@@ -18,7 +18,9 @@ import {
     FaChevronRight,
     FaMoneyBillWave,
     FaUserCheck,
-    FaChartLine
+    FaChartLine,
+    FaListAlt,
+    FaNewspaper
 } from 'react-icons/fa'
 import {
     PieChart,
@@ -114,8 +116,8 @@ const CRDDashboard = () => {
             
             // Store all events for calculations
             setAllEventsData(events)
-            // Set all events (limit to 4 for display)
-            setAllEvents(events.slice(0, 4))
+            // Set all events (limit to 6 for display)
+            setAllEvents(events.slice(0, 6))
             
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
@@ -237,15 +239,33 @@ const CRDDashboard = () => {
         }
     }
 
-    // Chart colors
+    // Color Theme: 60% White, 30% Maroon, 10% Gold
+    const THEME_COLORS = {
+        white: '#FFFFFF',
+        whiteLight: '#F9FAFB',
+        whiteBg: '#F5F5F5',
+        maroon: '#800020',
+        maroonDark: '#660018',
+        maroonLight: '#9c0000',
+        maroonBg: '#F5E6E8',
+        gold: '#D4AF37',
+        goldDark: '#B8941F',
+        goldLight: '#E5C866',
+        goldBg: '#FDF8E8',
+        gray: '#6B7280',
+        grayLight: '#9CA3AF',
+        grayBg: '#F3F4F6'
+    }
+
+    // Chart colors using theme
     const CHART_COLORS = {
-        primary: '#800020',
-        primaryLight: '#9c0000',
-        secondary: '#fbbf24',
-        volunteer: '#800020',
-        donator: '#fbbf24',
-        gradientStart: '#800020',
-        gradientEnd: '#9c0000'
+        primary: THEME_COLORS.maroon,
+        primaryLight: THEME_COLORS.maroonLight,
+        secondary: THEME_COLORS.gold,
+        volunteer: THEME_COLORS.maroon,
+        donator: THEME_COLORS.gold,
+        gradientStart: THEME_COLORS.maroon,
+        gradientEnd: THEME_COLORS.maroonLight
     }
 
     // Custom tooltip for line chart
@@ -301,127 +321,142 @@ const CRDDashboard = () => {
     ].filter(item => item.value > 0) // Only show segments with data
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="min-h-screen" style={{ backgroundColor: THEME_COLORS.whiteBg }}>
             <Header />
             
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                 {/* Welcome Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-100">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 lg:mb-8 border" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold mb-2" style={{ color: THEME_COLORS.maroon }}>
                                 CRD Operations Dashboard
                             </h1>
-                            <p className="text-sm sm:text-base text-gray-600">
+                            <p className="text-xs sm:text-sm lg:text-base" style={{ color: THEME_COLORS.gray }}>
                                 Welcome back, {userData?.name || 'CRD Staff'}! Manage campaigns, reviews, and reports.
                             </p>
                         </div>
-                            <Button 
-                                variant="outlineLight" 
+                        <button 
                                 onClick={() => navigate('/user/profile')}
-                            className="border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white transition-all"
+                            className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl border-2 transition-all whitespace-nowrap"
+                            style={{ 
+                                borderColor: THEME_COLORS.maroon, 
+                                color: THEME_COLORS.maroon,
+                                backgroundColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                e.target.style.color = THEME_COLORS.white;
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.backgroundColor = 'transparent';
+                                e.target.style.color = THEME_COLORS.maroon;
+                            }}
                             >
                                 Profile Settings
-                            </Button>
+                        </button>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                    <div className="bg-gradient-to-br from-white to-yellow-50 rounded-2xl shadow-lg p-5 sm:p-6 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl border border-yellow-100 group">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <FaClock className="w-7 h-7 text-white" />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
+                                <FaClock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                             </div>
-                            <div>
-                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">{stats.pendingEvents}</p>
-                                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Pending Reviews</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-lg p-5 sm:p-6 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl border border-green-100 group">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <FaCheckCircle className="w-7 h-7 text-white" />
-                            </div>
-                            <div>
-                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">{stats.approvedEvents}</p>
-                                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Approved Events</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.pendingEvents}</p>
+                                <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: THEME_COLORS.gray }}>Pending Reviews</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg p-5 sm:p-6 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl border border-blue-100 group">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <FaMoneyBillWave className="w-7 h-7 text-white" />
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
+                                <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                             </div>
-                            <div>
-                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
-                                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Total Donations</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.approvedEvents}</p>
+                                <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: THEME_COLORS.gray }}>Approved Events</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-white to-purple-50 rounded-2xl shadow-lg p-5 sm:p-6 transform transition-all duration-300 hover:scale-[1.03] hover:shadow-2xl border border-purple-100 group">
-                        <div className="flex items-center space-x-4">
-                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <FaUserCheck className="w-7 h-7 text-white" />
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
+                                <FaMoneyBillWave className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
                             </div>
-                            <div>
-                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors">{stats.activeVolunteers}</p>
-                                <p className="text-xs sm:text-sm text-gray-600 font-semibold">Active Volunteers</p>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
+                                <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: THEME_COLORS.gray }}>Total Donations</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
+                                <FaUserCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.activeVolunteers}</p>
+                                <p className="text-xs sm:text-sm font-semibold truncate" style={{ color: THEME_COLORS.gray }}>Active Volunteers</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                {/* Main Content Grid - Aligned Heights */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-4 sm:mb-6">
                     {/* Left Column - Donations Chart */}
                     <div className="lg:col-span-7">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100 hover:shadow-xl transition-all duration-300">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-50 rounded-xl flex items-center justify-center shadow-md">
-                                        <FaHandHoldingHeart className="w-6 h-6 text-[#800020]" />
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border hover:shadow-xl transition-all duration-300 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                        <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Donations</h3>
-                                        <p className="text-xs sm:text-sm text-gray-500">Monthly donation trends</p>
+                                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold" style={{ color: THEME_COLORS.maroon }}>Donations</h3>
+                                        <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>Monthly donation trends</p>
                                     </div>
                                 </div>
                                 
                                 {/* Filter Buttons */}
-                                <div className="flex items-center space-x-2 bg-gray-100 rounded-xl p-1.5 shadow-inner">
+                                <div className="flex items-center space-x-1 sm:space-x-2 rounded-lg sm:rounded-xl p-1 sm:p-1.5" style={{ backgroundColor: THEME_COLORS.grayBg }}>
                                     <button
                                         onClick={() => setDonationFilter('weekly')}
-                                        className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                        className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'weekly'
-                                                ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white shadow-md'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                                                ? 'text-white shadow-md'
+                                                : 'hover:bg-white'
                                         }`}
+                                        style={donationFilter === 'weekly' ? { backgroundColor: THEME_COLORS.maroon } : { color: THEME_COLORS.gray }}
                                     >
                                         Weekly
                                     </button>
                                     <button
                                         onClick={() => setDonationFilter('monthly')}
-                                        className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                        className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'monthly'
-                                                ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white shadow-md'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                                                ? 'text-white shadow-md'
+                                                : 'hover:bg-white'
                                         }`}
+                                        style={donationFilter === 'monthly' ? { backgroundColor: THEME_COLORS.maroon } : { color: THEME_COLORS.gray }}
                                     >
                                         Monthly
                                     </button>
                                     <button
                                         onClick={() => setDonationFilter('yearly')}
-                                        className={`px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 ${
+                                        className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'yearly'
-                                                ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white shadow-md'
-                                                : 'text-gray-600 hover:text-gray-900 hover:bg-white'
+                                                ? 'text-white shadow-md'
+                                                : 'hover:bg-white'
                                         }`}
+                                        style={donationFilter === 'yearly' ? { backgroundColor: THEME_COLORS.maroon } : { color: THEME_COLORS.gray }}
                                     >
                                         Yearly
                                     </button>
@@ -429,22 +464,22 @@ const CRDDashboard = () => {
                             </div>
                             
                             {/* Date Range Selector */}
-                            <div className="mb-6 flex items-center space-x-4 bg-gray-50 rounded-xl p-3 border border-gray-200">
+                            <div className="mb-4 sm:mb-6 flex items-center space-x-2 sm:space-x-4 rounded-lg sm:rounded-xl p-2 sm:p-3 border" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
                                 <div className="flex items-center space-x-2">
-                                    <FaCalendarAlt className="w-4 h-4 text-[#800020]" />
-                                    <span className="text-sm font-semibold text-gray-700">
+                                    <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
+                                    <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>
                                         {donationDateRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - {donationDateRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                     </span>
                                 </div>
                             </div>
                             
-                            {/* Chart */}
+                            {/* Chart - Flex grow to fill space */}
                             {isLoading ? (
-                                <div className="h-[300px] flex items-center justify-center">
+                                <div className="flex-1 flex items-center justify-center min-h-[250px] sm:min-h-[300px]">
                                     <LoadingSpinner size="medium" />
                                 </div>
                             ) : (
-                                <div className="h-[300px] w-full">
+                                <div className="flex-1 w-full min-h-[250px] sm:min-h-[300px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart
                                             data={donationsChartData}
@@ -487,27 +522,27 @@ const CRDDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Users Chart */}
+                    {/* Right Column - Users Chart - Same height as Donations */}
                     <div className="lg:col-span-5">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100 hover:shadow-xl transition-all duration-300">
-                            <div className="flex items-center space-x-3 mb-6">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl flex items-center justify-center shadow-md">
-                                    <FaUsers className="w-6 h-6 text-blue-600" />
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border hover:shadow-xl transition-all duration-300 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                    <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Users</h3>
-                                    <p className="text-xs sm:text-sm text-gray-500">User distribution</p>
+                                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold" style={{ color: THEME_COLORS.maroon }}>Users</h3>
+                                    <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>User distribution</p>
                                 </div>
-                                </div>
-
+                            </div>
+                            
                             {isLoading ? (
-                                <div className="h-[400px] flex items-center justify-center">
+                                <div className="flex-1 flex items-center justify-center min-h-[250px] sm:min-h-[300px]">
                                     <LoadingSpinner size="medium" />
                                 </div>
                             ) : (
                                 <>
-                                    <div className="flex justify-center mb-6 bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-100 relative">
-                                        <ResponsiveContainer width="100%" height={250}>
+                                    <div className="flex justify-center mb-4 sm:mb-6 rounded-xl p-4 sm:p-6 border relative flex-1 min-h-[200px] sm:min-h-[250px]" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
+                                        <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -542,31 +577,32 @@ const CRDDashboard = () => {
                                         {/* Center label */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                             <div className="text-center">
-                                                <div className="text-3xl font-bold text-gray-900">{usersChartData.total}</div>
-                                                <div className="text-sm text-gray-600 font-semibold">Total Users</div>
+                                                <div className="text-2xl sm:text-3xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
+                                                <div className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Total Users</div>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     {/* Legend */}
-                                    <div className="space-y-3">
+                                    <div className="space-y-2 sm:space-y-3">
                                         {pieChartData.map((item, index) => (
                                             <div 
                                                 key={index}
-                                                className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group"
+                                                className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-md hover:scale-[1.01] transition-all duration-200 group"
+                                                style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}
                                             >
-                                                <div className="flex items-center space-x-3">
+                                                <div className="flex items-center space-x-2 sm:space-x-3">
                                                     <div 
-                                                        className="w-5 h-5 rounded-full shadow-md group-hover:scale-125 transition-transform duration-200"
+                                                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm group-hover:scale-125 transition-transform duration-200"
                                                         style={{ backgroundColor: item.fill }}
                                                     ></div>
                                                     <div>
-                                                        <span className="text-sm font-bold text-gray-900 block">{item.name}</span>
-                                                        <span className="text-xs text-gray-500">{item.percentage}%</span>
+                                                        <span className="text-xs sm:text-sm font-bold block" style={{ color: THEME_COLORS.maroon }}>{item.name}</span>
+                                                        <span className="text-xs" style={{ color: THEME_COLORS.gray }}>{item.percentage}%</span>
                                                     </div>
                                                 </div>
                                                 <span 
-                                                    className="text-xl font-bold"
+                                                    className="text-lg sm:text-xl font-bold"
                                                     style={{ color: item.fill }}
                                                 >
                                                     {item.value}
@@ -581,192 +617,323 @@ const CRDDashboard = () => {
                 </div>
 
                 {/* Bottom Section - Calendar, Events, and Quick Actions (3 Column Layout) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Left Column - Calendar */}
-                    <div className="lg:col-span-3 order-2 lg:order-1">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300">
-                            <div className="flex items-center space-x-3 mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-[#800020] to-[#9c0000] rounded-xl flex items-center justify-center shadow-md">
-                                    <FaCalendarAlt className="w-5 h-5 text-white" />
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+                    {/* Left Column - Calendar + Quick Actions - Wider */}
+                    <div className="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-4 sm:gap-6">
+                        {/* Calendar Card */}
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border hover:shadow-xl transition-all duration-300" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                    <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900">Calendar</h3>
+                                <h3 className="text-base sm:text-lg font-bold" style={{ color: THEME_COLORS.maroon }}>Calendar</h3>
                             </div>
-                            
-                            <div className="flex items-center justify-between mb-5 bg-gray-50 rounded-lg p-2">
+
+                            <div className="flex items-center justify-between mb-4 sm:mb-5 rounded-lg p-2" style={{ backgroundColor: THEME_COLORS.whiteLight }}>
                                 <button
                                     onClick={() => navigateMonth(-1)}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-gray-200 hover:bg-[#800020] hover:text-white hover:border-[#800020] transition-all duration-200 shadow-sm"
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border transition-all duration-200 shadow-sm hover:scale-110"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroonBg,
+                                        color: THEME_COLORS.maroon
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.borderColor = THEME_COLORS.maroon;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.white;
+                                        e.target.style.borderColor = THEME_COLORS.maroonBg;
+                                    }}
                                 >
-                                    <FaChevronLeft className="w-3 h-3" />
+                                    <FaChevronLeft className="w-3 h-3" style={{ color: 'inherit' }} />
                                 </button>
-                                <h4 className="text-sm font-bold text-gray-900 px-3">
+                                <h4 className="text-xs sm:text-sm font-bold px-2 sm:px-3" style={{ color: THEME_COLORS.maroon }}>
                                     {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                 </h4>
                                 <button
                                     onClick={() => navigateMonth(1)}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg bg-white border border-gray-200 hover:bg-[#800020] hover:text-white hover:border-[#800020] transition-all duration-200 shadow-sm"
+                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border transition-all duration-200 shadow-sm hover:scale-110"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.maroon,
+                                        borderColor: THEME_COLORS.maroon,
+                                        color: THEME_COLORS.white
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
+                                        e.target.style.borderColor = THEME_COLORS.maroonDark;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.borderColor = THEME_COLORS.maroon;
+                                    }}
                                 >
-                                    <FaChevronRight className="w-3 h-3" />
+                                    <FaChevronRight className="w-3 h-3" style={{ color: THEME_COLORS.white }} />
                                 </button>
                             </div>
 
-                            <div className="grid grid-cols-7 gap-1 mb-3">
+                            <div className="grid grid-cols-7 gap-1 mb-2 sm:mb-3">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                    <div key={day} className="text-center text-xs font-bold text-gray-600 py-2">
+                                    <div key={day} className="text-center text-xs font-bold py-1 sm:py-2" style={{ color: THEME_COLORS.gray }}>
                                         {day}
-                                        </div>
-                                    ))}
-                                </div>
-                                
-                            <div className="grid grid-cols-7 gap-1 mb-6">
-                                    {getDaysInMonth(currentDate).map((day, index) => (
-                                        <div
-                                            key={index}
-                                        className={`text-center py-2 text-xs rounded-lg transition-all duration-200 ${
-                                            day ? 'hover:bg-[#800020] hover:text-white cursor-pointer font-medium' : ''
-                                            } ${
-                                                day === new Date().getDate() && 
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="grid grid-cols-7 gap-1 mb-4 sm:mb-6">
+                                {getDaysInMonth(currentDate).map((day, index) => (
+                                    <div
+                                        key={index}
+                                        className={`text-center py-1 sm:py-2 text-xs rounded-lg transition-all duration-200 ${
+                                            day ? 'cursor-pointer font-medium hover:scale-110' : ''
+                                        }`}
+                                        style={day === new Date().getDate() && 
+                                            currentDate.getMonth() === new Date().getMonth() && 
+                                            currentDate.getFullYear() === new Date().getFullYear()
+                                                ? { 
+                                                    backgroundColor: THEME_COLORS.maroon, 
+                                                    color: THEME_COLORS.white,
+                                                    fontWeight: 'bold',
+                                                    transform: 'scale(1.1)'
+                                                }
+                                                : day ? { 
+                                                    color: THEME_COLORS.gray 
+                                                } : { 
+                                                    color: 'transparent' 
+                                                }}
+                                        onMouseEnter={(e) => {
+                                            if (day) {
+                                                e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                                e.target.style.color = THEME_COLORS.white;
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (day && !(day === new Date().getDate() && 
                                                 currentDate.getMonth() === new Date().getMonth() && 
-                                                currentDate.getFullYear() === new Date().getFullYear()
-                                                ? 'bg-gradient-to-br from-[#800020] to-[#9c0000] text-white font-bold shadow-md scale-110' 
-                                                : day ? 'text-gray-700' : 'text-transparent'
-                                            }`}
-                                        >
-                                            {day}
-                                        </div>
-                                    ))}
-                </div>
+                                                currentDate.getFullYear() === new Date().getFullYear())) {
+                                                e.target.style.backgroundColor = 'transparent';
+                                                e.target.style.color = THEME_COLORS.gray;
+                                            }
+                                        }}
+                                    >
+                                        {day}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
-                {/* Quick Actions */}
-                            <div className="pt-6 border-t border-gray-200">
-                                <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center">
-                                    <span className="w-1 h-4 bg-gradient-to-b from-[#800020] to-[#9c0000] rounded-full mr-2"></span>
-                                    Quick Actions
-                                </h4>
-                                <div className="space-y-2.5">
-                                    <button
-                                onClick={() => handleQuickAction('review-events')}
-                                        className="w-full h-11 flex items-center justify-center space-x-2.5 text-sm font-semibold bg-gradient-to-r from-[#800020] to-[#9c0000] text-white rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                            >
-                                        <FaCheckCircle className="w-4 h-4" />
-                                            <span>Review Events</span>
-                                    </button>
-                                    
-                                    <button
-                                        onClick={() => handleQuickAction('view-donations')}
-                                        className="w-full h-11 flex items-center justify-center space-x-2.5 text-sm font-semibold bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                                    >
-                                        <FaHandHoldingHeart className="w-4 h-4" />
-                                        <span>View Donations</span>
-                                    </button>
-                                    
-                                    <button
-                                        onClick={() => handleQuickAction('manage-volunteers')}
-                                        className="w-full h-11 flex items-center justify-center space-x-2.5 text-sm font-semibold bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                                    >
-                                        <FaUsers className="w-4 h-4" />
-                                        <span>Manage Volunteers</span>
-                                    </button>
-                                    
-                                    <button
-                                onClick={() => handleQuickAction('generate-reports')}
-                                        className="w-full h-11 flex items-center justify-center space-x-2.5 text-sm font-semibold bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                            >
-                                        <FaChartLine className="w-4 h-4" />
-                                            <span>Generate Reports</span>
-                                    </button>
-                                </div>
+                        {/* Quick Actions Card */}
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border hover:shadow-xl transition-all duration-300 flex-1" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <h4 className="text-sm font-bold mb-3 sm:mb-4 flex items-center">
+                                <span className="w-1 h-3 sm:h-4 rounded-full mr-2" style={{ backgroundColor: THEME_COLORS.maroon }}></span>
+                                <span style={{ color: THEME_COLORS.maroon }}>Quick Actions</span>
+                            </h4>
+                            <div className="space-y-2 sm:space-y-2.5">
+                                <button
+                                    onClick={() => handleQuickAction('review-events')}
+                                    className="w-full h-10 sm:h-11 flex items-center justify-center space-x-2 sm:space-x-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.maroon,
+                                        boxShadow: '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
+                                        e.target.style.boxShadow = '0 10px 15px -3px rgba(128, 0, 32, 0.4), 0 4px 6px -2px rgba(128, 0, 32, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.boxShadow = '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)';
+                                    }}
+                                >
+                                    <FaCheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>Review Events</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => handleQuickAction('view-donations')}
+                                    className="w-full h-10 sm:h-11 flex items-center justify-center space-x-2 sm:space-x-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.maroon,
+                                        boxShadow: '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
+                                        e.target.style.boxShadow = '0 10px 15px -3px rgba(128, 0, 32, 0.4), 0 4px 6px -2px rgba(128, 0, 32, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.boxShadow = '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)';
+                                    }}
+                                >
+                                    <FaHandHoldingHeart className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>View Donations</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => handleQuickAction('manage-volunteers')}
+                                    className="w-full h-10 sm:h-11 flex items-center justify-center space-x-2 sm:space-x-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.maroon,
+                                        boxShadow: '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
+                                        e.target.style.boxShadow = '0 10px 15px -3px rgba(128, 0, 32, 0.4), 0 4px 6px -2px rgba(128, 0, 32, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.boxShadow = '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)';
+                                    }}
+                                >
+                                    <FaUsers className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>Manage Volunteers</span>
+                                </button>
+                                
+                                <button
+                                    onClick={() => handleQuickAction('generate-reports')}
+                                    className="w-full h-10 sm:h-11 flex items-center justify-center space-x-2 sm:space-x-2.5 text-xs sm:text-sm font-semibold text-white rounded-lg sm:rounded-xl shadow-md hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.maroon,
+                                        boxShadow: '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
+                                        e.target.style.boxShadow = '0 10px 15px -3px rgba(128, 0, 32, 0.4), 0 4px 6px -2px rgba(128, 0, 32, 0.3)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.boxShadow = '0 4px 6px -1px rgba(128, 0, 32, 0.3), 0 2px 4px -1px rgba(128, 0, 32, 0.2)';
+                                    }}
+                                >
+                                    <FaChartLine className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    <span>Generate Reports</span>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column - Events Feed */}
-                    <div className="lg:col-span-9 order-1 lg:order-2">
-                        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                                        <FaCalendarAlt className="w-5 h-5 text-white" />
+                    {/* Right Column - Events Feed - Height matches Calendar + Quick Actions - Narrower */}
+                    <div className="lg:col-span-8 order-1 lg:order-2">
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border hover:shadow-xl transition-all duration-300 h-full" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                        <FaListAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900">All Events Feed</h3>
-                                        <p className="text-xs text-gray-500">Recent event activities</p>
+                                        <h3 className="text-lg sm:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>All Events Feed</h3>
+                                        <p className="text-xs" style={{ color: THEME_COLORS.gray }}>Recent event activities</p>
                                     </div>
                                 </div>
                                 <button 
-                                onClick={() => navigate('/crd-staff/events')}
-                                    className="px-4 py-2 text-sm font-semibold text-[#800020] border-2 border-[#800020] rounded-xl hover:bg-[#800020] hover:text-white transition-all duration-200"
-                            >
-                                View All
+                                    onClick={() => navigate('/crd-staff/events')}
+                                    className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold border-2 rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                                    style={{ 
+                                        borderColor: THEME_COLORS.maroon, 
+                                        color: THEME_COLORS.maroon,
+                                        backgroundColor: 'transparent'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.color = THEME_COLORS.white;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = 'transparent';
+                                        e.target.style.color = THEME_COLORS.maroon;
+                                    }}
+                                >
+                                    View All
                                 </button>
-                        </div>
-                        
-                        {isLoading ? (
-                            <div className="py-12">
-                                <LoadingSpinner size="medium" text="Loading events..." />
                             </div>
-                                        ) : allEvents.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                            {isLoading ? (
+                                <div className="py-8 sm:py-12 flex items-center justify-center min-h-[200px]">
+                                    <LoadingSpinner size="medium" text="Loading events..." />
+                                </div>
+                            ) : allEvents.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                     {allEvents.map((event, index) => (
                                         <div 
                                             key={event._id} 
-                                            className="group border border-gray-200 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:border-[#800020] hover:-translate-y-1 bg-gradient-to-br from-white to-gray-50"
-                                            style={{ animationDelay: `${index * 100}ms` }}
+                                            className="group border rounded-lg sm:rounded-xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                                            style={{ 
+                                                borderColor: THEME_COLORS.maroonBg,
+                                                backgroundColor: THEME_COLORS.whiteLight,
+                                                animationDelay: `${index * 100}ms` 
+                                            }}
                                         >
-                                            <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-start justify-between mb-3 sm:mb-4">
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center space-x-2 mb-2">
-                                                        <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate group-hover:text-[#800020] transition-colors">
+                                                        <h4 className="font-bold text-sm sm:text-base lg:text-lg truncate transition-colors" style={{ color: THEME_COLORS.maroon }}>
                                                             {event.title}
                                                         </h4>
                                                     </div>
-                                                    <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                                                        {String(event.description || '').replace(/<[^>]*>/g, '').substring(0, 120)}...
+                                                    <p className="text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray }}>
+                                                        {String(event.description || '').replace(/<[^>]*>/g, '').substring(0, 100)}...
                                                     </p>
-                                                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                                                        <span className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-lg">
+                                                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs" style={{ color: THEME_COLORS.gray }}>
+                                                        <span className="flex items-center space-x-1 px-2 py-1 rounded-lg" style={{ backgroundColor: THEME_COLORS.white }}>
                                                             <FaCalendarAlt className="w-3 h-3" />
                                                             <span>{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                                </span>
+                                                        </span>
                                                         {event.location && (
-                                                            <span className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded-lg truncate max-w-[150px]">
+                                                            <span className="flex items-center space-x-1 px-2 py-1 rounded-lg truncate max-w-[120px] sm:max-w-[150px]" style={{ backgroundColor: THEME_COLORS.white }}>
                                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                    </svg>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
                                                                 <span className="truncate">{event.location}</span>
-                                                                </span>
+                                                            </span>
                                                         )}
                                                     </div>
-                                                            </div>
-                                        </div>
-                                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                                <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm ${
-                                                    event.status === 'Approved' ? 'bg-gradient-to-r from-green-100 to-green-50 text-green-800 border border-green-200' :
-                                                    event.status === 'Pending' ? 'bg-gradient-to-r from-yellow-100 to-yellow-50 text-yellow-800 border border-yellow-200' :
-                                                    'bg-gradient-to-r from-red-100 to-red-50 text-red-800 border border-red-200'
-                                        }`}>
-                                            {event.status || 'Pending'}
-                                        </span>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-sm border ${
+                                                    event.status === 'Approved' ? 'text-green-800 border-green-200' :
+                                                    event.status === 'Pending' ? 'text-yellow-800 border-yellow-200' :
+                                                    'text-red-800 border-red-200'
+                                                }`}
+                                                style={event.status === 'Approved' ? { backgroundColor: '#D1FAE5' } :
+                                                    event.status === 'Pending' ? { backgroundColor: THEME_COLORS.goldBg } :
+                                                    { backgroundColor: '#FEE2E2' }}
+                                                >
+                                                    {event.status || 'Pending'}
+                                                </span>
                                                 <button
-                                                                onClick={() => navigate('/crd-staff/events')}
-                                                    className="px-4 py-1.5 text-xs font-semibold text-[#800020] border border-[#800020] rounded-lg hover:bg-[#800020] hover:text-white transition-all duration-200"
-                                                            >
+                                                    onClick={() => navigate('/crd-staff/events')}
+                                                    className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs font-semibold border rounded-lg hover:scale-105 transition-all duration-200"
+                                                    style={{ 
+                                                        borderColor: THEME_COLORS.maroon, 
+                                                        color: THEME_COLORS.maroon,
+                                                        backgroundColor: 'transparent'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                                        e.target.style.color = THEME_COLORS.white;
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.target.style.backgroundColor = 'transparent';
+                                                        e.target.style.color = THEME_COLORS.maroon;
+                                                    }}
+                                                >
                                                     Review →
                                                 </button>
-                                                        </div>
-                                    </div>
+                                            </div>
+                                        </div>
                                     ))}
-                            </div>
-                            ) : (
-                                <div className="text-center py-16">
-                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <FaCalendarAlt className="w-10 h-10 text-gray-400" />
-                            </div>
-                                    <p className="text-gray-500 font-medium text-lg">No events found</p>
-                                    <p className="text-gray-400 text-sm mt-1">Events will appear here once created</p>
                                 </div>
-                                                )}
+                            ) : (
+                                <div className="text-center py-12 sm:py-16">
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
+                                        <FaListAlt className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
+                                    </div>
+                                    <p className="font-medium text-base sm:text-lg mb-1" style={{ color: THEME_COLORS.gray }}>No events found</p>
+                                    <p className="text-sm" style={{ color: THEME_COLORS.grayLight }}>Events will appear here once created</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
