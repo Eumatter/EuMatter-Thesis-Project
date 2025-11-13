@@ -301,7 +301,43 @@ const DonationHistory = () => {
             fetchDonations()
             setActiveTab('history')
         } catch (err) {
-            toast.error(err?.response?.data?.message || err.message || 'Failed to process donation')
+            // Extract error message from various possible locations
+            let errorMessage = 'Failed to process donation. Please check your connection and try again.';
+            
+            if (err?.response?.data) {
+                // Check for error message in response
+                errorMessage = err.response.data.message || 
+                              err.response.data.error?.message || 
+                              err.response.data.error ||
+                              errorMessage;
+                
+                // If it's a 500 error, provide more context
+                if (err.response.status === 500) {
+                    console.error('❌ Server Error (500):', {
+                        message: err.response.data.message,
+                        error: err.response.data.error,
+                        fullResponse: err.response.data
+                    });
+                    
+                    // Check for specific error types
+                    if (err.response.data.error?.includes('PAYMONGO_SECRET_KEY')) {
+                        errorMessage = 'Payment service is not configured. Please contact support.';
+                    } else if (err.response.data.message?.includes('configuration')) {
+                        errorMessage = err.response.data.message;
+                    }
+                }
+            } else if (err?.message) {
+                errorMessage = err.message;
+            }
+            
+            console.error('Donation error:', {
+                message: errorMessage,
+                status: err?.response?.status,
+                response: err?.response?.data,
+                error: err
+            });
+            
+            toast.error(errorMessage);
         } finally {
             setDonating(false)
         }
@@ -445,46 +481,55 @@ const DonationHistory = () => {
 
                 {/* Tabs */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
-                    <div className="flex flex-wrap border-b border-gray-200">
+                    <div className="border-b border-gray-200">
+                        <div 
+                            className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-1.5 sm:gap-0 -mx-4 px-3 sm:mx-0 sm:px-0 scrollbar-hide"
+                            style={{ 
+                                WebkitOverflowScrolling: 'touch',
+                                scrollbarWidth: 'none',
+                                msOverflowStyle: 'none'
+                            }}
+                        >
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${
+                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
                                 activeTab === 'history'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
+                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex items-center justify-center space-x-2">
-                                <FaHandHoldingHeart />
-                                <span>My Donations</span>
+                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
+                                <FaHandHoldingHeart className="text-base sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">My Donations</span>
                             </div>
                         </button>
                         <button
                             onClick={() => setActiveTab('donate')}
-                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${
+                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
                                 activeTab === 'donate'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
+                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex items-center justify-center space-x-2">
-                                <FaMoneyBillWave />
-                                <span>Make a Donation</span>
+                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
+                                <FaMoneyBillWave className="text-base sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">Make a Donation</span>
                             </div>
                         </button>
                         <button
                             onClick={() => setActiveTab('inkind')}
-                            className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-colors ${
+                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
                                 activeTab === 'inkind'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
+                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex items-center justify-center space-x-2">
-                                <FaBoxOpen />
-                                <span>In-Kind Donation</span>
+                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
+                                <FaBoxOpen className="text-base sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">In-Kind Donation</span>
                             </div>
                         </button>
+                        </div>
                     </div>
 
                     {/* Tab Content */}

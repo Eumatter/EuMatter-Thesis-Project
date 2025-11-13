@@ -84,6 +84,48 @@ export const createDonation = async (req, res) => {
   try {
     const { donorName, donorEmail, amount, message = "", paymentMethod, eventId = null } = req.body;
     const userId = req.user?._id || null;
+    
+    // Validate required fields
+    if (!donorName || !donorEmail || !amount) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Missing required fields: donorName, donorEmail, and amount are required" 
+      });
+    }
+
+    if (!paymentMethod) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Payment method is required" 
+      });
+    }
+
+    // Validate environment variables
+    if (!process.env.PAYMONGO_SECRET_KEY) {
+      console.error("❌ PAYMONGO_SECRET_KEY is not set");
+      return res.status(500).json({ 
+        success: false, 
+        message: "Payment service configuration error. Please contact support." 
+      });
+    }
+
+    if (!process.env.BACKEND_URL) {
+      console.error("❌ BACKEND_URL is not set");
+      console.error("💡 For Render deployment, set BACKEND_URL to your Render service URL (e.g., https://your-service.onrender.com)");
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server configuration error: BACKEND_URL environment variable is missing. Please contact support." 
+      });
+    }
+
+    if (!process.env.FRONTEND_URL) {
+      console.error("❌ FRONTEND_URL is not set");
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server configuration error. Please contact support." 
+      });
+    }
+
     const amountInCents = toCentavos(amount);
 
     // 1️⃣ Create the donation entry
@@ -230,8 +272,73 @@ export const createDonation = async (req, res) => {
     return res.status(400).json({ success: false, message: "Invalid payment method" });
 
   } catch (err) {
-    console.error("❌ createDonation Error:", err.response?.data || err.message);
-    return res.status(500).json({ error: err.response?.data || err.message });
+    console.error("❌ createDonation Error:", {
+      message: err.message,
+      name: err.name,
+      response: err.response?.data,
+      status: err.response?.status,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+    
+    // Handle missing PayMongo secret key error (from interceptor)
+    if (err.message && err.message.includes("PAYMONGO_SECRET_KEY")) {
+      return res.status(500).json({ 
+        success: false,
+        message: "Payment service is not configured. Please contact support.",
+        error: "Missing PAYMONGO_SECRET_KEY environment variable"
+      });
+    }
+    
+    // Handle PayMongo API errors
+    if (err.response?.data) {
+      const paymongoError = err.response.data;
+      const errorMessage = paymongoError.errors?.[0]?.detail || paymongoError.message || "Payment processing failed";
+      console.error("❌ PayMongo API Error Details:", {
+        errors: paymongoError.errors,
+        message: paymongoError.message
+      });
+      return res.status(500).json({ 
+        success: false,
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? paymongoError : undefined
+      });
+    }
+    
+    // Handle network/timeout errors
+    if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      return res.status(500).json({ 
+        success: false,
+        message: "Payment service timeout. Please try again in a moment."
+      });
+    }
+    
+    // Handle database errors
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        success: false,
+        message: "Invalid donation data: " + Object.values(err.errors).map(e => e.message).join(", ")
+      });
+    }
+    
+    // Handle MongoDB connection errors
+    if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+      console.error("❌ Database Error:", err.message);
+      return res.status(500).json({ 
+        success: false,
+        message: "Database error. Please try again later."
+      });
+    }
+    
+    // Generic error
+    return res.status(500).json({ 
+      success: false,
+      message: err.message || "An error occurred while processing your donation. Please try again.",
+      error: process.env.NODE_ENV === 'development' ? {
+        message: err.message,
+        name: err.name,
+        stack: err.stack
+      } : undefined
+    });
   }
 };
 

@@ -36,6 +36,16 @@ html, body {
   background: rgba(255, 215, 0, 0.7);
 }
 
+/* Hide scrollbar for tab navigation on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Accessibility Styles */
 :root {
   --text-contrast: 1;

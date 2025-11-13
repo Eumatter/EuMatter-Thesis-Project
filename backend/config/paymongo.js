@@ -13,7 +13,15 @@ const paymongoClient = axios.create({
 
 paymongoClient.interceptors.request.use((config) => {
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
-    if (!secretKey) throw new Error("Missing PAYMONGO_SECRET_KEY env");
+    if (!secretKey) {
+        const error = new Error("Missing PAYMONGO_SECRET_KEY environment variable. Please set it in your .env file or Render environment variables.");
+        console.error("❌ PayMongo Configuration Error:", error.message);
+        console.error("💡 To fix this:");
+        console.error("   1. Get your PayMongo API keys from https://dashboard.paymongo.com/developers/api-keys");
+        console.error("   2. Add PAYMONGO_SECRET_KEY=sk_test_xxx to your .env file (or Render environment variables)");
+        console.error("   3. Add PAYMONGO_PUBLIC_KEY=pk_test_xxx to your .env file");
+        throw error;
+    }
     const basicAuth = Buffer.from(`${secretKey}:`).toString("base64");
     config.headers.Authorization = `Basic ${basicAuth}`;
     
@@ -31,6 +39,9 @@ paymongoClient.interceptors.request.use((config) => {
     }
     
     return config;
+}, (error) => {
+    console.error("❌ PayMongo Request Interceptor Error:", error.message);
+    return Promise.reject(error);
 });
 
 export const getPaymongoPublicKey = () => {

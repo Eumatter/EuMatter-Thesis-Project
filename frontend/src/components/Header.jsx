@@ -308,20 +308,20 @@ const Header = () => {
             </div>
         )}
         <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible`}>
-            <div className="w-full px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-3 sm:py-4">
-                <div className="max-w-7xl mx-auto flex justify-between items-center">
+            <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
+                <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
-                    <div className="flex items-center space-x-3 sm:space-x-3 min-w-0 flex-shrink-0">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0">
+                    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 flex-shrink-0">
                             <img 
                                 src={EnvergaLogo} 
                                 alt="Enverga University Logo" 
-                                className="w-full h-auto object-contain"
+                                className="w-full h-full object-contain"
                             />
                         </div>
-                        <div className="min-w-0 flex-shrink-0">
-                            <h1 className="text-xl sm:text-xl md:text-xl lg:text-xl xl:text-3xl font-extrabold text-[#800000] truncate tracking-tight">EUMATTER</h1>
-                            <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-medium text-[#800000] uppercase tracking-wide truncate">Community Relations Department</p>
+                        <div className="min-w-0 flex-1 overflow-hidden">
+                            <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-extrabold text-[#800000] truncate tracking-tight leading-tight">EUMATTER</h1>
+                            <p className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm xl:text-base 2xl:text-lg font-medium text-[#800000] uppercase tracking-wide truncate leading-tight mt-0.5">Community Relations Department</p>
                         </div>
                     </div>
 
@@ -365,18 +365,18 @@ const Header = () => {
 						{/* Notifications Bell */}
                         <div className="relative" ref={bellRef}>
 							<button
-								className="relative p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation"
+								className="relative p-1.5 sm:p-2 md:p-2.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 onClick={() => setIsBellOpen(v => { const next = !v; if (next) setIsDropdownOpen(false); return next; })}
 								title="Notifications"
 								aria-label="Notifications"
 							>
-								<svg className="w-6 h-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+								<svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
 								{unreadCount > 0 && (
-									<span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{unreadCount}</span>
+									<span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-semibold min-w-[16px] sm:min-w-[18px] text-center">{unreadCount > 99 ? '99+' : unreadCount}</span>
 								)}
 							</button>
 							{isBellOpen && (
-                                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
+                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-xl shadow-2xl border border-gray-200 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
 									{/* Header */}
 									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white flex items-center justify-between">
 										<div className="flex items-center gap-2">
@@ -489,22 +489,22 @@ const Header = () => {
                         <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setIsDropdownOpen(v => { const next = !v; if (next) setIsBellOpen(false); return next; })}
-                                className="flex items-center space-x-1 sm:space-x-2 p-1.5 sm:p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation"
+                                className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 p-1 sm:p-1.5 md:p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px]"
                                 aria-label="User menu"
                             >
                                 {userData?.profileImage ? (
                                     <img
                                         src={userData.profileImage}
                                         alt={userData.name}
-                                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-[#800000] flex-shrink-0"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-[#800000] flex-shrink-0"
                                     />
                                 ) : (
-                                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold border-2 border-[#800000] text-xs sm:text-sm flex-shrink-0">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold border-2 border-[#800000] text-[10px] sm:text-xs md:text-sm flex-shrink-0">
                                         {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
                                     </div>
                                 )}
                                 <svg
-                                    className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                                    className={`hidden sm:block w-3.5 sm:w-4 md:w-4 text-gray-600 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -513,7 +513,7 @@ const Header = () => {
                                 </svg>
                             </button>
                             {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-72 md:w-80 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
                                             <div className="flex items-center gap-3">
@@ -676,7 +676,7 @@ const Header = () => {
                         </nav>
                         {/* Mobile Menu Button */}
                         <button 
-                            className="lg:hidden p-2 text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 rounded-lg transition-colors duration-200 touch-manipulation"
+                            className="lg:hidden p-1.5 sm:p-2 md:p-2.5 text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 rounded-lg transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                             aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
                             aria-expanded={isMobileMenuOpen}
@@ -699,8 +699,8 @@ const Header = () => {
                     className="fixed inset-0 z-[90] lg:hidden bg-black/50 backdrop-blur-sm transition-opacity duration-300"
                             onClick={() => setIsMobileMenuOpen(false)}
                         />
-                <div className="fixed top-16 md:top-20 left-0 right-0 z-[95] lg:hidden p-3 md:p-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="mx-auto w-full max-w-md md:max-w-xl rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl ring-1 ring-[#800000]/10 overflow-hidden max-h-[calc(100vh-9rem)] md:max-h-[calc(100vh-10rem)] flex flex-col">
+                <div className={`fixed ${showMaintenanceBanner ? 'top-28 sm:top-32 md:top-36' : 'top-14 sm:top-16 md:top-20'} left-0 right-0 z-[95] lg:hidden p-2 sm:p-3 md:p-4 animate-in fade-in slide-in-from-top-2 duration-200`}>
+                    <div className="mx-auto w-full max-w-md md:max-w-xl rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl ring-1 ring-[#800000]/10 overflow-hidden max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] md:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)] flex flex-col">
                         <div className="px-4 py-3 flex items-center justify-start border-b border-white/60 bg-gradient-to-r from-[#800000]/90 to-[#9c0000]/90 text-white">
                             <div className="text-sm font-semibold">Menu</div>
                                 </div>
@@ -773,7 +773,7 @@ const Header = () => {
                     </>
                 )}
         {/* Spacer to offset fixed header height */}
-        <div aria-hidden className="h-16 sm:h-20 md:h-20"></div>
+        <div aria-hidden className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}></div>
         </>
     );
 };

@@ -127,13 +127,63 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(port, () => console.log(`🚀 Server running on port ${port}`));
+if (!port) {
+    console.error("❌ PORT environment variable is not set!");
+    console.error("💡 Set PORT in your .env file (e.g., PORT=8000)");
+    process.exit(1);
+}
+
+app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Check critical environment variables (warn only, don't crash)
+    if (!process.env.PAYMONGO_SECRET_KEY) {
+        console.warn("⚠️  PAYMONGO_SECRET_KEY is not set - donation features will not work");
+    }
+    if (!process.env.BACKEND_URL) {
+        console.warn("⚠️  BACKEND_URL is not set - payment redirects may fail");
+    }
+    if (!process.env.FRONTEND_URL) {
+        console.warn("⚠️  FRONTEND_URL is not set - CORS and redirects may fail");
+    }
+});
+
+// Handle server errors
+process.on('unhandledRejection', (error) => {
+    console.error('❌ Unhandled Promise Rejection:', error);
+    // Don't exit in development, but log the error
+    if (process.env.NODE_ENV === 'production') {
+        process.exit(1);
+    }
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('❌ Uncaught Exception:', error);
+    console.error('Stack:', error.stack);
+    process.exit(1);
+});
 
 // Start reminder scheduler (simple interval)
-try { scheduleReminders(); } catch (e) { console.error('Reminder scheduler failed to start', e?.message) }
+try { 
+    scheduleReminders(); 
+    console.log('✅ Reminder scheduler started');
+} catch (e) { 
+    console.error('❌ Reminder scheduler failed to start:', e?.message);
+}
 
 // Start maintenance mode scheduler
-try { startMaintenanceScheduler(); } catch (e) { console.error('Maintenance scheduler failed to start', e?.message) }
+try { 
+    startMaintenanceScheduler(); 
+    console.log('✅ Maintenance scheduler started');
+} catch (e) { 
+    console.error('❌ Maintenance scheduler failed to start:', e?.message);
+}
 
 // Start feedback scheduler
-try { startFeedbackScheduler(); } catch (e) { console.error('Feedback scheduler failed to start', e?.message) }
+try { 
+    startFeedbackScheduler(); 
+    console.log('✅ Feedback scheduler started');
+} catch (e) { 
+    console.error('❌ Feedback scheduler failed to start:', e?.message);
+}
