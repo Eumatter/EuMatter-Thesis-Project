@@ -1,0 +1,308 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import "tailwindcss";
+
+
+@theme {
+  --font-sans: "Poppins", sans-serif;
+}
+
+/* Prevent horizontal scrolling globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* Custom scrollbar styles for middle column */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.7);
+}
+
+/* Accessibility Styles */
+:root {
+  --text-contrast: 1;
+  --animation-duration: 0.3s;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --text-contrast: 1.5;
+}
+
+.high-contrast .text-gray-600,
+.high-contrast .text-gray-700,
+.high-contrast .text-gray-800 {
+  color: #000000 !important;
+}
+
+.high-contrast .text-white {
+  color: #ffffff !important;
+}
+
+.high-contrast .bg-white {
+  background-color: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+
+.high-contrast .border-gray-200,
+.high-contrast .border-gray-300 {
+  border-color: #000000 !important;
+  border-width: 2px !important;
+}
+
+/* Dark Mode */
+.dark-mode {
+  background-color: #1a1a1a;
+  color: #e5e5e5;
+}
+
+.dark-mode .bg-white {
+  background-color: #2d2d2d !important;
+  color: #e5e5e5 !important;
+}
+
+.dark-mode .bg-gray-50 {
+  background-color: #1a1a1a !important;
+}
+
+.dark-mode .text-black {
+  color: #e5e5e5 !important;
+}
+
+.dark-mode .text-gray-900 {
+  color: #e5e5e5 !important;
+}
+
+.dark-mode .text-gray-700 {
+  color: #d1d1d1 !important;
+}
+
+.dark-mode .text-gray-600 {
+  color: #b8b8b8 !important;
+}
+
+.dark-mode .border-gray-200,
+.dark-mode .border-gray-300 {
+  border-color: #4a4a4a !important;
+}
+
+/* Reduced Motion */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Font Size Adjustments - Applied globally for accessibility */
+/* Note: This affects the base font size, which scales all rem-based units proportionally */
+html[data-font-size="small"] {
+  font-size: 87.5%;
+}
+
+html[data-font-size="medium"] {
+  font-size: 100%;
+}
+
+html[data-font-size="large"] {
+  font-size: 112.5%;
+}
+
+html[data-font-size="extra-large"] {
+  font-size: 125%;
+}
+
+/* Ensure headings are always prominently sized */
+/* Headings use large Tailwind classes that will be proportionally larger even when scaled */
+/* For maximum visibility, ensure system font size is set to "Medium" or larger */
+
+/* PWA Install Button Animation */
+@keyframes slide-up-from-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-pwa-slide-up {
+  animation: slide-up-from-bottom 0.5s ease-out;
+}
+
+/* Modal Animations */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-modal-in {
+  animation: modal-fade-in 0.2s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Modal z-index override to ensure it's above header */
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+.modal-content {
+  z-index: 10000 !important;
+}
+
+/* Maroon, White, Gold color scheme utilities */
+.bg-maroon {
+  background-color: #800020;
+}
+
+.bg-maroon-dark {
+  background-color: #5a0017;
+}
+
+.bg-maroon-light {
+  background-color: #a0002a;
+}
+
+.text-maroon {
+  color: #800020;
+}
+
+.border-maroon {
+  border-color: #800020;
+}
+
+.bg-gold {
+  background-color: #d4af37;
+}
+
+.bg-gold-light {
+  background-color: #f4d03f;
+}
+
+.bg-gold-dark {
+  background-color: #b8941f;
+}
+
+.text-gold {
+  color: #d4af37;
+}
+
+.border-gold {
+  border-color: #d4af37;
+}
+
+/* Reaction Animations - Used in Reactions component */
+@keyframes reaction-slide-up {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes reaction-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.2);
+  }
+}
+
+@keyframes reaction-pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+.animate-slide-up {
+  animation: reaction-slide-up 0.2s ease-out;
+}
+
+.reaction-pulse {
+  animation: reaction-pulse 1.5s ease-in-out infinite;
+}
+
+/* Custom bounce animation for RegisterPage */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.5s ease-out;
+}
