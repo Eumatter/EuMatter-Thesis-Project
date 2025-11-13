@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import axios from 'axios'
+import { getBackendUrl } from './utils/backendUrl.js'
 import Home from './pages/Home.jsx'
 import PublicCampaigns from './pages/PublicCampaigns.jsx'
 import Login from './pages/auth/LoginPage.jsx'
@@ -59,7 +60,7 @@ const AppContent = () => {
     useEffect(() => {
         const checkMaintenanceMode = async () => {
             try {
-                const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/';
+                const backendUrl = getBackendUrl();
                 const { data } = await axios.get(backendUrl + 'api/system-settings/maintenance-mode');
                 if (data.success) {
                     setMaintenanceMode(data.maintenanceMode);
@@ -98,7 +99,7 @@ const AppContent = () => {
         const forceLogoutForMaintenance = async () => {
             try {
                 axios.defaults.withCredentials = true;
-                await axios.post((import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/') + 'api/auth/logout');
+                await axios.post(getBackendUrl() + 'api/auth/logout');
             } catch (error) {
                 // silent fail - we'll still clear local state
                 console.warn('Forced logout during maintenance failed:', error?.message || error);

@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from "react";
 import api from '../utils/api';
+import { getBackendUrl } from '../utils/backendUrl.js';
 
 export const AppContent = createContext();
 
@@ -70,8 +71,7 @@ export const applySystemSettings = (settings) => {
 };
 
 export const AppContextProvider = (props) => {
-    const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/';
-    const backendUrl = rawBackendUrl.endsWith('/') ? rawBackendUrl : `${rawBackendUrl}/`;
+    const backendUrl = getBackendUrl();
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [userData, setUserData] = useState(null)
     const [isLoading, setIsLoading] = useState(true)

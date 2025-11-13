@@ -4,6 +4,7 @@ import { FaTools, FaClock, FaEnvelope, FaHome } from 'react-icons/fa';
 import axios from 'axios';
 import EuMatterLogo from '../assets/Eumatter-logo.png';
 import EnvergaLogo from '../assets/enverga-logo.png';
+import { getBackendUrl } from '../utils/backendUrl.js';
 
 const MaintenanceMode = () => {
     const [maintenanceInfo, setMaintenanceInfo] = useState({
@@ -15,7 +16,7 @@ const MaintenanceMode = () => {
     useEffect(() => {
         const fetchMaintenanceInfo = async () => {
             try {
-                const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/';
+                const backendUrl = getBackendUrl();
                 const { data } = await axios.get(backendUrl + 'api/system-settings/maintenance-mode');
                 if (data.success) {
                     setMaintenanceInfo({
