@@ -70,7 +70,8 @@ export const applySystemSettings = (settings) => {
 };
 
 export const AppContextProvider = (props) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/'
+    const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/';
+    const backendUrl = rawBackendUrl.endsWith('/') ? rawBackendUrl : `${rawBackendUrl}/`;
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [userData, setUserData] = useState(null)
     const [isLoading, setIsLoading] = useState(true)

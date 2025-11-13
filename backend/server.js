@@ -33,6 +33,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // CORS setup
+const normalizeOrigin = (origin) => {
+    if (!origin) return origin;
+    return origin.endsWith('/') ? origin.slice(0, -1) : origin;
+};
+
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.FRONTEND_URL?.replace('https://', 'https://www.'),
@@ -40,10 +45,10 @@ const allowedOrigins = [
     process.env.RENDER_EXTERNAL_URL,
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    'https://eu-matter-thesis-project.vercel.app/'
-].filter(Boolean);
+    'https://eu-matter-thesis-project.vercel.app'
+].map(normalizeOrigin).filter(Boolean);
 
-const allowVercelPreviews = (process.env.ALLOW_VERCEL_PREVIEWS || 'true').toLowerCase() !== 'false';
+const allowVercelPreviews = (process.env.ALLOW_VERCEL_PREVIEWS || 'true').trim().toLowerCase() !== 'false';
 
 if (process.env.NODE_ENV !== 'production') {
     console.log('CORS allowed origins:', allowedOrigins);
@@ -58,11 +63,13 @@ app.use(cors({
             return callback(null, true);
         }
 
-        if (allowedOrigins.includes(origin)) {
+        const normalizedOrigin = normalizeOrigin(origin);
+
+        if (allowedOrigins.includes(normalizedOrigin)) {
             return callback(null, true);
         }
 
-        if (allowVercelPreviews && origin.endsWith('.vercel.app')) {
+        if (allowVercelPreviews && normalizedOrigin.endsWith('.vercel.app')) {
             return callback(null, true);
         }
 
