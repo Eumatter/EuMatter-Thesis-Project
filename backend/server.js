@@ -39,17 +39,33 @@ const allowedOrigins = [
     process.env.BACKEND_PUBLIC_URL,
     process.env.RENDER_EXTERNAL_URL,
     'http://localhost:5173',
-    'http://127.0.0.1:5173'
+    'http://127.0.0.1:5173',
+    'https://eu-matter-thesis-project.vercel.app/'
 ].filter(Boolean);
+
+const allowVercelPreviews = (process.env.ALLOW_VERCEL_PREVIEWS || 'true').toLowerCase() !== 'false';
 
 if (process.env.NODE_ENV !== 'production') {
     console.log('CORS allowed origins:', allowedOrigins);
+    if (allowVercelPreviews) {
+        console.log('CORS preview domains: *.vercel.app enabled');
+    }
 }
+
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (!origin) {
             return callback(null, true);
         }
+
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+
+        if (allowVercelPreviews && origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+
         console.warn(`Blocked CORS origin: ${origin}`);
         return callback(new Error('Not allowed by CORS'));
     },
