@@ -3,11 +3,15 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import transporter from "../config/nodemailer.js";
 
-const isProd = process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
 const cookieOptions = {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    secure: process.env.COOKIE_SECURE
+        ? process.env.COOKIE_SECURE !== 'false'
+        : isProd,
+    sameSite: process.env.COOKIE_SAME_SITE
+        ? process.env.COOKIE_SAME_SITE
+        : (isProd ? 'none' : 'lax'),
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000
 }
