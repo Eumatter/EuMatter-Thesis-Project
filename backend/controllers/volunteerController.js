@@ -163,6 +163,7 @@ export const generateAttendanceQR = async (req, res) => {
 
         const now = new Date();
         const eventStart = new Date(event.startDate);
+        const eventEnd = new Date(event.endDate);
         const fiveHoursBefore = new Date(eventStart.getTime() - (5 * 60 * 60 * 1000));
 
         // Check if it's within 5 hours before event start
@@ -175,7 +176,7 @@ export const generateAttendanceQR = async (req, res) => {
         }
 
         // Check if event has ended
-        if (now > eventStart) {
+        if (now > eventEnd) {
             return res.status(400).json({ 
                 success: false, 
                 message: "Event has already started or ended" 
@@ -199,7 +200,7 @@ export const generateAttendanceQR = async (req, res) => {
             generatedAt: now,
             generatedBy: userId,
             isActive: true,
-            expiresAt: eventStart
+            expiresAt: eventEnd
         };
 
         await event.save();
@@ -299,6 +300,21 @@ export const recordAttendance = async (req, res) => {
             record => record.date.getTime() === today.getTime()
         );
 
+        // Sync with standalone attendance collection
+        const startOfDay = new Date(now)
+        startOfDay.setHours(0,0,0,0)
+        const endOfDay = new Date(now)
+        endOfDay.setHours(23,59,59,999)
+
+        const requiresFeedback = event.feedbackRules?.requireFeedback !== false
+        const deadlineHours = Number(event.feedbackRules?.deadlineHours) || 24
+
+        let attendanceDoc = await volunteerAttendanceModel.findOne({
+            event: event._id,
+            volunteer: userId,
+            date: { $gte: startOfDay, $lte: endOfDay }
+        })
+
         if (action === 'timein') {
             if (attendanceRecord && attendanceRecord.timeIn) {
                 return res.status(400).json({ 
@@ -308,7 +324,6 @@ export const recordAttendance = async (req, res) => {
             }
 
             if (!attendanceRecord) {
-                // Create new attendance record
                 attendanceRecord = {
                     date: today,
                     timeIn: now,
@@ -320,6 +335,32 @@ export const recordAttendance = async (req, res) => {
                 attendanceRecord.timeIn = now;
                 attendanceRecord.qrCode = qrCode;
                 attendanceRecord.isValid = true;
+            }
+
+            if (!attendanceDoc) {
+                attendanceDoc = await volunteerAttendanceModel.create({
+                    event: event._id,
+                    volunteer: userId,
+                    date: now,
+                    timeIn: now,
+                    qrCode,
+                    status: requiresFeedback ? 'pending' : 'not_required',
+                    isValid: true,
+                    voidedHours: false
+                })
+            } else {
+                if (attendanceDoc.timeIn) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: "You have already recorded time in for today" 
+                    });
+                }
+                attendanceDoc.timeIn = now
+                attendanceDoc.qrCode = qrCode
+                attendanceDoc.isValid = true
+                attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
+                attendanceDoc.voidedHours = false
+                await attendanceDoc.save()
             }
 
         } else if (action === 'timeout') {
@@ -342,6 +383,31 @@ export const recordAttendance = async (req, res) => {
             // Calculate total hours
             const hoursWorked = (now.getTime() - attendanceRecord.timeIn.getTime()) / (1000 * 60 * 60);
             attendanceRecord.totalHours = Math.round(hoursWorked * 100) / 100; // Round to 2 decimal places
+
+            if (!attendanceDoc || !attendanceDoc.timeIn) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "You must record time in before time out" 
+                });
+            }
+            if (attendanceDoc.timeOut) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "You have already recorded time out for today" 
+                });
+            }
+            attendanceDoc.timeOut = now
+            attendanceDoc.totalHours = attendanceRecord.totalHours
+
+            if (requiresFeedback) {
+                const base = new Date(Math.min(new Date(event.endDate).getTime(), now.getTime()))
+                attendanceDoc.deadlineAt = new Date(base.getTime() + deadlineHours * 3600000)
+                attendanceDoc.status = 'pending'
+            } else {
+                attendanceDoc.status = 'not_required'
+            }
+            attendanceDoc.voidedHours = false
+            await attendanceDoc.save()
         }
 
         await event.save();

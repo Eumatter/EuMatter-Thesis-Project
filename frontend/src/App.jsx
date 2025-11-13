@@ -13,6 +13,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import UserDashboard from './pages/user/User/UserDashboard.jsx'
 import UserEvents from './pages/user/User/UserEvents.jsx'
 import UserProfile from './pages/user/User/UserProfile.jsx'
+import VolunteerHistory from './pages/user/User/VolunteerHistory.jsx'
 import EventDetails from './pages/user/User/EventDetails.jsx'
 import CalendarPage from './pages/common/CalendarPage.jsx'
 import CRDDashboard from './pages/user/CRD_Staff/CRDDashboard.jsx'
@@ -171,6 +172,7 @@ const AppContent = () => {
                 <Route path="/user/events" element={<ProtectedRoute><UserEvents /></ProtectedRoute>} />
                 <Route path="/user/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
                 <Route path="/user/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                <Route path="/user/volunteer-history" element={<ProtectedRoute><VolunteerHistory /></ProtectedRoute>} />
                 <Route path="/user/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 

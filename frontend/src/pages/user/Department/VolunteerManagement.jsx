@@ -18,6 +18,9 @@ const VolunteerManagement = () => {
     const [qrStatus, setQrStatus] = useState(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('volunteers') // 'volunteers', 'attendance', 'qr'
+    const [feedbackData, setFeedbackData] = useState(null)
+    const [feedbackLoading, setFeedbackLoading] = useState(false)
+    const [feedbackError, setFeedbackError] = useState(null)
     
     // QR Code states
     const [qrCode, setQrCode] = useState(null)
@@ -32,6 +35,12 @@ const VolunteerManagement = () => {
         fetchEventData()
         fetchQRStatus()
     }, [eventId])
+
+    useEffect(() => {
+        if (activeTab === 'feedback' && !feedbackData && !feedbackLoading) {
+            fetchFeedbackData()
+        }
+    }, [activeTab])
 
     const fetchEventData = async () => {
         try {
@@ -105,6 +114,49 @@ const VolunteerManagement = () => {
             console.error('Error fetching QR status:', error)
             console.log('QR status error (this is normal if no QR generated yet):', error.response?.data)
             // Don't show error toast for QR status as it's optional
+        }
+    }
+
+    const fetchFeedbackData = async () => {
+        try {
+            setFeedbackLoading(true)
+            setFeedbackError(null)
+            const token = localStorage.getItem('token')
+            const response = await axios.get(`${backendUrl}api/feedback/event/${eventId}`, {
+                withCredentials: true,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            setFeedbackData(response.data)
+        } catch (error) {
+            console.error('Error fetching feedback data:', error)
+            setFeedbackError(error.response?.data?.message || 'Failed to load feedback data')
+        } finally {
+            setFeedbackLoading(false)
+        }
+    }
+
+    const handleOverrideFeedback = async (attendanceId, reinstateHours) => {
+        try {
+            const reason = window.prompt('Provide a reason for this action (optional):') || ''
+            const token = localStorage.getItem('token')
+            await axios.post(`${backendUrl}api/feedback/${attendanceId}/override`, {
+                reinstateHours,
+                reason
+            }, {
+                withCredentials: true,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            toast.success(reinstateHours ? 'Attendance reinstated' : 'Attendance voided')
+            fetchFeedbackData()
+        } catch (error) {
+            console.error('Override feedback error:', error)
+            toast.error(error.response?.data?.message || 'Failed to update feedback status')
         }
     }
 
@@ -304,6 +356,7 @@ const VolunteerManagement = () => {
                             {[
                                 { id: 'volunteers', label: 'Volunteers', count: volunteers.length },
                                 { id: 'attendance', label: 'Attendance', count: attendance.length },
+                                { id: 'feedback', label: 'Feedback', count: feedbackData?.records?.length || 0 },
                                 { id: 'qr', label: 'QR Code', count: qrStatus?.hasQR ? 1 : 0 }
                             ].map(tab => (
                                 <button
@@ -404,6 +457,125 @@ const VolunteerManagement = () => {
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Feedback Tab */}
+                    {activeTab === 'feedback' && (
+                        <div className="px-4 sm:px-6 py-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900">Volunteer Feedback</h2>
+                                    <p className="text-sm text-gray-500">
+                                        Review ratings and comments for each volunteer attendance day.
+                                    </p>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                    Average rating:{' '}
+                                    <span className="font-semibold text-[#800000]">
+                                        {feedbackData?.event?.feedbackSummary?.averageRating
+                                            ? `${feedbackData.event.feedbackSummary.averageRating.toFixed(1)} / 5`
+                                            : 'No ratings yet'}
+                                    </span>
+                                    {feedbackData?.event?.feedbackSummary?.totalResponses ? (
+                                        <span className="ml-2 text-gray-500">
+                                            ({feedbackData.event.feedbackSummary.totalResponses} responses)
+                                        </span>
+                                    ) : null}
+                                </div>
+                            </div>
+
+                            {feedbackLoading ? (
+                                <div className="py-12 flex items-center justify-center">
+                                    <LoadingSpinner size="medium" text="Loading feedback..." />
+                                </div>
+                            ) : feedbackError ? (
+                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                                    {feedbackError}
+                                </div>
+                            ) : (feedbackData?.records || []).length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20l9-5-9-5-9 5 9 5zm0 0V10m0 10l-9-5m9-5l9 5" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-600 mb-2">No feedback records yet</h3>
+                                    <p className="text-gray-500">Feedback will appear here once volunteers submit their ratings.</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Volunteer</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Date</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Rating</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Feedback</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Deadline</th>
+                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {(feedbackData?.records || []).map(record => (
+                                                <tr key={record._id}>
+                                                    <td className="px-4 py-3">
+                                                        <div className="font-medium text-gray-900">{record.volunteer?.name || 'Volunteer'}</div>
+                                                        <div className="text-xs text-gray-500 truncate">{record.volunteer?.email}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-700">
+                                                        {record.date ? new Date(record.date).toLocaleDateString() : '—'}
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                                            record.status === 'submitted' ? 'bg-emerald-100 text-emerald-700' :
+                                                            record.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                            record.status === 'missed' ? 'bg-red-100 text-red-700' :
+                                                            record.status === 'overridden' ? 'bg-blue-100 text-blue-700' :
+                                                            record.status === 'voided' ? 'bg-gray-200 text-gray-600' :
+                                                            'bg-gray-100 text-gray-500'
+                                                        }`}>
+                                                            {record.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-700">
+                                                        {record.feedback?.rating ? `${record.feedback.rating}/5` : '—'}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-600">
+                                                        {record.feedback?.comment ? (
+                                                            <span className="block max-w-[260px] whitespace-pre-line break-words">
+                                                                {record.feedback.comment}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-400">No feedback</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-gray-700">
+                                                        {record.deadlineAt
+                                                            ? new Date(record.deadlineAt).toLocaleString()
+                                                            : '—'}
+                                                    </td>
+                                                    <td className="px-4 py-3 space-y-2">
+                                                        <button
+                                                            onClick={() => handleOverrideFeedback(record._id, true)}
+                                                            className="w-full px-3 py-1.5 text-xs font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors"
+                                                        >
+                                                            Reinstate Hours
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleOverrideFeedback(record._id, false)}
+                                                            className="w-full px-3 py-1.5 text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
+                                                        >
+                                                            Void Hours
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
                         </div>

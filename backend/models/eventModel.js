@@ -117,7 +117,18 @@ const eventSchema = new mongoose.Schema({
     // Facebook integration
     facebookPostId: { type: String, default: null },
     facebookPostedAt: { type: Date, default: null },
-    facebookPageId: { type: String, default: null }
+    facebookPageId: { type: String, default: null },
+
+    feedbackRules: {
+        deadlineHours: { type: Number, default: 24 },
+        requireFeedback: { type: Boolean, default: true },
+        allowOrganizerOverride: { type: Boolean, default: true }
+    },
+    feedbackSummary: {
+        averageRating: { type: Number, default: 0 },
+        totalResponses: { type: Number, default: 0 },
+        lastCalculatedAt: { type: Date, default: null }
+    }
 }, { timestamps: true });
 
 const eventModel = mongoose.models.event || mongoose.model("event", eventSchema);

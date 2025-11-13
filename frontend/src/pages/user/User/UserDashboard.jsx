@@ -11,6 +11,7 @@ import Reactions from '../../../components/social/Reactions';
 import CommentModal from '../../../components/social/CommentModal';
 import ShareButton from '../../../components/social/ShareButton';
 import { Tooltip } from 'react-tooltip';
+import { FaStar } from 'react-icons/fa';
 
 const UserDashboard = () => {
     const navigate = useNavigate();
@@ -20,10 +21,16 @@ const UserDashboard = () => {
     const [today, setToday] = useState(new Date());
     const [selectedEventId, setSelectedEventId] = useState(null);
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+    const [pendingFeedback, setPendingFeedback] = useState([]);
+    const [feedbackForms, setFeedbackForms] = useState({});
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
+    const [attendanceSummary, setAttendanceSummary] = useState({ totalHours: 0, totalEvents: 0, events: [] });
 
     useEffect(() => {
         fetchEvents()
         fetchUserData()
+        fetchPendingFeedback()
+        fetchAttendanceSummary()
     }, [])
 
     const fetchEvents = async () => {
@@ -59,6 +66,78 @@ const UserDashboard = () => {
             if (error.response?.status === 401) {
                 navigate('/login');
             }
+        }
+    };
+
+    const fetchPendingFeedback = async () => {
+        try {
+            setFeedbackLoading(true);
+            const { data } = await api.get('/api/feedback/me/pending');
+            if (data?.success) {
+                setPendingFeedback(data.records || []);
+            }
+        } catch (error) {
+            console.error('Error fetching pending feedback:', error);
+        } finally {
+            setFeedbackLoading(false);
+        }
+    };
+
+    const fetchAttendanceSummary = async () => {
+        try {
+            const { data } = await api.get('/api/attendance/me/summary');
+            if (data?.success) {
+                setAttendanceSummary({
+                    totalHours: data.totalHours || 0,
+                    totalEvents: data.totalEvents || 0,
+                    events: Array.isArray(data.events) ? data.events : []
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching attendance summary:', error);
+        }
+    };
+
+    const handleFeedbackChange = (attendanceId, field, value) => {
+        setFeedbackForms(prev => ({
+            ...prev,
+            [attendanceId]: {
+                ...(prev[attendanceId] || {}),
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSubmitFeedback = async (attendanceId) => {
+        const form = feedbackForms[attendanceId] || {};
+        const rating = form.rating;
+        const comment = form.comment || '';
+
+        if (!rating) {
+            notifyError('Rating required', 'Please select a rating before submitting feedback.');
+            return;
+        }
+
+        try {
+            handleFeedbackChange(attendanceId, 'submitting', true);
+            const { data } = await api.post(`/api/feedback/${attendanceId}`, { rating, comment });
+            if (data?.success) {
+                notifySuccess('Feedback submitted', 'Thank you for sharing your feedback!');
+                setPendingFeedback(prev => prev.filter(entry => String(entry._id) !== String(attendanceId)));
+                setFeedbackForms(prev => {
+                    const clone = { ...prev };
+                    delete clone[attendanceId];
+                    return clone;
+                });
+                fetchAttendanceSummary();
+                fetchPendingFeedback();
+            }
+        } catch (error) {
+            console.error('Submit feedback error:', error);
+            const message = error.response?.data?.message || 'Failed to submit feedback.';
+            notifyError('Feedback error', message);
+        } finally {
+            handleFeedbackChange(attendanceId, 'submitting', false);
         }
     };
 
@@ -470,12 +549,135 @@ const UserDashboard = () => {
         return events.find(e => e._id === selectedEventId) || null;
     }, [events, selectedEventId]);
 
+    const eventsJoined = attendanceSummary.totalEvents || 0;
+    const totalHours = attendanceSummary.totalHours || 0;
+    const hoursDisplay = Number(totalHours).toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1
+    });
+    const pendingFeedbackCount = pendingFeedback.length;
+
     // Main component render
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
 
             <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 min-h-[calc(100vh-80px)]">
+                {(feedbackLoading || pendingFeedback.length > 0) && (
+                    <section className="mb-6 sm:mb-8">
+                        <div className="bg-white border border-[#f1e6d8] rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                                <div>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-[#800000]">Pending Volunteer Feedback</h2>
+                                    <p className="text-sm text-gray-600">Submit your feedback within the deadline to keep your volunteer hours valid.</p>
+                                </div>
+                            </div>
+
+                            {feedbackLoading && (
+                                <div className="flex items-center gap-3 text-gray-600">
+                                    <LoadingSpinner size="small" />
+                                    <span>Loading feedback tasks...</span>
+                                </div>
+                            )}
+
+                            {!feedbackLoading && pendingFeedback.length === 0 && (
+                                <p className="text-gray-600">No pending feedback. Thank you for staying on top of your volunteer tasks!</p>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {pendingFeedback.map(record => {
+                                    const form = feedbackForms[record._id] || {};
+                                    const deadline = record.deadlineAt ? new Date(record.deadlineAt) : null;
+                                    const overdue = record.overdue;
+                                    const event = record.event || {};
+                                    return (
+                                        <div key={record._id} className="bg-[#fffdfa] border border-[#ecd8c4] rounded-xl p-4 shadow-sm">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-[#800000]">{event.title || 'Event'}</h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        Attended on{' '}
+                                                        {new Date(record.date).toLocaleDateString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </p>
+                                                </div>
+                                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                    {overdue ? 'Overdue' : 'Pending'}
+                                                </span>
+                                            </div>
+
+                        {deadline && (
+                            <p className="text-xs text-gray-500 mb-3">
+                                Deadline: {deadline.toLocaleString(undefined, {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit'
+                                })}
+                            </p>
+                        )}
+
+                                            <div className="mb-3">
+                                                <p className="text-sm font-medium text-gray-700 mb-2">Rate your experience</p>
+                                                <div className="flex gap-2">
+                                                    {[1, 2, 3, 4, 5].map(value => (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            onClick={() => handleFeedbackChange(record._id, 'rating', value)}
+                                                            className="focus:outline-none"
+                                                        >
+                                                            <FaStar
+                                                                className={`w-7 h-7 transition-colors ${
+                                                                    (form.rating || 0) >= value ? 'text-[#FFD700]' : 'text-gray-300'
+                                                                }`}
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="text-sm font-medium text-gray-700 mb-2 block">Feedback (optional)</label>
+                                                <textarea
+                                                    rows={3}
+                                                    value={form.comment || ''}
+                                                    onChange={(e) => handleFeedbackChange(record._id, 'comment', e.target.value)}
+                                                    className="w-full border border-[#e5d2bf] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:outline-none"
+                                                    placeholder="Share highlights, challenges, or suggestions..."
+                                                    maxLength={2000}
+                                                />
+                                                <div className="text-xs text-gray-400 text-right">
+                                                    {(form.comment || '').length}/2000
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                variant="maroon"
+                                                disabled={form.submitting}
+                                                onClick={() => handleSubmitFeedback(record._id)}
+                                                className="w-full"
+                                            >
+                                                {form.submitting ? 'Submitting...' : 'Submit Feedback'}
+                                            </Button>
+
+                                            {overdue && (
+                                                <p className="mt-3 text-xs text-red-600">
+                                                    Feedback deadline passed. Submit now and coordinate with the organizer if you need assistance.
+                                                </p>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
                     {/* Left Column: Profile + Stats - Responsive */}
                     <aside className="lg:col-span-3 space-y-4 sm:space-y-6 lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-120px)] lg:overflow-y-auto">
@@ -504,15 +706,19 @@ const UserDashboard = () => {
                                          <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                          <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Events Joined</span>
                                     </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">0</span>
+                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
+                                        {eventsJoined}
+                                    </span>
                                 </div>
-                                 {/* Total Donated */}
+                                 {/* Pending Feedback */}
                                  <div className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50">
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
-                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Total Donated</span>
+                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Pending Feedback</span>
                                     </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">₱0</span>
+                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
+                                        {pendingFeedbackCount}
+                                    </span>
                                 </div>
                                  {/* Hours Volunteered */}
                                  <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-green-50">
@@ -520,7 +726,9 @@ const UserDashboard = () => {
                                          <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                          <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Hours</span>
                                     </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">0</span>
+                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
+                                        {hoursDisplay}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -542,6 +750,15 @@ const UserDashboard = () => {
                                     <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Browse Events</span>
                                     </button>
+                                <button
+                                    onClick={() => navigate('/user/volunteer-history')}
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                >
+                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1 4v-4m0 4h3M9 12h.01M12 6.25A6.25 6.25 0 115.75 12.5m6.25-6.25a6.25 6.25 0 016.25 6.25H12" />
+                                    </svg>
+                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Volunteer Hours</span>
+                                </button>
                             </div>
                         </div>
                     </aside>

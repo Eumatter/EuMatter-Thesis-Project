@@ -18,8 +18,10 @@ import commentRouter from "./routes/commentRoutes.js";
 import reactionRouter from "./routes/reactionRoutes.js";
 import facebookRouter from "./routes/facebookRoutes.js";
 import systemSettingsRouter from "./routes/systemSettingsRoutes.js";
+import feedbackRouter from "./routes/feedbackRoutes.js";
 import { scheduleReminders } from './utils/reminderScheduler.js'
 import { startMaintenanceScheduler } from './utils/maintenanceScheduler.js'
+import { startFeedbackScheduler } from './utils/feedbackScheduler.js'
 
 const app = express();
 const port = process.env.PORT;
@@ -95,6 +97,7 @@ app.use("/api/events", commentRouter);  // Mount comment routes under /api/event
 app.use("/api/events", reactionRouter); // Mount reaction routes under /api/events
 app.use("/api/facebook", facebookRouter); // Mount Facebook routes
 app.use("/api/system-settings", systemSettingsRouter); // System settings routes
+app.use("/api/feedback", feedbackRouter);
 
 // Enhanced Error Handler
 app.use((err, req, res, next) => {
@@ -131,3 +134,6 @@ try { scheduleReminders(); } catch (e) { console.error('Reminder scheduler faile
 
 // Start maintenance mode scheduler
 try { startMaintenanceScheduler(); } catch (e) { console.error('Maintenance scheduler failed to start', e?.message) }
+
+// Start feedback scheduler
+try { startFeedbackScheduler(); } catch (e) { console.error('Feedback scheduler failed to start', e?.message) }

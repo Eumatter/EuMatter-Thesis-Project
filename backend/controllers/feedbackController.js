@@ -1,0 +1,239 @@
+import mongoose from 'mongoose'
+import volunteerAttendanceModel from '../models/volunteerAttendanceModel.js'
+import eventModel from '../models/eventModel.js'
+import { notifyUsers } from '../utils/notify.js'
+
+const ObjectId = mongoose.Types.ObjectId
+
+function isOrganizer(user, event) {
+    if (!user || !event) return false
+    if (String(event.createdBy) === String(user._id)) return true
+    const privileged = ['CRD Staff', 'System Administrator']
+    return privileged.includes(user.role)
+}
+
+async function recalculateEventFeedback(eventId) {
+    try {
+        const result = await volunteerAttendanceModel.aggregate([
+            {
+                $match: {
+                    event: new ObjectId(eventId),
+                    status: { $in: ['submitted', 'overridden'] },
+                    'feedback.rating': { $exists: true, $ne: null }
+                }
+            },
+            {
+                $group: {
+                    _id: '$event',
+                    averageRating: { $avg: '$feedback.rating' },
+                    totalResponses: { $sum: 1 }
+                }
+            }
+        ])
+
+        const summary = result[0]
+        await eventModel.findByIdAndUpdate(eventId, {
+            $set: {
+                'feedbackSummary.averageRating': summary ? Math.round(summary.averageRating * 100) / 100 : 0,
+                'feedbackSummary.totalResponses': summary ? summary.totalResponses : 0,
+                'feedbackSummary.lastCalculatedAt': new Date()
+            }
+        }, { new: false })
+    } catch (error) {
+        console.error('Error recalculating feedback summary:', error?.message || error)
+    }
+}
+
+export async function submitFeedback(req, res) {
+    try {
+        const { attendanceId } = req.params
+        const { rating, comment } = req.body || {}
+        const userId = req.user?._id
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        const attendance = await volunteerAttendanceModel.findById(attendanceId).populate('event')
+        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' })
+        const event = attendance.event
+
+        const isVolunteer = String(attendance.volunteer) === String(userId)
+        const organizer = isOrganizer(req.user, event)
+        if (!isVolunteer && !organizer) {
+            return res.status(403).json({ success: false, message: 'Forbidden' })
+        }
+
+        if (!attendance.timeOut) {
+            return res.status(400).json({ success: false, message: 'Attendance not completed yet' })
+        }
+
+        if (attendance.status === 'not_required') {
+            return res.status(400).json({ success: false, message: 'Feedback not required for this attendance' })
+        }
+
+        if (attendance.status === 'submitted' && !organizer) {
+            return res.status(400).json({ success: false, message: 'Feedback already submitted' })
+        }
+
+        if (!organizer) {
+            const deadline = attendance.deadlineAt ? new Date(attendance.deadlineAt) : null
+            if (!deadline) {
+                return res.status(400).json({ success: false, message: 'Feedback deadline not set' })
+            }
+            if (Date.now() > deadline.getTime()) {
+                return res.status(400).json({ success: false, message: 'Feedback deadline has passed' })
+            }
+        }
+
+        const parsedRating = Number(rating)
+        if (!parsedRating || parsedRating < 1 || parsedRating > 5) {
+            return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' })
+        }
+
+        attendance.feedback = {
+            rating: parsedRating,
+            comment: comment ? String(comment).trim() : '',
+            submittedAt: new Date(),
+            submittedBy: userId,
+            overridden: organizer && !isVolunteer,
+            overrideReason: organizer && !isVolunteer ? 'Submitted by organizer' : undefined
+        }
+        attendance.status = organizer && !isVolunteer ? 'overridden' : 'submitted'
+        attendance.voidedHours = false
+        await attendance.save()
+
+        await recalculateEventFeedback(attendance.event._id || attendance.event)
+
+        // Notify organizer that volunteer submitted feedback
+        if (isVolunteer && event?.createdBy) {
+            await notifyUsers({
+                userIds: [event.createdBy],
+                title: 'Volunteer feedback received',
+                message: `${req.user.name || 'Volunteer'} submitted feedback for ${event.title}`,
+                payload: { eventId: String(event._id), attendanceId: String(attendance._id) }
+            })
+        }
+
+        return res.json({ success: true, message: 'Feedback submitted', attendance })
+    } catch (error) {
+        console.error('Submit feedback error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+export async function overrideFeedback(req, res) {
+    try {
+        const { attendanceId } = req.params
+        const { rating, comment, reinstateHours = false, reason } = req.body || {}
+
+        const attendance = await volunteerAttendanceModel.findById(attendanceId).populate('event')
+        if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' })
+
+        const event = attendance.event
+        if (!isOrganizer(req.user, event)) {
+            return res.status(403).json({ success: false, message: 'Forbidden' })
+        }
+
+        if (event.feedbackRules?.allowOrganizerOverride === false) {
+            return res.status(400).json({ success: false, message: 'Overrides disabled for this event' })
+        }
+
+        attendance.feedback = attendance.feedback || {}
+
+        const hasRating = rating !== undefined && rating !== null
+        if (hasRating) {
+            const parsed = Number(rating)
+            if (!parsed || parsed < 1 || parsed > 5) {
+                return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' })
+            }
+            attendance.feedback.rating = parsed
+        }
+        if (comment !== undefined) {
+            attendance.feedback.comment = String(comment ?? '').trim()
+        }
+
+        attendance.feedback.submittedAt = new Date()
+        attendance.feedback.submittedBy = req.user._id
+        attendance.feedback.overridden = true
+        attendance.feedback.overrideReason = reason ? String(reason).trim() : ''
+
+        attendance.status = reinstateHours ? 'overridden' : 'voided'
+        attendance.voidedHours = !reinstateHours
+        if (!reinstateHours) {
+            attendance.totalHours = 0
+        }
+        await attendance.save()
+
+        await recalculateEventFeedback(attendance.event._id || attendance.event)
+
+        // Notify volunteer of the action
+        await notifyUsers({
+            userIds: [attendance.volunteer],
+            title: reinstateHours ? 'Feedback override approved' : 'Attendance voided',
+            message: reinstateHours
+                ? `Your attendance for ${event.title} has been reinstated by the organizer.`
+                : `Your attendance for ${event.title} was voided by the organizer.`,
+            payload: { eventId: String(event._id), attendanceId: String(attendance._id) }
+        })
+
+        return res.json({ success: true, attendance })
+    } catch (error) {
+        console.error('Override feedback error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+export async function getPendingFeedback(req, res) {
+    try {
+        const userId = req.user?._id
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        const now = new Date()
+        const records = await volunteerAttendanceModel.find({
+            volunteer: userId,
+            status: { $in: ['pending', 'missed'] },
+            isValid: true
+        }).populate('event', 'title startDate endDate createdBy feedbackRules')
+            .sort({ deadlineAt: 1 })
+            .lean()
+
+        const enriched = records.map(r => ({
+            ...r,
+            overdue: r.deadlineAt ? now.getTime() > new Date(r.deadlineAt).getTime() : false
+        }))
+
+        return res.json({ success: true, records: enriched })
+    } catch (error) {
+        console.error('Get pending feedback error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+export async function getEventFeedback(req, res) {
+    try {
+        const { eventId } = req.params
+        const event = await eventModel.findById(eventId)
+        if (!event) return res.status(404).json({ success: false, message: 'Event not found' })
+
+        if (!isOrganizer(req.user, event)) {
+            return res.status(403).json({ success: false, message: 'Forbidden' })
+        }
+
+        const records = await volunteerAttendanceModel.find({ event: eventId })
+            .populate('volunteer', 'name email role')
+            .sort({ date: 1 })
+            .lean()
+
+        return res.json({
+            success: true,
+            event: {
+                id: eventId,
+                title: event.title,
+                feedbackSummary: event.feedbackSummary
+            },
+            records
+        })
+    } catch (error) {
+        console.error('Get event feedback error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+

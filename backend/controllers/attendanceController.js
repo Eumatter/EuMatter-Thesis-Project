@@ -2,6 +2,72 @@ import eventModel from '../models/eventModel.js'
 import volunteerAttendanceModel from '../models/volunteerAttendanceModel.js'
 import { issueAttendanceToken, verifyAttendanceToken } from '../utils/qrToken.js'
 
+export async function getMyAttendanceSummary(req, res) {
+    try {
+        const volunteerId = req.user?._id
+        if (!volunteerId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        const records = await volunteerAttendanceModel.find({ volunteer: volunteerId })
+            .populate('event', 'title startDate endDate location feedbackSummary')
+            .sort({ date: -1 })
+            .lean()
+
+        let totalHours = 0
+        const eventsMap = new Map()
+
+        records.forEach(record => {
+            const eventId = record.event?._id?.toString()
+            if (!eventId) return
+
+            const hours = record.voidedHours ? 0 : (record.totalHours || 0)
+            if (!record.voidedHours) {
+                totalHours += hours
+            }
+
+            if (!eventsMap.has(eventId)) {
+                eventsMap.set(eventId, {
+                    eventId,
+                    title: record.event.title,
+                    startDate: record.event.startDate,
+                    endDate: record.event.endDate,
+                    location: record.event.location,
+                    feedbackSummary: record.event.feedbackSummary || {},
+                    totalHours: 0,
+                    records: []
+                })
+            }
+
+            const eventEntry = eventsMap.get(eventId)
+            eventEntry.totalHours += hours
+            eventEntry.records.push({
+                attendanceId: record._id,
+                date: record.date,
+                timeIn: record.timeIn,
+                timeOut: record.timeOut,
+                totalHours: hours,
+                status: record.status,
+                deadlineAt: record.deadlineAt,
+                feedback: record.feedback
+            })
+        })
+
+        const events = Array.from(eventsMap.values()).map(event => ({
+            ...event,
+            records: event.records.sort((a, b) => new Date(b.date) - new Date(a.date))
+        })).sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+
+        return res.json({
+            success: true,
+            totalHours: Math.round(totalHours * 100) / 100,
+            totalEvents: events.length,
+            events
+        })
+    } catch (error) {
+        console.error('Get my attendance summary error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
 // POST /api/attendance/:eventId/issue-token
 export async function issueQrToken(req, res) {
     try {
@@ -80,12 +146,14 @@ export async function checkInWithToken(req, res) {
 
         // If no record, this is a time-in
         if (!attendance) {
+            const requiresFeedback = event.feedbackRules?.requireFeedback !== false
             attendance = await volunteerAttendanceModel.create({
                 event: eventId,
                 volunteer: userId,
                 date: now,
                 timeIn: now,
-                qrCode: decoded.jti
+                qrCode: decoded.jti,
+                status: requiresFeedback ? 'pending' : 'not_required'
             })
             return res.json({ success: true, message: 'Time in recorded', status: 'timein' })
         }
@@ -96,6 +164,16 @@ export async function checkInWithToken(req, res) {
             // Compute total hours
             const ms = Math.max(0, new Date(attendance.timeOut).getTime() - new Date(attendance.timeIn).getTime())
             attendance.totalHours = Math.round((ms / 3600000) * 100) / 100
+            const requiresFeedback = event.feedbackRules?.requireFeedback !== false
+            if (!requiresFeedback) {
+                attendance.status = 'not_required'
+            } else {
+                const deadlineHours = Number(event.feedbackRules?.deadlineHours) || 24
+                const base = new Date(Math.min(new Date(event.endDate).getTime(), new Date(attendance.timeOut).getTime()))
+                attendance.deadlineAt = new Date(base.getTime() + deadlineHours * 3600000)
+                attendance.status = 'pending'
+            }
+            attendance.voidedHours = false
             await attendance.save()
             return res.json({ success: true, message: 'Time out recorded', status: 'timeout', totalHours: attendance.totalHours })
         }
