@@ -29,6 +29,7 @@
     "react-share": "^5.2.2",
     "react-toastify": "^11.0.5",
     "react-tooltip": "^5.30.0",
+    "recharts": "^3.4.1",
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {
