@@ -35,12 +35,22 @@ app.use(cookieParser());
 // CORS setup
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+    process.env.FRONTEND_URL?.replace('https://', 'https://www.'),
+    process.env.BACKEND_PUBLIC_URL,
+    process.env.RENDER_EXTERNAL_URL,
     'http://localhost:5173',
     'http://127.0.0.1:5173'
 ].filter(Boolean);
+
+if (process.env.NODE_ENV !== 'production') {
+    console.log('CORS allowed origins:', allowedOrigins);
+}
 app.use(cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+        if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        console.warn(`Blocked CORS origin: ${origin}`);
         return callback(new Error('Not allowed by CORS'));
     },
     credentials: true
