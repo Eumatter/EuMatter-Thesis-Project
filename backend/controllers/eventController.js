@@ -435,6 +435,22 @@ export const joinEvent = async (req, res) => {
             return res.status(404).json({ message: "Event not found" });
         }
 
+        // Check event status - only allow registration for Upcoming or Approved events
+        if (event.status === 'Ongoing' || event.status === 'Completed') {
+            return res.status(400).json({ 
+                message: event.status === 'Ongoing' 
+                    ? "Registration is closed. This event is currently ongoing." 
+                    : "This event has been completed and registration is no longer available." 
+            });
+        }
+
+        // Check if event is approved or upcoming
+        if (!['Approved', 'Upcoming'].includes(event.status)) {
+            return res.status(400).json({ 
+                message: "This event is not yet open for registration. Please wait for approval." 
+            });
+        }
+
         // Check if event is open for volunteers
         if (!event.isOpenForVolunteer) {
             return res.status(400).json({ message: "This event is not open for volunteers" });
@@ -445,7 +461,7 @@ export const joinEvent = async (req, res) => {
             return res.status(400).json({ message: "You have already joined this event" });
         }
 
-        // Check if event has ended
+        // Check if event has ended (additional date check)
         const now = new Date();
         if (now > new Date(event.endDate)) {
             return res.status(400).json({ message: "This event has already ended" });

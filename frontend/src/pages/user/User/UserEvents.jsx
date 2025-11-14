@@ -68,11 +68,13 @@ const UserEvents = () => {
     }
 
     const getEventStatus = (event) => {
-        // First check if there's a manual status set by CRD
-        if (event.status === 'Ongoing') {
-            return { text: 'Ongoing', color: 'bg-blue-100 text-blue-800 border-blue-200' }
+        // First check if there's a manual status set by CRD staff
+        if (event.status === 'Upcoming') {
+            return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 border-blue-200', canRegister: true }
+        } else if (event.status === 'Ongoing') {
+            return { text: 'Ongoing', color: 'bg-green-100 text-green-800 border-green-200', canRegister: false }
         } else if (event.status === 'Completed') {
-            return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200' }
+            return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200', canRegister: false }
         }
         
         // Fall back to date-based status if no manual status is set
@@ -80,9 +82,9 @@ const UserEvents = () => {
         const startDate = new Date(event.startDate)
         const endDate = new Date(event.endDate)
         
-        if (now < startDate) return { text: 'Upcoming', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' }
-        if (now >= startDate && now <= endDate) return { text: 'Ongoing', color: 'bg-blue-100 text-blue-800 border-blue-200' }
-        return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200' }
+        if (now < startDate) return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 border-blue-200', canRegister: true }
+        if (now >= startDate && now <= endDate) return { text: 'Ongoing', color: 'bg-green-100 text-green-800 border-green-200', canRegister: false }
+        return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200', canRegister: false }
     }
 
     return (

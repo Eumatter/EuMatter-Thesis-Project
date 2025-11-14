@@ -159,13 +159,42 @@ const EventDetails = () => {
     }
 
     const getEventStatus = (event) => {
+        // First check if there's a manual status set by CRD staff
+        if (event.status === 'Upcoming') {
+            return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 border-blue-200', canRegister: true }
+        } else if (event.status === 'Ongoing') {
+            return { text: 'Ongoing', color: 'bg-green-100 text-green-800 border-green-200', canRegister: false }
+        } else if (event.status === 'Completed') {
+            return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200', canRegister: false }
+        }
+        
+        // Fall back to date-based status if no manual status is set
         const now = new Date()
         const startDate = new Date(event.startDate)
         const endDate = new Date(event.endDate)
         
-        if (now < startDate) return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 border-blue-200' }
-        if (now >= startDate && now <= endDate) return { text: 'Active', color: 'bg-green-100 text-green-800 border-green-200' }
-        return { text: 'Ended', color: 'bg-gray-100 text-gray-800 border-gray-200' }
+        if (now < startDate) return { text: 'Upcoming', color: 'bg-blue-100 text-blue-800 border-blue-200', canRegister: true }
+        if (now >= startDate && now <= endDate) return { text: 'Ongoing', color: 'bg-green-100 text-green-800 border-green-200', canRegister: false }
+        return { text: 'Completed', color: 'bg-gray-100 text-gray-800 border-gray-200', canRegister: false }
+    }
+
+    const calculateTimeFrame = (event) => {
+        if (!event.startDate || !event.endDate) return null
+        const start = new Date(event.startDate)
+        const end = new Date(event.endDate)
+        const diffMs = end - start
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+        const diffDays = Math.floor(diffHours / 24)
+        const hours = diffHours % 24
+        
+        if (diffDays > 0) {
+            return `${diffDays} day${diffDays > 1 ? 's' : ''}${hours > 0 ? ` and ${hours} hour${hours > 1 ? 's' : ''}` : ''}`
+        } else if (diffHours > 0) {
+            return `${diffHours} hour${diffHours > 1 ? 's' : ''}`
+        } else {
+            const diffMins = Math.floor(diffMs / (1000 * 60))
+            return `${diffMins} minute${diffMins > 1 ? 's' : ''}`
+        }
     }
 
     const isUserJoined = () => {
@@ -295,56 +324,103 @@ const EventDetails = () => {
                             </div>
                         </div>
 
-                        {/* Action Buttons - Only show if event is approved and open for actions */}
-                        {(openForVolunteer || openForDonation) && event.status === 'Approved' && (
-                            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                                {openForVolunteer && (
-                                    <Button 
-                                        onClick={handleJoinEvent}
-                                        disabled={isJoining || userJoined || status.text === 'Ended'}
-                                        className="flex-1 flex items-center justify-center"
-                                    >
-                                        {isJoining ? (
-                                            <>
-                                                <LoadingSpinner size="tiny" inline />
-                                                Joining...
-                                            </>
-                                        ) : userJoined ? (
-                                            <>
-                                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                Already Joined
-                                            </>
-                                        ) : (
-                                            <>
-                                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                </svg>
-                                                Join as Volunteer
-                                            </>
+                        {/* Action Buttons - Show based on event status and settings */}
+                        {(() => {
+                            const isUpcoming = status.text === 'Upcoming' && (event.status === 'Upcoming' || event.status === 'Approved')
+                            const isOngoing = status.text === 'Ongoing' || event.status === 'Ongoing'
+                            const isCompleted = status.text === 'Completed' || event.status === 'Completed'
+                            
+                            // Show registration button only for Upcoming events with volunteer allowed
+                            const canRegister = isUpcoming && openForVolunteer && !userJoined
+                            // Show donation button only for Upcoming events with donation allowed
+                            const canDonate = isUpcoming && openForDonation
+                            
+                            if (isCompleted) {
+                                return (
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
+                                        <div className="flex items-center">
+                                            <svg className="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <p className="text-gray-800 font-medium">This event has been completed.</p>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            
+                            if (isOngoing) {
+                                const timeFrame = calculateTimeFrame(event)
+                                return (
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                                        <div className="flex items-start">
+                                            <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <p className="text-blue-800 font-medium mb-1">Event is currently ongoing</p>
+                                                <p className="text-blue-700 text-sm">
+                                                    Registration is closed. {timeFrame && `Volunteer duration: ${timeFrame}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            }
+                            
+                            if (canRegister || canDonate) {
+                                return (
+                                    <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                                        {openForVolunteer && (
+                                            <Button 
+                                                onClick={handleJoinEvent}
+                                                disabled={isJoining || userJoined || !canRegister}
+                                                className="flex-1 flex items-center justify-center"
+                                            >
+                                                {isJoining ? (
+                                                    <>
+                                                        <LoadingSpinner size="tiny" inline />
+                                                        Joining...
+                                                    </>
+                                                ) : userJoined ? (
+                                                    <>
+                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Already Joined
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                        </svg>
+                                                        Join Event
+                                                    </>
+                                                )}
+                                            </Button>
                                         )}
-                                    </Button>
-                                )}
-                                
-                                {openForDonation && (
-                                    <Button 
-                                        variant="primary"
-                                        onClick={() => setShowDonationModal(true)}
-                                        disabled={status.text === 'Ended'}
-                                        className="flex-1 flex items-center justify-center"
-                                    >
-                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                        </svg>
-                                        Make a Donation
-                                    </Button>
-                                )}
-                            </div>
-                        )}
+                                        
+                                        {openForDonation && (
+                                            <Button 
+                                                variant="primary"
+                                                onClick={() => setShowDonationModal(true)}
+                                                disabled={!canDonate}
+                                                className="flex-1 flex items-center justify-center"
+                                            >
+                                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                                </svg>
+                                                Make a Donation
+                                            </Button>
+                                        )}
+                                    </div>
+                                )
+                            }
+                            
+                            return null
+                        })()}
 
-                        {/* Event Status Message for Non-Approved Events */}
-                        {event.status !== 'Approved' && (
+                        {/* Event Status Message for Non-Approved/Non-Upcoming Events */}
+                        {!['Approved', 'Upcoming', 'Ongoing', 'Completed'].includes(event.status) && (
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
                                 <div className="flex items-center">
                                     <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,14 +429,14 @@ const EventDetails = () => {
                                     <p className="text-yellow-800 font-medium">
                                         {event.status === 'Proposed' && 'This event is pending approval and not yet open for participation.'}
                                         {event.status === 'Declined' && 'This event has been declined and is not available for participation.'}
-                                        {!['Proposed', 'Declined', 'Approved'].includes(event.status) && `This event is currently ${event.status?.toLowerCase()} and not available for participation.`}
+                                        {event.status === 'Pending' && 'This event is pending review and not yet open for participation.'}
                                     </p>
                                 </div>
                             </div>
                         )}
 
-                        {/* No Actions Available Message */}
-                        {event.status === 'Approved' && !event.isOpenForVolunteer && !event.isOpenForDonation && (
+                        {/* No Actions Available Message for Upcoming/Approved events without volunteer/donation options */}
+                        {['Approved', 'Upcoming'].includes(event.status) && !event.isOpenForVolunteer && !event.isOpenForDonation && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
                                 <div className="flex items-center">
                                     <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,24 +604,32 @@ const EventDetails = () => {
                 </div>
             )}
 
-            {/* Join as Volunteer Modal */}
+            {/* Join as Volunteer Modal - Registration Form */}
             {showJoinModal && (
                 <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6">
+                    <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-black">Join as Volunteer</h3>
+                            <h3 className="text-xl font-bold text-black">Register for Event</h3>
                             <button onClick={() => setShowJoinModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
+                        
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-sm text-blue-800 font-medium">{event?.title}</p>
+                            <p className="text-xs text-blue-600 mt-1">Please fill out the registration form below to join this event as a volunteer.</p>
+                        </div>
+                        
                         {event?.volunteerSettings?.mode === 'with_requirements' && (
                             <div className="mb-4 text-sm text-gray-600 bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                                <p className="font-semibold text-gray-800 mb-2">Requirements</p>
+                                <p className="font-semibold text-gray-800 mb-2">Event Requirements</p>
                                 <ul className="list-disc ml-5 space-y-1">
-                                    {event.volunteerSettings.minAge && (<li>Minimum age: {event.volunteerSettings.minAge}</li>)}
-                                    {event.volunteerSettings.maxVolunteers && (<li>Max volunteers: {event.volunteerSettings.maxVolunteers}</li>)}
+                                    {event.volunteerSettings.minAge && (<li>Minimum age: {event.volunteerSettings.minAge} years old</li>)}
+                                    {event.volunteerSettings.maxVolunteers && (
+                                        <li>Maximum volunteers: {event.volunteerSettings.maxVolunteers} ({event.volunteers?.length || 0} already registered)</li>
+                                    )}
                                     {Array.isArray(event.volunteerSettings.requiredSkills) && event.volunteerSettings.requiredSkills.length > 0 && (
-                                        <li>Required skills: {event.volunteerSettings.requiredSkills.join(', ')}</li>
+                                        <li className="text-red-600 font-medium">Required skills: {event.volunteerSettings.requiredSkills.join(', ')}</li>
                                     )}
                                     {event.volunteerSettings.departmentRestrictionType === 'specific' && Array.isArray(event.volunteerSettings.allowedDepartments) && event.volunteerSettings.allowedDepartments.length > 0 && (
                                         <li>Allowed departments: {event.volunteerSettings.allowedDepartments.join(', ')}</li>
@@ -554,20 +638,66 @@ const EventDetails = () => {
                                 </ul>
                             </div>
                         )}
-                        <div className="grid grid-cols-1 gap-3 mb-4">
+                        
+                        <form onSubmit={(e) => { e.preventDefault(); submitJoin(); }} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
-                                <input type="text" value={joinForm.skills} onChange={e => setJoinForm({ ...joinForm, skills: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" placeholder="e.g., First Aid, Logistics" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Skills <span className="text-red-500">*</span>
+                                    <span className="text-xs text-gray-500 font-normal ml-1">(comma separated)</span>
+                                </label>
+                                <input 
+                                    type="text" 
+                                    value={joinForm.skills} 
+                                    onChange={e => setJoinForm({ ...joinForm, skills: e.target.value })} 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" 
+                                    placeholder="e.g., First Aid, Logistics, Communication"
+                                    required
+                                />
+                                <p className="text-xs text-gray-500 mt-1">List your relevant skills or experience</p>
                             </div>
+                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                                <textarea rows={3} value={joinForm.additionalNotes} onChange={e => setJoinForm({ ...joinForm, additionalNotes: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Additional Notes
+                                    <span className="text-xs text-gray-500 font-normal ml-1">(optional)</span>
+                                </label>
+                                <textarea 
+                                    rows={4} 
+                                    value={joinForm.additionalNotes} 
+                                    onChange={e => setJoinForm({ ...joinForm, additionalNotes: e.target.value })} 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" 
+                                    placeholder="Tell us why you want to volunteer or any additional information..."
+                                />
                             </div>
-                        </div>
-                        <div className="flex space-x-3">
-                            <Button variant="ghostDark" className="flex-1" onClick={() => setShowJoinModal(false)}>Cancel</Button>
-                            <Button className="flex-1" onClick={submitJoin} disabled={isJoining}>{isJoining ? 'Joining...' : 'Join Event'}</Button>
-                        </div>
+                            
+                            <div className="pt-2 flex space-x-3">
+                                <Button 
+                                    variant="ghostDark" 
+                                    className="flex-1" 
+                                    type="button"
+                                    onClick={() => {
+                                        setShowJoinModal(false)
+                                        setJoinForm({ skills: '', additionalNotes: '' })
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button 
+                                    className="flex-1" 
+                                    type="submit"
+                                    disabled={isJoining || !joinForm.skills.trim()}
+                                >
+                                    {isJoining ? (
+                                        <>
+                                            <LoadingSpinner size="tiny" inline />
+                                            Registering...
+                                        </>
+                                    ) : (
+                                        'Register Now'
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

@@ -141,6 +141,26 @@ const UserDashboard = () => {
         }
     };
 
+    const getEventStatus = (event) => {
+        // First check if there's a manual status set by CRD staff
+        if (event.status === 'Upcoming') {
+            return { text: 'Upcoming', canRegister: true, canDonate: true }
+        } else if (event.status === 'Ongoing') {
+            return { text: 'Ongoing', canRegister: false, canDonate: false }
+        } else if (event.status === 'Completed') {
+            return { text: 'Completed', canRegister: false, canDonate: false }
+        }
+        
+        // Fall back to date-based status if no manual status is set
+        const now = new Date()
+        const startDate = new Date(event.startDate)
+        const endDate = new Date(event.endDate)
+        
+        if (now < startDate) return { text: 'Upcoming', canRegister: true, canDonate: true }
+        if (now >= startDate && now <= endDate) return { text: 'Ongoing', canRegister: false, canDonate: false }
+        return { text: 'Completed', canRegister: false, canDonate: false }
+    }
+
     const handleJoinEvent = async (eventId) => {
         try {
             const { data } = await api.post(`/api/events/${eventId}/join`, {});
@@ -873,21 +893,57 @@ const UserDashboard = () => {
                                                     <ShareButton event={event} />
                                                 </div>
 
-                                                {/* Action Buttons */}
-                                                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-5">
-                                                    <Button
-                                                        onClick={() => handleJoinEvent(event._id)}
-                                                        className="flex-1 bg-[#800000] hover:bg-[#600000] text-white py-2.5 sm:py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
-                                                    >
-                                                        Join Event
-                                                    </Button>
-                                                    <Button
-                                                        onClick={() => handleDonate(event._id)}
-                                                        className="flex-1 border-2 border-[#800000] text-[#800000] hover:bg-red-50 py-2.5 sm:py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
-                                                    >
-                                                        Donate
-                                                    </Button>
-                                                </div>
+                                                {/* Action Buttons - Show based on event status */}
+                                                {(() => {
+                                                    const eventStatus = getEventStatus(event)
+                                                    const isUpcoming = eventStatus.text === 'Upcoming' && (event.status === 'Upcoming' || event.status === 'Approved')
+                                                    const isOngoing = eventStatus.text === 'Ongoing' || event.status === 'Ongoing'
+                                                    const isCompleted = eventStatus.text === 'Completed' || event.status === 'Completed'
+                                                    
+                                                    const canRegister = isUpcoming && event.isOpenForVolunteer
+                                                    const canDonate = isUpcoming && event.isOpenForDonation
+                                                    
+                                                    if (isCompleted) {
+                                                        return (
+                                                            <div className="mt-4 sm:mt-5 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                                                <p className="text-sm text-gray-600 text-center">This event has been completed.</p>
+                                                            </div>
+                                                        )
+                                                    }
+                                                    
+                                                    if (isOngoing) {
+                                                        return (
+                                                            <div className="mt-4 sm:mt-5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                                <p className="text-sm text-blue-700 text-center">Event is currently ongoing. Registration is closed.</p>
+                                                            </div>
+                                                        )
+                                                    }
+                                                    
+                                                    if (canRegister || canDonate) {
+                                                        return (
+                                                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-5">
+                                                                {event.isOpenForVolunteer && (
+                                                                    <Button
+                                                                        onClick={() => navigate(`/user/events/${event._id}`)}
+                                                                        className="flex-1 bg-[#800000] hover:bg-[#600000] text-white py-2.5 sm:py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
+                                                                    >
+                                                                        Join Event
+                                                                    </Button>
+                                                                )}
+                                                                {event.isOpenForDonation && (
+                                                                    <Button
+                                                                        onClick={() => navigate(`/user/events/${event._id}`)}
+                                                                        className="flex-1 border-2 border-[#800000] text-[#800000] hover:bg-red-50 py-2.5 sm:py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] touch-manipulation"
+                                                                    >
+                                                                        Donate
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    }
+                                                    
+                                                    return null
+                                                })()}
                                             </div>
                                         </article>
                                     )

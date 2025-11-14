@@ -62,11 +62,17 @@ const VolunteerManagement = () => {
                         'Content-Type': 'application/json'
                     }
                 })
-                console.log('Volunteers response:', volunteersRes.data)
                 setVolunteers(volunteersRes.data.volunteers || [])
             } catch (volunteerError) {
-                console.log('No volunteers found or error:', volunteerError.response?.data)
-                toast.error(volunteerError.response?.data?.message || 'Failed to fetch volunteers')
+                // Only show error toast for actual errors (not 404 for no volunteers)
+                if (volunteerError.response?.status === 403) {
+                    console.error('Access denied to volunteer data:', volunteerError.response?.data)
+                    toast.error('Access denied. You may not have permission to view volunteers.')
+                } else if (volunteerError.response?.status !== 404) {
+                    console.error('Error fetching volunteers:', volunteerError.response?.data)
+                    toast.error(volunteerError.response?.data?.message || 'Failed to fetch volunteers')
+                }
+                // Silently handle 404 (no volunteers yet) - this is expected
                 setVolunteers([])
             }
             
@@ -80,10 +86,17 @@ const VolunteerManagement = () => {
                         'Content-Type': 'application/json'
                     }
                 })
-                console.log('Attendance response:', attendanceRes.data)
                 setAttendance(attendanceRes.data.attendance || [])
             } catch (attendanceError) {
-                console.log('No attendance found or error:', attendanceError.response?.data)
+                // Only show error toast for actual errors (not 404 for no attendance)
+                if (attendanceError.response?.status === 403) {
+                    console.error('Access denied to attendance data:', attendanceError.response?.data)
+                    toast.error('Access denied. You may not have permission to view attendance.')
+                } else if (attendanceError.response?.status !== 404) {
+                    console.error('Error fetching attendance:', attendanceError.response?.data)
+                    // Don't show toast for missing attendance - it's expected if no one has checked in yet
+                }
+                // Silently handle 404 (no attendance yet) - this is expected
                 setAttendance([])
             }
             
