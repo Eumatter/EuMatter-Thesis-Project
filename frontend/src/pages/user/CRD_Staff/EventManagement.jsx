@@ -24,19 +24,16 @@ const EventManagement = () => {
     const [searchTerm, setSearchTerm] = useState('')
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortOrder, setSortOrder] = useState('desc')
-    const [selectedEvents, setSelectedEvents] = useState([])
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
+    const [viewMode, setViewMode] = useState('card') // 'card' or 'table'
     
     // Modal states
     const [selectedEvent, setSelectedEvent] = useState(null)
     const [showModal, setShowModal] = useState(false)
-    const [showBulkModal, setShowBulkModal] = useState(false)
     const [showReviewModal, setShowReviewModal] = useState(false)
     const [showEventDetailsModal, setShowEventDetailsModal] = useState(false)
     const [reviewComment, setReviewComment] = useState('')
-    const [bulkAction, setBulkAction] = useState('')
-    const [bulkComment, setBulkComment] = useState('')
     // Create Event (CRD) modal state
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [createForm, setCreateForm] = useState({
@@ -184,67 +181,6 @@ const EventManagement = () => {
         }
     }
 
-    const handleBulkAction = async (action = bulkAction) => {
-        if (selectedEvents.length === 0) {
-            toast.error('Please select events to perform bulk action')
-            return
-        }
-
-        try {
-            const promises = selectedEvents.map(eventId => 
-                axios.patch(backendUrl + `api/events/${eventId}/review`, {
-                    status: action,
-                    reviewedBy: userData?._id
-                })
-            )
-
-            await Promise.all(promises)
-            toast.success(`${selectedEvents.length} events ${action.toLowerCase()} successfully!`)
-            setShowBulkModal(false)
-            setSelectedEvents([])
-            setBulkAction('')
-            setBulkComment('')
-            fetchEvents()
-        } catch (error) {
-            console.error('Bulk action error:', error)
-            toast.error('Failed to perform bulk action')
-        }
-    }
-
-    const handleBulkAccept = async () => {
-        if (selectedEvents.length === 0) {
-            toast.error('Please select events to accept')
-            return
-        }
-        try {
-            const promises = selectedEvents.map(eventId =>
-                axios.patch(backendUrl + `api/events/${eventId}/accept`)
-            )
-            await Promise.all(promises)
-            toast.success(`${selectedEvents.length} events accepted for review`)
-            setSelectedEvents([])
-            fetchEvents()
-        } catch (error) {
-            console.error('Bulk accept error:', error)
-            toast.error('Failed to accept selected events')
-        }
-    }
-
-    const handleSelectEvent = (eventId) => {
-        setSelectedEvents(prev => 
-            prev.includes(eventId) 
-                ? prev.filter(id => id !== eventId)
-                : [...prev, eventId]
-        )
-    }
-
-    const handleSelectAll = () => {
-        if (selectedEvents.length === paginatedEvents.length) {
-            setSelectedEvents([])
-        } else {
-            setSelectedEvents(paginatedEvents.map(event => event._id))
-        }
-    }
 
     const openReviewModal = (event) => {
         setSelectedEvent(event)
@@ -258,19 +194,6 @@ const EventManagement = () => {
         setReviewComment('')
     }
 
-    const openBulkModal = () => {
-        if (selectedEvents.length === 0) {
-            toast.error('Please select events first')
-            return
-        }
-        setShowBulkModal(true)
-    }
-
-    const closeBulkModal = () => {
-        setShowBulkModal(false)
-        setBulkAction('')
-        setBulkComment('')
-    }
 
     const openReviewDetailsModal = (event) => {
         setSelectedEvent(event)
@@ -617,6 +540,36 @@ const EventManagement = () => {
 
                         {/* Controls */}
                         <div className="flex items-center space-x-4">
+                            {/* View Toggle */}
+                            <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
+                                <button
+                                    onClick={() => setViewMode('card')}
+                                    className={`p-2 rounded-md transition-all ${
+                                        viewMode === 'card' 
+                                            ? 'bg-white text-red-900 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                    title="Card View"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('table')}
+                                    className={`p-2 rounded-md transition-all ${
+                                        viewMode === 'table' 
+                                            ? 'bg-white text-red-900 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                    title="Table View"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
+
                             {/* Sort */}
                             <div className="flex items-center space-x-2">
                                 <label className="text-sm font-medium text-gray-700">Sort by:</label>
@@ -715,60 +668,6 @@ const EventManagement = () => {
                         </Button>
                     </div>
 
-                    {/* Bulk Actions */}
-                    {selectedEvents.length > 0 && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-red-800 font-medium">{selectedEvents.length} events selected</span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                {filter === 'all' ? (
-                                    <Button
-                                        size="sm"
-                                        onClick={handleBulkAccept}
-                                        className="bg-red-900 hover:bg-red-800 text-white"
-                                    >
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
-                                        </svg>
-                                        Accept All
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        size="sm"
-                                        onClick={() => handleBulkAction('Approved')}
-                                        className="bg-green-600 hover:bg-green-700 text-white"
-                                    >
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Approve All
-                                    </Button>
-                                )}
-                                <Button
-                                    size="sm"
-                                    onClick={openBulkModal}
-                                    className="bg-red-900 hover:bg-red-800 text-white"
-                                >
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Review Details
-                                </Button>
-                                <Button
-                                    variant="ghostDark"
-                                    size="sm"
-                                    onClick={() => setSelectedEvents([])}
-                                    className="text-red-900 hover:text-red-700"
-                                >
-                                    Clear Selection
-                        </Button>
-                    </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Events List */}
@@ -777,22 +676,13 @@ const EventManagement = () => {
                         <LoadingSpinner size="medium" text="Loading events..." />
                     </div>
                 ) : paginatedEvents.length > 0 ? (
-                    <div className="space-y-6">
-                        {paginatedEvents.map((event) => (
-                            <div key={event._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-red-300">
-                                <div className="p-6">
-                                    <div className="flex items-start space-x-4">
-                                        {/* Checkbox for bulk selection */}
-                                        <div className="flex items-center pt-1">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedEvents.includes(event._id)}
-                                                onChange={() => handleSelectEvent(event._id)}
-                                                className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500 focus:ring-2"
-                                            />
-                                        </div>
-
-                                        <div className="flex-1">
+                    viewMode === 'card' ? (
+                        <div className="space-y-6">
+                            {paginatedEvents.map((event) => (
+                                <div key={event._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-red-300">
+                                    <div className="p-6">
+                                        <div className="flex items-start space-x-4">
+                                            <div className="flex-1">
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="flex-1">
                                                     <div className="flex items-center space-x-3 mb-2">
@@ -917,16 +807,20 @@ const EventManagement = () => {
                                             )}
                                             {event.status === 'Pending' && (
                                                 <div className="flex flex-col space-y-2">
+                                                    {/* Primary Action: Review Details - First Step */}
                                                     <Button
                                                         size="sm"
                                                         onClick={() => openReviewDetailsModal(event)}
-                                                        className="bg-red-900 hover:bg-red-800 text-white transition-all duration-200 hover:shadow-md w-full"
+                                                        className="bg-red-900 hover:bg-red-800 text-white transition-all duration-200 hover:shadow-md w-full font-semibold"
                                                     >
                                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        Review Details
+                                                        Review Details (First Step)
                                                     </Button>
+                                                    <div className="text-xs text-gray-500 text-center mb-1">
+                                                        Review event details before making a decision
+                                                    </div>
                                                     <div className="flex space-x-2">
                                                         <Button
                                                             size="sm"
@@ -940,7 +834,7 @@ const EventManagement = () => {
                                                         </Button>
                                                         <Button
                                                             size="sm"
-                                                            onClick={() => handleReviewEvent(event._id, 'Declined')}
+                                                            onClick={() => openReviewModal(event)}
                                                             className="bg-red-600 hover:bg-red-700 text-white transition-all duration-200 hover:shadow-md flex-1"
                                                         >
                                                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1059,6 +953,142 @@ const EventManagement = () => {
                             </div>
                         ))}
                     </div>
+                    ) : (
+                        /* Table View */
+                        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Title</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Features</th>
+                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {paginatedEvents.map((event) => (
+                                            <tr key={event._id} className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-semibold text-gray-900">{event.title}</div>
+                                                    {event.description && (
+                                                        <div 
+                                                            className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-md"
+                                                            dangerouslySetInnerHTML={{ 
+                                                                __html: event.description
+                                                                    .replace(/&lt;/g, '<')
+                                                                    .replace(/&gt;/g, '>')
+                                                                    .replace(/&amp;/g, '&')
+                                                                    .substring(0, 100) + '...'
+                                                            }}
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-900">{event.createdBy?.name || 'Unknown'}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm text-gray-900">{formatDate(event.startDate)}</div>
+                                                    <div className="text-xs text-gray-500">{formatDate(event.endDate)}</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm text-gray-900">{event.location}</div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(event.status)}`}>
+                                                        {getStatusIcon(event.status)}
+                                                        <span className="ml-1">{event.status || 'Pending'}</span>
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {event.isOpenForVolunteer && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">
+                                                                Volunteers
+                                                            </span>
+                                                        )}
+                                                        {event.isOpenForDonation && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">
+                                                                Donations
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                    <div className="flex items-center justify-end space-x-2">
+                                                        {event.status === 'Proposed' && (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => handleAcceptEvent(event._id)}
+                                                                className="bg-red-900 hover:bg-red-800 text-white"
+                                                            >
+                                                                Accept
+                                                            </Button>
+                                                        )}
+                                                        {event.status === 'Pending' && (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openReviewDetailsModal(event)}
+                                                                    className="bg-red-900 hover:bg-red-800 text-white"
+                                                                >
+                                                                    Review
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => handleReviewEvent(event._id, 'Approved')}
+                                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                                >
+                                                                    Approve
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openReviewModal(event)}
+                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                >
+                                                                    Decline
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                        {event.status === 'Approved' && (
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openEventDetailsModal(event)}
+                                                                    className="border-red-600 text-red-600 hover:bg-red-50"
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openStatusUpdate(event)}
+                                                                    className="bg-gray-700 hover:bg-gray-800 text-white"
+                                                                >
+                                                                    Update Status
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                        {event.status !== 'Approved' && event.status !== 'Pending' && event.status !== 'Proposed' && (
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => openStatusUpdate(event)}
+                                                                className="border-gray-600 text-gray-600 hover:bg-gray-50"
+                                                            >
+                                                                Update Status
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )
                 ) : (
                     <div className="text-center py-16">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1952,88 +1982,25 @@ const EventManagement = () => {
                     </div>
                 </div>
             )}
-            {/* Bulk Action Modal */}
-            {showBulkModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-6rem)] border border-red-200 overflow-y-auto">
-                        <div className="p-8">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-red-900">Bulk Actions</h3>
-                                    <p className="text-red-700 mt-1">Apply action to {selectedEvents.length} selected events</p>
-                                </div>
-                                <button
-                                    onClick={closeBulkModal}
-                                    className="text-red-400 hover:text-red-600 transition-colors"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            
-                            <div className="mb-6">
-                                <label htmlFor="bulkAction" className="block text-sm font-semibold text-red-900 mb-3">
-                                    Select Action
-                                </label>
-                                <select
-                                    id="bulkAction"
-                                    value={bulkAction}
-                                    onChange={(e) => setBulkAction(e.target.value)}
-                                    className="w-full px-4 py-3 border border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-red-900 bg-white"
-                                >
-                                    <option value="">Choose an action...</option>
-                                    <option value="Declined">Decline All Selected Events</option>
-                                </select>
-                                <p className="text-sm text-gray-600 mt-2">
-                                    💡 <strong>Tip:</strong> Use "Quick Approve All" button for instant approval. This modal is for decline actions with comments.
-                                </p>
-                            </div>
-                            
-                            <div className="mb-8">
-                                <label htmlFor="bulkComment" className="block text-sm font-semibold text-red-900 mb-3">
-                                    Comment (Optional)
-                                </label>
-                                <textarea
-                                    id="bulkComment"
-                                    value={bulkComment}
-                                    onChange={(e) => setBulkComment(e.target.value)}
-                                    rows={4}
-                                    className="w-full px-4 py-3 border border-red-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-red-900 placeholder-red-400"
-                                    placeholder="Add a comment for all selected events..."
-                                />
-                            </div>
-                            
-                            <div className="flex space-x-4">
-                                <Button
-                                    variant="ghostDark"
-                                    onClick={closeBulkModal}
-                                    className="flex-1 py-3 rounded-xl text-gray-700 hover:text-gray-900"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleBulkAction}
-                                    disabled={!bulkAction}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Decline {selectedEvents.length} Events
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Review Details Modal */}
+            {/* Review Details Modal - Enhanced for better workflow */}
             {showReviewModal && selectedEvent && (
                 <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
                     <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto border border-gray-200">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h3 className="text-2xl font-bold text-gray-900">Event Details</h3>
-                                    <p className="text-gray-600">Review event proposal details and attachments</p>
+                                    <div className="flex items-center space-x-2 mb-2">
+                                        <div className="bg-blue-100 rounded-full p-2">
+                                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-gray-900">Step 1: Review Event Details</h3>
+                                            <p className="text-sm text-blue-600 font-medium">First step in the approval process</p>
+                                        </div>
+                                    </div>
+                                    <p className="text-gray-600 mt-2">Carefully review all event information, attachments, and requirements before making your decision</p>
                                 </div>
                                 <button
                                     onClick={closeReviewDetailsModal}
@@ -2184,7 +2151,23 @@ const EventManagement = () => {
                                 </div>
                             )}
 
-                            {/* Action Buttons */}
+                            {/* Action Buttons - Enhanced workflow */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                                <div className="flex items-start space-x-3">
+                                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-sm font-semibold text-blue-900 mb-1">Review Process:</p>
+                                        <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
+                                            <li>Review all event details and attachments above</li>
+                                            <li>Check if the event meets all requirements</li>
+                                            <li>Make your decision: Approve or Decline</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div className="flex space-x-4">
                                 <Button
                                     variant="ghostDark"

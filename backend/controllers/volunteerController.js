@@ -172,13 +172,14 @@ export const generateAttendanceQR = async (req, res) => {
         const userId = req.user._id;
         const { type = 'checkIn' } = req.body; // 'checkIn' or 'checkOut'
 
-        const event = await eventModel.findById(eventId);
+        const event = await eventModel.findById(eventId)
+            .populate('createdBy', 'name email role');
         if (!event) {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
         // Get the creator ID (handle both populated and non-populated cases)
-        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const creatorId = event.createdBy?._id ? event.createdBy._id.toString() : (event.createdBy?.toString() || String(event.createdBy));
         const currentUserId = userId.toString();
 
         // Check if user is the event creator, System Administrator, or CRD Staff
@@ -195,6 +196,7 @@ export const generateAttendanceQR = async (req, res) => {
         // Calculate if event is single-day or multi-day
         const eventDuration = Math.ceil((eventEnd - eventStart) / (1000 * 60 * 60 * 24));
         const isSingleDay = eventDuration <= 1;
+        const isMultiDay = eventDuration > 1;
         
         // For check-in QR: Allow generation 1 day before start (single-day) or during ongoing event
         if (type === 'checkIn') {
@@ -318,7 +320,12 @@ export const generateAttendanceQR = async (req, res) => {
         });
     } catch (error) {
         console.error('Generate QR code error:', error);
-        return res.status(500).json({ success: false, message: error.message });
+        console.error('Error stack:', error.stack);
+        return res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Failed to generate QR code',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
