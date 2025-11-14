@@ -70,7 +70,7 @@ const VolunteerManagement = () => {
                     toast.error('Access denied. You may not have permission to view volunteers.')
                 } else if (volunteerError.response?.status !== 404) {
                     console.error('Error fetching volunteers:', volunteerError.response?.data)
-                    toast.error(volunteerError.response?.data?.message || 'Failed to fetch volunteers')
+                toast.error(volunteerError.response?.data?.message || 'Failed to fetch volunteers')
                 }
                 // Silently handle 404 (no volunteers yet) - this is expected
                 setVolunteers([])
@@ -412,11 +412,11 @@ const VolunteerManagement = () => {
                     
                     if (!canGenerateCheckInQR() && !canGenerateCheckOutQR()) {
                         return (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                                 <div className="flex items-start">
                                     <svg className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
                                     <div>
                                         <p className="text-yellow-800 font-medium mb-1">QR Code Generation Rules:</p>
                                         <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
@@ -442,9 +442,9 @@ const VolunteerManagement = () => {
                                             {isSingleDay 
                                                 ? `Check-in QR can be generated starting ${oneDayBefore.toLocaleString()}.`
                                                 : 'Check-in QR can be generated once the event starts.'}
-                                        </p>
-                                    </div>
-                                </div>
+                            </p>
+                        </div>
+                    </div>
                             </div>
                         )
                     }
@@ -579,10 +579,10 @@ const VolunteerManagement = () => {
                                     <div className="text-xs uppercase tracking-wide opacity-90 mb-1">Average Rating</div>
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-bold">
-                                            {feedbackData?.event?.feedbackSummary?.averageRating
+                                        {feedbackData?.event?.feedbackSummary?.averageRating
                                                 ? feedbackData.event.feedbackSummary.averageRating.toFixed(1)
                                                 : '0.0'}
-                                        </span>
+                                    </span>
                                         <span className="text-lg opacity-80">/ 5</span>
                                     </div>
                                     {feedbackData?.event?.feedbackSummary?.totalResponses ? (
@@ -641,7 +641,7 @@ const VolunteerManagement = () => {
                                 </div>
                             ) : (
                                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-                                    <div className="overflow-x-auto">
+                                <div className="overflow-x-auto">
                                         <table className="min-w-full divide-y divide-gray-200">
                                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                                                 <tr>
@@ -653,9 +653,9 @@ const VolunteerManagement = () => {
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Feedback</th>
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Deadline</th>
                                                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="bg-white divide-y divide-gray-200">
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
                                                 {(feedbackData?.records || []).map(record => {
                                                     const deadline = record.deadlineAt ? new Date(record.deadlineAt) : null;
                                                     const now = new Date();
@@ -676,7 +676,7 @@ const VolunteerManagement = () => {
                                                                         <div className="text-xs text-gray-500">{record.volunteer?.email || ''}</div>
                                                                     </div>
                                                                 </div>
-                                                            </td>
+                                                    </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm text-gray-900">
                                                                     {record.date ? new Date(record.date).toLocaleDateString('en-US', { 
@@ -689,7 +689,7 @@ const VolunteerManagement = () => {
                                                                     {record.checkInTime ? `In: ${new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                                                                     {record.checkOutTime ? ` | Out: ${new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                                                                 </div>
-                                                            </td>
+                                                    </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm font-semibold text-gray-900">
                                                                     {hoursWorked.toFixed(1)} hrs
@@ -710,8 +710,8 @@ const VolunteerManagement = () => {
                                                                     'bg-gray-100 text-gray-600 border border-gray-200'
                                                                 }`}>
                                                                     {record.status === 'pending' && isOverdue ? 'Overdue' : record.status}
-                                                                </span>
-                                                            </td>
+                                                        </span>
+                                                    </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 {record.feedback?.rating ? (
                                                                     <div className="flex items-center gap-1">
@@ -738,12 +738,12 @@ const VolunteerManagement = () => {
                                                                 ) : (
                                                                     <span className="text-gray-400 text-sm">—</span>
                                                                 )}
-                                                            </td>
+                                                    </td>
                                                             <td className="px-6 py-4">
-                                                                {record.feedback?.comment ? (
+                                                        {record.feedback?.comment ? (
                                                                     <div className="max-w-xs">
                                                                         <p className="text-sm text-gray-700 line-clamp-2">
-                                                                            {record.feedback.comment}
+                                                                {record.feedback.comment}
                                                                         </p>
                                                                         {record.feedback.overridden && record.feedback.overrideReason && (
                                                                             <p className="text-xs text-blue-600 mt-1 italic">
@@ -753,8 +753,8 @@ const VolunteerManagement = () => {
                                                                     </div>
                                                                 ) : (
                                                                     <span className="text-gray-400 text-sm">No feedback</span>
-                                                                )}
-                                                            </td>
+                                                        )}
+                                                    </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 {deadline ? (
                                                                     <div>
@@ -776,23 +776,23 @@ const VolunteerManagement = () => {
                                                                 ) : (
                                                                     <span className="text-gray-400 text-sm">—</span>
                                                                 )}
-                                                            </td>
+                                                    </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                                 <div className="flex flex-col gap-2">
                                                                     {record.status === 'missed' || record.status === 'voided' ? (
-                                                                        <button
+                                                        <button
                                                                             onClick={() => {
                                                                                 if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours.`)) {
                                                                                     handleOverrideFeedback(record._id, true);
                                                                                 }
                                                                             }}
                                                                             className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm"
-                                                                        >
-                                                                            Reinstate Hours
-                                                                        </button>
+                                                        >
+                                                            Reinstate Hours
+                                                        </button>
                                                                     ) : record.status === 'pending' && isOverdue ? (
                                                                         <>
-                                                                            <button
+                                                        <button
                                                                                 onClick={() => {
                                                                                     if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours despite missing the deadline.`)) {
                                                                                         handleOverrideFeedback(record._id, true);
@@ -809,9 +809,9 @@ const VolunteerManagement = () => {
                                                                                     }
                                                                                 }}
                                                                                 className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm"
-                                                                            >
-                                                                                Void Hours
-                                                                            </button>
+                                                        >
+                                                            Void Hours
+                                                        </button>
                                                                         </>
                                                                     ) : record.status === 'submitted' || record.status === 'overridden' ? (
                                                                         <button
@@ -826,12 +826,12 @@ const VolunteerManagement = () => {
                                                                         </button>
                                                                     ) : null}
                                                                 </div>
-                                                            </td>
-                                                        </tr>
+                                                    </td>
+                                                </tr>
                                                     );
                                                 })}
-                                            </tbody>
-                                        </table>
+                                        </tbody>
+                                    </table>
                                     </div>
                                 </div>
                             )}
@@ -920,21 +920,21 @@ const VolunteerManagement = () => {
                             <div className="mb-8">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Check-In QR Code (Time In)</h3>
                                 {qrStatus?.hasCheckInQR && qrStatus?.checkInActive ? (
-                                    <div className="text-center">
-                                        <div className="bg-gray-50 rounded-lg p-6 mb-4">
-                                            <img 
+                                <div className="text-center">
+                                    <div className="bg-gray-50 rounded-lg p-6 mb-4">
+                                        <img 
                                                 src={qrStatus.checkInQR} 
                                                 alt="Check-In QR Code" 
-                                                className="mx-auto mb-4 max-w-full"
-                                                style={{ maxWidth: '300px' }}
-                                            />
-                                            <p className="text-sm text-gray-600 mb-2">
+                                            className="mx-auto mb-4 max-w-full"
+                                            style={{ maxWidth: '300px' }}
+                                        />
+                                        <p className="text-sm text-gray-600 mb-2">
                                                 Generated: {qrStatus.generatedAt ? formatDate(qrStatus.generatedAt) : 'N/A'}
-                                            </p>
-                                            <p className="text-sm text-gray-600">
+                                        </p>
+                                        <p className="text-sm text-gray-600">
                                                 Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
-                                            </p>
-                                        </div>
+                                        </p>
+                                    </div>
                                         <button
                                             onClick={() => {
                                                 setQrCode(qrStatus.checkInQR)
@@ -961,7 +961,7 @@ const VolunteerManagement = () => {
                                         </button>
                                     </div>
                                 )}
-                            </div>
+                                </div>
 
                             {/* Check-Out/Evaluation QR Code */}
                             <div>
@@ -981,7 +981,7 @@ const VolunteerManagement = () => {
                                             <p className="text-sm text-gray-600">
                                                 Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
                                             </p>
-                                        </div>
+                                    </div>
                                         <div className="flex flex-col sm:flex-row justify-center gap-3">
                                             <button
                                                 onClick={() => {
@@ -1014,20 +1014,20 @@ const VolunteerManagement = () => {
                                             })()}
                                         </p>
                                         {canGenerateCheckOutQR() && (
-                                            <button
+                                    <button
                                                 onClick={() => generateQRCode('checkOut')}
                                                 disabled={qrGenerating}
-                                                className={`px-6 py-3 rounded-lg transition-colors ${
+                                        className={`px-6 py-3 rounded-lg transition-colors ${
                                                     !qrGenerating
                                                         ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                }`}
-                                            >
+                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                        }`}
+                                    >
                                                 {qrGenerating ? 'Generating...' : 'Generate Evaluation QR'}
-                                            </button>
+                                    </button>
                                         )}
-                                    </div>
-                                )}
+                                </div>
+                            )}
                             </div>
                         </div>
                     )}
