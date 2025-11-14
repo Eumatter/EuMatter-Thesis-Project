@@ -44,6 +44,7 @@ const EventManagement = () => {
         endDate: '',
         isOpenForDonation: false,
         isOpenForVolunteer: false,
+        donationTarget: '',
         status: 'Approved'
     })
     const [createImageFile, setCreateImageFile] = useState(null)
@@ -323,6 +324,12 @@ const EventManagement = () => {
                 return
             }
 
+            // Validate donation target if donations are enabled
+            if (createForm.isOpenForDonation && (!createForm.donationTarget || parseFloat(createForm.donationTarget) <= 0)) {
+                toast.error('Please enter a valid donation target amount when donations are enabled')
+                return
+            }
+
             const formDataToSend = new FormData()
             formDataToSend.append('title', createForm.title)
             formDataToSend.append('description', createForm.description)
@@ -331,6 +338,9 @@ const EventManagement = () => {
             formDataToSend.append('endDate', new Date(createForm.endDate).toISOString())
             formDataToSend.append('isOpenForDonation', createForm.isOpenForDonation)
             formDataToSend.append('isOpenForVolunteer', createForm.isOpenForVolunteer)
+            if (createForm.isOpenForDonation && createForm.donationTarget) {
+                formDataToSend.append('donationTarget', parseFloat(createForm.donationTarget))
+            }
             formDataToSend.append('status', createForm.status)
             if (createImageFile) formDataToSend.append('image', createImageFile)
             if (createDocFile) formDataToSend.append('proposalDocument', createDocFile)
@@ -344,7 +354,7 @@ const EventManagement = () => {
             if (data?.event?._id) {
                 toast.success('Event created')
                 setShowCreateModal(false)
-                setCreateForm({ title: '', description: '', location: '', startDate: '', endDate: '', isOpenForDonation: false, isOpenForVolunteer: false, status: 'Approved' })
+                setCreateForm({ title: '', description: '', location: '', startDate: '', endDate: '', isOpenForDonation: false, isOpenForVolunteer: false, donationTarget: '', status: 'Approved' })
                 setCreateImageFile(null)
                 setCreateDocFile(null)
                 fetchEvents()
@@ -1955,6 +1965,26 @@ const EventManagement = () => {
                                             </button>
                                             <span className="text-gray-700 select-none">Open for Donations</span>
                                         </div>
+                                        {createForm.isOpenForDonation && (
+                                            <div className="w-full col-span-2">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Donation Target Amount (₱) <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={createForm.donationTarget}
+                                                    onChange={(e) => setCreateForm({ ...createForm, donationTarget: e.target.value })}
+                                                    placeholder="Enter target donation amount"
+                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                    required={createForm.isOpenForDonation}
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">
+                                                    Specify how much funding is needed for this event
+                                                </p>
+                                            </div>
+                                        )}
                                         <div className="ml-auto">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">Initial Status</label>
                                             <select

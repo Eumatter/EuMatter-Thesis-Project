@@ -129,17 +129,23 @@ const Home = () => {
                         ? Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)))
                         : 0;
 
+                    // Calculate volunteer count
+                    const volunteerCount = event.volunteers?.length || 0;
+                    const maxVolunteers = event.volunteerSettings?.maxVolunteers || null;
+                    
                     return {
                         id: event._id,
                         title: event.title,
                         image: event.image || "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
                         description: event.description || '',
                         raised: event.totalDonations || 0,
-                        goal: 10000, // Default goal since donationGoal field doesn't exist in model
+                        goal: event.donationTarget || null, // Use donationTarget from event
                         daysRemaining: daysRemaining,
                         status: event.status,
                         isOpenForDonation: event.isOpenForDonation || false,
                         isOpenForVolunteer: event.isOpenForVolunteer || false,
+                        volunteerCount: volunteerCount,
+                        maxVolunteers: maxVolunteers,
                     };
                 });
 
@@ -295,7 +301,13 @@ const Home = () => {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                             {campaigns.map((campaign, index) => {
-                                const progressPercentage = Math.min(100, (campaign.raised / campaign.goal) * 100);
+                                // Calculate progress based on event type
+                                let progressPercentage = 0;
+                                if (campaign.isOpenForDonation && campaign.goal) {
+                                    progressPercentage = Math.min(100, (campaign.raised / campaign.goal) * 100);
+                                } else if (campaign.isOpenForVolunteer && campaign.maxVolunteers) {
+                                    progressPercentage = Math.min(100, (campaign.volunteerCount / campaign.maxVolunteers) * 100);
+                                }
                                 
                                 // Determine image URL - handle base64, data URLs, and regular URLs
                                 let imageUrl = "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
@@ -348,27 +360,55 @@ const Home = () => {
                                                 {campaign.title}
                                             </h3>
                                             
-                                            {/* Progress Bar - Only show if donation is enabled */}
-                                            {campaign.isOpenForDonation && (
+                                            {/* Progress Bar - Show for donations or volunteers */}
+                                            {(campaign.isOpenForDonation || campaign.isOpenForVolunteer) && (
                                                 <div className="space-y-2">
-                                                    <div className="flex justify-between items-center text-sm">
-                                                        <span className="font-semibold text-[#800000]">
-                                                            ₱{campaign.raised.toLocaleString()}
-                                                        </span>
-                                                        <span className="text-gray-500">
-                                                            of ₱{campaign.goal.toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                                        <div 
-                                                            className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
-                                                            style={{ width: `${progressPercentage}%` }}
-                                                        ></div>
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {progressPercentage.toFixed(0)}% funded
-                                                    </div>
-                                    </div>
+                                                    {campaign.isOpenForDonation && campaign.goal ? (
+                                                        <>
+                                                            <div className="flex justify-between items-center text-sm">
+                                                                <span className="font-semibold text-[#800000]">
+                                                                    ₱{campaign.raised.toLocaleString()}
+                                                                </span>
+                                                                <span className="text-gray-500">
+                                                                    of ₱{campaign.goal.toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
+                                                                    style={{ width: `${progressPercentage}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {progressPercentage.toFixed(0)}% donated
+                                                            </div>
+                                                        </>
+                                                    ) : campaign.isOpenForVolunteer && campaign.maxVolunteers ? (
+                                                        <>
+                                                            <div className="flex justify-between items-center text-sm">
+                                                                <span className="font-semibold text-[#800000]">
+                                                                    {campaign.volunteerCount} volunteer{campaign.volunteerCount !== 1 ? 's' : ''}
+                                                                </span>
+                                                                <span className="text-gray-500">
+                                                                    of {campaign.maxVolunteers} needed
+                                                                </span>
+                                                            </div>
+                                                            <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
+                                                                    style={{ width: `${progressPercentage}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {progressPercentage.toFixed(0)}% volunteers
+                                                            </div>
+                                                        </>
+                                                    ) : campaign.isOpenForVolunteer ? (
+                                                        <div className="text-sm text-gray-600">
+                                                            <span className="font-semibold text-[#800000]">{campaign.volunteerCount}</span> volunteer{campaign.volunteerCount !== 1 ? 's' : ''} joined
+                                                        </div>
+                                                    ) : null}
+                                                </div>
                                             )}
                                             
                                             {/* Action Button */}
@@ -378,13 +418,25 @@ const Home = () => {
                                                     if (!isLoggedIn) {
                                                         navigate('/login');
                                                     } else {
-                                                        // If logged in, go to campaigns page
-                                                        navigate('/campaigns');
+                                                        // If logged in, go to campaigns page or event details
+                                                        if (campaign.isOpenForDonation) {
+                                                            navigate('/campaigns');
+                                                        } else if (campaign.isOpenForVolunteer) {
+                                                            navigate(`/events/${campaign.id}`);
+                                                        } else {
+                                                            navigate('/campaigns');
+                                                        }
                                                     }
                                                 }}
                                                 className="w-full py-3 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white font-semibold rounded-lg hover:from-[#9c0000] hover:to-[#800000] transform hover:scale-105 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg"
                                             >
-                                                {campaign.isOpenForDonation ? 'Donate Now' : 'View Details'}
+                                                {campaign.isOpenForDonation && !campaign.isOpenForVolunteer 
+                                                    ? 'Donate Now' 
+                                                    : !campaign.isOpenForDonation && campaign.isOpenForVolunteer
+                                                    ? 'Volunteer Now'
+                                                    : campaign.isOpenForDonation && campaign.isOpenForVolunteer
+                                                    ? 'Donate Now'
+                                                    : 'View Details'}
                                             </button>
                                 </div>
                             </motion.div>

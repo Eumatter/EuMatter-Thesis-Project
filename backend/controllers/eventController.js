@@ -24,6 +24,7 @@ export const createEvent = async (req, res) => {
             location,
             isOpenForDonation,
             isOpenForVolunteer,
+            donationTarget,
             volunteerSettings
         } = req.body;
 
@@ -78,6 +79,13 @@ export const createEvent = async (req, res) => {
             }
         }
 
+        // Validate donation target if donations are enabled
+        if ((isOpenForDonation === 'true' || isOpenForDonation === true) && (!donationTarget || parseFloat(donationTarget) <= 0)) {
+            return res.status(400).json({ 
+                message: "Donation target amount is required when donations are enabled" 
+            });
+        }
+
         // Validate dailySchedule for multi-day events with volunteers
         if (isOpenForVolunteer === 'true' || isOpenForVolunteer === true) {
             if (isMultiDay && parsedVolunteerSettings) {
@@ -121,6 +129,7 @@ export const createEvent = async (req, res) => {
             proposalDocument: docBase64,
             isOpenForDonation: isOpenForDonation === 'true' || isOpenForDonation === true,
             isOpenForVolunteer: isOpenForVolunteer === 'true' || isOpenForVolunteer === true,
+            donationTarget: (isOpenForDonation === 'true' || isOpenForDonation === true) && donationTarget ? parseFloat(donationTarget) : null,
             volunteerSettings: parsedVolunteerSettings || undefined
         });
 
@@ -646,7 +655,7 @@ export const donateToEvent = async (req, res) => {
 export const crdCreateEvent = async (req, res) => {
     const files = [];
     try {
-        const { title, description, startDate, endDate, location, isOpenForDonation, isOpenForVolunteer, volunteerSettings, status } = req.body;
+        const { title, description, startDate, endDate, location, isOpenForDonation, isOpenForVolunteer, donationTarget, volunteerSettings, status } = req.body;
         if (!title || !startDate || !endDate || !location) {
             return res.status(400).json({ message: "Missing required fields", required: "title, startDate, endDate, location" });
         }
@@ -663,6 +672,13 @@ export const crdCreateEvent = async (req, res) => {
         if (isNaN(start.getTime()) || isNaN(end.getTime())) return res.status(400).json({ message: "Invalid start or end date" });
         if (end <= start) return res.status(400).json({ message: "End date/time must be after start date/time" });
 
+        // Validate donation target if donations are enabled
+        if ((isOpenForDonation === 'true' || isOpenForDonation === true) && (!donationTarget || parseFloat(donationTarget) <= 0)) {
+            return res.status(400).json({ 
+                message: "Donation target amount is required when donations are enabled" 
+            });
+        }
+
         const allowedInitial = ["Approved", "Upcoming"];
         const initialStatus = allowedInitial.includes(status) ? status : "Approved";
 
@@ -677,6 +693,7 @@ export const crdCreateEvent = async (req, res) => {
             proposalDocument: docBase64,
             isOpenForDonation: isOpenForDonation === 'true' || isOpenForDonation === true,
             isOpenForVolunteer: isOpenForVolunteer === 'true' || isOpenForVolunteer === true,
+            donationTarget: (isOpenForDonation === 'true' || isOpenForDonation === true) && donationTarget ? parseFloat(donationTarget) : null,
             volunteerSettings: (() => {
                 try {
                     if (!volunteerSettings) return undefined;

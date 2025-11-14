@@ -118,6 +118,7 @@ const eventSchema = new mongoose.Schema({
     // Donation and Volunteer options
     isOpenForDonation: { type: Boolean, default: false },
     isOpenForVolunteer: { type: Boolean, default: false },
+    donationTarget: { type: Number, default: null }, // Target donation amount (required if isOpenForDonation is true)
 
     // Volunteer settings and requirements
     volunteerSettings: {

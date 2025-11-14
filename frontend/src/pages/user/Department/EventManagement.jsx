@@ -40,6 +40,7 @@ const EventManagement = () => {
         endDate: '',
         isOpenForDonation: false,
         isOpenForVolunteer: false,
+        donationTarget: '',
         volunteerSettings: {
             mode: 'open_for_all', // 'open_for_all' | 'with_requirements'
             minAge: '',
@@ -119,6 +120,7 @@ const EventManagement = () => {
         endDate: '',
         isOpenForDonation: false,
         isOpenForVolunteer: false,
+        donationTarget: '',
         status: 'Approved'
     })
     const [postImageFile, setPostImageFile] = useState(null)
