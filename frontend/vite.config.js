@@ -65,6 +65,7 @@ export default defineConfig({
         skipWaiting: true,
         navigateFallback: '/index.html',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./i,

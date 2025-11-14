@@ -68,6 +68,9 @@ router.put(
 // DELETE Event - Only for Department/Organization users
 router.delete("/:id", userAuth, requireRole(["Department/Organization"]), deleteEvent);
 
+// DELETE Event - CRD Staff / System Administrator (Temporary feature for data cleanup)
+router.delete("/:id/crd-delete", userAuth, requireRole(["CRD Staff", "System Administrator"]), deleteEvent);
+
 // DUPLICATE existing Event - CRD Staff / System Administrator
 router.post(
     "/:id/duplicate",

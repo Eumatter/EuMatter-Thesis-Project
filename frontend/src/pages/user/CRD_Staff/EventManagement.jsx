@@ -56,6 +56,12 @@ const EventManagement = () => {
     const [newStatus, setNewStatus] = useState('Upcoming')
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
     
+    // Delete Event modal state (Temporary feature)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deleteEventId, setDeleteEventId] = useState(null)
+    const [deleteEventTitle, setDeleteEventTitle] = useState('')
+    const [isDeleting, setIsDeleting] = useState(false)
+    
     // Statistics
     const [stats, setStats] = useState({
         total: 0,
@@ -428,6 +434,49 @@ const EventManagement = () => {
             toast.error(error.response?.data?.message || 'Failed to update event status. Please try again.');
         } finally {
             setIsUpdatingStatus(false);
+        }
+    }
+
+    // Delete Event Handler (Temporary feature for data cleanup)
+    const openDeleteModal = (event) => {
+        setDeleteEventId(event._id)
+        setDeleteEventTitle(event.title)
+        setShowDeleteModal(true)
+    }
+
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false)
+        setDeleteEventId(null)
+        setDeleteEventTitle('')
+    }
+
+    const handleDeleteEvent = async () => {
+        if (!deleteEventId) return
+        
+        setIsDeleting(true)
+        try {
+            axios.defaults.withCredentials = true
+            const { data } = await axios.delete(`${backendUrl}api/events/${deleteEventId}/crd-delete`, {
+                withCredentials: true
+            })
+            
+            if (data?.message === 'Event deleted successfully') {
+                toast.success('Event deleted successfully')
+                closeDeleteModal()
+                // Optimistically remove from list
+                setEvents(prevEvents => {
+                    const updated = prevEvents.filter(e => e._id !== deleteEventId)
+                    calculateStats(updated)
+                    return updated
+                })
+            } else {
+                toast.error(data?.message || 'Failed to delete event')
+            }
+        } catch (error) {
+            console.error('Error deleting event:', error)
+            toast.error(error?.response?.data?.message || 'Failed to delete event. Please try again.')
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -845,8 +894,8 @@ const EventManagement = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                                    {/* Update Status action for CRD */}
-                                                    <div className="flex">
+                                                    {/* Update Status and Delete actions for CRD */}
+                                                    <div className="flex flex-col space-y-2">
                                                         <Button
                                                             size="sm"
                                                             onClick={() => openStatusUpdate(event)}
@@ -856,6 +905,17 @@ const EventManagement = () => {
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                             </svg>
                                                             Update Status
+                                                        </Button>
+                                                        {/* Temporary Delete Button */}
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => openDeleteModal(event)}
+                                                            className="bg-red-600 hover:bg-red-700 text-white border border-red-700"
+                                                        >
+                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                            Delete (Temp)
                                                         </Button>
                                                     </div>
                                                     
@@ -1069,16 +1129,32 @@ const EventManagement = () => {
                                                                 >
                                                                     Update Status
                                                                 </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openDeleteModal(event)}
+                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                >
+                                                                    Delete (Temp)
+                                                                </Button>
                                                             </>
                                                         )}
                                                         {event.status !== 'Approved' && event.status !== 'Pending' && event.status !== 'Proposed' && (
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => openStatusUpdate(event)}
-                                                                className="border-gray-600 text-gray-600 hover:bg-gray-50"
-                                                            >
-                                                                Update Status
-                                                            </Button>
+                                                            <>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openStatusUpdate(event)}
+                                                                    className="border-gray-600 text-gray-600 hover:bg-gray-50"
+                                                                >
+                                                                    Update Status
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    onClick={() => openDeleteModal(event)}
+                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                >
+                                                                    Delete (Temp)
+                                                                </Button>
+                                                            </>
                                                         )}
                                                     </div>
                                                 </td>
@@ -2196,6 +2272,81 @@ const EventManagement = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                     <span>Decline Event</span>
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Event Confirmation Modal (Temporary Feature) */}
+            {showDeleteModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-2xl font-bold text-gray-900">Delete Event</h3>
+                                <button
+                                    onClick={closeDeleteModal}
+                                    disabled={isDeleting}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                    <div className="flex items-start">
+                                        <svg className="w-5 h-5 text-red-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm font-semibold text-red-900 mb-1">Warning: This action cannot be undone</p>
+                                            <p className="text-xs text-red-700">
+                                                This is a temporary feature for data cleanup. The event will be permanently deleted from the database.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <p className="text-sm text-gray-700 mb-2">
+                                        <span className="font-semibold">Event Title:</span>
+                                    </p>
+                                    <p className="text-lg font-medium text-gray-900">{deleteEventTitle}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex space-x-3">
+                                <Button
+                                    variant="ghostDark"
+                                    onClick={closeDeleteModal}
+                                    disabled={isDeleting}
+                                    className="flex-1 py-3 rounded-xl text-gray-700 hover:text-gray-900 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={handleDeleteEvent}
+                                    disabled={isDeleting}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isDeleting ? (
+                                        <>
+                                            <LoadingSpinner size="tiny" inline />
+                                            <span>Deleting...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            <span>Delete Event</span>
+                                        </>
+                                    )}
                                 </Button>
                             </div>
                         </div>

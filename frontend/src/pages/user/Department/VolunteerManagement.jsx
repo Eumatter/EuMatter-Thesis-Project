@@ -568,27 +568,58 @@ const VolunteerManagement = () => {
                     {/* Feedback Tab */}
                     {activeTab === 'feedback' && (
                         <div className="px-4 sm:px-6 py-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-gray-900">Volunteer Feedback</h2>
-                                    <p className="text-sm text-gray-500">
-                                        Review ratings and comments for each volunteer attendance day.
+                                    <h2 className="text-xl font-semibold text-gray-900">Feedback & Evaluation Management</h2>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                        Review and manage volunteer feedback, ratings, and attendance hours. Volunteers must submit feedback within 24 hours after the event ends.
                                     </p>
                                 </div>
-                                <div className="text-sm text-gray-600">
-                                    Average rating:{' '}
-                                    <span className="font-semibold text-[#800000]">
-                                        {feedbackData?.event?.feedbackSummary?.averageRating
-                                            ? `${feedbackData.event.feedbackSummary.averageRating.toFixed(1)} / 5`
-                                            : 'No ratings yet'}
-                                    </span>
-                                    {feedbackData?.event?.feedbackSummary?.totalResponses ? (
-                                        <span className="ml-2 text-gray-500">
-                                            ({feedbackData.event.feedbackSummary.totalResponses} responses)
+                                <div className="bg-gradient-to-br from-[#800000] to-[#a00000] rounded-lg p-4 text-white shadow-lg">
+                                    <div className="text-xs uppercase tracking-wide opacity-90 mb-1">Average Rating</div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-bold">
+                                            {feedbackData?.event?.feedbackSummary?.averageRating
+                                                ? feedbackData.event.feedbackSummary.averageRating.toFixed(1)
+                                                : '0.0'}
                                         </span>
+                                        <span className="text-lg opacity-80">/ 5</span>
+                                    </div>
+                                    {feedbackData?.event?.feedbackSummary?.totalResponses ? (
+                                        <div className="text-xs mt-1 opacity-80">
+                                            {feedbackData.event.feedbackSummary.totalResponses} response{feedbackData.event.feedbackSummary.totalResponses !== 1 ? 's' : ''}
+                                        </div>
                                     ) : null}
                                 </div>
                             </div>
+
+                            {/* Summary Cards */}
+                            {feedbackData?.records && feedbackData.records.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                        <div className="text-sm text-gray-600 mb-1">Total Records</div>
+                                        <div className="text-2xl font-bold text-gray-900">{feedbackData.records.length}</div>
+                                    </div>
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-sm">
+                                        <div className="text-sm text-yellow-700 mb-1">Pending Feedback</div>
+                                        <div className="text-2xl font-bold text-yellow-800">
+                                            {feedbackData.records.filter(r => r.status === 'pending').length}
+                                        </div>
+                                    </div>
+                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 shadow-sm">
+                                        <div className="text-sm text-green-700 mb-1">Submitted</div>
+                                        <div className="text-2xl font-bold text-green-800">
+                                            {feedbackData.records.filter(r => r.status === 'submitted' || r.status === 'overridden').length}
+                                        </div>
+                                    </div>
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+                                        <div className="text-sm text-red-700 mb-1">Missed/Voided</div>
+                                        <div className="text-2xl font-bold text-red-800">
+                                            {feedbackData.records.filter(r => r.status === 'missed' || r.status === 'voided').length}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {feedbackLoading ? (
                                 <div className="py-12 flex items-center justify-center">
@@ -609,76 +640,199 @@ const VolunteerManagement = () => {
                                     <p className="text-gray-500">Feedback will appear here once volunteers submit their ratings.</p>
                                 </div>
                             ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Volunteer</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Date</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Status</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Rating</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Feedback</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Deadline</th>
-                                                <th className="px-4 py-3 text-left font-semibold text-gray-700">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {(feedbackData?.records || []).map(record => (
-                                                <tr key={record._id}>
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-medium text-gray-900">{record.volunteer?.name || 'Volunteer'}</div>
-                                                        <div className="text-xs text-gray-500 truncate">{record.volunteer?.email}</div>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-700">
-                                                        {record.date ? new Date(record.date).toLocaleDateString() : '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3">
-                                                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                            record.status === 'submitted' ? 'bg-emerald-100 text-emerald-700' :
-                                                            record.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                            record.status === 'missed' ? 'bg-red-100 text-red-700' :
-                                                            record.status === 'overridden' ? 'bg-blue-100 text-blue-700' :
-                                                            record.status === 'voided' ? 'bg-gray-200 text-gray-600' :
-                                                            'bg-gray-100 text-gray-500'
-                                                        }`}>
-                                                            {record.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-700">
-                                                        {record.feedback?.rating ? `${record.feedback.rating}/5` : '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-600">
-                                                        {record.feedback?.comment ? (
-                                                            <span className="block max-w-[260px] whitespace-pre-line break-words">
-                                                                {record.feedback.comment}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-gray-400">No feedback</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-gray-700">
-                                                        {record.deadlineAt
-                                                            ? new Date(record.deadlineAt).toLocaleString()
-                                                            : '—'}
-                                                    </td>
-                                                    <td className="px-4 py-3 space-y-2">
-                                                        <button
-                                                            onClick={() => handleOverrideFeedback(record._id, true)}
-                                                            className="w-full px-3 py-1.5 text-xs font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors"
-                                                        >
-                                                            Reinstate Hours
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleOverrideFeedback(record._id, false)}
-                                                            className="w-full px-3 py-1.5 text-xs font-semibold bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors"
-                                                        >
-                                                            Void Hours
-                                                        </button>
-                                                    </td>
+                                <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                                                <tr>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Volunteer</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date & Time</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Hours</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Rating</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Feedback</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Deadline</th>
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {(feedbackData?.records || []).map(record => {
+                                                    const deadline = record.deadlineAt ? new Date(record.deadlineAt) : null;
+                                                    const now = new Date();
+                                                    const isOverdue = deadline && now > deadline && record.status === 'pending';
+                                                    const hoursWorked = record.hoursWorked || record.totalHours || 0;
+                                                    
+                                                    return (
+                                                        <tr key={record._id} className={`hover:bg-gray-50 transition-colors ${
+                                                            isOverdue ? 'bg-red-50/50' : ''
+                                                        }`}>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="flex items-center">
+                                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-[#800000] to-[#a00000] flex items-center justify-center text-white font-semibold">
+                                                                        {(record.volunteer?.name || 'V')[0].toUpperCase()}
+                                                                    </div>
+                                                                    <div className="ml-4">
+                                                                        <div className="text-sm font-medium text-gray-900">{record.volunteer?.name || 'Volunteer'}</div>
+                                                                        <div className="text-xs text-gray-500">{record.volunteer?.email || ''}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm text-gray-900">
+                                                                    {record.date ? new Date(record.date).toLocaleDateString('en-US', { 
+                                                                        month: 'short', 
+                                                                        day: 'numeric', 
+                                                                        year: 'numeric' 
+                                                                    }) : '—'}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500">
+                                                                    {record.checkInTime ? `In: ${new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                                                                    {record.checkOutTime ? ` | Out: ${new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-semibold text-gray-900">
+                                                                    {hoursWorked.toFixed(1)} hrs
+                                                                </div>
+                                                                {record.voidedHours && (
+                                                                    <div className="text-xs text-red-600 font-medium">Voided</div>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                                                    record.status === 'submitted' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                                                    record.status === 'pending' ? isOverdue 
+                                                                        ? 'bg-red-100 text-red-800 border border-red-200 animate-pulse' 
+                                                                        : 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                                                    record.status === 'missed' ? 'bg-red-100 text-red-800 border border-red-200' :
+                                                                    record.status === 'overridden' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                                                    record.status === 'voided' ? 'bg-gray-200 text-gray-700 border border-gray-300' :
+                                                                    'bg-gray-100 text-gray-600 border border-gray-200'
+                                                                }`}>
+                                                                    {record.status === 'pending' && isOverdue ? 'Overdue' : record.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                {record.feedback?.rating ? (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <div className="flex">
+                                                                            {[1, 2, 3, 4, 5].map(star => (
+                                                                                <svg
+                                                                                    key={star}
+                                                                                    className={`w-4 h-4 ${
+                                                                                        star <= record.feedback.rating
+                                                                                            ? 'text-yellow-400 fill-current'
+                                                                                            : 'text-gray-300'
+                                                                                    }`}
+                                                                                    fill="currentColor"
+                                                                                    viewBox="0 0 20 20"
+                                                                                >
+                                                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                                                </svg>
+                                                                            ))}
+                                                                        </div>
+                                                                        <span className="text-sm font-medium text-gray-700 ml-1">
+                                                                            {record.feedback.rating}/5
+                                                                        </span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400 text-sm">—</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                {record.feedback?.comment ? (
+                                                                    <div className="max-w-xs">
+                                                                        <p className="text-sm text-gray-700 line-clamp-2">
+                                                                            {record.feedback.comment}
+                                                                        </p>
+                                                                        {record.feedback.overridden && record.feedback.overrideReason && (
+                                                                            <p className="text-xs text-blue-600 mt-1 italic">
+                                                                                Override: {record.feedback.overrideReason}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400 text-sm">No feedback</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                {deadline ? (
+                                                                    <div>
+                                                                        <div className={`text-sm ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'}`}>
+                                                                            {deadline.toLocaleDateString('en-US', { 
+                                                                                month: 'short', 
+                                                                                day: 'numeric' 
+                                                                            })}
+                                                                        </div>
+                                                                        <div className={`text-xs ${isOverdue ? 'text-red-500' : 'text-gray-500'}`}>
+                                                                            {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </div>
+                                                                        {isOverdue && (
+                                                                            <div className="text-xs text-red-600 font-medium mt-1">
+                                                                                Overdue
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-400 text-sm">—</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                                <div className="flex flex-col gap-2">
+                                                                    {record.status === 'missed' || record.status === 'voided' ? (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours.`)) {
+                                                                                    handleOverrideFeedback(record._id, true);
+                                                                                }
+                                                                            }}
+                                                                            className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm"
+                                                                        >
+                                                                            Reinstate Hours
+                                                                        </button>
+                                                                    ) : record.status === 'pending' && isOverdue ? (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours despite missing the deadline.`)) {
+                                                                                        handleOverrideFeedback(record._id, true);
+                                                                                    }
+                                                                                }}
+                                                                                className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm"
+                                                                            >
+                                                                                Reinstate Hours
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    if (window.confirm(`Void hours for ${record.volunteer?.name || 'this volunteer'}? This will remove ${hoursWorked.toFixed(1)} hours.`)) {
+                                                                                        handleOverrideFeedback(record._id, false);
+                                                                                    }
+                                                                                }}
+                                                                                className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm"
+                                                                            >
+                                                                                Void Hours
+                                                                            </button>
+                                                                        </>
+                                                                    ) : record.status === 'submitted' || record.status === 'overridden' ? (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (window.confirm(`Void hours for ${record.volunteer?.name || 'this volunteer'}? This will remove ${hoursWorked.toFixed(1)} hours.`)) {
+                                                                                    handleOverrideFeedback(record._id, false);
+                                                                                }
+                                                                            }}
+                                                                            className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm"
+                                                                        >
+                                                                            Void Hours
+                                                                        </button>
+                                                                    ) : null}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             )}
                         </div>
