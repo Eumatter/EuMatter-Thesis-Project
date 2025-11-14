@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react'
+import React, { useState, useContext, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AppContent } from '../../context/AppContext'
 import axios from 'axios'
@@ -32,19 +32,101 @@ const QRScanner = () => {
     const html5QrCodeRef = useRef(null)
     const lastScannedCode = useRef('')
 
+    // Fetch event data
+    const fetchEventData = useCallback(async () => {
+        if (!eventId) return
+        try {
+            setLoading(true)
+            const response = await axios.get(`${backendUrl}api/events/${eventId}`, { 
+                withCredentials: true 
+            })
+            // Handle both response formats: response.data.event or response.data
+            const eventData = response.data.event || response.data
+            if (!eventData) {
+                throw new Error('Event data not found in response')
+            }
+            // Populate volunteerRegistrations if not already populated
+            if (eventData.volunteerRegistrations && eventData.volunteerRegistrations.length > 0) {
+                eventData.volunteerRegistrations = eventData.volunteerRegistrations.map(reg => ({
+                    ...reg,
+                    user: reg.user?._id ? reg.user : reg.user
+                }))
+            }
+            setEvent(eventData)
+        } catch (error) {
+            console.error('Error fetching event data:', error)
+            if (error.response?.status === 404) {
+                toast.error('Event not found')
+            } else if (error.response?.status === 403) {
+                toast.error('You do not have access to this event')
+            } else {
+                toast.error(error.response?.data?.message || 'Failed to load event data')
+            }
+            // Don't navigate immediately, show error state
+        } finally {
+            setLoading(false)
+        }
+    }, [eventId, backendUrl])
+
+    // Fetch attendance status from event data (no API call needed)
+    const fetchAttendanceStatus = useCallback(() => {
+        if (!event || !userData?._id) return
+        
+        // Get attendance from the event's volunteer registrations
+        if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+            const userReg = event.volunteerRegistrations.find(reg => 
+                String(reg.user?._id || reg.user) === String(userData._id)
+            )
+            if (userReg?.attendanceRecords && userReg.attendanceRecords.length > 0) {
+                // Get today's attendance record or the most recent one
+                const today = new Date()
+                today.setHours(0, 0, 0, 0)
+                const todayRecord = userReg.attendanceRecords.find(record => {
+                    const recordDate = new Date(record.date)
+                    recordDate.setHours(0, 0, 0, 0)
+                    return recordDate.getTime() === today.getTime()
+                }) || userReg.attendanceRecords[userReg.attendanceRecords.length - 1]
+                
+                if (todayRecord) {
+                    if (todayRecord.timeOut) {
+                        setAttendanceStatus('completed')
+                        setAttendanceData({
+                            _id: todayRecord._id,
+                            checkInTime: todayRecord.timeIn,
+                            checkOutTime: todayRecord.timeOut,
+                            hoursWorked: todayRecord.totalHours || 0
+                        })
+                    } else if (todayRecord.timeIn) {
+                        setAttendanceStatus('timeout')
+                        setAttendanceData({
+                            _id: todayRecord._id,
+                            checkInTime: todayRecord.timeIn,
+                            hoursWorked: 0
+                        })
+                    }
+                }
+            }
+        }
+    }, [event, userData?._id])
+
     useEffect(() => {
         if (eventId) {
-            fetchEventData()
+        fetchEventData()
+        }
+    }, [eventId, fetchEventData])
+
+    useEffect(() => {
+        if (event && userData?._id) {
             fetchAttendanceStatus()
         }
-    }, [eventId])
+    }, [event?._id, userData?._id, fetchAttendanceStatus])
 
     // Auto check-in via deeplink token (?token=...)
     useEffect(() => {
         const params = new URLSearchParams(location.search)
         const token = params.get('token')
-        if (token && !processing && event) {
-            ;(async () => {
+        if (token && !processing && event?._id) {
+            const handleAutoCheckIn = async () => {
                 setProcessing(true)
                 try {
                     const response = await axios.post(`${backendUrl}api/attendance/check-in`, { token }, { withCredentials: true })
@@ -55,64 +137,18 @@ const QRScanner = () => {
                         setAttendanceStatus('completed')
                         setShowFeedbackModal(true)
                     }
-                    fetchAttendanceStatus()
+                    if (eventId && userData?._id) {
+                        fetchAttendanceStatus()
+                    }
                 } catch (err) {
                     toast.error(err?.response?.data?.message || 'Failed to check in')
                 } finally {
                     setProcessing(false)
                 }
-            })()
-        }
-    }, [location.search, backendUrl, event])
-
-    const fetchEventData = async () => {
-        try {
-            setLoading(true)
-            const response = await axios.get(`${backendUrl}api/events/${eventId}`, { withCredentials: true })
-            // Handle both response formats: response.data.event or response.data
-            const eventData = response.data.event || response.data
-            if (!eventData) {
-                throw new Error('Event data not found in response')
             }
-            setEvent(eventData)
-        } catch (error) {
-            console.error('Error fetching event data:', error)
-            toast.error(error.response?.data?.message || 'Failed to load event data')
-            // Don't navigate immediately, show error state
-        } finally {
-            setLoading(false)
+            handleAutoCheckIn()
         }
-    }
-
-    const fetchAttendanceStatus = async () => {
-        if (!eventId || !userData?._id) return
-        try {
-            // Try to get attendance from the event's volunteer attendance records
-            const response = await axios.get(`${backendUrl}api/volunteers/attendance/event/${eventId}`, {
-                withCredentials: true
-            })
-            if (response.data?.attendance && Array.isArray(response.data.attendance)) {
-                // Find the current user's attendance record
-                const userAttendance = response.data.attendance.find(att => 
-                    (att.userId && String(att.userId) === String(userData._id)) ||
-                    (att.volunteer && String(att.volunteer._id || att.volunteer) === String(userData._id))
-                )
-                if (userAttendance) {
-                    const att = userAttendance
-                    if (att.checkOutTime || att.timeOut) {
-                        setAttendanceStatus('completed')
-                        setAttendanceData(att)
-                    } else if (att.checkInTime || att.timeIn) {
-                        setAttendanceStatus('timeout')
-                        setAttendanceData(att)
-                    }
-                }
-            }
-        } catch (error) {
-            // Silently fail - user might not have attendance yet
-            console.log('No attendance record found yet:', error.message)
-        }
-    }
+    }, [location.search, backendUrl, event?._id, processing, eventId, userData?._id, fetchAttendanceStatus])
 
     const handleQRScan = async (qrCode) => {
         // Prevent duplicate scans
@@ -163,17 +199,31 @@ const QRScanner = () => {
             // Update attendance status for UI
             if (action === 'timein') {
                 setAttendanceStatus('timeout')
-                // Resume scanning after a short delay
-                setTimeout(() => {
-                    startScanning()
-                }, 2000)
+                // Update attendance data from response
+                if (response.data.attendance) {
+                    setAttendanceData({
+                        _id: response.data.attendance._id,
+                        checkInTime: response.data.attendance.checkInTime || response.data.attendance.timeIn,
+                        hoursWorked: 0
+                    })
+                }
+                // Refresh event data to get updated attendance records
+                fetchEventData().then(() => {
+                    // Resume scanning after a short delay
+                    setTimeout(() => {
+                        startScanning()
+                    }, 2000)
+                })
             } else {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
-                // Show feedback modal after checkout
-                setTimeout(() => {
-                    setShowFeedbackModal(true)
-                }, 1000)
+                // Refresh event data to get updated attendance records
+                fetchEventData().then(() => {
+                    // Show feedback modal after checkout
+                    setTimeout(() => {
+                        setShowFeedbackModal(true)
+                    }, 1000)
+                })
             }
             
         } catch (error) {
@@ -256,8 +306,11 @@ const QRScanner = () => {
     
     useEffect(() => {
         return () => {
-            stopScanning()
+            if (html5QrCodeRef.current) {
+                stopScanning()
+            }
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleManualQR = () => {
@@ -292,7 +345,10 @@ const QRScanner = () => {
             toast.success('Thank you for your feedback!')
             setShowFeedbackModal(false)
             setFeedbackForm({ rating: 0, comment: '' })
-            fetchAttendanceStatus()
+            // Refresh attendance status after feedback submission
+            if (eventId && userData?._id) {
+                fetchAttendanceStatus()
+            }
         } catch (error) {
             console.error('Error submitting feedback:', error)
             toast.error(error.response?.data?.message || 'Failed to submit feedback')
@@ -307,7 +363,7 @@ const QRScanner = () => {
                 <Header />
                 <div className="flex items-center justify-center min-h-[70vh]">
                     <div className="text-center">
-                        <LoadingSpinner size="large" text="Loading QR scanner..." />
+                    <LoadingSpinner size="large" text="Loading QR scanner..." />
                     </div>
                 </div>
                 <Footer />
@@ -456,18 +512,18 @@ const QRScanner = () => {
                                     <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                        </svg>
-                                    </div>
+                                </svg>
+                            </div>
                                     <div className="flex-1">
                                         <p className="text-red-800 font-semibold mb-2">Camera Access Error</p>
                                         <p className="text-red-700 text-sm mb-4">{cameraError}</p>
-                                        <button
-                                            onClick={handleManualQR}
+                            <button
+                                onClick={handleManualQR}
                                             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
-                                        >
-                                            Enter QR Code Manually
-                                        </button>
-                                    </div>
+                            >
+                                Enter QR Code Manually
+                            </button>
+                        </div>
                                 </div>
                             </div>
                         )}

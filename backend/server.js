@@ -76,10 +76,18 @@ app.use(cors({
             return callback(null, true);
         }
 
+        // Allow all vercel.app subdomains
+        if (normalizedOrigin.includes('vercel.app')) {
+            return callback(null, true);
+        }
+
         console.warn(`Blocked CORS origin: ${origin}`);
         return callback(new Error('Not allowed by CORS'));
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range']
 }));
 
 // API Endpoints
