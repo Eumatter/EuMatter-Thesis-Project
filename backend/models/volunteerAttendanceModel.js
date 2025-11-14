@@ -50,6 +50,10 @@ const volunteerAttendanceSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    previousDayHours: {
+        type: Number,
+        default: 0 // For multi-day events: hours from previous days (paused)
+    },
     
     // Additional fields
     isValid: {

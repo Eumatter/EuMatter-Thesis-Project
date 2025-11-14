@@ -22,6 +22,18 @@ async function generateEvaluationQRCodes(now) {
 
         for (const event of events) {
             const eventEnd = new Date(event.endDate)
+            const eventStart = new Date(event.startDate)
+            const eventDuration = Math.ceil((eventEnd - eventStart) / (1000 * 60 * 60 * 24))
+            const isMultiDay = eventDuration > 1
+            
+            // For multi-day events, only generate evaluation QR on the last day
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+            const lastDay = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate())
+            
+            if (isMultiDay && today.getTime() !== lastDay.getTime()) {
+                continue // Skip if not the last day for multi-day events
+            }
+            
             const fiveMinutesBefore = new Date(eventEnd.getTime() - (5 * 60 * 1000))
             
             // Only generate if we're within the 5-minute window

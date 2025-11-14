@@ -64,6 +64,52 @@ export const createEvent = async (req, res) => {
             return res.status(400).json({ message: "End date/time must be after start date/time" });
         }
 
+        // Calculate event duration
+        const eventDuration = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        const isMultiDay = eventDuration > 1;
+
+        // Parse volunteerSettings
+        let parsedVolunteerSettings = null;
+        if (volunteerSettings) {
+            try {
+                parsedVolunteerSettings = typeof volunteerSettings === 'string' ? JSON.parse(volunteerSettings) : volunteerSettings;
+            } catch (e) {
+                return res.status(400).json({ message: "Invalid volunteerSettings format" });
+            }
+        }
+
+        // Validate dailySchedule for multi-day events with volunteers
+        if (isOpenForVolunteer === 'true' || isOpenForVolunteer === true) {
+            if (isMultiDay && parsedVolunteerSettings) {
+                if (!parsedVolunteerSettings.dailySchedule || !Array.isArray(parsedVolunteerSettings.dailySchedule) || parsedVolunteerSettings.dailySchedule.length === 0) {
+                    return res.status(400).json({ 
+                        message: "Multi-day events with volunteers require a daily schedule with time in/out for each day" 
+                    });
+                }
+                
+                // Validate that dailySchedule has entries for each day
+                if (parsedVolunteerSettings.dailySchedule.length !== eventDuration) {
+                    return res.status(400).json({ 
+                        message: `Daily schedule must have entries for all ${eventDuration} day(s) of the event` 
+                    });
+                }
+
+                // Validate each day has timeIn and timeOut
+                for (let i = 0; i < parsedVolunteerSettings.dailySchedule.length; i++) {
+                    const day = parsedVolunteerSettings.dailySchedule[i];
+                    if (!day.timeIn || !day.timeOut) {
+                        return res.status(400).json({ 
+                            message: `Day ${i + 1} is missing time in or time out` 
+                        });
+                    }
+                }
+            } else if (isMultiDay) {
+                return res.status(400).json({ 
+                    message: "Multi-day events with volunteers require volunteerSettings with dailySchedule" 
+                });
+            }
+        }
+
         const newEvent = new eventModel({
             title,
             description,
@@ -75,15 +121,7 @@ export const createEvent = async (req, res) => {
             proposalDocument: docBase64,
             isOpenForDonation: isOpenForDonation === 'true' || isOpenForDonation === true,
             isOpenForVolunteer: isOpenForVolunteer === 'true' || isOpenForVolunteer === true,
-            volunteerSettings: (() => {
-                try {
-                    if (!volunteerSettings) return undefined;
-                    const parsed = typeof volunteerSettings === 'string' ? JSON.parse(volunteerSettings) : volunteerSettings;
-                    return parsed;
-                } catch (_) {
-                    return undefined;
-                }
-            })()
+            volunteerSettings: parsedVolunteerSettings || undefined
         });
 
         await newEvent.save();
@@ -282,6 +320,38 @@ export const updateEvent = async (req, res) => {
         // If volunteerSettings is provided as JSON string, parse it
         if (typeof updates.volunteerSettings === 'string') {
             try { updates.volunteerSettings = JSON.parse(updates.volunteerSettings) } catch (_) { delete updates.volunteerSettings }
+        }
+
+        // Validate dailySchedule if updating volunteerSettings for multi-day events
+        if (updates.volunteerSettings && updates.volunteerSettings.dailySchedule) {
+            const event = await eventModel.findById(req.params.id);
+            if (event) {
+                const eventDuration = Math.ceil((new Date(event.endDate) - new Date(event.startDate)) / (1000 * 60 * 60 * 24));
+                const isMultiDay = eventDuration > 1;
+                
+                if (isMultiDay && event.isOpenForVolunteer) {
+                    if (!Array.isArray(updates.volunteerSettings.dailySchedule) || updates.volunteerSettings.dailySchedule.length === 0) {
+                        return res.status(400).json({ 
+                            message: "Multi-day events with volunteers require a daily schedule with time in/out for each day" 
+                        });
+                    }
+                    
+                    if (updates.volunteerSettings.dailySchedule.length !== eventDuration) {
+                        return res.status(400).json({ 
+                            message: `Daily schedule must have entries for all ${eventDuration} day(s) of the event` 
+                        });
+                    }
+
+                    for (let i = 0; i < updates.volunteerSettings.dailySchedule.length; i++) {
+                        const day = updates.volunteerSettings.dailySchedule[i];
+                        if (!day.timeIn || !day.timeOut) {
+                            return res.status(400).json({ 
+                                message: `Day ${i + 1} is missing time in or time out` 
+                            });
+                        }
+                    }
+                }
+            }
         }
 
         // Convert uploaded files to Base64 if provided
