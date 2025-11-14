@@ -165,11 +165,12 @@ export const removeVolunteer = async (req, res) => {
     }
 };
 
-// Generate QR code for attendance (5 hours before event)
+// Generate QR code for attendance (Time In - for check-in)
 export const generateAttendanceQR = async (req, res) => {
     try {
         const { eventId } = req.params;
         const userId = req.user._id;
+        const { type = 'checkIn' } = req.body; // 'checkIn' or 'checkOut'
 
         const event = await eventModel.findById(eventId);
         if (!event) {
@@ -190,28 +191,54 @@ export const generateAttendanceQR = async (req, res) => {
         const now = new Date();
         const eventStart = new Date(event.startDate);
         const eventEnd = new Date(event.endDate);
-        const fiveHoursBefore = new Date(eventStart.getTime() - (5 * 60 * 60 * 1000));
-
-        // Check if it's within 5 hours before event start
-        if (now < fiveHoursBefore) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "QR code can only be generated 5 hours before event starts",
-                earliestGeneration: fiveHoursBefore
-            });
+        
+        // Calculate if event is single-day or multi-day
+        const eventDuration = Math.ceil((eventEnd - eventStart) / (1000 * 60 * 60 * 24));
+        const isSingleDay = eventDuration <= 1;
+        
+        // For check-in QR: Allow generation 1 day before start (single-day) or during ongoing event
+        if (type === 'checkIn') {
+            const oneDayBefore = new Date(eventStart.getTime() - (24 * 60 * 60 * 1000));
+            
+            // Check if event has ended
+            if (now > eventEnd) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Event has already ended" 
+                });
+            }
+            
+            // For single-day events: allow 1 day before start
+            // For ongoing events: always allow during event
+            if (isSingleDay && now < oneDayBefore) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "QR code can only be generated 1 day before event starts for single-day events",
+                    earliestGeneration: oneDayBefore
+                });
+            }
+        }
+        
+        // For check-out/evaluation QR: Only allow if 5 minutes before end or during event
+        if (type === 'checkOut') {
+            const fiveMinutesBeforeEnd = new Date(eventEnd.getTime() - (5 * 60 * 1000));
+            
+            if (now < fiveMinutesBeforeEnd && now < eventStart) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Evaluation QR code can only be generated 5 minutes before event end or during the event"
+                });
+            }
         }
 
-        // Check if event has ended
-        if (now > eventEnd) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Event has already started or ended" 
-            });
-        }
+        // Get today's date in YYYY-MM-DD format
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
         // Generate unique QR code
         const qrData = {
             eventId: event._id.toString(),
+            type: type, // 'checkIn' or 'checkOut'
+            date: todayStr,
             generatedAt: now.toISOString(),
             generatedBy: userId.toString(),
             random: crypto.randomBytes(16).toString('hex')
@@ -220,22 +247,57 @@ export const generateAttendanceQR = async (req, res) => {
         const qrString = JSON.stringify(qrData);
         const qrCodeImage = await QRCode.toDataURL(qrString);
 
-        // Save QR code to event
-        event.attendanceQR = {
-            code: qrString,
-            generatedAt: now,
-            generatedBy: userId,
-            isActive: true,
-            expiresAt: eventEnd
-        };
+        // Update qrCodes array in event model
+        if (!event.qrCodes) {
+            event.qrCodes = [];
+        }
+        
+        // Find or create QR code entry for today
+        let qrEntry = event.qrCodes.find(qr => qr.date === todayStr);
+        if (!qrEntry) {
+            qrEntry = {
+                date: todayStr,
+                checkIn: '',
+                checkOut: '',
+                generatedAt: now,
+                generatedBy: userId,
+                isActive: true,
+                expiresAt: eventEnd
+            };
+            event.qrCodes.push(qrEntry);
+        }
+        
+        // Update the appropriate QR code (checkIn or checkOut)
+        if (type === 'checkIn') {
+            qrEntry.checkIn = qrString;
+        } else if (type === 'checkOut') {
+            qrEntry.checkOut = qrString;
+        }
+        qrEntry.isActive = true;
+        qrEntry.generatedAt = now;
+        qrEntry.generatedBy = userId;
+        qrEntry.expiresAt = eventEnd;
+
+        // Also update legacy attendanceQR for backward compatibility (only for checkIn)
+        if (type === 'checkIn') {
+            event.attendanceQR = {
+                code: qrString,
+                generatedAt: now,
+                generatedBy: userId,
+                isActive: true,
+                expiresAt: eventEnd
+            };
+        }
 
         await event.save();
 
         return res.json({ 
             success: true, 
-            message: "QR code generated successfully",
+            message: `${type === 'checkIn' ? 'Check-in' : 'Evaluation/Check-out'} QR code generated successfully`,
             qrCode: qrCodeImage,
-            expiresAt: eventStart,
+            type: type,
+            date: todayStr,
+            expiresAt: eventEnd,
             isActive: true
         });
     } catch (error) {
@@ -244,10 +306,70 @@ export const generateAttendanceQR = async (req, res) => {
     }
 };
 
+// Close evaluation QR code (can be done anytime by department)
+export const closeEvaluationQR = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { date } = req.body; // Optional: specific date, otherwise closes all active evaluation QRs
+        const userId = req.user._id;
+
+        const event = await eventModel.findById(eventId);
+        if (!event) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        if (!event.qrCodes || event.qrCodes.length === 0) {
+            return res.status(400).json({ success: false, message: "No QR codes found for this event" });
+        }
+
+        // Close evaluation QR codes
+        let closedCount = 0;
+        if (date) {
+            // Close specific date's checkOut QR
+            const qrEntry = event.qrCodes.find(qr => qr.date === date);
+            if (qrEntry && qrEntry.checkOut) {
+                qrEntry.isActive = false;
+                closedCount = 1;
+            }
+        } else {
+            // Close all active checkOut QRs
+            event.qrCodes.forEach(qr => {
+                if (qr.checkOut && qr.isActive) {
+                    qr.isActive = false;
+                    closedCount++;
+                }
+            });
+        }
+
+        await event.save();
+
+        return res.json({ 
+            success: true, 
+            message: `Closed ${closedCount} evaluation QR code(s)`,
+            closedCount
+        });
+    } catch (error) {
+        console.error('Close evaluation QR error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Get current QR code status
 export const getQRStatus = async (req, res) => {
     try {
         const { eventId } = req.params;
+        const { date } = req.query; // Optional: get QR for specific date
         const userId = req.user._id;
 
         const event = await eventModel.findById(eventId);
@@ -267,15 +389,48 @@ export const getQRStatus = async (req, res) => {
         }
 
         const now = new Date();
-        const isExpired = event.attendanceQR?.expiresAt && now > event.attendanceQR.expiresAt;
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const targetDate = date || todayStr;
+
+        // Get QR codes for the specified date (or today)
+        let qrEntry = null;
+        if (event.qrCodes && event.qrCodes.length > 0) {
+            qrEntry = event.qrCodes.find(qr => qr.date === targetDate);
+        }
+
+        // Legacy support: check attendanceQR if no qrCodes entry found
+        const legacyQR = event.attendanceQR;
+        const isLegacyExpired = legacyQR?.expiresAt && now > legacyQR.expiresAt;
+
+        // Get check-in QR
+        let checkInQR = null;
+        if (qrEntry && qrEntry.checkIn && qrEntry.isActive) {
+            checkInQR = await QRCode.toDataURL(qrEntry.checkIn);
+        } else if (legacyQR?.code && legacyQR.isActive && !isLegacyExpired) {
+            checkInQR = await QRCode.toDataURL(legacyQR.code);
+        }
+
+        // Get check-out/evaluation QR
+        let checkOutQR = null;
+        if (qrEntry && qrEntry.checkOut && qrEntry.isActive) {
+            checkOutQR = await QRCode.toDataURL(qrEntry.checkOut);
+        }
 
         return res.json({ 
             success: true,
-            hasQR: !!event.attendanceQR?.code,
-            isActive: event.attendanceQR?.isActive && !isExpired,
-            generatedAt: event.attendanceQR?.generatedAt,
-            expiresAt: event.attendanceQR?.expiresAt,
-            qrCode: event.attendanceQR?.isActive && !isExpired ? await QRCode.toDataURL(event.attendanceQR.code) : null
+            date: targetDate,
+            hasCheckInQR: !!checkInQR,
+            hasCheckOutQR: !!checkOutQR,
+            checkInQR: checkInQR,
+            checkOutQR: checkOutQR,
+            checkInActive: qrEntry ? (qrEntry.checkIn && qrEntry.isActive) : (legacyQR?.isActive && !isLegacyExpired),
+            checkOutActive: qrEntry ? (qrEntry.checkOut && qrEntry.isActive) : false,
+            generatedAt: qrEntry?.generatedAt || legacyQR?.generatedAt,
+            expiresAt: qrEntry?.expiresAt || legacyQR?.expiresAt,
+            // Legacy fields for backward compatibility
+            hasQR: !!checkInQR,
+            isActive: qrEntry ? qrEntry.isActive : (legacyQR?.isActive && !isLegacyExpired),
+            qrCode: checkInQR
         });
     } catch (error) {
         console.error('Get QR status error:', error);
@@ -306,10 +461,43 @@ export const recordAttendance = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if QR code is still active
         const now = new Date();
-        if (!event.attendanceQR?.isActive || now > event.attendanceQR.expiresAt) {
-            return res.status(400).json({ success: false, message: "QR code has expired" });
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        // Determine QR type from QR data or action
+        const qrType = qrData.type || (action === 'timein' ? 'checkIn' : 'checkOut');
+        
+        // Check if QR code is still active - check new qrCodes array first, then legacy
+        let qrEntry = null;
+        if (event.qrCodes && event.qrCodes.length > 0) {
+            qrEntry = event.qrCodes.find(qr => qr.date === (qrData.date || todayStr));
+        }
+        
+        let isQRActive = false;
+        if (qrEntry) {
+            if (qrType === 'checkIn' && qrEntry.checkIn) {
+                isQRActive = qrEntry.isActive && qrEntry.checkIn === qrCode;
+            } else if (qrType === 'checkOut' && qrEntry.checkOut) {
+                isQRActive = qrEntry.isActive && qrEntry.checkOut === qrCode;
+            }
+        } else {
+            // Fallback to legacy attendanceQR for backward compatibility
+            const legacyQR = event.attendanceQR;
+            if (legacyQR && legacyQR.code === qrCode) {
+                isQRActive = legacyQR.isActive && (!legacyQR.expiresAt || now <= legacyQR.expiresAt);
+            }
+        }
+        
+        if (!isQRActive) {
+            return res.status(400).json({ success: false, message: "QR code is not active or has expired" });
+        }
+        
+        // Validate QR type matches action
+        if ((qrType === 'checkIn' && action !== 'timein') || (qrType === 'checkOut' && action !== 'timeout')) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `QR code type (${qrType}) does not match action (${action})` 
+            });
         }
 
         // Check if user is registered as volunteer

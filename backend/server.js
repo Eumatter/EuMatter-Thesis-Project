@@ -22,6 +22,7 @@ import feedbackRouter from "./routes/feedbackRoutes.js";
 import { scheduleReminders } from './utils/reminderScheduler.js'
 import { startMaintenanceScheduler } from './utils/maintenanceScheduler.js'
 import { startFeedbackScheduler } from './utils/feedbackScheduler.js'
+import { startQRScheduler } from './utils/qrScheduler.js'
 
 const app = express();
 const port = process.env.PORT;
@@ -181,9 +182,17 @@ try {
 }
 
 // Start feedback scheduler
-try { 
+try {
     startFeedbackScheduler(); 
     console.log('✅ Feedback scheduler started');
 } catch (e) { 
     console.error('❌ Feedback scheduler failed to start:', e?.message);
+}
+
+// Start QR code scheduler for automatic evaluation QR generation
+try {
+    startQRScheduler(); 
+    console.log('✅ QR code scheduler started');
+} catch (e) { 
+    console.error('❌ QR code scheduler failed to start:', e?.message);
 }

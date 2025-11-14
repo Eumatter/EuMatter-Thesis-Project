@@ -5,6 +5,7 @@ import {
     removeVolunteer,
     generateAttendanceQR,
     getQRStatus,
+    closeEvaluationQR,
     recordAttendance,
     getVolunteerAttendance,
     validateAttendance
@@ -21,6 +22,7 @@ router.delete("/event/:eventId/volunteer/:volunteerId", userAuth, removeVoluntee
 // QR Code and attendance routes
 router.post("/event/:eventId/qr/generate", userAuth, generateAttendanceQR);
 router.get("/event/:eventId/qr/status", userAuth, getQRStatus);
+router.post("/event/:eventId/qr/close-evaluation", userAuth, closeEvaluationQR);
 router.post("/attendance/record", userAuth, recordAttendance);
 router.get("/event/:eventId/attendance", userAuth, getVolunteerAttendance);
 router.post("/event/:eventId/attendance/validate", userAuth, validateAttendance);

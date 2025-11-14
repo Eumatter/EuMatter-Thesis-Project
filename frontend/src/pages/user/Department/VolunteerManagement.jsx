@@ -204,23 +204,41 @@ const VolunteerManagement = () => {
         }
     }
 
-    const generateQRCode = async () => {
+    const generateQRCode = async (type = 'checkIn') => {
         setQrGenerating(true)
         try {
             const response = await axios.post(`${backendUrl}api/volunteers/event/${eventId}/qr/generate`, 
-                {}, 
+                { type }, 
                 { withCredentials: true }
             )
             
             setQrCode(response.data.qrCode)
             setQrStatus(response.data)
             setShowQRModal(true)
-            toast.success('QR code generated successfully')
+            toast.success(`${type === 'checkIn' ? 'Check-in' : 'Evaluation/Check-out'} QR code generated successfully`)
+            fetchQRStatus() // Refresh QR status
         } catch (error) {
             console.error('Error generating QR code:', error)
             toast.error(error.response?.data?.message || 'Failed to generate QR code')
         } finally {
             setQrGenerating(false)
+        }
+    }
+
+    const closeEvaluationQR = async () => {
+        if (!window.confirm('Are you sure you want to close the evaluation QR code? This will prevent volunteers from checking out.')) return
+        
+        try {
+            const response = await axios.post(`${backendUrl}api/volunteers/event/${eventId}/qr/close-evaluation`, 
+                {}, 
+                { withCredentials: true }
+            )
+            
+            toast.success(response.data.message || 'Evaluation QR code closed')
+            fetchQRStatus() // Refresh QR status
+        } catch (error) {
+            console.error('Error closing evaluation QR:', error)
+            toast.error(error.response?.data?.message || 'Failed to close evaluation QR code')
         }
     }
 
@@ -258,13 +276,36 @@ const VolunteerManagement = () => {
         return new Date(date).toLocaleDateString()
     }
 
-    const canGenerateQR = () => {
+    const canGenerateCheckInQR = () => {
         if (!event) return false
         const now = new Date()
         const eventStart = new Date(event.startDate)
-        const fiveHoursBefore = new Date(eventStart.getTime() - (5 * 60 * 60 * 1000))
+        const eventEnd = new Date(event.endDate)
+        const oneDayBefore = new Date(eventStart.getTime() - (24 * 60 * 60 * 1000))
         
-        return now >= fiveHoursBefore && now < eventStart
+        // Calculate if event is single-day or multi-day
+        const eventDuration = Math.ceil((eventEnd - eventStart) / (1000 * 60 * 60 * 24))
+        const isSingleDay = eventDuration <= 1
+        
+        // For single-day: allow 1 day before start
+        // For ongoing events: always allow during event
+        if (isSingleDay) {
+            return now >= oneDayBefore && now <= eventEnd
+        } else {
+            // Multi-day: allow during event
+            return now >= eventStart && now <= eventEnd
+        }
+    }
+
+    const canGenerateCheckOutQR = () => {
+        if (!event) return false
+        const now = new Date()
+        const eventStart = new Date(event.startDate)
+        const eventEnd = new Date(event.endDate)
+        const fiveMinutesBeforeEnd = new Date(eventEnd.getTime() - (5 * 60 * 1000))
+        
+        // Allow if 5 minutes before end or during event
+        return (now >= fiveMinutesBeforeEnd || (now >= eventStart && now <= eventEnd)) && now <= eventEnd
     }
 
     if (loading) {
@@ -334,33 +375,82 @@ const VolunteerManagement = () => {
                                 Validate Attendance
                             </button>
                             <button
-                                onClick={generateQRCode}
-                                disabled={!canGenerateQR() || qrGenerating}
+                                onClick={() => generateQRCode('checkIn')}
+                                disabled={!canGenerateCheckInQR() || qrGenerating}
                                 className={`px-4 sm:px-5 py-2 rounded-lg transition-colors w-full md:w-auto ${
-                                    canGenerateQR() && !qrGenerating
+                                    canGenerateCheckInQR() && !qrGenerating
                                         ? 'bg-green-600 text-white hover:bg-green-700'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                             >
-                                {qrGenerating ? 'Generating...' : 'Generate QR Code'}
+                                {qrGenerating ? 'Generating...' : 'Generate Check-In QR'}
+                            </button>
+                            <button
+                                onClick={() => generateQRCode('checkOut')}
+                                disabled={!canGenerateCheckOutQR() || qrGenerating}
+                                className={`px-4 sm:px-5 py-2 rounded-lg transition-colors w-full md:w-auto ${
+                                    canGenerateCheckOutQR() && !qrGenerating
+                                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                                {qrGenerating ? 'Generating...' : 'Generate Evaluation QR'}
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* QR Code Generation Info */}
-                {!canGenerateQR() && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                        <div className="flex items-center">
-                            <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                            </svg>
-                            <p className="text-yellow-800">
-                                QR code can only be generated 5 hours before the event starts.
-                            </p>
-                        </div>
-                    </div>
-                )}
+                {(() => {
+                    const now = new Date()
+                    const eventStart = new Date(event.startDate)
+                    const eventEnd = new Date(event.endDate)
+                    const eventDuration = Math.ceil((eventEnd - eventStart) / (1000 * 60 * 60 * 24))
+                    const isSingleDay = eventDuration <= 1
+                    const oneDayBefore = new Date(eventStart.getTime() - (24 * 60 * 60 * 1000))
+                    const fiveMinutesBeforeEnd = new Date(eventEnd.getTime() - (5 * 60 * 1000))
+                    
+                    if (!canGenerateCheckInQR() && !canGenerateCheckOutQR()) {
+                        return (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                                <div className="flex items-start">
+                                    <svg className="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-yellow-800 font-medium mb-1">QR Code Generation Rules:</p>
+                                        <ul className="text-yellow-700 text-sm space-y-1 list-disc list-inside">
+                                            <li><strong>Check-In QR:</strong> {isSingleDay ? 'Can be generated 1 day before event starts or during the event' : 'Can be generated during the event'}</li>
+                                            <li><strong>Evaluation QR:</strong> Automatically appears 5 minutes before event end, or can be manually generated during the event</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+                    
+                    if (!canGenerateCheckInQR() && now < eventStart) {
+                        return (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                <div className="flex items-start">
+                                    <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-blue-800 font-medium mb-1">Check-In QR Available:</p>
+                                        <p className="text-blue-700 text-sm">
+                                            {isSingleDay 
+                                                ? `Check-in QR can be generated starting ${oneDayBefore.toLocaleString()}.`
+                                                : 'Check-in QR can be generated once the event starts.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+                    
+                    return null
+                })()}
 
                 {/* Tab Navigation */}
                 <div className="bg-white rounded-xl shadow-md mb-6">
@@ -660,68 +750,131 @@ const VolunteerManagement = () => {
                     {/* QR Code Tab */}
                     {activeTab === 'qr' && (
                         <div className="px-4 sm:px-6 py-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-6">QR Code for Attendance</h2>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                                <h2 className="text-xl font-semibold text-gray-900">QR Codes for Attendance</h2>
+                                {qrStatus?.hasCheckOutQR && qrStatus?.checkOutActive && (
+                                    <button
+                                        onClick={closeEvaluationQR}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                    >
+                                        Close Evaluation QR
+                                    </button>
+                                )}
+                            </div>
                             
-                            {qrStatus?.hasQR ? (
-                                <div className="text-center">
-                                    <div className="bg-gray-50 rounded-lg p-6 mb-4">
-                                        <img 
-                                            src={qrCode} 
-                                            alt="Attendance QR Code" 
-                                            className="mx-auto mb-4 max-w-full"
-                                            style={{ maxWidth: '300px' }}
-                                        />
-                                        <p className="text-sm text-gray-600 mb-2">
-                                            Generated: {formatDate(qrStatus.generatedAt)}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                            Expires: {formatDate(qrStatus.expiresAt)}
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row justify-center gap-3 sm:space-x-4">
+                            {/* Check-In QR Code */}
+                            <div className="mb-8">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Check-In QR Code (Time In)</h3>
+                                {qrStatus?.hasCheckInQR && qrStatus?.checkInActive ? (
+                                    <div className="text-center">
+                                        <div className="bg-gray-50 rounded-lg p-6 mb-4">
+                                            <img 
+                                                src={qrStatus.checkInQR} 
+                                                alt="Check-In QR Code" 
+                                                className="mx-auto mb-4 max-w-full"
+                                                style={{ maxWidth: '300px' }}
+                                            />
+                                            <p className="text-sm text-gray-600 mb-2">
+                                                Generated: {qrStatus.generatedAt ? formatDate(qrStatus.generatedAt) : 'N/A'}
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
+                                            </p>
+                                        </div>
                                         <button
-                                            onClick={() => setShowQRModal(true)}
+                                            onClick={() => {
+                                                setQrCode(qrStatus.checkInQR)
+                                                setShowQRModal(true)
+                                            }}
                                             className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                                         >
                                             View Full Size
                                         </button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                        <p className="text-gray-600 mb-4">No check-in QR code generated yet</p>
                                         <button
-                                            onClick={generateQRCode}
-                                            disabled={!canGenerateQR() || qrGenerating}
-                                            className={`px-4 sm:px-5 py-2 rounded-lg transition-colors ${
-                                                canGenerateQR() && !qrGenerating
+                                            onClick={() => generateQRCode('checkIn')}
+                                            disabled={!canGenerateCheckInQR() || qrGenerating}
+                                            className={`px-6 py-3 rounded-lg transition-colors ${
+                                                canGenerateCheckInQR() && !qrGenerating
                                                     ? 'bg-green-600 text-white hover:bg-green-700'
                                                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                             }`}
                                         >
-                                            {qrGenerating ? 'Generating...' : 'Regenerate'}
+                                            {qrGenerating ? 'Generating...' : 'Generate Check-In QR'}
                                         </button>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                        </svg>
+                                )}
+                            </div>
+
+                            {/* Check-Out/Evaluation QR Code */}
+                            <div>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-4">Evaluation QR Code (Time Out)</h3>
+                                {qrStatus?.hasCheckOutQR && qrStatus?.checkOutActive ? (
+                                    <div className="text-center">
+                                        <div className="bg-purple-50 rounded-lg p-6 mb-4">
+                                            <img 
+                                                src={qrStatus.checkOutQR} 
+                                                alt="Evaluation QR Code" 
+                                                className="mx-auto mb-4 max-w-full"
+                                                style={{ maxWidth: '300px' }}
+                                            />
+                                            <p className="text-sm text-gray-600 mb-2">
+                                                Generated: {qrStatus.generatedAt ? formatDate(qrStatus.generatedAt) : 'N/A'}
+                                            </p>
+                                            <p className="text-sm text-gray-600">
+                                                Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row justify-center gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    setQrCode(qrStatus.checkOutQR)
+                                                    setShowQRModal(true)
+                                                }}
+                                                className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                            >
+                                                View Full Size
+                                            </button>
+                                            <button
+                                                onClick={closeEvaluationQR}
+                                                className="bg-red-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                                            >
+                                                Close Evaluation QR
+                                            </button>
+                                        </div>
                                     </div>
-                                    <h3 className="text-lg font-semibold text-gray-600 mb-2">No QR code generated</h3>
-                                    <p className="text-gray-500 mb-4">
-                                        Generate a QR code to enable volunteer attendance tracking.
-                                    </p>
-                                    <button
-                                        onClick={generateQRCode}
-                                        disabled={!canGenerateQR() || qrGenerating}
-                                        className={`px-6 py-3 rounded-lg transition-colors ${
-                                            canGenerateQR() && !qrGenerating
-                                                ? 'bg-green-600 text-white hover:bg-green-700'
-                                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        }`}
-                                    >
-                                        {qrGenerating ? 'Generating...' : 'Generate QR Code'}
-                                    </button>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                                        <p className="text-gray-600 mb-4">
+                                            {(() => {
+                                                const now = new Date()
+                                                const eventEnd = new Date(event.endDate)
+                                                const fiveMinutesBeforeEnd = new Date(eventEnd.getTime() - (5 * 60 * 1000))
+                                                if (now < fiveMinutesBeforeEnd) {
+                                                    return 'Evaluation QR will automatically appear 5 minutes before event end'
+                                                }
+                                                return 'No evaluation QR code generated yet'
+                                            })()}
+                                        </p>
+                                        {canGenerateCheckOutQR() && (
+                                            <button
+                                                onClick={() => generateQRCode('checkOut')}
+                                                disabled={qrGenerating}
+                                                className={`px-6 py-3 rounded-lg transition-colors ${
+                                                    !qrGenerating
+                                                        ? 'bg-purple-600 text-white hover:bg-purple-700'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                }`}
+                                            >
+                                                {qrGenerating ? 'Generating...' : 'Generate Evaluation QR'}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
