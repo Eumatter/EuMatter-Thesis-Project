@@ -499,15 +499,24 @@ export const recordAttendance = async (req, res) => {
         let isQRActive = false;
         if (qrEntry) {
             if (qrType === 'checkIn' && qrEntry.checkIn) {
-                isQRActive = qrEntry.isActive && qrEntry.checkIn === qrCode;
+                // Compare the full QR string - normalize both for comparison
+                const qrString = typeof qrEntry.checkIn === 'string' ? qrEntry.checkIn : JSON.stringify(qrEntry.checkIn);
+                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
+                // Exact match or check if they represent the same data
+                isQRActive = qrEntry.isActive && qrString === scannedQR;
             } else if (qrType === 'checkOut' && qrEntry.checkOut) {
-                isQRActive = qrEntry.isActive && qrEntry.checkOut === qrCode;
+                const qrString = typeof qrEntry.checkOut === 'string' ? qrEntry.checkOut : JSON.stringify(qrEntry.checkOut);
+                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
+                isQRActive = qrEntry.isActive && qrString === scannedQR;
             }
         } else {
             // Fallback to legacy attendanceQR for backward compatibility
             const legacyQR = event.attendanceQR;
-            if (legacyQR && legacyQR.code === qrCode) {
-                isQRActive = legacyQR.isActive && (!legacyQR.expiresAt || now <= legacyQR.expiresAt);
+            if (legacyQR && legacyQR.code) {
+                const legacyQRString = typeof legacyQR.code === 'string' ? legacyQR.code : JSON.stringify(legacyQR.code);
+                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
+                isQRActive = legacyQR.isActive && (!legacyQR.expiresAt || now <= legacyQR.expiresAt) && 
+                    legacyQRString === scannedQR;
             }
         }
         
@@ -609,28 +618,35 @@ export const recordAttendance = async (req, res) => {
                 attendanceDoc = await volunteerAttendanceModel.create({
                     event: event._id,
                     volunteer: userId,
-                    date: now,
+                    eventId: event._id,
+                    userId: userId,
+                    date: todayStr,
                     timeIn: now,
-                    qrCode,
+                    checkInTime: now,
+                    qrCode: qrCode,
                     status: requiresFeedback ? 'pending' : 'not_required',
                     isValid: true,
                     voidedHours: false,
-                    // Store previous day hours for multi-day events
-                    previousDayHours: isMultiDay ? previousDayHours : 0
+                    previousDayHours: isMultiDay ? previousDayHours : 0,
+                    hoursWorked: 0,
+                    totalHours: previousDayHours
                 })
             } else {
-                if (attendanceDoc.timeIn) {
+                if (attendanceDoc.checkInTime || attendanceDoc.timeIn) {
                     return res.status(400).json({ 
                         success: false, 
                         message: "You have already recorded time in for today" 
                     });
                 }
                 attendanceDoc.timeIn = now
+                attendanceDoc.checkInTime = now
                 attendanceDoc.qrCode = qrCode
                 attendanceDoc.isValid = true
                 attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
                 attendanceDoc.voidedHours = false
                 attendanceDoc.previousDayHours = isMultiDay ? previousDayHours : 0
+                attendanceDoc.hoursWorked = 0
+                attendanceDoc.totalHours = previousDayHours
                 await attendanceDoc.save()
             }
 
@@ -659,7 +675,15 @@ export const recordAttendance = async (req, res) => {
             attendanceRecord.timeOut = now;
             
             // Calculate hours worked for this day
-            const hoursWorkedToday = (now.getTime() - attendanceRecord.timeIn.getTime()) / (1000 * 60 * 60);
+            const timeIn = attendanceRecord.timeIn || attendanceDoc?.checkInTime || attendanceDoc?.timeIn;
+            if (!timeIn) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "You must record time in before time out" 
+                });
+            }
+            
+            const hoursWorkedToday = (now.getTime() - new Date(timeIn).getTime()) / (1000 * 60 * 60);
             const hoursWorkedTodayRounded = Math.round(hoursWorkedToday * 100) / 100;
             
             // For multi-day events, add previous day hours
@@ -670,13 +694,13 @@ export const recordAttendance = async (req, res) => {
             
             attendanceRecord.totalHours = totalHours;
 
-            if (!attendanceDoc || !attendanceDoc.timeIn) {
+            if (!attendanceDoc || (!attendanceDoc.checkInTime && !attendanceDoc.timeIn)) {
                 return res.status(400).json({ 
                     success: false, 
                     message: "You must record time in before time out" 
                 });
             }
-            if (attendanceDoc.timeOut) {
+            if (attendanceDoc.checkOutTime || attendanceDoc.timeOut) {
                 return res.status(400).json({ 
                     success: false, 
                     message: "You have already recorded time out for today" 
@@ -684,6 +708,7 @@ export const recordAttendance = async (req, res) => {
             }
             
             attendanceDoc.timeOut = now
+            attendanceDoc.checkOutTime = now
             attendanceDoc.hoursWorked = hoursWorkedTodayRounded // Hours for this day only
             attendanceDoc.totalHours = totalHours // Total hours including previous days
             

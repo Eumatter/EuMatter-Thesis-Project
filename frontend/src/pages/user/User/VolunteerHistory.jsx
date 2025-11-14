@@ -140,8 +140,17 @@ const VolunteerHistory = () => {
                                                     </span>
                                                 </div>
                                                 <article className="rounded-2xl border border-[#efdac9] bg-[#fffaf6] p-5 sm:p-6 shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl">
-                                                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                                        <div>
+                                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                                        <div className="flex-1">
+                                                            {event.image && (
+                                                                <div className="mb-4 rounded-lg overflow-hidden">
+                                                                    <img 
+                                                                        src={`data:image/jpeg;base64,${event.image}`} 
+                                                                        alt={event.title}
+                                                                        className="w-full h-48 object-cover"
+                                                                    />
+                                                                </div>
+                                                            )}
                                                             <h3 className="text-lg sm:text-xl font-semibold text-[#541616] leading-snug">
                                                                 {event.title}
                                                             </h3>

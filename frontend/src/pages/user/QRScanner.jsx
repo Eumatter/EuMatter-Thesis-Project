@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AppContent } from '../../context/AppContext'
 import axios from 'axios'
@@ -6,6 +6,7 @@ import { toast } from 'react-toastify'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import { Html5Qrcode } from 'html5-qrcode'
 
 const QRScanner = () => {
     const { backendUrl, userData } = useContext(AppContent)
@@ -18,6 +19,10 @@ const QRScanner = () => {
     const [scannedCode, setScannedCode] = useState('')
     const [processing, setProcessing] = useState(false)
     const [attendanceStatus, setAttendanceStatus] = useState(null)
+    const [scanning, setScanning] = useState(false)
+    const [cameraError, setCameraError] = useState(null)
+    const scannerRef = useRef(null)
+    const html5QrCodeRef = useRef(null)
 
     useEffect(() => {
         fetchEventData()
@@ -59,21 +64,48 @@ const QRScanner = () => {
     }
 
     const handleQRScan = async (qrCode) => {
+        if (processing) return // Prevent duplicate scans
+        
         setScannedCode(qrCode)
         setProcessing(true)
         
+        // Stop scanning temporarily
+        if (html5QrCodeRef.current && scanning) {
+            try {
+                await html5QrCodeRef.current.stop()
+                setScanning(false)
+            } catch (err) {
+                console.error('Error stopping scanner:', err)
+            }
+        }
+        
         try {
-            // Determine action based on current attendance status
-            const action = attendanceStatus === 'timein' ? 'timeout' : 'timein'
+            // Parse QR code to determine action
+            let qrData
+            try {
+                qrData = JSON.parse(qrCode)
+            } catch (e) {
+                // If not JSON, treat as legacy format
+                qrData = { code: qrCode }
+            }
             
-            // Legacy/manual input path not using token; keep for fallback UX
+            // Determine action based on QR code type
+            let action = 'timein'
+            if (qrData.type === 'checkOut' || qrData.type === 'checkout') {
+                action = 'timeout'
+            } else if (qrData.type === 'checkIn' || qrData.type === 'checkin') {
+                action = 'timein'
+            } else {
+                // Fallback: determine based on current status
+                action = attendanceStatus === 'timein' ? 'timeout' : 'timein'
+            }
+            
             const response = await axios.post(`${backendUrl}api/volunteers/attendance/record`, 
                 { qrCode, action }, 
                 { withCredentials: true }
             )
             
-            toast.success(response.data.message)
-            setAttendanceStatus(action)
+            toast.success(response.data.message || 'Attendance recorded successfully!')
             
             // Update attendance status for UI
             if (action === 'timein') {
@@ -82,13 +114,85 @@ const QRScanner = () => {
                 setAttendanceStatus('completed')
             }
             
+            // Resume scanning after a short delay
+            setTimeout(() => {
+                startScanning()
+            }, 2000)
+            
         } catch (error) {
             console.error('Error recording attendance:', error)
             toast.error(error.response?.data?.message || 'Failed to record attendance')
+            
+            // Resume scanning on error
+            setTimeout(() => {
+                startScanning()
+            }, 2000)
         } finally {
             setProcessing(false)
         }
     }
+    
+    const startScanning = async () => {
+        if (processing) return // Don't start if processing a scan
+        
+        if (html5QrCodeRef.current) {
+            try {
+                await html5QrCodeRef.current.stop()
+                await html5QrCodeRef.current.clear()
+            } catch (err) {
+                // Ignore stop errors
+            }
+        }
+        
+        try {
+            const html5QrCode = new Html5Qrcode("qr-reader")
+            html5QrCodeRef.current = html5QrCode
+            scannerRef.current = true
+            
+            await html5QrCode.start(
+                { facingMode: "environment" }, // Use back camera
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    disableFlip: false
+                },
+                (decodedText) => {
+                    handleQRScan(decodedText)
+                },
+                (errorMessage) => {
+                    // Ignore scan errors (they're frequent during scanning)
+                }
+            )
+            setScanning(true)
+            setCameraError(null)
+        } catch (err) {
+            console.error('Error starting camera:', err)
+            setCameraError('Failed to access camera. Please ensure camera permissions are granted.')
+            setScanning(false)
+            html5QrCodeRef.current = null
+            scannerRef.current = null
+        }
+    }
+    
+    const stopScanning = async () => {
+        if (html5QrCodeRef.current) {
+            try {
+                await html5QrCodeRef.current.stop()
+                await html5QrCodeRef.current.clear()
+                html5QrCodeRef.current = null
+            } catch (err) {
+                console.error('Error stopping scanner:', err)
+            }
+        }
+        setScanning(false)
+    }
+    
+    useEffect(() => {
+        return () => {
+            stopScanning()
+        }
+    }, [])
 
     const handleManualQR = () => {
         const qrCode = prompt('Enter QR code data:')
@@ -159,24 +263,68 @@ const QRScanner = () => {
 
                 {/* Scanner Section */}
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">Scan QR Code</h2>
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-semibold text-gray-900">Scan QR Code</h2>
+                        <div className="flex gap-2">
+                            {!scanning ? (
+                                <button
+                                    onClick={startScanning}
+                                    disabled={processing}
+                                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Start Camera
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={stopScanning}
+                                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                                    </svg>
+                                    Stop Camera
+                                </button>
+                            )}
+                        </div>
+                    </div>
                     
                     <div className="text-center">
-                        <div className="bg-gray-50 rounded-lg p-8 mb-6">
-                            <div className="w-64 h-64 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                </svg>
-                            </div>
-                            <p className="text-gray-600 mb-4">
-                                Point your camera at the QR code to scan attendance
-                            </p>
-                            <button
-                                onClick={handleManualQR}
-                                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                Enter QR Code Manually
-                            </button>
+                        {/* QR Code Scanner */}
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                            <div id="qr-reader" className="w-full max-w-md mx-auto rounded-lg overflow-hidden bg-black"></div>
+                            {cameraError && (
+                                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-red-800 text-sm">{cameraError}</p>
+                                    <button
+                                        onClick={handleManualQR}
+                                        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                    >
+                                        Enter QR Code Manually
+                                    </button>
+                                </div>
+                            )}
+                            {!scanning && !cameraError && (
+                                <div className="mt-4">
+                                    <p className="text-gray-600 mb-4">
+                                        Click "Start Camera" to begin scanning QR codes
+                                    </p>
+                                    <button
+                                        onClick={handleManualQR}
+                                        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                        Enter QR Code Manually
+                                    </button>
+                                </div>
+                            )}
+                            {scanning && (
+                                <p className="mt-4 text-sm text-gray-600">
+                                    Point your camera at the QR code. Scanning will pause automatically when a code is detected.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
