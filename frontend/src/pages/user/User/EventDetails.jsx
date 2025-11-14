@@ -639,6 +639,45 @@ const EventDetails = () => {
                             </div>
                         )}
                         
+                        {/* Time Schedule Requirements */}
+                        {event?.volunteerSettings?.dailySchedule && event.volunteerSettings.dailySchedule.length > 0 && (
+                            <div className="mb-4 text-sm text-gray-600 bg-blue-50 border border-blue-200 p-3 rounded-lg">
+                                <p className="font-semibold text-blue-800 mb-2 flex items-center">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Volunteer Time Schedule
+                                </p>
+                                <div className="space-y-2">
+                                    {event.volunteerSettings.dailySchedule.map((schedule, index) => {
+                                        const scheduleDate = new Date(schedule.date)
+                                        const isMultiDay = event.volunteerSettings.dailySchedule.length > 1
+                                        const dayLabel = isMultiDay 
+                                            ? scheduleDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                                            : 'Event Day'
+                                        
+                                        return (
+                                            <div key={index} className="bg-white rounded p-2 border border-blue-100">
+                                                <p className="font-medium text-blue-900 text-xs mb-1">{dayLabel}</p>
+                                                <p className="text-xs text-gray-700">
+                                                    <span className="font-medium">Time In:</span> {schedule.timeIn || '08:00'} | 
+                                                    <span className="font-medium ml-1">Time Out:</span> {schedule.timeOut || '17:00'}
+                                                </p>
+                                                {schedule.notes && (
+                                                    <p className="text-xs text-gray-600 mt-1 italic">{schedule.notes}</p>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                <p className="text-xs text-blue-700 mt-2 italic">
+                                    {event.volunteerSettings.dailySchedule.length > 1 
+                                        ? 'Volunteers must check in/out for each day. Evaluation form will be available after each day\'s time out.'
+                                        : 'After time out, you will be asked to complete an evaluation form to finalize your volunteer hours.'}
+                                </p>
+                            </div>
+                        )}
+                        
                         <form onSubmit={(e) => { e.preventDefault(); submitJoin(); }} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">

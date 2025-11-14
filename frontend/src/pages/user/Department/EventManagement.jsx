@@ -47,7 +47,9 @@ const EventManagement = () => {
             requiredSkills: [],
             departmentRestrictionType: 'all', // 'all' | 'specific'
             allowedDepartments: [],
-            notes: ''
+            notes: '',
+            dailySchedule: [],
+            requireTimeTracking: true
         }
     })
     const [imageFile, setImageFile] = useState(null)
@@ -1434,6 +1436,158 @@ const EventManagement = () => {
                                                                 placeholder="Any additional requirements or notes for volunteers..."
                                                     />
                                                 </div>
+                                                
+                                                {/* Time In/Out Schedule Section */}
+                                                {formData.startDate && formData.endDate && (() => {
+                                                    const start = new Date(formData.startDate)
+                                                    const end = new Date(formData.endDate)
+                                                    const isMultiDay = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) > 1
+                                                    const days = []
+                                                    
+                                                    if (isMultiDay) {
+                                                        // Generate array of days for multi-day event
+                                                        const currentDate = new Date(start)
+                                                        while (currentDate <= end) {
+                                                            days.push(new Date(currentDate))
+                                                            currentDate.setDate(currentDate.getDate() + 1)
+                                                        }
+                                                    } else {
+                                                        // Single day event
+                                                        days.push(new Date(start))
+                                                    }
+                                                    
+                                                    // Initialize dailySchedule if not exists
+                                                    if (!formData.volunteerSettings.dailySchedule || formData.volunteerSettings.dailySchedule.length !== days.length) {
+                                                        const defaultSchedule = days.map(day => ({
+                                                            date: day.toISOString(),
+                                                            timeIn: '08:00',
+                                                            timeOut: '17:00',
+                                                            notes: ''
+                                                        }))
+                                                        if (!formData.volunteerSettings.dailySchedule || JSON.stringify(formData.volunteerSettings.dailySchedule) !== JSON.stringify(defaultSchedule)) {
+                                                            setTimeout(() => {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    volunteerSettings: {
+                                                                        ...prev.volunteerSettings,
+                                                                        dailySchedule: defaultSchedule,
+                                                                        requireTimeTracking: true
+                                                                    }
+                                                                }))
+                                                            }, 0)
+                                                        }
+                                                    }
+                                                    
+                                                    return (
+                                                        <div className="md:col-span-2 space-y-3">
+                                                            <label className="flex items-center space-x-2 text-xs font-semibold text-[#800020]">
+                                                                <div className="w-6 h-6 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                                    <svg className="w-3.5 h-3.5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                </div>
+                                                                <span>Volunteer Time Schedule {isMultiDay ? `(${days.length} days)` : '(Single Day)'}</span>
+                                                            </label>
+                                                            <div className="space-y-3 bg-blue-50/50 rounded-lg p-4 border-2 border-blue-200/30">
+                                                                {days.map((day, index) => {
+                                                                    const daySchedule = formData.volunteerSettings.dailySchedule?.[index] || {
+                                                                        date: day.toISOString(),
+                                                                        timeIn: '08:00',
+                                                                        timeOut: '17:00',
+                                                                        notes: ''
+                                                                    }
+                                                                    const dayLabel = isMultiDay 
+                                                                        ? day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+                                                                        : 'Event Day'
+                                                                    
+                                                                    return (
+                                                                        <div key={index} className="bg-white rounded-lg p-4 border-2 border-gray-200 space-y-3">
+                                                                            <div className="flex items-center justify-between mb-2">
+                                                                                <span className="text-sm font-semibold text-[#800020]">{dayLabel}</span>
+                                                                                {isMultiDay && <span className="text-xs text-gray-500">Day {index + 1}</span>}
+                                                                            </div>
+                                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-xs font-medium text-gray-700">Time In</label>
+                                                                                    <input
+                                                                                        type="time"
+                                                                                        value={daySchedule.timeIn || '08:00'}
+                                                                                        onChange={e => {
+                                                                                            const updatedSchedule = [...(formData.volunteerSettings.dailySchedule || [])]
+                                                                                            updatedSchedule[index] = {
+                                                                                                ...daySchedule,
+                                                                                                timeIn: e.target.value
+                                                                                            }
+                                                                                            setFormData(prev => ({
+                                                                                                ...prev,
+                                                                                                volunteerSettings: {
+                                                                                                    ...prev.volunteerSettings,
+                                                                                                    dailySchedule: updatedSchedule
+                                                                                                }
+                                                                                            }))
+                                                                                        }}
+                                                                                        className="w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-xs font-medium text-gray-700">Time Out</label>
+                                                                                    <input
+                                                                                        type="time"
+                                                                                        value={daySchedule.timeOut || '17:00'}
+                                                                                        onChange={e => {
+                                                                                            const updatedSchedule = [...(formData.volunteerSettings.dailySchedule || [])]
+                                                                                            updatedSchedule[index] = {
+                                                                                                ...daySchedule,
+                                                                                                timeOut: e.target.value
+                                                                                            }
+                                                                                            setFormData(prev => ({
+                                                                                                ...prev,
+                                                                                                volunteerSettings: {
+                                                                                                    ...prev.volunteerSettings,
+                                                                                                    dailySchedule: updatedSchedule
+                                                                                                }
+                                                                                            }))
+                                                                                        }}
+                                                                                        className="w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                                                    />
+                                                                                </div>
+                                                                            </div>
+                                                                            {isMultiDay && (
+                                                                                <div className="space-y-1">
+                                                                                    <label className="text-xs font-medium text-gray-700">Day Notes (Optional)</label>
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={daySchedule.notes || ''}
+                                                                                        onChange={e => {
+                                                                                            const updatedSchedule = [...(formData.volunteerSettings.dailySchedule || [])]
+                                                                                            updatedSchedule[index] = {
+                                                                                                ...daySchedule,
+                                                                                                notes: e.target.value
+                                                                                            }
+                                                                                            setFormData(prev => ({
+                                                                                                ...prev,
+                                                                                                volunteerSettings: {
+                                                                                                    ...prev.volunteerSettings,
+                                                                                                    dailySchedule: updatedSchedule
+                                                                                                }
+                                                                                            }))
+                                                                                        }}
+                                                                                        placeholder="e.g., Special instructions for this day"
+                                                                                        className="w-full rounded-lg border-2 border-gray-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                                                    />
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )
+                                                                })}
+                                                                <p className="text-xs text-gray-600 mt-2">
+                                                                    <strong>Note:</strong> Volunteers must check in (time in) and check out (time out) for each day. 
+                                                                    {isMultiDay ? ' For multi-day events, volunteers need to check in/out daily.' : ' After time out, volunteers will be asked to complete an evaluation form.'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })()}
                                             </div>
                                         )}
                                     </div>
@@ -1462,7 +1616,9 @@ const EventManagement = () => {
                                                             requiredSkills: [],
                                                             departmentRestrictionType: 'all',
                                                             allowedDepartments: [],
-                                                            notes: ''
+                                                            notes: '',
+                                                            dailySchedule: [],
+                                                            requireTimeTracking: true
                                                         }
                                                     })
                                                     setImageFile(null)

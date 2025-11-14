@@ -32,16 +32,24 @@ export const getEventVolunteers = async (req, res) => {
             eventCreatedByName: event.createdBy.name
         });
 
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+        
         // Check if user is the event creator or has permission
         console.log('Authorization check:', {
-            eventCreatedBy: event.createdBy.toString(),
-            userId: userId.toString(),
+            eventCreatedBy: creatorId,
+            userId: currentUserId,
             userRole: req.user.role,
-            isCreator: event.createdBy.toString() === userId.toString(),
-            isSystemAdmin: req.user.role === 'System Administrator'
+            isCreator: creatorId === currentUserId,
+            isSystemAdmin: req.user.role === 'System Administrator',
+            isCRDStaff: req.user.role === 'CRD Staff'
         });
         
-        if (event.createdBy.toString() !== userId.toString() && req.user.role !== 'System Administrator') {
+        // Allow access if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized to view volunteers" });
         }
 
@@ -68,8 +76,14 @@ export const updateVolunteerStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -127,8 +141,14 @@ export const removeVolunteer = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -156,8 +176,14 @@ export const generateAttendanceQR = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -229,8 +255,14 @@ export const getQRStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -436,8 +468,14 @@ export const getVolunteerAttendance = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
@@ -481,8 +519,14 @@ export const validateAttendance = async (req, res) => {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
 
-        // Check if user is the event creator
-        if (event.createdBy.toString() !== userId.toString()) {
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 

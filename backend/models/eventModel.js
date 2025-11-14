@@ -43,7 +43,7 @@ const eventSchema = new mongoose.Schema({
         }]
     }],
 
-    // QR Code for attendance tracking
+    // QR Code for attendance tracking (legacy - kept for backward compatibility)
     attendanceQR: {
         code: { type: String },
         generatedAt: { type: Date },
@@ -51,6 +51,26 @@ const eventSchema = new mongoose.Schema({
         isActive: { type: Boolean, default: false },
         expiresAt: { type: Date }
     },
+
+    // QR Codes for multi-day events - one QR per day for check-in and check-out
+    qrCodes: [{
+        date: { type: String, required: true }, // Format: "YYYY-MM-DD"
+        checkIn: { type: String, default: "" }, // QR code string for check-in
+        checkOut: { type: String, default: "" }, // QR code string for check-out
+        generatedAt: { type: Date, default: Date.now },
+        generatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
+        isActive: { type: Boolean, default: true },
+        expiresAt: { type: Date }
+    }],
+
+    // Feedback collection for the event
+    feedback: [{
+        volunteerId: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
+        rating: { type: Number, min: 1, max: 5, required: true },
+        comment: { type: String, default: "" },
+        submittedAt: { type: Date, default: Date.now },
+        attendanceId: { type: mongoose.Schema.Types.ObjectId, ref: "volunteerAttendance" } // Link to attendance record
+    }],
 
     // Comments on the event
     comments: [{
@@ -109,7 +129,20 @@ const eventSchema = new mongoose.Schema({
             studentOnly: { type: Boolean, default: false },
             departmentRestrictionType: { type: String, enum: ["all", "specific"], default: "all" },
             allowedDepartments: [{ type: String }],
-            notes: { type: String, default: "" }
+            notes: { type: String, default: "" },
+            // Time in/out schedule for volunteers
+            dailySchedule: {
+                // For single-day events: one time in/out
+                // For multi-day events: array of daily schedules
+                type: [{
+                    date: { type: Date, required: true },
+                    timeIn: { type: String, required: true }, // Format: "HH:MM" (24-hour)
+                    timeOut: { type: String, required: true }, // Format: "HH:MM" (24-hour)
+                    notes: { type: String, default: "" }
+                }],
+                default: []
+            },
+            requireTimeTracking: { type: Boolean, default: true } // Whether time in/out is required
         }, { _id: false }),
         default: undefined
     },
