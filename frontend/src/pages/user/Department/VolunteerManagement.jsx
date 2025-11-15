@@ -896,12 +896,6 @@ const VolunteerManagement = () => {
                         <div className="px-4 sm:px-6 py-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900">Attendance Records</h2>
-                                <button
-                                    onClick={() => setShowAttendanceModal(true)}
-                                    className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
-                                >
-                                    View Details
-                                </button>
                             </div>
                             
                             {attendance.length === 0 ? (
@@ -983,17 +977,29 @@ const VolunteerManagement = () => {
                                                                             rowSpan={totalRows}
                                                                         >
                                                                             <div className="flex items-center space-x-3">
-                                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                                                                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#800000] to-[#a00000]">
                                                                                     {record.volunteer.profileImage ? (
                                                                                         <img 
                                                                                             src={record.volunteer.profileImage} 
                                                                                             alt={record.volunteer.name}
                                                                                             className="w-10 h-10 rounded-full object-cover"
+                                                                                            onError={(e) => {
+                                                                                                // Fallback to initials if image fails to load
+                                                                                                e.target.style.display = 'none';
+                                                                                                const parent = e.target.parentElement;
+                                                                                                if (parent && !parent.querySelector('.initials')) {
+                                                                                                    const initials = (record.volunteer.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                                                                                                    const initialsDiv = document.createElement('div');
+                                                                                                    initialsDiv.className = 'initials text-white text-xs font-semibold';
+                                                                                                    initialsDiv.textContent = initials;
+                                                                                                    parent.appendChild(initialsDiv);
+                                                                                                }
+                                                                                            }}
                                                                                         />
                                                                                     ) : (
-                                                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                                        </svg>
+                                                                                        <div className="text-white text-xs font-semibold">
+                                                                                            {(record.volunteer.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                                                                                        </div>
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="min-w-0">
@@ -1047,17 +1053,29 @@ const VolunteerManagement = () => {
                                                     <tr key={record.volunteer._id} className="hover:bg-gray-50">
                                                         <td className="px-4 py-3 whitespace-nowrap">
                                                             <div className="flex items-center space-x-3">
-                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                                                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-gradient-to-br from-[#800000] to-[#a00000]">
                                                                     {record.volunteer.profileImage ? (
                                                                         <img 
                                                                             src={record.volunteer.profileImage} 
                                                                             alt={record.volunteer.name}
                                                                             className="w-10 h-10 rounded-full object-cover"
+                                                                            onError={(e) => {
+                                                                                // Fallback to initials if image fails to load
+                                                                                e.target.style.display = 'none';
+                                                                                const parent = e.target.parentElement;
+                                                                                if (parent && !parent.querySelector('.initials')) {
+                                                                                    const initials = (record.volunteer.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                                                                                    const initialsDiv = document.createElement('div');
+                                                                                    initialsDiv.className = 'initials text-white text-xs font-semibold';
+                                                                                    initialsDiv.textContent = initials;
+                                                                                    parent.appendChild(initialsDiv);
+                                                                                }
+                                                                            }}
                                                                         />
                                                                     ) : (
-                                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                        </svg>
+                                                                        <div className="text-white text-xs font-semibold">
+                                                                            {(record.volunteer.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                                 <div className="min-w-0">
