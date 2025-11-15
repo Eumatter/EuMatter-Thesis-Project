@@ -31,6 +31,7 @@ const QRScanner = () => {
     const [showTimeOutPrimaryKey, setShowTimeOutPrimaryKey] = useState(false)
     const [activeScanner, setActiveScanner] = useState(null) // 'timein' or 'timeout' or null
     const [isMobile, setIsMobile] = useState(false)
+    const [showCameraModal, setShowCameraModal] = useState(false) // Modal state for camera
     
     const scannerRef = useRef(null)
     const html5QrCodeRef = useRef(null)
@@ -237,6 +238,11 @@ const QRScanner = () => {
             
             toast.success(response.data.message || 'Attendance recorded successfully!')
             
+            // Close camera modal after successful scan
+            if (scanning) {
+                await stopScanning()
+            }
+            
             // Update attendance status for UI
             if (finalAction === 'timein') {
                 setAttendanceStatus('timeout')
@@ -247,13 +253,7 @@ const QRScanner = () => {
                         hoursWorked: 0
                     })
                 }
-                fetchEventData().then(() => {
-                    setTimeout(() => {
-                        if (scanning) {
-                            stopScanning()
-                        }
-                    }, 2000)
-                })
+                fetchEventData()
             } else {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
@@ -301,18 +301,23 @@ const QRScanner = () => {
     const startScanning = async (action) => {
         if (processing || scanning) return
         
-        // Wait a bit to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // Open camera modal first
+        setShowCameraModal(true)
+        setActiveScanner(action)
         
-        // Check if qr-reader element exists
-        let qrReaderElement = document.getElementById("qr-reader")
+        // Wait a bit to ensure DOM is ready and modal is rendered
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        // Check if qr-reader-modal element exists (in modal)
+        let qrReaderElement = document.getElementById("qr-reader-modal")
         if (!qrReaderElement) {
             // Try again after a short delay
             await new Promise(resolve => setTimeout(resolve, 200))
-            qrReaderElement = document.getElementById("qr-reader")
+            qrReaderElement = document.getElementById("qr-reader-modal")
             if (!qrReaderElement) {
                 toast.error('QR scanner element not found. Please refresh the page.')
                 console.error('QR reader element not found')
+                setShowCameraModal(false)
                 return
             }
         }
@@ -327,10 +332,9 @@ const QRScanner = () => {
         }
         
         try {
-            const html5QrCode = new Html5Qrcode("qr-reader")
+            const html5QrCode = new Html5Qrcode("qr-reader-modal")
             html5QrCodeRef.current = html5QrCode
             scannerRef.current = true
-            setActiveScanner(action)
             
             // Get browser-compatible camera constraints
             const browser = detectBrowser()
@@ -363,7 +367,7 @@ const QRScanner = () => {
                 )
                 setScanning(true)
                 setCameraError(null)
-                toast.success('Camera started successfully!')
+                // Don't show toast in modal - it's already visible
             } catch (envError) {
                 console.log('Environment camera failed, trying user camera:', envError.message)
                 // If environment camera fails, try user camera (front camera)
@@ -382,9 +386,9 @@ const QRScanner = () => {
                                 // Ignore scan errors
                 }
             )
-            setScanning(true)
-            setCameraError(null)
-                        toast.success('Camera started successfully!')
+                        setScanning(true)
+                        setCameraError(null)
+                        // Don't show toast in modal - it's already visible
                     } catch (userError) {
                         console.log('User camera failed, trying default camera:', userError.message)
                         // If user camera also fails, try without facingMode constraint
@@ -399,9 +403,9 @@ const QRScanner = () => {
                                     // Ignore scan errors
                                 }
                             )
-                            setScanning(true)
-                            setCameraError(null)
-                            toast.success('Camera started successfully!')
+                        setScanning(true)
+                        setCameraError(null)
+                        // Don't show toast in modal - it's already visible
                         } catch (finalError) {
                             console.error('Error starting camera:', finalError)
                             setCameraError(finalError.message || 'Failed to start camera')
@@ -443,6 +447,11 @@ const QRScanner = () => {
         }
         setScanning(false)
         setActiveScanner(null)
+        setShowCameraModal(false)
+    }
+    
+    const closeCameraModal = async () => {
+        await stopScanning()
     }
     
     useEffect(() => {
@@ -649,14 +658,14 @@ const QRScanner = () => {
                         </div>
                         {timeInCompleted && (
                             <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 sm:px-4 py-2 rounded-lg">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
+                                    </svg>
                                 <span className="font-semibold text-sm sm:text-base">Completed</span>
                             </div>
                         )}
                     </div>
-
+                    
                     {timeInCompleted ? (
                         <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                             <div className="flex items-center gap-4">
@@ -664,7 +673,7 @@ const QRScanner = () => {
                                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                </div>
+                                    </div>
                                 <div className="flex-1">
                                     <p className="font-semibold text-green-900 mb-1">Time In Recorded</p>
                                     {attendanceData?.checkInTime && (
@@ -672,9 +681,9 @@ const QRScanner = () => {
                                             {new Date(attendanceData.checkInTime).toLocaleString()}
                                         </p>
                                     )}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
                     ) : (
                         <div className="space-y-4">
                             {/* QR Scanner Option */}
@@ -689,7 +698,7 @@ const QRScanner = () => {
                                         <div>
                                             <h3 className="font-bold text-blue-900">Scan QR Code</h3>
                                             <p className="text-sm text-blue-700">Use your camera to scan the QR code</p>
-                                        </div>
+                                </div>
                                     </div>
                                 <button
                                         onClick={() => startScanning('timein')}
@@ -711,7 +720,7 @@ const QRScanner = () => {
                                         )}
                                 </button>
                                 </div>
-                            </div>
+                        </div>
 
                             {/* Primary Key Input Option */}
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 sm:p-6">
@@ -720,9 +729,9 @@ const QRScanner = () => {
                                         <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                            </svg>
-                                        </div>
-                                        <div className="flex-1">
+                                </svg>
+                            </div>
+                                    <div className="flex-1">
                                             <h3 className="font-bold text-purple-900">Enter Primary Key</h3>
                                             <p className="text-sm text-purple-700">Manually enter the primary key code</p>
                                         </div>
@@ -739,14 +748,14 @@ const QRScanner = () => {
                                                 autoFocus
                                             />
                                             <div className="flex gap-3">
-                                                <button
+                            <button
                                                     onClick={() => handlePrimaryKeySubmit('timein')}
                                                     disabled={processing || !timeInPrimaryKey.trim()}
                                                     className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
+                            >
                                                     Submit
-                                                </button>
-                                                <button
+                            </button>
+                                    <button
                                                     onClick={() => {
                                                         setShowTimeInPrimaryKey(false)
                                                         setTimeInPrimaryKey('')
@@ -754,9 +763,9 @@ const QRScanner = () => {
                                                     className="px-6 py-3 border-2 border-purple-300 text-purple-700 rounded-xl hover:bg-purple-100 transition-all duration-200 font-semibold"
                                                 >
                                                     Cancel
-                                                </button>
-                                            </div>
-                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                             ) : (
                                 <button
                                             onClick={() => setShowTimeInPrimaryKey(true)}
@@ -777,7 +786,7 @@ const QRScanner = () => {
                                     <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                            </svg>
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold text-green-900">Upload QR Image</h3>
@@ -814,10 +823,10 @@ const QRScanner = () => {
                                 timeOutCompleted ? 'bg-green-500' : timeInCompleted ? 'bg-orange-500' : 'bg-gray-300'
                             }`}>
                                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
                             </div>
-                            <div>
+                                <div>
                                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">Time Out</h2>
                                 <p className="text-xs sm:text-sm text-gray-600">Record your departure time</p>
                         </div>
@@ -885,7 +894,7 @@ const QRScanner = () => {
                                             <p className="text-sm text-orange-700">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
-                                    <button
+                                        <button
                                         onClick={() => startScanning('timeout')}
                                         disabled={processing || (scanning && activeScanner === 'timeout')}
                                         className="w-full sm:w-auto bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -899,14 +908,14 @@ const QRScanner = () => {
                                             <>
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
+                                            </svg>
                                                 Start Camera
                                             </>
                                         )}
-                                    </button>
+                                        </button>
                                 </div>
-                    </div>
-                    
+                            </div>
+
                             {/* Primary Key Input Option */}
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex flex-col gap-4">
@@ -932,7 +941,7 @@ const QRScanner = () => {
                                                 className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                                                 autoFocus
                                             />
-                                            <div className="flex gap-3">
+                            <div className="flex gap-3">
                                                 <button
                                                     onClick={() => handlePrimaryKeySubmit('timeout')}
                                                     disabled={processing || !timeOutPrimaryKey.trim()}
@@ -940,38 +949,38 @@ const QRScanner = () => {
                                                 >
                                                     Submit
                                                 </button>
-                                                <button
-                                                    onClick={() => {
+                                <button
+                                    onClick={() => {
                                                         setShowTimeOutPrimaryKey(false)
                                                         setTimeOutPrimaryKey('')
-                                                    }}
+                                    }}
                                                     className="px-6 py-3 border-2 border-purple-300 text-purple-700 rounded-xl hover:bg-purple-100 transition-all duration-200 font-semibold"
-                                                >
+                                >
                                                     Cancel
-                                                </button>
+                                </button>
                 </div>
                         </div>
                                     ) : (
-                                        <button
+                                <button
                                             onClick={() => setShowTimeOutPrimaryKey(true)}
                                             className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
-                                        >
+                                >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                                             </svg>
                                             Enter Primary Key
-                                        </button>
+                                </button>
                                     )}
-                                </div>
                             </div>
-
+                    </div>
+                    
                             {/* Image Upload Option */}
                             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                                </svg>
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-bold text-green-900">Upload QR Image</h3>
@@ -998,51 +1007,95 @@ const QRScanner = () => {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* Camera Scanner Modal */}
+                {showCameraModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg sm:text-xl font-bold text-white">
+                                            {activeScanner === 'timein' ? 'Scan QR Code for Time In' : 'Scan QR Code for Time Out'}
+                    </h3>
+                                        <p className="text-xs sm:text-sm text-blue-100">Position QR code within the frame</p>
+                </div>
+                        </div>
+                                        <button
+                                    onClick={closeCameraModal}
+                                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-all duration-200 text-white"
+                                    aria-label="Close camera"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
                             </div>
 
-                {/* Camera Scanner Display - Always render qr-reader element but hide when not scanning */}
-                <div className={`bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6 overflow-hidden ${!scanning ? 'hidden' : ''}`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                            {activeScanner === 'timein' ? 'Scanning for Time In' : 'Scanning for Time Out'}
-                        </h3>
-                                <button
-                            onClick={stopScanning}
-                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold flex items-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Stop
-                                </button>
-                            </div>
-                    <div className="relative">
-                        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
-                            {/* Always render qr-reader element - it must be in DOM for Html5Qrcode to work */}
-                            <div id="qr-reader" className="w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl"></div>
+                            {/* Camera View */}
+                            <div className="relative flex-1 bg-black flex items-center justify-center min-h-[400px] sm:min-h-[500px]">
+                                <div id="qr-reader-modal" className="w-full h-full"></div>
+                                
+                                {/* Scanning Overlay */}
                                 <div className="absolute inset-0 pointer-events-none">
                                     <div className="absolute inset-0 border-4 border-green-500 rounded-2xl animate-pulse"></div>
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                         <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-green-400 rounded-xl"></div>
-                        </div>
+                                    </div>
                                     <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2">
                                         <div className="bg-black/70 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
                                             <p className="text-xs sm:text-sm font-semibold flex items-center gap-2">
                                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                                                 Scanning...
                                             </p>
-                    </div>
+                                        </div>
                                     </div>
-                                </div>
+                            </div>
+
+                                {/* Camera Error Display */}
+                                {cameraError && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 max-w-md mx-4">
+                                            <p className="text-red-800 font-semibold mb-2 text-lg">Camera Error</p>
+                                            <p className="text-red-700 text-sm mb-4">{cameraError}</p>
+                                <button
+                                                onClick={closeCameraModal}
+                                                className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold"
+                                            >
+                                                Close
+                                </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Modal Footer */}
+                            <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <p className="text-sm text-gray-600 text-center sm:text-left">
+                                        Point your camera at the QR code. Make sure it's well-lit and in focus.
+                                    </p>
+                                <button
+                                        onClick={closeCameraModal}
+                                        className="w-full sm:w-auto bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
+                                >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Stop Camera
+                                </button>
                             </div>
                         </div>
-                    {cameraError && (
-                        <div className="mt-4 bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                            <p className="text-red-800 font-semibold mb-2">Camera Error</p>
-                            <p className="text-red-700 text-sm">{cameraError}</p>
+                    </div>
                 </div>
             )}
-                </div>
 
                 {/* Processing Overlay */}
                 {processing && (

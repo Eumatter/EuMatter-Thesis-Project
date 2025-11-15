@@ -51,7 +51,7 @@ export async function submitFeedback(req, res) {
         const userId = req.user?._id
         if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
 
-        const attendance = await volunteerAttendanceModel.findById(attendanceId).populate('event')
+        let attendance = await volunteerAttendanceModel.findById(attendanceId).populate('event')
         if (!attendance) return res.status(404).json({ success: false, message: 'Attendance record not found' })
         const event = attendance.event
 
@@ -61,9 +61,64 @@ export async function submitFeedback(req, res) {
             return res.status(403).json({ success: false, message: 'Forbidden' })
         }
 
-        // Check both timeOut and checkOutTime for backward compatibility
-        if (!attendance.timeOut && !attendance.checkOutTime) {
-            return res.status(400).json({ success: false, message: 'Attendance not completed yet' })
+        // Sync fields manually to ensure consistency (the pre-save hook only runs on save)
+        let needsSave = false
+        
+        // Sync timeIn/checkInTime
+        if (attendance.timeIn && !attendance.checkInTime) {
+            attendance.checkInTime = attendance.timeIn
+            needsSave = true
+        }
+        if (attendance.checkInTime && !attendance.timeIn) {
+            attendance.timeIn = attendance.checkInTime
+            needsSave = true
+        }
+        
+        // Sync timeOut/checkOutTime
+        if (attendance.timeOut && !attendance.checkOutTime) {
+            attendance.checkOutTime = attendance.timeOut
+            needsSave = true
+        }
+        if (attendance.checkOutTime && !attendance.timeOut) {
+            attendance.timeOut = attendance.checkOutTime
+            needsSave = true
+        }
+        
+        // Save if we synced any fields
+        if (needsSave) {
+            await attendance.save()
+        }
+
+        // Check if attendance is completed - check all possible field combinations
+        const hasTimeIn = !!(attendance.timeIn || attendance.checkInTime)
+        const hasTimeOut = !!(attendance.timeOut || attendance.checkOutTime)
+        
+        // Also check if totalHours > 0 as an indicator of completed attendance
+        const hasHours = !!(attendance.totalHours && attendance.totalHours > 0)
+        
+        // Attendance is considered completed if:
+        // 1. Both time in and time out exist, OR
+        // 2. Time out exists (implies time in was done), OR
+        // 3. Hours are recorded (implies attendance was completed)
+        const isCompleted = (hasTimeIn && hasTimeOut) || hasTimeOut || hasHours
+        
+        if (!isCompleted) {
+            console.log('Attendance not completed:', {
+                attendanceId: attendance._id,
+                timeIn: attendance.timeIn,
+                checkInTime: attendance.checkInTime,
+                timeOut: attendance.timeOut,
+                checkOutTime: attendance.checkOutTime,
+                totalHours: attendance.totalHours,
+                hasTimeIn,
+                hasTimeOut,
+                hasHours,
+                isCompleted
+            })
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Attendance not completed yet. Please complete time in and time out before submitting feedback.' 
+            })
         }
 
         if (attendance.status === 'not_required') {
