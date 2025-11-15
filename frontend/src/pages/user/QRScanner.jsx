@@ -128,7 +128,7 @@ const QRScanner = () => {
 
     useEffect(() => {
         if (eventId) {
-            fetchEventData()
+        fetchEventData()
         }
     }, [eventId, fetchEventData])
 
@@ -235,10 +235,10 @@ const QRScanner = () => {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
                 fetchEventData().then(() => {
-                    // Redirect to volunteer history page for feedback
+                    // Redirect to event attendance page for feedback
                     setTimeout(() => {
-                        toast.info('Redirecting to volunteer history to submit feedback...')
-                        navigate('/user/volunteer-history?fromQR=true')
+                        toast.info('Redirecting to attendance page to submit feedback...')
+                        navigate(`/volunteer/attendance/${eventId}?fromQR=true`)
                     }, 1500)
                 })
             }
@@ -279,9 +279,9 @@ const QRScanner = () => {
             
             // More flexible camera constraints to avoid OverconstrainedError
             const config = {
-                fps: 10,
+                    fps: 10,
                 qrbox: { width: isMobile ? 250 : 280, height: isMobile ? 250 : 280 },
-                aspectRatio: 1.0,
+                    aspectRatio: 1.0,
                 disableFlip: false
             }
             
@@ -295,15 +295,15 @@ const QRScanner = () => {
                 await html5QrCode.start(
                     { facingMode: "environment" },
                     config,
-                    (decodedText) => {
+                (decodedText) => {
                         handleQRScan(decodedText, action)
-                    },
-                    (errorMessage) => {
+                },
+                (errorMessage) => {
                         // Ignore scan errors
-                    }
-                )
-                setScanning(true)
-                setCameraError(null)
+                }
+            )
+            setScanning(true)
+            setCameraError(null)
             } catch (envError) {
                 // If environment camera fails, try user camera (front camera)
                 if (envError.message?.includes('OverconstrainedError') || 
@@ -533,7 +533,7 @@ const QRScanner = () => {
                         <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 </div>
@@ -555,15 +555,15 @@ const QRScanner = () => {
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </div>
                                         <div>
                                             <h3 className="font-bold text-blue-900">Scan QR Code</h3>
                                             <p className="text-sm text-blue-700">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
-                                    <button
+                                <button
                                         onClick={() => startScanning('timein')}
                                         disabled={processing || (scanning && activeScanner === 'timein')}
                                         className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -575,13 +575,13 @@ const QRScanner = () => {
                                             </>
                                         ) : (
                                             <>
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                </svg>
-                                                Start Camera
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    Start Camera
                                             </>
                                         )}
-                                    </button>
+                                </button>
                                 </div>
                             </div>
 
@@ -629,20 +629,20 @@ const QRScanner = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <button
+                            ) : (
+                                <button
                                             onClick={() => setShowTimeInPrimaryKey(true)}
                                             className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
-                                        >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                            </svg>
+                                    </svg>
                                             Enter Primary Key
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    
                             {/* Image Upload Option */}
                             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">
@@ -654,8 +654,8 @@ const QRScanner = () => {
                                     <div className="flex-1">
                                         <h3 className="font-bold text-green-900">Upload QR Image</h3>
                                         <p className="text-sm text-green-700">Upload an image containing the QR code</p>
+                                        </div>
                                     </div>
-                                </div>
                                 <input
                                     ref={timeInFileInputRef}
                                     type="file"
@@ -673,10 +673,10 @@ const QRScanner = () => {
                                     </svg>
                                     Upload Image
                                 </label>
-                            </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
 
                 {/* Time Out Section */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6 overflow-hidden">
@@ -692,8 +692,8 @@ const QRScanner = () => {
                             <div>
                                 <h2 className="text-lg sm:text-xl font-bold text-gray-900">Time Out</h2>
                                 <p className="text-xs sm:text-sm text-gray-600">Record your departure time</p>
-                            </div>
                         </div>
+                                </div>
                         {timeOutCompleted && (
                             <div className="flex items-center gap-2 bg-green-100 text-green-800 px-3 sm:px-4 py-2 rounded-lg">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -702,7 +702,7 @@ const QRScanner = () => {
                                 <span className="font-semibold text-sm sm:text-base">Completed</span>
                             </div>
                         )}
-                    </div>
+                </div>
 
                     {!timeInCompleted ? (
                         <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 sm:p-6">
@@ -777,8 +777,8 @@ const QRScanner = () => {
                                         )}
                                     </button>
                                 </div>
-                            </div>
-
+                    </div>
+                    
                             {/* Primary Key Input Option */}
                             <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex flex-col gap-4">
@@ -786,13 +786,13 @@ const QRScanner = () => {
                                         <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                            </svg>
-                                        </div>
+                                </svg>
+                            </div>
                                         <div className="flex-1">
                                             <h3 className="font-bold text-purple-900">Enter Primary Key</h3>
                                             <p className="text-sm text-purple-700">Manually enter the primary key code</p>
-                                        </div>
-                                    </div>
+                        </div>
+                </div>
                                     {showTimeOutPrimaryKey ? (
                                         <div className="space-y-3">
                                             <input
@@ -821,8 +821,8 @@ const QRScanner = () => {
                                                 >
                                                     Cancel
                                                 </button>
-                                            </div>
-                                        </div>
+                </div>
+                        </div>
                                     ) : (
                                         <button
                                             onClick={() => setShowTimeOutPrimaryKey(true)}
@@ -870,7 +870,7 @@ const QRScanner = () => {
                             </div>
                         </div>
                     )}
-                </div>
+                            </div>
 
                 {/* Camera Scanner Display */}
                 {scanning && (
@@ -879,7 +879,7 @@ const QRScanner = () => {
                             <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                                 {activeScanner === 'timein' ? 'Scanning for Time In' : 'Scanning for Time Out'}
                             </h3>
-                            <button
+                                <button
                                 onClick={stopScanning}
                                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold flex items-center gap-2"
                             >
@@ -887,8 +887,8 @@ const QRScanner = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                                 Stop
-                            </button>
-                        </div>
+                                </button>
+                            </div>
                         <div className="relative">
                             <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
                                 <div id="qr-reader" className="w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl"></div>
@@ -896,14 +896,14 @@ const QRScanner = () => {
                                     <div className="absolute inset-0 border-4 border-green-500 rounded-2xl animate-pulse"></div>
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                                         <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-green-400 rounded-xl"></div>
-                                    </div>
+                        </div>
                                     <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2">
                                         <div className="bg-black/70 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
                                             <p className="text-xs sm:text-sm font-semibold flex items-center gap-2">
                                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                                                 Scanning...
                                             </p>
-                                        </div>
+                    </div>
                                     </div>
                                 </div>
                             </div>
@@ -914,8 +914,8 @@ const QRScanner = () => {
                                 <p className="text-red-700 text-sm">{cameraError}</p>
                             </div>
                         )}
-                    </div>
-                )}
+                </div>
+            )}
 
                 {/* Processing Overlay */}
                 {processing && (

@@ -97,7 +97,7 @@ const VolunteerHistory = () => {
 
         try {
             const { data } = await api.post(`/api/feedback/${attendanceId}`, {
-                rating: form.rating,
+                rating: Number(form.rating),
                 comment: form.comment || ''
             });
 
@@ -121,8 +121,28 @@ const VolunteerHistory = () => {
             }
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            const message = error.response?.data?.message || 'Failed to submit feedback';
-            notifyError('Submission Failed', message);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to submit feedback';
+            
+            // Show more specific error messages
+            if (error.response?.status === 400) {
+                if (errorMessage.includes('not completed')) {
+                    notifyError('Attendance Not Completed', 'Please complete your attendance (Time Out) before submitting feedback');
+                } else if (errorMessage.includes('deadline')) {
+                    notifyError('Deadline Passed', 'The feedback deadline has passed. Please contact the event organizer.');
+                } else if (errorMessage.includes('already submitted')) {
+                    notifyError('Already Submitted', 'Feedback has already been submitted for this attendance');
+                } else if (errorMessage.includes('Rating must be')) {
+                    notifyError('Invalid Rating', 'Please select a valid rating from 1 to 5 stars');
+                } else {
+                    notifyError('Submission Failed', errorMessage);
+                }
+            } else if (error.response?.status === 403) {
+                notifyError('Permission Denied', 'You do not have permission to submit feedback for this attendance');
+            } else if (error.response?.status === 404) {
+                notifyError('Not Found', 'Attendance record not found. Please refresh the page.');
+            } else {
+                notifyError('Submission Failed', errorMessage);
+            }
         } finally {
             setFeedbackForms(prev => ({
                 ...prev,
