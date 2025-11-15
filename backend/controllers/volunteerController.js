@@ -252,6 +252,10 @@ export const generateAttendanceQR = async (req, res) => {
         // Get today's date in YYYY-MM-DD format
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
+        // Generate primary key code (eventId + date + type + short random)
+        const shortRandom = crypto.randomBytes(4).toString('hex'); // Shorter random for primary key
+        const primaryKey = `${event._id.toString().substring(0, 8)}-${todayStr.replace(/-/g, '')}-${type === 'checkIn' ? 'IN' : 'OUT'}-${shortRandom}`;
+
         // Generate unique QR code
         const qrData = {
             eventId: event._id.toString(),
@@ -259,7 +263,8 @@ export const generateAttendanceQR = async (req, res) => {
             date: todayStr,
             generatedAt: now.toISOString(),
             generatedBy: userId.toString(),
-            random: crypto.randomBytes(16).toString('hex')
+            random: crypto.randomBytes(16).toString('hex'),
+            primaryKey: primaryKey // Add primary key for manual entry
         };
 
         const qrString = JSON.stringify(qrData);
@@ -316,7 +321,8 @@ export const generateAttendanceQR = async (req, res) => {
             type: type,
             date: todayStr,
             expiresAt: eventEnd,
-            isActive: true
+            isActive: true,
+            primaryKey: primaryKey // Return primary key for manual entry
         });
     } catch (error) {
         console.error('Generate QR code error:', error);
@@ -425,18 +431,38 @@ export const getQRStatus = async (req, res) => {
         const legacyQR = event.attendanceQR;
         const isLegacyExpired = legacyQR?.expiresAt && now > legacyQR.expiresAt;
 
-        // Get check-in QR
+        // Get check-in QR and primary key
         let checkInQR = null;
+        let checkInPrimaryKey = null;
         if (qrEntry && qrEntry.checkIn && qrEntry.isActive) {
             checkInQR = await QRCode.toDataURL(qrEntry.checkIn);
+            try {
+                const checkInData = JSON.parse(qrEntry.checkIn);
+                checkInPrimaryKey = checkInData.primaryKey;
+            } catch (e) {
+                // Skip if not valid JSON
+            }
         } else if (legacyQR?.code && legacyQR.isActive && !isLegacyExpired) {
             checkInQR = await QRCode.toDataURL(legacyQR.code);
+            try {
+                const legacyData = JSON.parse(legacyQR.code);
+                checkInPrimaryKey = legacyData.primaryKey;
+            } catch (e) {
+                // Skip if not valid JSON
+            }
         }
 
-        // Get check-out/evaluation QR
+        // Get check-out/evaluation QR and primary key
         let checkOutQR = null;
+        let checkOutPrimaryKey = null;
         if (qrEntry && qrEntry.checkOut && qrEntry.isActive) {
             checkOutQR = await QRCode.toDataURL(qrEntry.checkOut);
+            try {
+                const checkOutData = JSON.parse(qrEntry.checkOut);
+                checkOutPrimaryKey = checkOutData.primaryKey;
+            } catch (e) {
+                // Skip if not valid JSON
+            }
         }
 
         return res.json({ 
@@ -446,6 +472,9 @@ export const getQRStatus = async (req, res) => {
             hasCheckOutQR: !!checkOutQR,
             checkInQR: checkInQR,
             checkOutQR: checkOutQR,
+            checkInPrimaryKey: checkInPrimaryKey,
+            checkOutPrimaryKey: checkOutPrimaryKey,
+            primaryKey: checkInPrimaryKey, // Legacy field for backward compatibility
             checkInActive: qrEntry ? (qrEntry.checkIn && qrEntry.isActive) : (legacyQR?.isActive && !isLegacyExpired),
             checkOutActive: qrEntry ? (qrEntry.checkOut && qrEntry.isActive) : false,
             generatedAt: qrEntry?.generatedAt || legacyQR?.generatedAt,
@@ -471,21 +500,88 @@ export const recordAttendance = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid action" });
         }
 
-        // Parse QR code data
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        
+        // Parse QR code data - handle both JSON string and primary key
         let qrData;
+        let actualQRCode = qrCode;
+        let event = null;
+        
         try {
+            // Try to parse as JSON first
             qrData = JSON.parse(qrCode);
+            event = await eventModel.findById(qrData.eventId);
         } catch (error) {
-            return res.status(400).json({ success: false, message: "Invalid QR code" });
+            // If not JSON, treat as primary key and look it up
+            // Primary key format: eventIdPrefix-date-type-random
+            // Example: 6917ffd9-20240115-IN-abc123
+            
+            // Find event by searching through all events with active QR codes
+            // We'll search for the primary key in the qrCodes array
+            const allEvents = await eventModel.find({
+                'qrCodes.date': todayStr,
+                'qrCodes.isActive': true
+            });
+            
+            for (const evt of allEvents) {
+                if (evt.qrCodes && evt.qrCodes.length > 0) {
+                    const qrEntry = evt.qrCodes.find(qr => qr.date === todayStr);
+                    if (qrEntry) {
+                        // Check checkIn QR
+                        if (qrEntry.checkIn) {
+                            try {
+                                const checkInData = JSON.parse(qrEntry.checkIn);
+                                if (checkInData.primaryKey === qrCode) {
+                                    qrData = checkInData;
+                                    actualQRCode = qrEntry.checkIn;
+                                    event = evt;
+                                    break;
+                                }
+                            } catch (e) {
+                                // Skip invalid JSON
+                            }
+                        }
+                        // Check checkOut QR
+                        if (qrEntry.checkOut) {
+                            try {
+                                const checkOutData = JSON.parse(qrEntry.checkOut);
+                                if (checkOutData.primaryKey === qrCode) {
+                                    qrData = checkOutData;
+                                    actualQRCode = qrEntry.checkOut;
+                                    event = evt;
+                                    break;
+                                }
+                            } catch (e) {
+                                // Skip invalid JSON
+                            }
+                        }
+                    }
+                }
+                // Also check legacy attendanceQR
+                if (evt.attendanceQR && evt.attendanceQR.code) {
+                    try {
+                        const legacyData = JSON.parse(evt.attendanceQR.code);
+                        if (legacyData.primaryKey === qrCode) {
+                            qrData = legacyData;
+                            actualQRCode = evt.attendanceQR.code;
+                            event = evt;
+                            break;
+                        }
+                    } catch (e) {
+                        // Skip invalid JSON
+                    }
+                }
+            }
+            
+            if (!event || !qrData) {
+                return res.status(400).json({ success: false, message: "Invalid QR code or primary key. Please check and try again." });
+            }
         }
 
-        const event = await eventModel.findById(qrData.eventId);
         if (!event) {
             return res.status(404).json({ success: false, message: "Event not found" });
         }
-
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
         // Determine QR type from QR data or action
         const qrType = qrData.type || (action === 'timein' ? 'checkIn' : 'checkOut');
@@ -501,22 +597,22 @@ export const recordAttendance = async (req, res) => {
             if (qrType === 'checkIn' && qrEntry.checkIn) {
                 // Compare the full QR string - normalize both for comparison
                 const qrString = typeof qrEntry.checkIn === 'string' ? qrEntry.checkIn : JSON.stringify(qrEntry.checkIn);
-                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
-                // Exact match or check if they represent the same data
-                isQRActive = qrEntry.isActive && qrString === scannedQR;
+                const scannedQR = typeof actualQRCode === 'string' ? actualQRCode : JSON.stringify(actualQRCode);
+                // Exact match or check if they represent the same data (including primary key match)
+                isQRActive = qrEntry.isActive && (qrString === scannedQR || (qrData.primaryKey && JSON.parse(qrString).primaryKey === qrData.primaryKey));
             } else if (qrType === 'checkOut' && qrEntry.checkOut) {
                 const qrString = typeof qrEntry.checkOut === 'string' ? qrEntry.checkOut : JSON.stringify(qrEntry.checkOut);
-                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
-                isQRActive = qrEntry.isActive && qrString === scannedQR;
+                const scannedQR = typeof actualQRCode === 'string' ? actualQRCode : JSON.stringify(actualQRCode);
+                isQRActive = qrEntry.isActive && (qrString === scannedQR || (qrData.primaryKey && JSON.parse(qrString).primaryKey === qrData.primaryKey));
             }
         } else {
             // Fallback to legacy attendanceQR for backward compatibility
             const legacyQR = event.attendanceQR;
             if (legacyQR && legacyQR.code) {
                 const legacyQRString = typeof legacyQR.code === 'string' ? legacyQR.code : JSON.stringify(legacyQR.code);
-                const scannedQR = typeof qrCode === 'string' ? qrCode : JSON.stringify(qrCode);
+                const scannedQR = typeof actualQRCode === 'string' ? actualQRCode : JSON.stringify(actualQRCode);
                 isQRActive = legacyQR.isActive && (!legacyQR.expiresAt || now <= legacyQR.expiresAt) && 
-                    legacyQRString === scannedQR;
+                    (legacyQRString === scannedQR || (qrData.primaryKey && JSON.parse(legacyQRString).primaryKey === qrData.primaryKey));
             }
         }
         
@@ -602,14 +698,14 @@ export const recordAttendance = async (req, res) => {
                 attendanceRecord = {
                     date: today,
                     timeIn: now,
-                    qrCode: qrCode,
+                    qrCode: actualQRCode, // Use the actual QR code string
                     isValid: true,
                     totalHours: previousDayHours // Store previous hours for reference
                 };
                 volunteerReg.attendanceRecords.push(attendanceRecord);
             } else {
                 attendanceRecord.timeIn = now;
-                attendanceRecord.qrCode = qrCode;
+                attendanceRecord.qrCode = actualQRCode; // Use the actual QR code string
                 attendanceRecord.isValid = true;
                 attendanceRecord.totalHours = previousDayHours;
             }
@@ -623,7 +719,7 @@ export const recordAttendance = async (req, res) => {
                     date: todayStr,
                     timeIn: now,
                     checkInTime: now,
-                    qrCode: qrCode,
+                    qrCode: actualQRCode, // Use the actual QR code string
                     status: requiresFeedback ? 'pending' : 'not_required',
                     isValid: true,
                     voidedHours: false,
@@ -640,7 +736,7 @@ export const recordAttendance = async (req, res) => {
                 }
                 attendanceDoc.timeIn = now
                 attendanceDoc.checkInTime = now
-                attendanceDoc.qrCode = qrCode
+                attendanceDoc.qrCode = actualQRCode // Use the actual QR code string
                 attendanceDoc.isValid = true
                 attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
                 attendanceDoc.voidedHours = false

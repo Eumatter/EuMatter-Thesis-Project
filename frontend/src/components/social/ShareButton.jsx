@@ -15,9 +15,14 @@ const ShareButton = ({ event }) => {
       label: 'Copy link',
       action: async () => {
         try {
-          await navigator.clipboard.writeText(shareUrl);
-          toast.success('Link copied to clipboard!');
-          setShowShareOptions(false);
+          const { copyToClipboard } = await import('../../utils/browserCompatibility.js');
+          const success = await copyToClipboard(shareUrl);
+          if (success) {
+            toast.success('Link copied to clipboard!');
+            setShowShareOptions(false);
+          } else {
+            toast.error('Failed to copy link. Please copy manually.');
+          }
         } catch (err) {
           console.error('Failed to copy:', err);
           toast.error('Failed to copy link');

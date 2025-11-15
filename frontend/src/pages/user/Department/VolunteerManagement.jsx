@@ -1056,9 +1056,38 @@ const VolunteerManagement = () => {
                                 className="mx-auto mb-4"
                                 style={{ maxWidth: '100%' }}
                             />
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 mb-4">
                                 Volunteers can scan this QR code to record their attendance
                             </p>
+                            
+                            {/* Primary Key Display */}
+                            {qrStatus?.primaryKey && (
+                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
+                                    <p className="text-sm font-semibold text-blue-900 mb-2">Primary Key Code (for manual entry):</p>
+                                    <div className="bg-white border border-blue-300 rounded-lg p-3 mb-2">
+                                        <code className="text-lg font-mono font-bold text-blue-800 break-all">
+                                            {qrStatus.primaryKey}
+                                        </code>
+                                    </div>
+                                    <p className="text-xs text-blue-700">
+                                        Volunteers can enter this code manually if they cannot scan the QR code
+                                    </p>
+                                    <button
+                                        onClick={async () => {
+                                            const { copyToClipboard } = await import('../../../utils/browserCompatibility.js');
+                                            const success = await copyToClipboard(qrStatus.primaryKey);
+                                            if (success) {
+                                                toast.success('Primary key copied to clipboard!');
+                                            } else {
+                                                toast.error('Failed to copy. Please copy manually.');
+                                            }
+                                        }}
+                                        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
+                                    >
+                                        Copy Primary Key
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

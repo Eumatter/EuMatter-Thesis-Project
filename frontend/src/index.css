@@ -6,11 +6,47 @@
   --font-sans: "Poppins", sans-serif;
 }
 
+/* Safari viewport height fix */
+:root {
+  --vh: 1vh;
+}
+
 /* Prevent horizontal scrolling globally */
 html, body {
   overflow-x: hidden;
   max-width: 100%;
   width: 100%;
+  /* Safari specific fixes */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent text size adjustment on iOS */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Safari iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    /* Fix for Safari iOS viewport height */
+    height: -webkit-fill-available;
+  }
+  
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Use CSS variable for viewport height on mobile Safari */
+@media screen and (max-width: 768px) {
+  html {
+    height: calc(var(--vh, 1vh) * 100);
+  }
+  
+  body {
+    min-height: calc(var(--vh, 1vh) * 100);
+  }
 }
 
 /* Custom scrollbar styles for middle column */
