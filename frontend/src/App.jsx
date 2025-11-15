@@ -45,8 +45,10 @@ import Program from './pages/Program.jsx'
 import NSTP from './pages/NSTP.jsx'
 import About from './pages/About.jsx'
 import Notifications from './pages/user/Notifications.jsx'
+import NotificationPreferences from './pages/user/NotificationPreferences.jsx'
 import MaintenanceMode from './pages/MaintenanceMode.jsx'
 import { AppContent as AppContext } from './context/AppContext.jsx'
+import PushNotificationPrompt from './components/PushNotificationPrompt.jsx'
 
 const AppContent = () => {
     const location = useLocation();
@@ -152,6 +154,7 @@ const AppContent = () => {
                 theme="colored"
             />
             {showInstallButton && <PWAInstallPrompt />}
+            {isLoggedIn && <PushNotificationPrompt />}
             <Routes>
                 <Route path="/" element={
                     <ProtectedRoute>
@@ -176,6 +179,7 @@ const AppContent = () => {
                 <Route path="/user/volunteer-history" element={<ProtectedRoute><VolunteerHistory /></ProtectedRoute>} />
                 <Route path="/user/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+                <Route path="/user/notification-preferences" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
 
                 {/* CRD Staff Routes */}
                 <Route path="/crd-staff/dashboard" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><CRDDashboard /></ProtectedRoute>} />

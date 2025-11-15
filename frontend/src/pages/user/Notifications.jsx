@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { AppContent } from '../../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { formatNotificationPayload, getNotificationIcon as getNotificationIconFromUtil, getNotificationColorClass } from '../../utils/notificationFormatter.js';
 import { 
     FaBell, 
     FaCheck, 
@@ -56,20 +57,24 @@ const Notifications = () => {
             const response = await axios.get(backendUrl + 'api/notifications?paginated=true&limit=100');
             
             if (response.data) {
+                let fetchedNotifications = [];
                 if (Array.isArray(response.data)) {
                     // Backward compatibility
-                    setNotifications(response.data);
-                    setStats({
-                        total: response.data.length,
-                        unread: response.data.filter(n => n.unread).length
-                    });
+                    fetchedNotifications = response.data;
                 } else {
-                    setNotifications(response.data.notifications || []);
-                    setStats({
-                        total: response.data.total || 0,
-                        unread: response.data.unreadCount || 0
-                    });
+                    fetchedNotifications = response.data.notifications || [];
                 }
+                
+                // Remove duplicates based on notification ID
+                const uniqueNotifications = fetchedNotifications.filter((n, index, self) =>
+                    index === self.findIndex((t) => (t.id || t._id) === (n.id || n._id))
+                );
+                
+                setNotifications(uniqueNotifications);
+                setStats({
+                    total: uniqueNotifications.length,
+                    unread: uniqueNotifications.filter(n => n.unread || n.read === false).length
+                });
             }
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -162,36 +167,14 @@ const Notifications = () => {
     };
 
     const getNotificationIcon = (notification) => {
-        const title = notification.title?.toLowerCase() || '';
-        const message = notification.message?.toLowerCase() || '';
-        
-        if (title.includes('event') || message.includes('event')) {
-            return <FaCalendarAlt className="w-5 h-5" />;
-        } else if (title.includes('donation') || message.includes('donation')) {
-            return <FaHandHoldingHeart className="w-5 h-5" />;
-        } else if (title.includes('volunteer') || message.includes('volunteer')) {
-            return <FaUsers className="w-5 h-5" />;
-        } else if (title.includes('approv') || title.includes('reject')) {
-            return <FaCheckCircle className="w-5 h-5" />;
-        } else if (title.includes('error') || title.includes('fail')) {
-            return <FaExclamationCircle className="w-5 h-5" />;
-        }
-        return <FaInfoCircle className="w-5 h-5" />;
+        const notificationType = notification.payload?.type || 'system';
+        const icon = getNotificationIconFromUtil(notificationType);
+        return <span className="text-2xl">{icon}</span>;
     };
 
     const getNotificationColor = (notification) => {
-        const title = notification.title?.toLowerCase() || '';
-        
-        if (title.includes('approv') || title.includes('success')) {
-            return 'from-green-500 to-green-600';
-        } else if (title.includes('reject') || title.includes('error') || title.includes('fail')) {
-            return 'from-red-500 to-red-600';
-        } else if (title.includes('event')) {
-            return 'from-blue-500 to-blue-600';
-        } else if (title.includes('donation')) {
-            return 'from-purple-500 to-purple-600';
-        }
-        return 'from-[#800000] to-[#900000]';
+        const notificationType = notification.payload?.type || 'system';
+        return getNotificationColorClass(notificationType);
     };
 
     const formatTimeAgo = (dateString) => {
@@ -256,15 +239,15 @@ const Notifications = () => {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-white rounded-xl p-4 shadow-lg border border-gray-100"
+                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10 hover:border-[#800000]/20 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Total</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Total</p>
+                                    <p className="text-3xl font-bold text-[#800000]">{stats.total}</p>
                                 </div>
-                                <div className="w-12 h-12 bg-gradient-to-br from-[#800000] to-[#900000] rounded-lg flex items-center justify-center">
-                                    <FaBell className="w-6 h-6 text-white" />
+                                <div className="w-14 h-14 bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl flex items-center justify-center shadow-md">
+                                    <FaBell className="w-7 h-7 text-white" />
                                 </div>
                             </div>
                         </motion.div>
@@ -273,15 +256,15 @@ const Notifications = () => {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-white rounded-xl p-4 shadow-lg border border-gray-100"
+                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#D4AF37]/20 hover:border-[#D4AF37]/30 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Unread</p>
-                                    <p className="text-2xl font-bold text-red-600">{stats.unread}</p>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Unread</p>
+                                    <p className="text-3xl font-bold text-[#D4AF37]">{stats.unread}</p>
                                 </div>
-                                <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
-                                    <FaExclamationCircle className="w-6 h-6 text-white" />
+                                <div className="w-14 h-14 bg-gradient-to-br from-[#D4AF37] to-[#C9A227] rounded-xl flex items-center justify-center shadow-md">
+                                    <FaExclamationCircle className="w-7 h-7 text-white" />
                                 </div>
                             </div>
                         </motion.div>
@@ -290,33 +273,35 @@ const Notifications = () => {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6, delay: 0.3 }}
-                            className="bg-white rounded-xl p-4 shadow-lg border border-gray-100"
+                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-gray-200 hover:border-gray-300 transition-all duration-300"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Read</p>
-                                    <p className="text-2xl font-bold text-green-600">{stats.total - stats.unread}</p>
+                                    <p className="text-sm font-medium text-gray-600 mb-1">Read</p>
+                                    <p className="text-3xl font-bold text-gray-700">{stats.total - stats.unread}</p>
                                 </div>
-                                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                                    <FaCheckDouble className="w-6 h-6 text-white" />
+                                <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-md">
+                                    <FaCheckDouble className="w-7 h-7 text-white" />
                                 </div>
                             </div>
                         </motion.div>
                     </div>
 
                     {/* Filter and Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white rounded-xl p-4 shadow-lg border border-gray-100">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <FaFilter className="text-gray-600" />
-                            <span className="text-sm font-medium text-gray-700">Filter:</span>
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10">
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#900000] rounded-lg flex items-center justify-center">
+                                <FaFilter className="text-white w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-bold text-gray-700">Filter:</span>
                             {['all', 'unread', 'read'].map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                                    className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
                                         filter === f
-                                            ? 'bg-[#800000] text-white shadow-md'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white shadow-lg transform scale-105'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
                                     }`}
                                 >
                                     {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -326,7 +311,7 @@ const Notifications = () => {
                         <button
                             onClick={handleMarkAllRead}
                             disabled={stats.unread === 0}
-                            className="px-4 py-2 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 disabled:hover:shadow-md"
                         >
                             <FaCheckDouble />
                             Mark All Read
@@ -368,15 +353,15 @@ const Notifications = () => {
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ duration: 0.3, delay: index * 0.05 }}
                                     onClick={() => handleNotificationClick(notification)}
-                                    className={`group relative bg-white rounded-xl p-4 shadow-lg border-2 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                                    className={`group relative bg-white rounded-xl p-5 shadow-lg border-2 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
                                         notification.unread 
-                                            ? 'border-[#800000]/30 bg-gradient-to-r from-[#800000]/5 to-transparent' 
-                                            : 'border-gray-100'
+                                            ? 'border-[#800000]/40 bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent' 
+                                            : 'border-gray-200'
                                     }`}
                                 >
                                     <div className="flex items-start gap-4">
                                         {/* Icon */}
-                                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${getNotificationColor(notification)} flex items-center justify-center text-white shadow-md`}>
+                                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${getNotificationColor(notification)} flex items-center justify-center text-white shadow-lg`}>
                                             {getNotificationIcon(notification)}
                                         </div>
 
@@ -452,7 +437,7 @@ const Notifications = () => {
                             onClick={(e) => e.stopPropagation()}
                             className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
                         >
-                            <div className={`p-6 bg-gradient-to-br ${getNotificationColor(selectedNotification)} text-white`}>
+                            <div className={`p-6 bg-gradient-to-br ${getNotificationColor(selectedNotification)} text-white shadow-lg`}>
                                 <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
@@ -486,11 +471,34 @@ const Notifications = () => {
 
                                 {selectedNotification.payload && Object.keys(selectedNotification.payload).length > 0 && (
                                     <div className="mb-6">
-                                        <h3 className="text-sm font-semibold text-gray-600 mb-2">Details</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
-                                            <pre className="text-xs text-gray-700 whitespace-pre-wrap">
-                                                {JSON.stringify(selectedNotification.payload, null, 2)}
-                                            </pre>
+                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                            <span className="w-1 h-4 bg-gradient-to-b from-[#800000] to-[#D4AF37] rounded"></span>
+                                            Details
+                                        </h3>
+                                        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
+                                            {formatNotificationPayload(selectedNotification.payload) ? (
+                                                <div className="space-y-3">
+                                                    {formatNotificationPayload(selectedNotification.payload).map((item, idx) => (
+                                                        <div key={idx} className="flex items-start gap-3 pb-3 border-b border-gray-200 last:border-0 last:pb-0">
+                                                            <span className="text-xs font-bold text-[#800000] min-w-[100px]">{item.label}:</span>
+                                                            <span className="text-xs text-gray-700 flex-1">{item.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-xs text-gray-600">
+                                                    <p className="font-medium mb-2">Notification Type:</p>
+                                                    <span className="px-2 py-1 bg-[#800000]/10 text-[#800000] rounded-lg font-semibold">
+                                                        {selectedNotification.payload.type || 'General'}
+                                                    </span>
+                                                    {selectedNotification.payload.eventId && (
+                                                        <div className="mt-3">
+                                                            <p className="font-medium mb-1">Event ID:</p>
+                                                            <span className="text-gray-700">{selectedNotification.payload.eventId}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -517,7 +525,7 @@ const Notifications = () => {
                                                     toast.error(error.response?.data?.message || 'Failed to accept invitation');
                                                 }
                                             }}
-                                            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                                         >
                                             <FaCheckCircle />
                                             Accept Invitation
@@ -526,7 +534,7 @@ const Notifications = () => {
                                     {selectedNotification.payload?.eventId && selectedNotification.payload?.type !== 'volunteer_invitation' && (
                                         <button
                                             onClick={() => handleNavigateFromPayload(selectedNotification.payload)}
-                                            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                                         >
                                             <FaCalendarAlt />
                                             View Event
@@ -538,7 +546,7 @@ const Notifications = () => {
                                                 handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
                                                 setShowDetailModal(false);
                                             }}
-                                            className="px-4 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 flex items-center gap-2"
+                                            className="px-5 py-3 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
                                         >
                                             <FaCheck />
                                             Mark as Read
@@ -549,7 +557,7 @@ const Notifications = () => {
                                             handleDelete(selectedNotification.id, { stopPropagation: () => {} });
                                             setShowDetailModal(false);
                                         }}
-                                        className="px-4 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-all duration-200 flex items-center gap-2"
+                                        className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
                                     >
                                         <FaTrash />
                                         Delete

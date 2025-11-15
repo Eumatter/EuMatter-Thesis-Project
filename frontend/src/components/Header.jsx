@@ -5,6 +5,7 @@ import { AppContent } from '../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import EnvergaLogo from '../assets/enverga-logo.png';
+import { formatNotificationPayload, getNotificationIcon, getNotificationColorClass } from '../utils/notificationFormatter.js';
 import { 
     FaHome, 
     FaBell, 
@@ -30,7 +31,8 @@ import {
     FaSlidersH,
     FaEye,
     FaTools,
-    FaClock
+    FaClock,
+    FaChevronRight
 } from 'react-icons/fa';
 
 const Header = () => {
@@ -146,13 +148,21 @@ const Header = () => {
 				axios.defaults.withCredentials = true;
 				const { data } = await axios.get(backendUrl + 'api/notifications?limit=10');
 				// Handle both array (backward compatibility) and object (new format) responses
+				let fetchedNotifications = [];
 				if (Array.isArray(data)) {
-					setNotifications(data);
+					fetchedNotifications = data;
 				} else if (data && data.notifications) {
-					setNotifications(data.notifications);
-				} else {
-					setNotifications([]);
+					fetchedNotifications = data.notifications;
 				}
+				
+				// Remove duplicates based on notification ID
+				const uniqueNotifications = fetchedNotifications.filter((n, index, self) =>
+					index === self.findIndex((t) => t.id === n.id || (t._id && t._id === n._id))
+				);
+				
+				// Only show unread notifications in dropdown
+				const unreadOnly = uniqueNotifications.filter(n => n && (n.unread || n.read === false));
+				setNotifications(unreadOnly);
             } catch (err) {
                 if (err?.response?.status === 404 && timer) {
                     clearInterval(timer);
@@ -168,12 +178,42 @@ const Header = () => {
 	}, [isLoggedIn, userData, backendUrl]);
 
 	const unreadCount = notifications.filter(n => n && (n.unread || n.read === false)).length;
+	
+	const handleNotificationClick = async (notification) => {
+		try {
+			// Mark as read if unread
+			if (notification.unread || notification.read === false) {
+				axios.defaults.withCredentials = true;
+				await axios.post(backendUrl + `api/notifications/${notification.id || notification._id}/read`);
+				// Remove from dropdown immediately
+				setNotifications(prev => prev.filter(n => (n.id || n._id) !== (notification.id || notification._id)));
+			}
+			
+			// Navigate based on payload
+			if (notification.payload?.eventId) {
+				navigate(`/user/events/${notification.payload.eventId}`);
+			} else {
+				navigate('/notifications');
+			}
+			setIsBellOpen(false);
+		} catch (error) {
+			console.error('Error handling notification click:', error);
+			// Still navigate even if marking as read fails
+			if (notification.payload?.eventId) {
+				navigate(`/user/events/${notification.payload.eventId}`);
+			} else {
+				navigate('/notifications');
+			}
+			setIsBellOpen(false);
+		}
+	};
 
 	const markAllRead = async () => {
 		try {
 			axios.defaults.withCredentials = true;
 			await axios.post(backendUrl + 'api/notifications/mark-all-read');
-			setNotifications(prev => prev.map(n => ({ ...n, unread: false, read: true })));
+			// Clear all notifications from dropdown since they're all read now
+			setNotifications([]);
 		} catch (_) {
 			// silent
 		}
@@ -376,40 +416,63 @@ const Header = () => {
 								)}
 							</button>
 							{isBellOpen && (
-                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-xl shadow-2xl border border-gray-200 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden">
-									{/* Header */}
-									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white flex items-center justify-between">
+                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border-2 border-[#800000]/10 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden backdrop-blur-sm">
+									{/* Header with View All button in top right */}
+									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] via-[#900000] to-[#800000] text-white flex items-center justify-between relative">
 										<div className="flex items-center gap-2">
-											<FaBell className="w-4 h-4" />
-											<span className="text-sm font-bold">Notifications</span>
-											{unreadCount > 0 && (
-												<span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-semibold">
-													{unreadCount} new
-												</span>
-											)}
+											<div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+												<FaBell className="w-4 h-4" />
+											</div>
+											<div>
+												<span className="text-sm font-bold block">Notifications</span>
+												{unreadCount > 0 && (
+													<span className="text-xs text-white/90">
+														{unreadCount} {unreadCount === 1 ? 'new' : 'new'}
+													</span>
+												)}
+											</div>
 										</div>
-										{unreadCount > 0 && (
-											<button 
-												className="text-xs hover:underline font-medium" 
-												onClick={(e) => { e.stopPropagation(); markAllRead(); }}
+										<div className="flex items-center gap-2">
+											{unreadCount > 0 && (
+												<button 
+													className="text-xs px-2 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm" 
+													onClick={(e) => { 
+														e.stopPropagation(); 
+														markAllRead(); 
+													}}
+												>
+													Mark all read
+												</button>
+											)}
+											<button
+												onClick={(e) => {
+													e.stopPropagation();
+													navigate('/notifications');
+													setIsBellOpen(false);
+												}}
+												className="text-xs px-3 py-1.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5"
 											>
-												Mark all read
+												<FaEye className="w-3 h-3" />
+												View All
 											</button>
-										)}
+										</div>
 									</div>
 									
 									{/* Notifications List */}
-									<div className="max-h-96 overflow-y-auto">
+									<div className="max-h-96 overflow-y-auto bg-gradient-to-b from-white to-gray-50/50">
 										{isLoadingNotifications && (
-											<div className="p-6 text-center">
-												<div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-[#800000]"></div>
-												<p className="text-sm text-gray-500 mt-2">Loading...</p>
+											<div className="p-8 text-center">
+												<div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#800000] border-t-transparent"></div>
+												<p className="text-sm text-gray-600 mt-3 font-medium">Loading notifications...</p>
 											</div>
 										)}
 										{!isLoadingNotifications && notifications.length === 0 && (
-											<div className="p-6 text-center">
-												<FaBell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-												<p className="text-sm text-gray-500">No notifications</p>
+											<div className="p-8 text-center">
+												<div className="w-16 h-16 bg-gradient-to-br from-[#800000]/10 to-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+													<FaBell className="w-8 h-8 text-gray-400" />
+												</div>
+												<p className="text-sm font-semibold text-gray-700 mb-1">All caught up!</p>
+												<p className="text-xs text-gray-500">No new notifications</p>
 											</div>
 										)}
 										{!isLoadingNotifications && notifications.map((n, idx) => {
@@ -424,63 +487,58 @@ const Header = () => {
 												return date.toLocaleDateString();
 											};
 											
+											const notificationType = n.payload?.type || 'system';
+											const icon = getNotificationIcon(notificationType);
+											const colorClass = getNotificationColorClass(notificationType);
+											
 											return (
 												<div 
-													key={n.id || idx} 
-													onClick={() => {
-														if (n.payload?.eventId) {
-															navigate(`/user/events/${n.payload.eventId}`);
-														} else {
-															navigate('/notifications');
-														}
-														setIsBellOpen(false);
-													}}
-													className={`px-4 py-3 border-b cursor-pointer transition-all duration-200 hover:bg-gray-50 ${
+													key={n.id || n._id || idx} 
+													onClick={() => handleNotificationClick(n)}
+													className={`px-4 py-3.5 border-b cursor-pointer transition-all duration-300 hover:shadow-md hover:bg-gradient-to-r hover:from-white hover:to-[#800000]/5 ${
 														n.unread || n.read === false 
-															? 'bg-gradient-to-r from-[#800000]/5 to-transparent border-[#800000]/20' 
+															? 'bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent border-[#800000]/20' 
 															: 'bg-white border-gray-100'
 													}`}
 												>
 													<div className="flex items-start gap-3">
-														<div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-															n.unread || n.read === false ? 'bg-[#800000]' : 'bg-transparent'
-														}`}></div>
+														{/* Icon */}
+														<div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white shadow-md text-lg`}>
+															{icon}
+														</div>
+														
+														{/* Content */}
 														<div className="flex-1 min-w-0">
 															<div className="flex items-start justify-between gap-2 mb-1">
-																<div className={`font-semibold text-sm truncate ${
+																<h4 className={`font-bold text-sm leading-tight ${
 																	n.unread || n.read === false ? 'text-gray-900' : 'text-gray-700'
 																}`}>
-																	{n.title || 'Update'}
-																</div>
+																	{n.title || 'Notification'}
+																</h4>
+																{(n.unread || n.read === false) && (
+																	<div className="flex-shrink-0 w-2 h-2 bg-[#800000] rounded-full mt-1.5 animate-pulse"></div>
+																)}
 															</div>
-															<p className="text-xs text-gray-600 line-clamp-2 mb-1">
-																{n.message || n.body || ''}
+															<p className="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">
+																{n.message || n.body || 'No message'}
 															</p>
-															<p className="text-xs text-gray-400">
-																{formatTime(n.createdAt)}
-															</p>
+															<div className="flex items-center justify-between">
+																<span className="text-xs text-gray-500 font-medium">
+																	{formatTime(n.createdAt)}
+																</span>
+																{n.payload?.eventId && (
+																	<span className="text-xs text-[#800000] font-semibold flex items-center gap-1">
+																		View
+																		<FaChevronRight className="w-2.5 h-2.5" />
+																	</span>
+																)}
+															</div>
 														</div>
 													</div>
 												</div>
 											);
 										})}
 									</div>
-									
-									{/* Footer with View All */}
-									{notifications.length > 0 && (
-										<div className="px-4 py-3 border-t bg-gray-50">
-											<button
-												onClick={() => {
-													navigate('/notifications');
-													setIsBellOpen(false);
-												}}
-												className="w-full px-4 py-2 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
-											>
-												<FaEye className="w-4 h-4" />
-												View All Notifications
-											</button>
-										</div>
-									)}
 								</div>
 							)}
 						</div>
