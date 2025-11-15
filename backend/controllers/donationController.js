@@ -359,14 +359,14 @@ const sendDonationNotifications = async (donation) => {
       await sendReceiptEmail(donationWithEvent, donationWithEvent.donorEmail, donationWithEvent.donorName, 'donor');
     }
     
-    // Notify donor (if logged in) with in-app notification
+    // Notify donor (if logged in) with in-app notification - Transfer Confirmed
     if (donationWithEvent.user) {
       const donorId = donationWithEvent.user._id || donationWithEvent.user;
       if (donorId) {
         await notifyUsers({
           userIds: [donorId],
-          title: "Donation Successful",
-          message: `Thank you for your donation of ₱${donationWithEvent.amount.toLocaleString()}${donationWithEvent.event ? ` to "${eventTitle}"` : ''}. Your receipt has been sent to your email.`,
+          title: "Transfer Confirmed - Money Entered CRD",
+          message: `Your donation of ₱${donationWithEvent.amount.toLocaleString()}${donationWithEvent.event ? ` to "${eventTitle}"` : ''} has been successfully transferred and entered into CRD. Your receipt has been sent to your email.`,
           payload: {
             donationId: donationWithEvent._id,
             eventId: donationWithEvent.event?._id,
@@ -374,6 +374,47 @@ const sendDonationNotifications = async (donation) => {
             type: "donation_success"
           }
         });
+      }
+    }
+    
+    // Also notify anonymous donors via email (if no user account but has email)
+    if (!donationWithEvent.user && donationWithEvent.donorEmail) {
+      // Email notification is already sent via sendReceiptEmail above
+      // But we can add a specific email for transfer confirmation
+      try {
+        const transferConfirmationHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+              <h1 style="color: white; margin: 0; font-size: 28px;">✓ Transfer Confirmed</h1>
+            </div>
+            <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+              <h2 style="color: #28a745; margin-top: 0;">Money Has Entered CRD</h2>
+              <p style="color: #333; line-height: 1.6;">
+                Dear ${donationWithEvent.donorName},
+              </p>
+              <p style="color: #333; line-height: 1.6;">
+                We are pleased to confirm that your donation of <strong>₱${donationWithEvent.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong>${donationWithEvent.event && donationWithEvent.event.title ? ` to "${donationWithEvent.event.title}"` : ''} has been <strong>successfully transferred and entered into CRD</strong>.
+              </p>
+              <p style="color: #333; line-height: 1.6;">
+                Your official acknowledgment receipt is attached to this email.
+              </p>
+              <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                Best regards,<br>
+                <strong>EUMATTER - Community Relations Department</strong><br>
+                Enverga University
+              </p>
+            </div>
+          </div>
+        `;
+        
+        await transporter.sendMail({
+          from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+          to: donationWithEvent.donorEmail,
+          subject: 'Transfer Confirmed - Money Entered CRD',
+          html: transferConfirmationHtml
+        });
+      } catch (emailError) {
+        console.error('Error sending transfer confirmation email:', emailError);
       }
     }
     
@@ -413,13 +454,13 @@ const sendDonationNotifications = async (donation) => {
       }
     }
     
-    // In-app notifications for CRD staff
+    // In-app notifications for CRD staff - Money Entered CRD
     const staffIds = crdStaff.map(staff => staff._id);
     if (staffIds.length > 0) {
       await notifyUsers({
         userIds: staffIds,
-        title: "Donation Received",
-        message: `₱${donationWithEvent.amount.toLocaleString()} donation received${donationWithEvent.event ? ` for "${eventTitle}"` : ''}. Receipt sent to your email for transparency.`,
+        title: "Money Entered CRD - Donation Received",
+        message: `₱${donationWithEvent.amount.toLocaleString()} donation from ${donationWithEvent.donorName}${donationWithEvent.event ? ` for "${eventTitle}"` : ''} has been successfully transferred and entered into CRD. Receipt sent to your email for transparency.`,
         payload: {
           donationId: donationWithEvent._id,
           eventId: donationWithEvent.event?._id,
@@ -792,18 +833,73 @@ export const confirmSourcePayment = async (req, res) => {
       } else if (["failed", "canceled"].includes(status)) {
         donation.status = "failed";
         await donation.save();
-        // Send failure notification to donor
+        // Send failure notification to donor - Transfer Failed
         if (donation.user) {
           try {
             await notifyUsers({
               userIds: [donation.user],
-              title: "Donation Failed",
-              message: `Your donation of ₱${donation.amount} failed. Please try again.`,
+              title: "Transfer Failed - Money Did Not Enter CRD",
+              message: `Your donation of ₱${donation.amount.toLocaleString()} failed to transfer. The money did not enter CRD. Please try again or contact support if the issue persists.`,
               payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
             });
           } catch (err) {
             console.error("Error sending donation failure notification:", err);
           }
+        }
+        
+        // Also notify anonymous donors via email if transfer fails
+        if (!donation.user && donation.donorEmail) {
+          try {
+            await transporter.sendMail({
+              from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+              to: donation.donorEmail,
+              subject: 'Transfer Failed - Donation Not Processed',
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                    <h1 style="color: white; margin: 0; font-size: 28px;">⚠️ Transfer Failed</h1>
+                  </div>
+                  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                    <h2 style="color: #dc3545; margin-top: 0;">Money Did Not Enter CRD</h2>
+                    <p style="color: #333; line-height: 1.6;">
+                      Dear ${donation.donorName},
+                    </p>
+                    <p style="color: #333; line-height: 1.6;">
+                      We regret to inform you that your donation of <strong>₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong> <strong>failed to transfer</strong>. The money did not enter CRD.
+                    </p>
+                    <p style="color: #333; line-height: 1.6;">
+                      Please try again or contact our support team if you continue to experience issues.
+                    </p>
+                    <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                      Best regards,<br>
+                      <strong>EUMATTER - Community Relations Department</strong><br>
+                      Enverga University
+                    </p>
+                  </div>
+                </div>
+              `
+            });
+          } catch (emailError) {
+            console.error('Error sending transfer failure email:', emailError);
+          }
+        }
+        
+        // Notify CRD staff about failed transfer
+        try {
+          const crdStaff = await userModel.find({ 
+            role: { $in: ["CRD Staff", "System Administrator"] } 
+          }).select('_id').lean();
+          const staffIds = crdStaff.map(staff => staff._id);
+          if (staffIds.length > 0) {
+            await notifyUsers({
+              userIds: staffIds,
+              title: "Transfer Failed - Donation Not Received",
+              message: `A donation of ₱${donation.amount.toLocaleString()} from ${donation.donorName} failed to transfer. Money did not enter CRD.`,
+              payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
+            });
+          }
+        } catch (err) {
+          console.error("Error notifying CRD staff about failed transfer:", err);
         }
       } else {
         donation.status = "pending";
@@ -851,18 +947,73 @@ export const confirmSourcePayment = async (req, res) => {
       } else if (["failed", "expired"].includes(status)) {
         donation.status = "failed";
         await donation.save();
-        // Send failure notification to donor
+        // Send failure notification to donor - Transfer Failed
         if (donation.user) {
           try {
             await notifyUsers({
               userIds: [donation.user],
-              title: "Donation Failed",
-              message: `Your donation of ₱${donation.amount} failed. Please try again.`,
+              title: "Transfer Failed - Money Did Not Enter CRD",
+              message: `Your donation of ₱${donation.amount.toLocaleString()} failed to transfer. The money did not enter CRD. Please try again or contact support if the issue persists.`,
               payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
             });
           } catch (err) {
             console.error("Error sending donation failure notification:", err);
           }
+        }
+        
+        // Also notify anonymous donors via email if transfer fails
+        if (!donation.user && donation.donorEmail) {
+          try {
+            await transporter.sendMail({
+              from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+              to: donation.donorEmail,
+              subject: 'Transfer Failed - Donation Not Processed',
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                    <h1 style="color: white; margin: 0; font-size: 28px;">⚠️ Transfer Failed</h1>
+                  </div>
+                  <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                    <h2 style="color: #dc3545; margin-top: 0;">Money Did Not Enter CRD</h2>
+                    <p style="color: #333; line-height: 1.6;">
+                      Dear ${donation.donorName},
+                    </p>
+                    <p style="color: #333; line-height: 1.6;">
+                      We regret to inform you that your donation of <strong>₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong> <strong>failed to transfer</strong>. The money did not enter CRD.
+                    </p>
+                    <p style="color: #333; line-height: 1.6;">
+                      Please try again or contact our support team if you continue to experience issues.
+                    </p>
+                    <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                      Best regards,<br>
+                      <strong>EUMATTER - Community Relations Department</strong><br>
+                      Enverga University
+                    </p>
+                  </div>
+                </div>
+              `
+            });
+          } catch (emailError) {
+            console.error('Error sending transfer failure email:', emailError);
+          }
+        }
+        
+        // Notify CRD staff about failed transfer
+        try {
+          const crdStaff = await userModel.find({ 
+            role: { $in: ["CRD Staff", "System Administrator"] } 
+          }).select('_id').lean();
+          const staffIds = crdStaff.map(staff => staff._id);
+          if (staffIds.length > 0) {
+            await notifyUsers({
+              userIds: staffIds,
+              title: "Transfer Failed - Donation Not Received",
+              message: `A donation of ₱${donation.amount.toLocaleString()} from ${donation.donorName} failed to transfer. Money did not enter CRD.`,
+              payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
+            });
+          }
+        } catch (err) {
+          console.error("Error notifying CRD staff about failed transfer:", err);
         }
       } else {
         donation.status = "pending";
@@ -938,18 +1089,73 @@ export const handleWebhook = async (req, res) => {
           donation.status = "failed";
           await donation.save();
           console.log(`❌ Donation ${donation._id} marked as failed.`);
-          // Send failure notification to donor
+          // Send failure notification to donor - Transfer Failed
           if (donation.user) {
             try {
               await notifyUsers({
                 userIds: [donation.user],
-                title: "Donation Failed",
-                message: `Your donation of ₱${donation.amount} failed. Please try again.`,
+                title: "Transfer Failed - Money Did Not Enter CRD",
+                message: `Your donation of ₱${donation.amount.toLocaleString()} failed to transfer. The money did not enter CRD. Please try again or contact support if the issue persists.`,
                 payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
               });
             } catch (err) {
               console.error("Error sending donation failure notification:", err);
             }
+          }
+          
+          // Also notify anonymous donors via email if transfer fails
+          if (!donation.user && donation.donorEmail) {
+            try {
+              await transporter.sendMail({
+                from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+                to: donation.donorEmail,
+                subject: 'Transfer Failed - Donation Not Processed',
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                      <h1 style="color: white; margin: 0; font-size: 28px;">⚠️ Transfer Failed</h1>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                      <h2 style="color: #dc3545; margin-top: 0;">Money Did Not Enter CRD</h2>
+                      <p style="color: #333; line-height: 1.6;">
+                        Dear ${donation.donorName},
+                      </p>
+                      <p style="color: #333; line-height: 1.6;">
+                        We regret to inform you that your donation of <strong>₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong> <strong>failed to transfer</strong>. The money did not enter CRD.
+                      </p>
+                      <p style="color: #333; line-height: 1.6;">
+                        Please try again or contact our support team if you continue to experience issues.
+                      </p>
+                      <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        Best regards,<br>
+                        <strong>EUMATTER - Community Relations Department</strong><br>
+                        Enverga University
+                      </p>
+                    </div>
+                  </div>
+                `
+              });
+            } catch (emailError) {
+              console.error('Error sending transfer failure email:', emailError);
+            }
+          }
+          
+          // Notify CRD staff about failed transfer
+          try {
+            const crdStaff = await userModel.find({ 
+              role: { $in: ["CRD Staff", "System Administrator"] } 
+            }).select('_id').lean();
+            const staffIds = crdStaff.map(staff => staff._id);
+            if (staffIds.length > 0) {
+              await notifyUsers({
+                userIds: staffIds,
+                title: "Transfer Failed - Donation Not Received",
+                message: `A donation of ₱${donation.amount.toLocaleString()} from ${donation.donorName} failed to transfer. Money did not enter CRD.`,
+                payload: { donationId: donation._id, eventId: donation.event, type: "donation_failed" }
+              });
+            }
+          } catch (err) {
+            console.error("Error notifying CRD staff about failed transfer:", err);
           }
           break;
   
