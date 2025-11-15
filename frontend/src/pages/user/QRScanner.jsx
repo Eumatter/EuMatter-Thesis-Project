@@ -235,9 +235,10 @@ const QRScanner = () => {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
                 fetchEventData().then(() => {
+                    // Check if there's pending feedback for this event
                     // Redirect to event attendance page for feedback
                     setTimeout(() => {
-                        toast.info('Redirecting to attendance page to submit feedback...')
+                        toast.success('Time out recorded successfully! Redirecting to submit feedback...')
                         navigate(`/volunteer/attendance/${eventId}?fromQR=true`)
                     }, 1500)
                 })
@@ -401,9 +402,8 @@ const QRScanner = () => {
 
         try {
             setProcessing(true)
-            const html5QrCode = new Html5Qrcode("qr-reader")
-            
-            const decodedText = await html5QrCode.scanFile(file, true)
+            // Use Html5Qrcode static method scanFile which doesn't require DOM element
+            const decodedText = await Html5Qrcode.scanFile(file, true)
             
             if (decodedText) {
                 await handleQRScan(decodedText, action)

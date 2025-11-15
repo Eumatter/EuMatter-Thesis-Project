@@ -133,22 +133,29 @@ const EventAttendance = () => {
         }
     }, [event?._id, userData?._id, fetchAttendanceStatus, fetchPendingFeedback])
 
-    // Check if redirected from QR scanner
+    // Check if redirected from QR scanner and refresh pending feedback
     useEffect(() => {
         const urlParams = new URLSearchParams(location.search)
         const fromQR = urlParams.get('fromQR')
-        if (fromQR === 'true' && pendingFeedback) {
-            // Scroll to feedback section after a short delay
+        if (fromQR === 'true') {
+            // Refresh pending feedback when coming from QR scanner
+            fetchPendingFeedback()
+            // Clean up URL
+            window.history.replaceState({}, '', `/volunteer/attendance/${eventId}`)
+        }
+    }, [location.search, eventId, fetchPendingFeedback])
+
+    // Scroll to feedback section when pending feedback is available
+    useEffect(() => {
+        if (pendingFeedback) {
             setTimeout(() => {
                 const feedbackSection = document.getElementById('pending-feedback-section')
                 if (feedbackSection) {
                     feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
                 }
-            }, 500)
-            // Clean up URL
-            window.history.replaceState({}, '', `/volunteer/attendance/${eventId}`)
+            }, 300)
         }
-    }, [location.search, pendingFeedback, eventId])
+    }, [pendingFeedback])
 
     const handleFeedbackChange = (field, value) => {
         setFeedbackForm(prev => ({
@@ -165,6 +172,11 @@ const EventAttendance = () => {
 
         if (!feedbackForm.rating || feedbackForm.rating < 1 || feedbackForm.rating > 5) {
             toast.error('Please select a rating from 1 to 5 stars')
+            return
+        }
+
+        if (!feedbackForm.comment || feedbackForm.comment.trim().length === 0) {
+            toast.error('Please provide feedback message')
             return
         }
 
@@ -195,12 +207,12 @@ const EventAttendance = () => {
             if (error.response?.status === 400) {
                 if (errorMessage.includes('not completed')) {
                     toast.error('Please complete your attendance (Time Out) before submitting feedback')
-                } else if (errorMessage.includes('deadline')) {
-                    toast.error('The feedback deadline has passed. Please contact the event organizer.')
                 } else if (errorMessage.includes('already submitted')) {
                     toast.error('Feedback has already been submitted for this attendance')
                 } else if (errorMessage.includes('Rating must be')) {
                     toast.error('Please select a valid rating from 1 to 5 stars')
+                } else if (errorMessage.includes('Feedback message is required')) {
+                    toast.error('Please provide feedback message')
                 } else {
                     toast.error(errorMessage)
                 }
@@ -386,7 +398,7 @@ const EventAttendance = () => {
                                         {/* Feedback Comment Section */}
                                         <div className="mb-6">
                                             <label className="block text-base sm:text-lg font-bold text-gray-900 mb-3">
-                                                Feedback <span className="text-gray-500 font-normal text-sm">(optional)</span>
+                                                Feedback <span className="text-red-500">*</span>
                                             </label>
                                             <div className="relative">
                                                 <textarea
@@ -396,17 +408,21 @@ const EventAttendance = () => {
                                                     className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm sm:text-base focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] outline-none resize-none transition-all duration-200 bg-white/90"
                                                     placeholder="Share highlights, challenges, or suggestions about your volunteer experience..."
                                                     maxLength={2000}
+                                                    required
                                                 />
                                                 <div className="absolute bottom-3 right-3 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
                                                     {feedbackForm.comment.length}/2000
                                                 </div>
                                             </div>
+                                            {!feedbackForm.comment && (
+                                                <p className="text-xs text-red-600 mt-1">Feedback message is required</p>
+                                            )}
                                         </div>
 
                                         {/* Submit Button */}
                                         <button
                                             onClick={handleSubmitFeedback}
-                                            disabled={submittingFeedback || !feedbackForm.rating || (pendingFeedback.status === 'pending' && !pendingFeedback.timeOut && !pendingFeedback.checkOutTime)}
+                                            disabled={submittingFeedback || !feedbackForm.rating || !feedbackForm.comment || feedbackForm.comment.trim().length === 0 || (pendingFeedback.status === 'pending' && !pendingFeedback.timeOut && !pendingFeedback.checkOutTime)}
                                             className="w-full bg-gradient-to-r from-[#800000] to-[#a00000] text-white px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3"
                                         >
                                             {submittingFeedback ? (
@@ -425,12 +441,12 @@ const EventAttendance = () => {
                                         </button>
 
                                         {pendingFeedback.overdue && (
-                                            <div className="mt-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                                                <p className="text-sm text-red-700 font-semibold flex items-center gap-2">
+                                            <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                                                <p className="text-sm text-amber-700 font-semibold flex items-center gap-2">
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    Feedback deadline passed. Submit now and coordinate with the organizer if you need assistance.
+                                                    Note: The original feedback deadline has passed, but you can still submit your feedback anytime.
                                                 </p>
                                             </div>
                                         )}

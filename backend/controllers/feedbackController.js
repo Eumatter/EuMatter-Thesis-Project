@@ -74,24 +74,24 @@ export async function submitFeedback(req, res) {
             return res.status(400).json({ success: false, message: 'Feedback already submitted' })
         }
 
-        if (!organizer) {
-            const deadline = attendance.deadlineAt ? new Date(attendance.deadlineAt) : null
-            if (!deadline) {
-                return res.status(400).json({ success: false, message: 'Feedback deadline not set' })
-            }
-            if (Date.now() > deadline.getTime()) {
-                return res.status(400).json({ success: false, message: 'Feedback deadline has passed' })
-            }
-        }
+        // Allow feedback submission anytime after attendance is completed
+        // Removed deadline restriction - volunteers can submit feedback even after event completion
+        // The deadline is only used for reminders, not for blocking submissions
 
         const parsedRating = Number(rating)
         if (!parsedRating || parsedRating < 1 || parsedRating > 5) {
             return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' })
         }
 
+        // Validate comment is required
+        const commentText = comment ? String(comment).trim() : ''
+        if (!commentText || commentText.length === 0) {
+            return res.status(400).json({ success: false, message: 'Feedback message is required' })
+        }
+
         attendance.feedback = {
             rating: parsedRating,
-            comment: comment ? String(comment).trim() : '',
+            comment: commentText,
             submittedAt: new Date(),
             submittedBy: userId,
             overridden: organizer && !isVolunteer,
