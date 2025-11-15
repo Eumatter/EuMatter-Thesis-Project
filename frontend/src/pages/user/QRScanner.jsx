@@ -23,12 +23,6 @@ const QRScanner = () => {
     const [attendanceData, setAttendanceData] = useState(null)
     const [scanning, setScanning] = useState(false)
     const [cameraError, setCameraError] = useState(null)
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false)
-    const [feedbackForm, setFeedbackForm] = useState({
-        rating: 0,
-        comment: ''
-    })
-    const [submittingFeedback, setSubmittingFeedback] = useState(false)
     
     // Separate states for Time In and Time Out
     const [timeInPrimaryKey, setTimeInPrimaryKey] = useState('')
@@ -241,9 +235,11 @@ const QRScanner = () => {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
                 fetchEventData().then(() => {
+                    // Redirect to volunteer history page for feedback
                     setTimeout(() => {
-                        setShowFeedbackModal(true)
-                    }, 1000)
+                        toast.info('Redirecting to volunteer history to submit feedback...')
+                        navigate('/user/volunteer-history?fromQR=true')
+                    }, 1500)
                 })
             }
             
@@ -427,41 +423,6 @@ const QRScanner = () => {
         }
     }
 
-    const handleSubmitFeedback = async () => {
-        if (!feedbackForm.rating || feedbackForm.rating < 1 || feedbackForm.rating > 5) {
-            toast.error('Please select a rating from 1 to 5 stars')
-            return
-        }
-
-        if (!attendanceData?._id) {
-            toast.error('Attendance record not found')
-            return
-        }
-
-        setSubmittingFeedback(true)
-        try {
-            const response = await axios.post(
-                `${backendUrl}api/feedback/${attendanceData._id}`,
-                {
-                    rating: feedbackForm.rating,
-                    comment: feedbackForm.comment
-                },
-                { withCredentials: true }
-            )
-
-            toast.success('Thank you for your feedback!')
-            setShowFeedbackModal(false)
-            setFeedbackForm({ rating: 0, comment: '' })
-            if (eventId && userData?._id) {
-                fetchAttendanceStatus()
-            }
-        } catch (error) {
-            console.error('Error submitting feedback:', error)
-            toast.error(error.response?.data?.message || 'Failed to submit feedback')
-        } finally {
-            setSubmittingFeedback(false)
-        }
-    }
 
     if (loading) {
         return (
@@ -969,79 +930,6 @@ const QRScanner = () => {
 
             </main>
 
-            {/* Feedback Modal */}
-            {showFeedbackModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
-                        <div className="bg-gradient-to-r from-[#800000] to-[#a00000] p-6 text-white">
-                            <h3 className="text-2xl font-bold">Event Feedback</h3>
-                            <p className="text-white/90 mt-1">Please share your experience</p>
-                        </div>
-                        
-                        <div className="p-6">
-                            <div className="mb-6">
-                                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                    Rating <span className="text-red-500">*</span>
-                                </label>
-                                <div className="flex gap-2 justify-center">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                            key={star}
-                                            type="button"
-                                            onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
-                                            className="focus:outline-none transform hover:scale-110 transition-transform"
-                                        >
-                                            <svg
-                                                className={`w-10 h-10 ${
-                                                    star <= feedbackForm.rating
-                                                        ? 'text-yellow-400 fill-current'
-                                                        : 'text-gray-300'
-                                                }`}
-                                                fill="currentColor"
-                                                viewBox="0 0 20 20"
-                                            >
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="mb-6">
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Comments (Optional)
-                                </label>
-                                <textarea
-                                    value={feedbackForm.comment}
-                                    onChange={(e) => setFeedbackForm({ ...feedbackForm, comment: e.target.value })}
-                                    placeholder="Share your thoughts about the event..."
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#800000] focus:border-[#800000] resize-none"
-                                    rows="4"
-                                />
-                            </div>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        setShowFeedbackModal(false)
-                                        setFeedbackForm({ rating: 0, comment: '' })
-                                    }}
-                                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-                                >
-                                    Skip
-                                </button>
-                                <button
-                                    onClick={handleSubmitFeedback}
-                                    disabled={submittingFeedback || !feedbackForm.rating}
-                                    className="flex-1 px-6 py-3 bg-gradient-to-r from-[#800000] to-[#a00000] text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <Footer />
         </div>

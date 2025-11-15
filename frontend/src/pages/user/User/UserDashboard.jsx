@@ -583,116 +583,29 @@ const UserDashboard = () => {
             <Header />
 
             <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 min-h-[calc(100vh-80px)]">
-                {(feedbackLoading || pendingFeedback.length > 0) && (
+                {/* Pending Feedback Alert - Link to Volunteer History */}
+                {pendingFeedback.length > 0 && (
                     <section className="mb-6 sm:mb-8">
-                        <div className="bg-white border border-[#f1e6d8] rounded-2xl shadow-sm p-5 sm:p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                                <div>
-                                    <h2 className="text-xl sm:text-2xl font-bold text-[#800000]">Pending Volunteer Feedback</h2>
-                                    <p className="text-sm text-gray-600">Submit your feedback within the deadline to keep your volunteer hours valid.</p>
+                        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-1">Pending Volunteer Feedback</h2>
+                                        <p className="text-sm text-gray-700">You have {pendingFeedback.length} pending feedback {pendingFeedback.length === 1 ? 'task' : 'tasks'}. Submit your feedback to keep your volunteer hours valid.</p>
+                                    </div>
                                 </div>
-                            </div>
-
-                            {feedbackLoading && (
-                                <div className="flex items-center gap-3 text-gray-600">
-                                    <LoadingSpinner size="small" />
-                                    <span>Loading feedback tasks...</span>
-                                </div>
-                            )}
-
-                            {!feedbackLoading && pendingFeedback.length === 0 && (
-                                <p className="text-gray-600">No pending feedback. Thank you for staying on top of your volunteer tasks!</p>
-                            )}
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {pendingFeedback.map(record => {
-                                    const form = feedbackForms[record._id] || {};
-                                    const deadline = record.deadlineAt ? new Date(record.deadlineAt) : null;
-                                    const overdue = record.overdue;
-                                    const event = record.event || {};
-                                    return (
-                                        <div key={record._id} className="bg-[#fffdfa] border border-[#ecd8c4] rounded-xl p-4 shadow-sm">
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    <h3 className="text-lg font-semibold text-[#800000]">{event.title || 'Event'}</h3>
-                                                    <p className="text-xs text-gray-500">
-                                                        Attended on{' '}
-                                                        {new Date(record.date).toLocaleDateString(undefined, {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </p>
-                                                </div>
-                                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
-                                                    {overdue ? 'Overdue' : 'Pending'}
-                                                </span>
-                                            </div>
-
-                        {deadline && (
-                            <p className="text-xs text-gray-500 mb-3">
-                                Deadline: {deadline.toLocaleString(undefined, {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: 'numeric',
-                                    minute: '2-digit'
-                                })}
-                            </p>
-                        )}
-
-                                            <div className="mb-3">
-                                                <p className="text-sm font-medium text-gray-700 mb-2">Rate your experience</p>
-                                                <div className="flex gap-2">
-                                                    {[1, 2, 3, 4, 5].map(value => (
-                                                        <button
-                                                            key={value}
-                                                            type="button"
-                                                            onClick={() => handleFeedbackChange(record._id, 'rating', value)}
-                                                            className="focus:outline-none"
-                                                        >
-                                                            <FaStar
-                                                                className={`w-7 h-7 transition-colors ${
-                                                                    (form.rating || 0) >= value ? 'text-[#FFD700]' : 'text-gray-300'
-                                                                }`}
-                                                            />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="mb-3">
-                                                <label className="text-sm font-medium text-gray-700 mb-2 block">Feedback (optional)</label>
-                                                <textarea
-                                                    rows={3}
-                                                    value={form.comment || ''}
-                                                    onChange={(e) => handleFeedbackChange(record._id, 'comment', e.target.value)}
-                                                    className="w-full border border-[#e5d2bf] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:outline-none"
-                                                    placeholder="Share highlights, challenges, or suggestions..."
-                                                    maxLength={2000}
-                                                />
-                                                <div className="text-xs text-gray-400 text-right">
-                                                    {(form.comment || '').length}/2000
-                                                </div>
-                                            </div>
-
-                                            <Button
-                                                variant="maroon"
-                                                disabled={form.submitting}
-                                                onClick={() => handleSubmitFeedback(record._id)}
-                                                className="w-full"
-                                            >
-                                                {form.submitting ? 'Submitting...' : 'Submit Feedback'}
-                                            </Button>
-
-                                            {overdue && (
-                                                <p className="mt-3 text-xs text-red-600">
-                                                    Feedback deadline passed. Submit now and coordinate with the organizer if you need assistance.
-                                                </p>
-                                            )}
-                                        </div>
-                                    )
-                                })}
+                                <Button
+                                    variant="maroon"
+                                    onClick={() => navigate('/user/volunteer-history')}
+                                    className="w-full sm:w-auto"
+                                >
+                                    View & Submit Feedback
+                                </Button>
                             </div>
                         </div>
                     </section>
@@ -731,7 +644,10 @@ const UserDashboard = () => {
                                     </span>
                                 </div>
                                  {/* Pending Feedback */}
-                                 <div className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50">
+                                 <button 
+                                     onClick={() => navigate('/user/volunteer-history')}
+                                     className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50 hover:bg-yellow-100 cursor-pointer w-full"
+                                 >
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
                                          <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                                          <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Pending Feedback</span>
@@ -739,7 +655,7 @@ const UserDashboard = () => {
                                      <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
                                         {pendingFeedbackCount}
                                     </span>
-                                </div>
+                                </button>
                                  {/* Hours Volunteered */}
                                  <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-green-50">
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">

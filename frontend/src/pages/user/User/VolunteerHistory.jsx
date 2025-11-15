@@ -5,12 +5,16 @@ import Footer from '../../../components/Footer';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import Button from '../../../components/Button';
 import api from '../../../utils/api';
-import { notifyError } from '../../../utils/notify';
+import { notifyError, notifySuccess } from '../../../utils/notify';
+import { FaStar } from 'react-icons/fa';
 
 const VolunteerHistory = () => {
     const navigate = useNavigate();
     const [attendanceSummary, setAttendanceSummary] = useState({ totalHours: 0, totalEvents: 0, events: [] });
     const [isLoading, setIsLoading] = useState(true);
+    const [pendingFeedback, setPendingFeedback] = useState([]);
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
+    const [feedbackForms, setFeedbackForms] = useState({});
 
     useEffect(() => {
         const fetchAttendanceSummary = async () => {
@@ -37,7 +41,95 @@ const VolunteerHistory = () => {
         };
 
         fetchAttendanceSummary();
+        fetchPendingFeedback();
+        
+        // Check if redirected from QR scanner for feedback
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromQR = urlParams.get('fromQR');
+        if (fromQR === 'true') {
+            // Scroll to feedback section after a short delay
+            setTimeout(() => {
+                const feedbackSection = document.getElementById('pending-feedback-section');
+                if (feedbackSection) {
+                    feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 500);
+            // Clean up URL
+            window.history.replaceState({}, '', '/user/volunteer-history');
+        }
     }, [navigate]);
+
+    const fetchPendingFeedback = async () => {
+        try {
+            setFeedbackLoading(true);
+            const { data } = await api.get('/api/feedback/me/pending');
+            if (data?.success) {
+                setPendingFeedback(data.records || []);
+            }
+        } catch (error) {
+            console.error('Error fetching pending feedback:', error);
+        } finally {
+            setFeedbackLoading(false);
+        }
+    };
+
+    const handleFeedbackChange = (attendanceId, field, value) => {
+        setFeedbackForms(prev => ({
+            ...prev,
+            [attendanceId]: {
+                ...prev[attendanceId],
+                [field]: value
+            }
+        }));
+    };
+
+    const handleSubmitFeedback = async (attendanceId) => {
+        const form = feedbackForms[attendanceId] || {};
+        if (!form.rating || form.rating < 1 || form.rating > 5) {
+            notifyError('Rating Required', 'Please select a rating from 1 to 5 stars');
+            return;
+        }
+
+        setFeedbackForms(prev => ({
+            ...prev,
+            [attendanceId]: { ...prev[attendanceId], submitting: true }
+        }));
+
+        try {
+            const { data } = await api.post(`/api/feedback/${attendanceId}`, {
+                rating: form.rating,
+                comment: form.comment || ''
+            });
+
+            if (data?.success) {
+                notifySuccess('Feedback Submitted', 'Thank you for your feedback!');
+                setPendingFeedback(prev => prev.filter(entry => String(entry._id) !== String(attendanceId)));
+                setFeedbackForms(prev => {
+                    const updated = { ...prev };
+                    delete updated[attendanceId];
+                    return updated;
+                });
+                // Refresh attendance summary to update status
+                const { data: summaryData } = await api.get('/api/attendance/me/summary');
+                if (summaryData?.success) {
+                    setAttendanceSummary({
+                        totalHours: summaryData.totalHours || 0,
+                        totalEvents: summaryData.totalEvents || 0,
+                        events: Array.isArray(summaryData.events) ? summaryData.events : []
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            const message = error.response?.data?.message || 'Failed to submit feedback';
+            notifyError('Submission Failed', message);
+        } finally {
+            setFeedbackForms(prev => ({
+                ...prev,
+                [attendanceId]: { ...prev[attendanceId], submitting: false }
+            }));
+        }
+    };
 
     const eventsJoined = attendanceSummary.totalEvents || 0;
     const totalHours = attendanceSummary.totalHours || 0;
@@ -51,6 +143,122 @@ const VolunteerHistory = () => {
             <Header />
 
             <main className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+                {/* Pending Volunteer Feedback Section */}
+                {(feedbackLoading || pendingFeedback.length > 0) && (
+                    <section id="pending-feedback-section" className="mb-8 sm:mb-10">
+                        <div className="bg-white border border-[#f1e6d8] rounded-2xl shadow-sm p-5 sm:p-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                                <div>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-[#800000]">Pending Volunteer Feedback</h2>
+                                    <p className="text-sm text-gray-600">Submit your feedback within the deadline to keep your volunteer hours valid.</p>
+                                </div>
+                            </div>
+
+                            {feedbackLoading && (
+                                <div className="flex items-center gap-3 text-gray-600">
+                                    <LoadingSpinner size="small" />
+                                    <span>Loading feedback tasks...</span>
+                                </div>
+                            )}
+
+                            {!feedbackLoading && pendingFeedback.length === 0 && (
+                                <p className="text-gray-600">No pending feedback. Thank you for staying on top of your volunteer tasks!</p>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {pendingFeedback.map(record => {
+                                    const form = feedbackForms[record._id] || {};
+                                    const deadline = record.deadlineAt ? new Date(record.deadlineAt) : null;
+                                    const overdue = record.overdue;
+                                    const event = record.event || {};
+                                    return (
+                                        <div key={record._id} className="bg-[#fffdfa] border border-[#ecd8c4] rounded-xl p-4 shadow-sm">
+                                            <div className="flex items-start justify-between mb-3">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-[#800000]">{event.title || 'Event'}</h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        Attended on{' '}
+                                                        {new Date(record.date).toLocaleDateString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
+                                                    </p>
+                                                </div>
+                                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${overdue ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                                                    {overdue ? 'Overdue' : 'Pending'}
+                                                </span>
+                                            </div>
+
+                                            {deadline && (
+                                                <p className="text-xs text-gray-500 mb-3">
+                                                    Deadline: {deadline.toLocaleString(undefined, {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        hour: 'numeric',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            )}
+
+                                            <div className="mb-3">
+                                                <p className="text-sm font-medium text-gray-700 mb-2">Rate your experience</p>
+                                                <div className="flex gap-2">
+                                                    {[1, 2, 3, 4, 5].map(value => (
+                                                        <button
+                                                            key={value}
+                                                            type="button"
+                                                            onClick={() => handleFeedbackChange(record._id, 'rating', value)}
+                                                            className="focus:outline-none transition-transform hover:scale-110"
+                                                        >
+                                                            <FaStar
+                                                                className={`w-7 h-7 transition-colors ${
+                                                                    (form.rating || 0) >= value ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'
+                                                                }`}
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="text-sm font-medium text-gray-700 mb-2 block">Feedback (optional)</label>
+                                                <textarea
+                                                    rows={3}
+                                                    value={form.comment || ''}
+                                                    onChange={(e) => handleFeedbackChange(record._id, 'comment', e.target.value)}
+                                                    className="w-full border border-[#e5d2bf] rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:outline-none resize-none"
+                                                    placeholder="Share highlights, challenges, or suggestions..."
+                                                    maxLength={2000}
+                                                />
+                                                <div className="text-xs text-gray-400 text-right mt-1">
+                                                    {(form.comment || '').length}/2000
+                                                </div>
+                                            </div>
+
+                                            <Button
+                                                variant="maroon"
+                                                disabled={form.submitting}
+                                                onClick={() => handleSubmitFeedback(record._id)}
+                                                className="w-full"
+                                            >
+                                                {form.submitting ? 'Submitting...' : 'Submit Feedback'}
+                                            </Button>
+
+                                            {overdue && (
+                                                <p className="mt-3 text-xs text-red-600">
+                                                    Feedback deadline passed. Submit now and coordinate with the organizer if you need assistance.
+                                                </p>
+                                            )}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
                 <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#771010] via-[#8f2a2a] to-[#b3622c] px-6 pt-10 pb-12 sm:px-10 sm:pt-12 sm:pb-14 shadow-xl">
                     <div className="absolute inset-0 opacity-30 mix-blend-overlay" aria-hidden="true">
                         <div className="h-full w-full bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.25),_transparent_45%)]"></div>
