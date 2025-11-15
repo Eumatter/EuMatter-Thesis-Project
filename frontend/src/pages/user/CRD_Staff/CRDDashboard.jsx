@@ -492,8 +492,8 @@ const CRDDashboard = () => {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
-                                <FaClock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                <FaClock className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.pendingEvents}</p>
@@ -504,8 +504,8 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
-                                <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                <FaCheckCircle className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.approvedEvents}</p>
@@ -516,8 +516,8 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
-                                <FaMoneyBillWave className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                <FaMoneyBillWave className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
@@ -528,8 +528,8 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-3 sm:p-4 lg:p-5 xl:p-6 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 lg:space-x-4">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.maroon }}>
-                                <FaUserCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                <FaUserCheck className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold transition-colors" style={{ color: THEME_COLORS.maroon }}>{stats.activeVolunteers}</p>
@@ -786,22 +786,22 @@ const CRDDashboard = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* Chart Container - Responsive */}
-                                    <div className="flex justify-center mb-4 sm:mb-6 rounded-xl p-3 sm:p-4 lg:p-6 border relative flex-1 min-h-[180px] sm:min-h-[220px] md:min-h-[250px] lg:min-h-[280px]" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
+                                    {/* Chart Container - Responsive - Larger Size */}
+                                    <div className="flex justify-center mb-4 sm:mb-6 rounded-xl p-4 sm:p-6 lg:p-8 border-2 relative flex-1 min-h-[250px] sm:min-h-[300px] md:min-h-[350px] lg:min-h-[400px]" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg, boxShadow: '0 2px 8px rgba(128, 0, 32, 0.08)' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.3"/>
+                                                        <feDropShadow dx="0" dy="3" stdDeviation="4" floodOpacity="0.25"/>
                                                     </filter>
                                                 </defs>
                                                 <Pie
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="40%"
-                                                    outerRadius="70%"
-                                                    paddingAngle={3}
+                                                    innerRadius="35%"
+                                                    outerRadius="75%"
+                                                    paddingAngle={4}
                                                     dataKey="value"
                                                     animationBegin={0}
                                                     animationDuration={1500}
@@ -812,7 +812,7 @@ const CRDDashboard = () => {
                                                             key={`cell-${index}`} 
                                                             fill={entry.fill}
                                                             stroke={entry.fill}
-                                                            strokeWidth={2}
+                                                            strokeWidth={3}
                                                             style={{ filter: 'url(#shadow)' }}
                                                         />
                                                     ))}
@@ -820,11 +820,11 @@ const CRDDashboard = () => {
                                                 <Tooltip content={<CustomPieTooltip />} />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Center label - Responsive */}
+                                        {/* Center label - Responsive - Larger */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                             <div className="text-center px-2">
-                                                <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
-                                                <div className="text-[10px] sm:text-xs lg:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Total Users</div>
+                                                <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
+                                                <div className="text-xs sm:text-sm md:text-base lg:text-lg font-semibold mt-1" style={{ color: THEME_COLORS.gray }}>Total Users</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1112,80 +1112,114 @@ const CRDDashboard = () => {
                                     <LoadingSpinner size="medium" text="Loading events..." />
                                 </div>
                             ) : allEvents.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 h-full">
-                                    {allEvents.map((event, index) => (
-                                        <div 
-                                            key={event._id} 
-                                            className="group border rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full"
-                                            style={{ 
-                                                borderColor: THEME_COLORS.maroonBg,
-                                                backgroundColor: THEME_COLORS.whiteLight,
-                                                animationDelay: `${index * 100}ms` 
-                                            }}
-                                        >
-                                            <div className="flex-1 flex flex-col min-h-0">
-                                                <div className="mb-2 sm:mb-3">
-                                                    <h4 className="font-bold text-sm sm:text-base lg:text-lg line-clamp-2 transition-colors mb-2" style={{ color: THEME_COLORS.maroon, minHeight: '2.5rem' }}>
-                                                        {event.title}
-                                                    </h4>
-                                                    <p className="text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray, minHeight: '2.5rem' }}>
-                                                        {String(event.description || '').replace(/<[^>]*>/g, '').substring(0, 80)}...
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                                    {allEvents.map((event, index) => {
+                                        const startDate = new Date(event.startDate)
+                                        const endDate = event.endDate ? new Date(event.endDate) : null
+                                        const isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString()
+                                        const volunteersCount = event.volunteerRegistrations?.filter(v => ['approved', 'accepted'].includes(v.status)).length || 0
+                                        const donationsCount = event.donations?.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length || 0
+                                        
+                                        return (
+                                            <div 
+                                                key={event._id} 
+                                                className="group bg-gradient-to-br from-white to-gray-50 border-2 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col"
+                                                style={{ 
+                                                    borderColor: THEME_COLORS.maroonBg,
+                                                    boxShadow: '0 2px 8px rgba(128, 0, 32, 0.08)'
+                                                }}
+                                            >
+                                                {/* Header Section */}
+                                                <div className="mb-4">
+                                                    <div className="flex items-start justify-between gap-3 mb-3">
+                                                        <h4 className="font-bold text-base sm:text-lg lg:text-xl line-clamp-2 flex-1 transition-colors group-hover:text-[#9c0000]" style={{ color: THEME_COLORS.maroon }}>
+                                                            {event.title}
+                                                        </h4>
+                                                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm border-2 flex-shrink-0 whitespace-nowrap ${
+                                                            event.status === 'Approved' ? 'text-green-800 border-green-300 bg-green-50' :
+                                                            event.status === 'Pending' ? 'text-yellow-800 border-yellow-300 bg-yellow-50' :
+                                                            event.status === 'Upcoming' ? 'text-blue-800 border-blue-300 bg-blue-50' :
+                                                            'text-red-800 border-red-300 bg-red-50'
+                                                        }`}>
+                                                            {event.status || 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <p className="text-sm sm:text-base mb-4 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray, minHeight: '3rem' }}>
+                                                        {String(event.description || 'No description available').replace(/<[^>]*>/g, '').substring(0, 120)}
+                                                        {String(event.description || '').replace(/<[^>]*>/g, '').length > 120 ? '...' : ''}
                                                     </p>
                                                 </div>
                                                 
-                                                <div className="flex flex-wrap items-center gap-2 text-xs mb-3 sm:mb-4 flex-shrink-0" style={{ color: THEME_COLORS.gray }}>
-                                                    <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg shadow-sm" style={{ backgroundColor: THEME_COLORS.white, border: `1px solid ${THEME_COLORS.maroonBg}` }}>
-                                                        <FaCalendarAlt className="w-3 h-3 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
-                                                        <span className="whitespace-nowrap">{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                    </span>
+                                                {/* Event Details */}
+                                                <div className="space-y-3 mb-4 flex-1">
+                                                    <div className="flex items-center gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.maroonBg }}>
+                                                            <FaCalendarAlt className="w-5 h-5" style={{ color: THEME_COLORS.maroon }} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="text-xs font-semibold mb-0.5" style={{ color: THEME_COLORS.gray }}>Event Date</div>
+                                                            <div className="text-sm font-bold truncate" style={{ color: THEME_COLORS.maroon }}>
+                                                                {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                {isMultiDay && ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
                                                     {event.location && (
-                                                        <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg truncate max-w-full sm:max-w-[180px] shadow-sm" style={{ backgroundColor: THEME_COLORS.white, border: `1px solid ${THEME_COLORS.maroonBg}` }}>
-                                                            <svg className="w-3 h-3 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                            <span className="truncate">{event.location}</span>
-                                                        </span>
+                                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.maroonBg }}>
+                                                                <svg className="w-5 h-5" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-xs font-semibold mb-0.5" style={{ color: THEME_COLORS.gray }}>Location</div>
+                                                                <div className="text-sm font-bold truncate" style={{ color: THEME_COLORS.maroon }}>{event.location}</div>
+                                                            </div>
+                                                        </div>
                                                     )}
+                                                    
+                                                    {/* Stats Row */}
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div className="p-2.5 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
+                                                            <div className="text-[10px] font-semibold mb-1 text-blue-700">Volunteers</div>
+                                                            <div className="text-lg font-bold text-blue-800">{volunteersCount}</div>
+                                                        </div>
+                                                        <div className="p-2.5 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
+                                                            <div className="text-[10px] font-semibold mb-1 text-amber-700">Donations</div>
+                                                            <div className="text-lg font-bold text-amber-800">{donationsCount}</div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 
-                                                <div className="flex items-center justify-between pt-3 border-t mt-auto flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                    <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border flex-shrink-0 ${
-                                                        event.status === 'Approved' ? 'text-green-800 border-green-200' :
-                                                        event.status === 'Pending' ? 'text-yellow-800 border-yellow-200' :
-                                                        event.status === 'Upcoming' ? 'text-blue-800 border-blue-200' :
-                                                        'text-red-800 border-red-200'
-                                                    }`}
-                                                    style={event.status === 'Approved' ? { backgroundColor: '#D1FAE5' } :
-                                                        event.status === 'Pending' ? { backgroundColor: THEME_COLORS.goldBg } :
-                                                        event.status === 'Upcoming' ? { backgroundColor: '#DBEAFE' } :
-                                                        { backgroundColor: '#FEE2E2' }}
-                                                    >
-                                                        {event.status || 'Pending'}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => navigate('/crd-staff/events')}
-                                                        className="px-2.5 sm:px-3 lg:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-                                                        style={{ 
-                                                            borderColor: THEME_COLORS.maroon, 
-                                                            color: THEME_COLORS.maroon,
-                                                            backgroundColor: 'transparent'
-                                                        }}
-                                                        onMouseEnter={(e) => {
-                                                            e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                                            e.target.style.color = THEME_COLORS.white;
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            e.target.style.backgroundColor = 'transparent';
-                                                            e.target.style.color = THEME_COLORS.maroon;
-                                                        }}
-                                                    >
-                                                        Review →
-                                                    </button>
-                                                </div>
+                                                {/* Action Button */}
+                                                <button
+                                                    onClick={() => navigate('/crd-staff/events')}
+                                                    className="w-full px-4 py-3 text-sm font-bold border-2 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                                                    style={{ 
+                                                        borderColor: THEME_COLORS.maroon, 
+                                                        color: THEME_COLORS.maroon,
+                                                        backgroundColor: 'transparent'
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                                        e.target.style.color = THEME_COLORS.white;
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        e.target.style.backgroundColor = 'transparent';
+                                                        e.target.style.color = THEME_COLORS.maroon;
+                                                    }}
+                                                >
+                                                    <span>Review Event</span>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </button>
                                             </div>
-                                        </div>
-                                    ))}
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 sm:py-16">
