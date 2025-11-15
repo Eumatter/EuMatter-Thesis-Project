@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Header from '../../../components/Header';
@@ -29,24 +29,35 @@ const EventDetails = () => {
     const { backendUrl } = useContext(AppContent);
     
     const [loading, setLoading] = useState(true);
+    const [filterLoading, setFilterLoading] = useState(false);
     const [analytics, setAnalytics] = useState(null);
     const [period, setPeriod] = useState('all');
     const [customStartDate, setCustomStartDate] = useState('');
     const [customEndDate, setCustomEndDate] = useState('');
     const [activeView, setActiveView] = useState('overview'); // 'overview', 'hours', 'feedback'
 
-    useEffect(() => {
-        fetchAnalytics();
-    }, [eventId, period, customStartDate, customEndDate]);
-
-    const fetchAnalytics = async () => {
+    const fetchAnalytics = useCallback(async (isInitialLoad = false, periodOverride = null, startDateOverride = null, endDateOverride = null) => {
         try {
-            setLoading(true);
+            // Use full loading only for initial load, subtle loading for filters
+            if (isInitialLoad) {
+                setLoading(true);
+            } else {
+                setFilterLoading(true);
+            }
+
+            const currentPeriod = periodOverride !== null ? periodOverride : period;
+            const currentStartDate = startDateOverride !== null ? startDateOverride : customStartDate;
+            const currentEndDate = endDateOverride !== null ? endDateOverride : customEndDate;
+
             const token = localStorage.getItem('token');
-            let url = `${backendUrl}api/events/${eventId}/analytics?period=${period}`;
+            let url = `${backendUrl}api/events/${eventId}/analytics?period=${currentPeriod}`;
             
-            if (period === 'custom' && customStartDate && customEndDate) {
-                url += `&startDate=${customStartDate}&endDate=${customEndDate}`;
+            if (currentPeriod === 'custom' && currentStartDate && currentEndDate) {
+                url += `&startDate=${currentStartDate}&endDate=${currentEndDate}`;
+            } else if (currentPeriod === 'custom') {
+                // Don't fetch if custom period but dates not ready
+                setFilterLoading(false);
+                return;
             }
 
             const response = await axios.get(url, {
@@ -63,9 +74,31 @@ const EventDetails = () => {
             console.error('Error fetching analytics:', error);
             toast.error(error.response?.data?.message || 'Failed to load event analytics');
         } finally {
-            setLoading(false);
+            if (isInitialLoad) {
+                setLoading(false);
+            } else {
+                setFilterLoading(false);
+            }
         }
-    };
+    }, [eventId, backendUrl, period, customStartDate, customEndDate]);
+
+    // Initial load
+    useEffect(() => {
+        fetchAnalytics(true);
+    }, [eventId, fetchAnalytics]);
+
+    // Filter changes - only fetch if custom period has both dates
+    useEffect(() => {
+        if (period === 'custom') {
+            // Only fetch if both dates are provided
+            if (customStartDate && customEndDate) {
+                fetchAnalytics(false);
+            }
+        } else {
+            // For non-custom periods, fetch immediately
+            fetchAnalytics(false);
+        }
+    }, [period, customStartDate, customEndDate, fetchAnalytics]);
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
@@ -97,9 +130,9 @@ const EventDetails = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
                 <Header />
-                <div className="flex justify-center items-center py-20">
+                <div className="flex-1 flex justify-center items-center py-20">
                     <LoadingSpinner size="large" text="Loading event analytics..." />
                 </div>
                 <Footer />
@@ -109,9 +142,9 @@ const EventDetails = () => {
 
     if (!analytics) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
                 <Header />
-                <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
                     <div className="text-center py-20">
                         <p className="text-gray-600">Failed to load analytics</p>
                         <button
@@ -128,10 +161,10 @@ const EventDetails = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
             <Header />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -171,7 +204,15 @@ const EventDetails = () => {
                     </div>
 
                     {/* Period Filter */}
-                    <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-4 mb-6">
+                    <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-4 mb-6 relative">
+                        {filterLoading && (
+                            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10">
+                                <div className="flex items-center gap-2 text-[#800000]">
+                                    <div className="w-5 h-5 border-2 border-[#800000] border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium">Updating...</span>
+                                </div>
+                            </div>
+                        )}
                         <div className="flex flex-wrap items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <FaFilter className="text-[#800000]" />
@@ -181,7 +222,8 @@ const EventDetails = () => {
                                 <button
                                     key={p}
                                     onClick={() => setPeriod(p)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                    disabled={filterLoading}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                                         period === p
                                             ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white shadow-md'
                                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -196,14 +238,16 @@ const EventDetails = () => {
                                         type="date"
                                         value={customStartDate}
                                         onChange={(e) => setCustomStartDate(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-lg"
+                                        disabled={filterLoading}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
                                     />
                                     <span>to</span>
                                     <input
                                         type="date"
                                         value={customEndDate}
                                         onChange={(e) => setCustomEndDate(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-lg"
+                                        disabled={filterLoading}
+                                        className="px-3 py-2 border border-gray-300 rounded-lg disabled:opacity-50"
                                     />
                                 </div>
                             )}
