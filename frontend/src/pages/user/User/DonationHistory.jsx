@@ -220,7 +220,7 @@ const DonationHistory = () => {
             filtered = filtered.filter(d => d.status === statusFilter)
         }
 
-        // Payment method filter
+        // Donation method filter
         if (paymentMethodFilter !== 'all') {
             filtered = filtered.filter(d => d.paymentMethod === paymentMethodFilter)
         }
@@ -625,7 +625,7 @@ const DonationHistory = () => {
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Payment Method</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation Method</th>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Message</th>
                                                         <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
@@ -782,7 +782,7 @@ const DonationHistory = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Payment Method
+                                            Donation Method
                                         </label>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             {[

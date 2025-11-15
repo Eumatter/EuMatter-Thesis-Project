@@ -35,7 +35,7 @@ router.post("/webhook", express.json({ type: "application/json" }), handleWebhoo
 // Create donation
 router.post("/", userAuth, createDonation);
 
-// Attach card payment method to intent
+// Attach card Donation method to intent
 router.post("/attach", userAuth, attachPaymentMethod);
 
 // Confirm source payment

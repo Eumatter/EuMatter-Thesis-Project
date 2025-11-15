@@ -179,7 +179,7 @@ const DepartmentDonations = () => {
 
     const handleExportDonations = () => {
         const csvContent = [
-            ['Donor Name', 'Email', 'Amount', 'Event', 'Status', 'Date', 'Payment Method'],
+            ['Donor Name', 'Email', 'Amount', 'Event', 'Status', 'Date', 'Donation Method'],
             ...filteredDonations.map(d => [
                 d.donorName || '',
                 d.donorEmail || '',
@@ -606,7 +606,7 @@ const DepartmentDonations = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Payment Method</label>
+                                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Donation Method</label>
                                     <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
                                         <p className="text-base sm:text-lg font-medium text-gray-900">{selectedDonation.paymentMethod || 'Unknown'}</p>
                                     </div>

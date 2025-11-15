@@ -125,7 +125,7 @@ const About = () => {
         {
             icon: FaHandHoldingHeart,
             title: "Donation System",
-            description: "Secure online donations with multiple payment methods"
+            description: "Secure online donations with multiple donation methods"
         },
         {
             icon: FaGraduationCap,

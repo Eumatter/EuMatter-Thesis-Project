@@ -1659,7 +1659,7 @@ const EventManagement = () => {
                                                                 }).join(' ');
                                                             };
                                                             
-                                                            // Get donor name - always censor for all payment methods (ignore isAnonymous flag)
+                                                            // Get donor name - always censor for all donation methods (ignore isAnonymous flag)
                                                             // Strategy: Use user.name if available (most reliable), otherwise use donorName
                                                             // If donorName is "Anonymous", try to get real name from user object
                                                             let name = '';
@@ -1671,7 +1671,7 @@ const EventManagement = () => {
                                                                 name = donation.donorName;
                                                             }
                                                             
-                                                            // Always censor the name regardless of payment method or isAnonymous flag
+                                                            // Always censor the name regardless of donation method or isAnonymous flag
                                                             const donorName = name ? censorName(name) : 'N/A';
                                                             
                                                             // Format date properly

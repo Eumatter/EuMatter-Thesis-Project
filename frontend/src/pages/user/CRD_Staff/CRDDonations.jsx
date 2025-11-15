@@ -129,7 +129,7 @@ const CRDDonations = () => {
             filtered = filtered.filter(d => d.status === statusFilter)
         }
         
-        // Payment method filter
+        // Donation method filter
         if (paymentMethodFilter !== 'all') {
             filtered = filtered.filter(d => d.paymentMethod === paymentMethodFilter)
         }
@@ -660,7 +660,7 @@ const CRDDonations = () => {
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <p className="text-xs text-gray-500 mb-1">Payment Method</p>
+                                                <p className="text-xs text-gray-500 mb-1">Donation Method</p>
                                                 <p className="text-base font-medium text-gray-900">{getPaymentMethodLabel(selectedDonation.paymentMethod)}</p>
                                             </div>
                                             <div>
