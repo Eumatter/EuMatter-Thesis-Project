@@ -621,7 +621,11 @@ export const getMyDonations = async (req, res) => {
     try {
         const userId = req.user?._id;
         if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
-        const donations = await donationModel.find({ user: userId }).sort({ createdAt: -1 });
+        // Filter out pending donations - only return successful/completed donations
+        const donations = await donationModel.find({ 
+            user: userId,
+            status: { $ne: 'pending' } // Exclude pending donations
+        }).sort({ createdAt: -1 });
         return res.json({ success: true, donations });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

@@ -203,7 +203,8 @@ const DonationHistory = () => {
     }
 
     const filterDonations = () => {
-        let filtered = [...donations]
+        // Filter out pending donations - only show successful/completed donations
+        let filtered = donations.filter(d => d.status !== 'pending')
 
         // Search filter
         if (searchTerm) {
@@ -419,11 +420,13 @@ const DonationHistory = () => {
         .filter(d => d.status === 'succeeded')
         .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
 
+    // Only count non-pending donations in stats
+    const nonPendingDonations = donations.filter(d => d.status !== 'pending')
     const stats = {
-        total: donations.length,
-        succeeded: donations.filter(d => d.status === 'succeeded').length,
-        pending: donations.filter(d => d.status === 'pending').length,
-        failed: donations.filter(d => d.status === 'failed' || d.status === 'canceled').length
+        total: nonPendingDonations.length,
+        succeeded: nonPendingDonations.filter(d => d.status === 'succeeded').length,
+        pending: 0, // Don't show pending count
+        failed: nonPendingDonations.filter(d => d.status === 'failed' || d.status === 'canceled').length
     }
 
     return (
@@ -460,7 +463,7 @@ const DonationHistory = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
                         <div className="text-xs sm:text-sm text-gray-500 mb-1">Total</div>
                         <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</div>
@@ -470,11 +473,7 @@ const DonationHistory = () => {
                         <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.succeeded}</div>
                     </div>
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
-                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Pending</div>
-                        <div className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</div>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
-                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Failed</div>
+                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Failed/Canceled</div>
                         <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.failed}</div>
                     </div>
                 </div>
@@ -570,7 +569,6 @@ const DonationHistory = () => {
                                                 >
                                                     <option value="all">All Status</option>
                                                     <option value="succeeded">Succeeded</option>
-                                                    <option value="pending">Pending</option>
                                                     <option value="failed">Failed</option>
                                                     <option value="canceled">Canceled</option>
                                                 </select>
