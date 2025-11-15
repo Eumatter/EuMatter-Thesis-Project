@@ -25,7 +25,8 @@ export const createEvent = async (req, res) => {
             isOpenForDonation,
             isOpenForVolunteer,
             donationTarget,
-            volunteerSettings
+            volunteerSettings,
+            eventCategory
         } = req.body;
 
         // Validate required fields
@@ -118,6 +119,19 @@ export const createEvent = async (req, res) => {
             }
         }
 
+        // Determine event category - default to community_relations for Department/Organization users
+        let finalEventCategory = eventCategory || 'other';
+        if (req.user?.role === 'Department/Organization' && !eventCategory) {
+            // Default to community_relations for department users if not specified
+            finalEventCategory = 'community_relations';
+        }
+        
+        // Validate event category
+        const validCategories = ['community_relations', 'community_extension', 'other'];
+        if (!validCategories.includes(finalEventCategory)) {
+            finalEventCategory = 'other';
+        }
+
         const newEvent = new eventModel({
             title,
             description,
@@ -130,7 +144,8 @@ export const createEvent = async (req, res) => {
             isOpenForDonation: isOpenForDonation === 'true' || isOpenForDonation === true,
             isOpenForVolunteer: isOpenForVolunteer === 'true' || isOpenForVolunteer === true,
             donationTarget: (isOpenForDonation === 'true' || isOpenForDonation === true) && donationTarget ? parseFloat(donationTarget) : null,
-            volunteerSettings: parsedVolunteerSettings || undefined
+            volunteerSettings: parsedVolunteerSettings || undefined,
+            eventCategory: finalEventCategory
         });
 
         await newEvent.save();

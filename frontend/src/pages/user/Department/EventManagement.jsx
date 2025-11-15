@@ -41,6 +41,7 @@ const EventManagement = () => {
         isOpenForDonation: false,
         isOpenForVolunteer: false,
         donationTarget: '',
+        eventCategory: 'community_relations', // Default for Department/Organization
         volunteerSettings: {
             mode: 'open_for_all', // 'open_for_all' | 'with_requirements'
             minAge: '',
@@ -401,6 +402,7 @@ const EventManagement = () => {
                 fd.append('endDate', new Date(e).toISOString())
                 fd.append('isOpenForDonation', formData.isOpenForDonation)
                 fd.append('isOpenForVolunteer', formData.isOpenForVolunteer)
+                fd.append('eventCategory', formData.eventCategory || 'community_relations') // Include event category
                 if (formData.isOpenForVolunteer) fd.append('volunteerSettings', JSON.stringify(formData.volunteerSettings))
                 // Optional: default reminder offsets in seconds (24h, 1h)
                 fd.append('reminderOffsets', JSON.stringify([86400, 3600]))
@@ -467,6 +469,8 @@ const EventManagement = () => {
                     endDate: '', 
                     isOpenForDonation: false, 
                     isOpenForVolunteer: false,
+                    donationTarget: '',
+                    eventCategory: 'community_relations',
                     volunteerSettings: {
                         mode: 'open_for_all',
                         minAge: '',
@@ -474,7 +478,9 @@ const EventManagement = () => {
                         requiredSkills: [],
                         departmentRestrictionType: 'all',
                         allowedDepartments: [],
-                        notes: ''
+                        notes: '',
+                        dailySchedule: [],
+                        requireTimeTracking: true
                     }
                 })
                 setImageFile(null)
@@ -768,6 +774,8 @@ const EventManagement = () => {
                                                     endDate: '', 
                                                     isOpenForDonation: false, 
                                                     isOpenForVolunteer: false,
+                                                    donationTarget: '',
+                                                    eventCategory: 'community_relations',
                                                     volunteerSettings: {
                                                         mode: 'open_for_all',
                                                         minAge: '',
@@ -775,7 +783,9 @@ const EventManagement = () => {
                                                         requiredSkills: [],
                                                         departmentRestrictionType: 'all',
                                                         allowedDepartments: [],
-                                                        notes: ''
+                                                        notes: '',
+                                                        dailySchedule: [],
+                                                        requireTimeTracking: true
                                                     }
                                                 })
                                                 setImageFile(null)
@@ -837,6 +847,31 @@ const EventManagement = () => {
                                     required
                                 />
                             </div>
+
+                                        {/* Event Category - Required for Department/Organization */}
+                                        <div className="space-y-2">
+                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
+                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                    <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                    </svg>
+                                                </div>
+                                                <span>Event Category <span className="text-[#800020] font-bold">*</span></span>
+                                            </label>
+                                            <select
+                                                value={formData.eventCategory}
+                                                onChange={e => setFormData(prev => ({ ...prev, eventCategory: e.target.value }))}
+                                                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                required
+                                            >
+                                                <option value="community_relations">Community Relations</option>
+                                                <option value="community_extension">Community Extension Services</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Select the category that best describes your event. Only Community Relations and Extension Services events appear in the CRD leaderboard.
+                                            </p>
+                                        </div>
 
                                         {/* Description */}
                                         <div className="space-y-2">

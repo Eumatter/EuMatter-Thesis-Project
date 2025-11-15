@@ -118,6 +118,13 @@ const eventSchema = new mongoose.Schema({
     // Proposal document stored as Base64 string
     proposalDocument: { type: String, default: "" },
 
+    // Event Category - for filtering community relations/extension services events
+    eventCategory: {
+        type: String,
+        enum: ["community_relations", "community_extension", "other"],
+        default: "other"
+    },
+    
     // Donation and Volunteer options
     isOpenForDonation: { type: Boolean, default: false },
     isOpenForVolunteer: { type: Boolean, default: false },

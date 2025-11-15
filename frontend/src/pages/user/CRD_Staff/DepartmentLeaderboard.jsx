@@ -30,14 +30,35 @@ const DepartmentLeaderboard = () => {
             const eventsResponse = await axios.get(backendUrl + 'api/events')
             const events = eventsResponse.data || []
             
+            // Filter events: Only community relations/extension services events
+            // and only events created by Department/Organization role users
+            const filteredEvents = events.filter(event => {
+                // Check if event is community relations or extension services
+                const isCommunityEvent = event.eventCategory === 'community_relations' || 
+                                        event.eventCategory === 'community_extension'
+                
+                // Check if created by Department/Organization role
+                const isDepartmentRole = event.createdBy && 
+                                        (event.createdBy.role === 'Department/Organization')
+                
+                return isCommunityEvent && isDepartmentRole
+            })
+            
             // Group events by department and calculate metrics
             const departmentMap = new Map()
             
-            events.forEach(event => {
+            filteredEvents.forEach(event => {
                 if (event.createdBy && event.createdBy._id) {
                     const deptId = event.createdBy._id
-                    const deptName = event.createdBy.name || event.createdBy.organizationName || 'Unknown Department'
+                    // Use name field (which contains department name like "Cyber Iskwela")
+                    const deptName = event.createdBy.name || 'Unknown Department'
+                    // Use email field (contact person email)
                     const deptEmail = event.createdBy.email || ''
+                    
+                    // Only process if it's a Department/Organization role
+                    if (event.createdBy.role !== 'Department/Organization') {
+                        return // Skip non-department users
+                    }
                     
                     if (!departmentMap.has(deptId)) {
                         departmentMap.set(deptId, {
@@ -53,19 +74,28 @@ const DepartmentLeaderboard = () => {
                     
                     const dept = departmentMap.get(deptId)
                     
-                    // Count events
+                    // Count events (only community relations/extension services)
                     dept.events += 1
                     
-                    // Count volunteers
-                    if (event.volunteers && Array.isArray(event.volunteers)) {
+                    // Count volunteers from volunteerRegistrations (more accurate)
+                    if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                        // Count approved/accepted volunteers
+                        const approvedVolunteers = event.volunteerRegistrations.filter(
+                            reg => ['approved', 'accepted'].includes(reg.status)
+                        )
+                        dept.volunteers += approvedVolunteers.length
+                    } else if (event.volunteers && Array.isArray(event.volunteers)) {
+                        // Fallback to old volunteers array
                         dept.volunteers += event.volunteers.length
                     }
                     
-                    // Calculate donations
+                    // Calculate donations (only succeeded donations)
                     if (event.donations && Array.isArray(event.donations)) {
-                        const eventDonations = event.donations.reduce((sum, donation) => {
-                            return sum + (parseFloat(donation.amount) || 0)
-                        }, 0)
+                        const eventDonations = event.donations
+                            .filter(donation => donation.status === 'succeeded')
+                            .reduce((sum, donation) => {
+                                return sum + (parseFloat(donation.amount) || 0)
+                            }, 0)
                         dept.donations += eventDonations
                     }
                 }
