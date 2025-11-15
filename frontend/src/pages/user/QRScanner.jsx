@@ -187,7 +187,7 @@ const QRScanner = () => {
         }
         
         try {
-            // Parse QR code to determine action
+            // Parse QR code to validate type
             let qrData
             try {
                 qrData = JSON.parse(qrCode)
@@ -196,18 +196,33 @@ const QRScanner = () => {
                 qrData = { code: qrCode }
             }
             
-            // Use provided action or determine from QR code
-            let finalAction = action || 'timein'
-            if (qrData.type === 'checkOut' || qrData.type === 'checkout') {
-                finalAction = 'timeout'
-            } else if (qrData.type === 'checkIn' || qrData.type === 'checkin') {
-                finalAction = 'timein'
-            } else if (!action) {
-                // Fallback: determine based on current status
-                finalAction = attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'timeout' : 'timein'
+            // Validate QR code type matches the intended action
+            if (qrData.type) {
+                const qrType = qrData.type.toLowerCase()
+                const expectedType = action === 'timein' ? 'checkin' : 'checkout'
+                
+                if (qrType !== expectedType && qrType !== 'checkin' && qrType !== 'checkout') {
+                    // If QR has a type but doesn't match, show error
+                    toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    return
+                }
+                
+                if ((qrType === 'checkout' && action === 'timein') || (qrType === 'checkin' && action === 'timeout')) {
+                    toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    return
+                }
             }
             
-            console.log('Recording attendance:', { qrCode: qrCode.substring(0, 50) + '...', action: finalAction, eventId })
+            // Use the provided action (don't auto-detect from QR code)
+            // This ensures users scan the correct QR for the correct action
+            const finalAction = action || (attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'timeout' : 'timein')
+            
+            console.log('Recording attendance:', { 
+                qrCode: qrCode.substring(0, 50) + '...', 
+                qrType: qrData.type,
+                action: finalAction, 
+                eventId 
+            })
             
             // Validate qrCode before sending
             if (!qrCode || qrCode.trim().length === 0) {
@@ -494,6 +509,20 @@ const QRScanner = () => {
             }
             
             if (decodedText) {
+                // Validate QR code type matches action before processing
+                try {
+                    const qrData = JSON.parse(decodedText)
+                    if (qrData.type) {
+                        const qrType = qrData.type.toLowerCase()
+                        if ((qrType === 'checkout' && action === 'timein') || (qrType === 'checkin' && action === 'timeout')) {
+                            toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                            return
+                        }
+                    }
+                } catch (e) {
+                    // If not JSON, it might be a primary key - let backend handle validation
+                }
+                
                 await handleQRScan(decodedText, action)
             } else {
                 toast.error('No QR code found in the image')
@@ -971,26 +1000,26 @@ const QRScanner = () => {
                     )}
                             </div>
 
-                {/* Camera Scanner Display */}
-                {scanning && (
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6 overflow-hidden">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                                {activeScanner === 'timein' ? 'Scanning for Time In' : 'Scanning for Time Out'}
-                            </h3>
-                                <button
-                                onClick={stopScanning}
-                                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold flex items-center gap-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                                Stop
-                                </button>
-                            </div>
-                        <div className="relative">
-                            <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
-                                <div id="qr-reader" className="w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl"></div>
+                {/* Camera Scanner Display - Always render qr-reader element but hide when not scanning */}
+                <div className={`bg-white rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6 overflow-hidden ${!scanning ? 'hidden' : ''}`}>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                            {activeScanner === 'timein' ? 'Scanning for Time In' : 'Scanning for Time Out'}
+                        </h3>
+                        <button
+                            onClick={stopScanning}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Stop
+                        </button>
+                    </div>
+                    <div className="relative">
+                        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
+                            {/* Always render qr-reader element - it must be in DOM for Html5Qrcode to work */}
+                            <div id="qr-reader" className="w-full min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] rounded-2xl"></div>
                                 <div className="absolute inset-0 pointer-events-none">
                                     <div className="absolute inset-0 border-4 border-green-500 rounded-2xl animate-pulse"></div>
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -1007,14 +1036,13 @@ const QRScanner = () => {
                                 </div>
                             </div>
                         </div>
-                        {cameraError && (
-                            <div className="mt-4 bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                                <p className="text-red-800 font-semibold mb-2">Camera Error</p>
-                                <p className="text-red-700 text-sm">{cameraError}</p>
-                            </div>
-                        )}
+                    {cameraError && (
+                        <div className="mt-4 bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                            <p className="text-red-800 font-semibold mb-2">Camera Error</p>
+                            <p className="text-red-700 text-sm">{cameraError}</p>
+                        </div>
+                    )}
                 </div>
-            )}
 
                 {/* Processing Overlay */}
                 {processing && (

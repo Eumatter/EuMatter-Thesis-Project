@@ -515,61 +515,132 @@ export const recordAttendance = async (req, res) => {
         } catch (error) {
             // If not JSON, treat as primary key and look it up
             // Primary key format: eventIdPrefix-date-type-random
-            // Example: 6917ffd9-20240115-IN-abc123
+            // Example: 6917ffd9-20240115-IN-abc123 or 6917ffd9-20240115-OUT-abc123
             
-            // Find event by searching through all events with active QR codes
-            // We'll search for the primary key in the qrCodes array
-            const allEvents = await eventModel.find({
-                'qrCodes.date': todayStr,
-                'qrCodes.isActive': true
-            });
-            
-            for (const evt of allEvents) {
-                if (evt.qrCodes && evt.qrCodes.length > 0) {
-                    const qrEntry = evt.qrCodes.find(qr => qr.date === todayStr);
-                    if (qrEntry) {
-                        // Check checkIn QR
-                        if (qrEntry.checkIn) {
-                            try {
-                                const checkInData = JSON.parse(qrEntry.checkIn);
-                                if (checkInData.primaryKey === qrCode) {
-                                    qrData = checkInData;
-                                    actualQRCode = qrEntry.checkIn;
-                                    event = evt;
-                                    break;
+            // First, try to extract event ID from primary key if possible
+            // Primary key format: eventIdPrefix-date-type-random
+            const primaryKeyParts = qrCode.split('-')
+            if (primaryKeyParts.length >= 2) {
+                // Try to find event by the first part (eventId prefix)
+                const eventIdPrefix = primaryKeyParts[0]
+                // Search for events where the ID starts with this prefix
+                // Note: MongoDB ObjectId search - we'll search all events and filter
+                const allEventsForToday = await eventModel.find({
+                    'qrCodes.date': todayStr,
+                    'qrCodes.isActive': true
+                })
+                
+                // Filter events where ID starts with prefix
+                const potentialEvents = allEventsForToday.filter(evt => 
+                    evt._id.toString().startsWith(eventIdPrefix)
+                )
+                
+                // Check each potential event
+                for (const evt of potentialEvents) {
+                    if (evt.qrCodes && evt.qrCodes.length > 0) {
+                        const qrEntry = evt.qrCodes.find(qr => qr.date === todayStr);
+                        if (qrEntry) {
+                            // Check checkIn QR
+                            if (qrEntry.checkIn) {
+                                try {
+                                    const checkInData = JSON.parse(qrEntry.checkIn);
+                                    if (checkInData.primaryKey === qrCode) {
+                                        qrData = checkInData;
+                                        actualQRCode = qrEntry.checkIn;
+                                        event = evt;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // Skip invalid JSON
                                 }
-                            } catch (e) {
-                                // Skip invalid JSON
                             }
-                        }
-                        // Check checkOut QR
-                        if (qrEntry.checkOut) {
-                            try {
-                                const checkOutData = JSON.parse(qrEntry.checkOut);
-                                if (checkOutData.primaryKey === qrCode) {
-                                    qrData = checkOutData;
-                                    actualQRCode = qrEntry.checkOut;
-                                    event = evt;
-                                    break;
+                            // Check checkOut QR
+                            if (qrEntry.checkOut) {
+                                try {
+                                    const checkOutData = JSON.parse(qrEntry.checkOut);
+                                    if (checkOutData.primaryKey === qrCode) {
+                                        qrData = checkOutData;
+                                        actualQRCode = qrEntry.checkOut;
+                                        event = evt;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // Skip invalid JSON
                                 }
-                            } catch (e) {
-                                // Skip invalid JSON
                             }
                         }
                     }
-                }
-                // Also check legacy attendanceQR
-                if (evt.attendanceQR && evt.attendanceQR.code) {
-                    try {
-                        const legacyData = JSON.parse(evt.attendanceQR.code);
-                        if (legacyData.primaryKey === qrCode) {
-                            qrData = legacyData;
-                            actualQRCode = evt.attendanceQR.code;
-                            event = evt;
-                            break;
+                    // Also check legacy attendanceQR
+                    if (evt.attendanceQR && evt.attendanceQR.code) {
+                        try {
+                            const legacyData = JSON.parse(evt.attendanceQR.code);
+                            if (legacyData.primaryKey === qrCode) {
+                                qrData = legacyData;
+                                actualQRCode = evt.attendanceQR.code;
+                                event = evt;
+                                break;
+                            }
+                        } catch (e) {
+                            // Skip invalid JSON
                         }
-                    } catch (e) {
-                        // Skip invalid JSON
+                    }
+                }
+            }
+            
+            // If still not found, search all events with active QR codes for today
+            if (!event || !qrData) {
+                const allEvents = await eventModel.find({
+                    'qrCodes.date': todayStr,
+                    'qrCodes.isActive': true
+                });
+                
+                for (const evt of allEvents) {
+                    if (evt.qrCodes && evt.qrCodes.length > 0) {
+                        const qrEntry = evt.qrCodes.find(qr => qr.date === todayStr);
+                        if (qrEntry) {
+                            // Check checkIn QR
+                            if (qrEntry.checkIn) {
+                                try {
+                                    const checkInData = JSON.parse(qrEntry.checkIn);
+                                    if (checkInData.primaryKey === qrCode) {
+                                        qrData = checkInData;
+                                        actualQRCode = qrEntry.checkIn;
+                                        event = evt;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // Skip invalid JSON
+                                }
+                            }
+                            // Check checkOut QR
+                            if (qrEntry.checkOut) {
+                                try {
+                                    const checkOutData = JSON.parse(qrEntry.checkOut);
+                                    if (checkOutData.primaryKey === qrCode) {
+                                        qrData = checkOutData;
+                                        actualQRCode = qrEntry.checkOut;
+                                        event = evt;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    // Skip invalid JSON
+                                }
+                            }
+                        }
+                    }
+                    // Also check legacy attendanceQR
+                    if (evt.attendanceQR && evt.attendanceQR.code) {
+                        try {
+                            const legacyData = JSON.parse(evt.attendanceQR.code);
+                            if (legacyData.primaryKey === qrCode) {
+                                qrData = legacyData;
+                                actualQRCode = evt.attendanceQR.code;
+                                event = evt;
+                                break;
+                            }
+                        } catch (e) {
+                            // Skip invalid JSON
+                        }
                     }
                 }
             }
@@ -628,16 +699,90 @@ export const recordAttendance = async (req, res) => {
             });
         }
 
+        // Check if event requires volunteer approval
+        const volunteerMode = event.volunteerSettings?.mode || 'open_for_all'
+        const requiresApproval = volunteerMode === 'with_requirements'
+        
         // Check if user is registered as volunteer
-        const volunteerReg = event.volunteerRegistrations.find(
-            reg => reg.user.toString() === userId.toString()
-        );
+        const volunteerReg = event.volunteerRegistrations?.find(
+            reg => String(reg.user) === String(userId)
+        )
+        
+        // Also check legacy volunteers array
+        const isInVolunteersList = event.volunteers && event.volunteers.some(
+            v => String(v) === String(userId)
+        )
+        
+        // If event requires approval, check volunteer status
+        if (requiresApproval) {
+            if (!volunteerReg) {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "You are not registered as a volunteer for this event. Please register first." 
+                })
+            }
+            
+            if (volunteerReg.status === 'rejected') {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Your volunteer application for this event was rejected. Please contact the event organizer." 
+                })
+            }
+            
+            if (volunteerReg.status !== 'approved' && volunteerReg.status !== 'registered') {
+                return res.status(403).json({ 
+                    success: false, 
+                    message: "Your volunteer application is pending approval. Please wait for organizer approval." 
+                })
+            }
+        } else {
+            // For open_for_all events, allow attendance even if not registered
+            // But we should still create a registration record for tracking if it doesn't exist
+            if (!volunteerReg) {
+                if (isInVolunteersList) {
+                    // User is in volunteers list but not in registrations - create registration record
+                    console.log('User in volunteers list but missing registration record - creating one')
+                } else {
+                    // User not registered at all - open for all allows this
+                    console.log('Open for all event - allowing attendance without prior registration')
+                    // Add to volunteers list if not already there
+                    if (!event.volunteers.includes(userId)) {
+                        event.volunteers.push(userId)
+                    }
+                }
+                
+                // Create a registration record for tracking purposes
+                if (!event.volunteerRegistrations) {
+                    event.volunteerRegistrations = []
+                }
+                const newReg = {
+                    user: userId,
+                    name: req.user?.name || 'Volunteer',
+                    email: req.user?.email || '',
+                    status: 'registered',
+                    joinedAt: now,
+                    attendanceRecords: []
+                }
+                event.volunteerRegistrations.push(newReg)
+                await event.save()
+                // Reload event to get the new registration
+                const updatedEvent = await eventModel.findById(event._id)
+                volunteerReg = updatedEvent.volunteerRegistrations.find(
+                    reg => String(reg.user) === String(userId)
+                )
+            }
+        }
 
-        if (!volunteerReg || volunteerReg.status !== 'approved') {
+        // Ensure volunteerReg exists and has attendanceRecords array
+        if (!volunteerReg) {
             return res.status(403).json({ 
                 success: false, 
-                message: "You are not an approved volunteer for this event" 
-            });
+                message: "Unable to process attendance. Please contact support." 
+            })
+        }
+        
+        if (!volunteerReg.attendanceRecords) {
+            volunteerReg.attendanceRecords = []
         }
 
         // Get today's date (start of day)
@@ -645,7 +790,11 @@ export const recordAttendance = async (req, res) => {
         
         // Find existing attendance record for today
         let attendanceRecord = volunteerReg.attendanceRecords.find(
-            record => record.date.getTime() === today.getTime()
+            record => {
+                const recordDate = new Date(record.date)
+                recordDate.setHours(0, 0, 0, 0)
+                return recordDate.getTime() === today.getTime()
+            }
         );
 
         // Sync with standalone attendance collection
