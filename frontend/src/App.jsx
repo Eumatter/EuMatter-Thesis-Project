@@ -33,7 +33,7 @@ import DepartmentEventManagement from './pages/user/Department/EventManagement'
 import DepartmentDonations from './pages/user/Department/DepartmentDonations'
 import DepartmentReports from './pages/user/Department/DepartmentReports'
 import VolunteerManagement from './pages/user/Department/VolunteerManagement'
-import EventDetails from './pages/user/Department/EventDetails'
+import DepartmentEventDetails from './pages/user/Department/EventDetails'
 import QRScanner from './pages/user/QRScanner'
 import EventAttendance from './pages/user/EventAttendance'
 import DonationForm from './components/DonationForm.jsx'
@@ -201,7 +201,7 @@ const AppContent = () => {
                 <Route path="/department/dashboard" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentDashboard /></ProtectedRoute>} />
                 <Route path="/department/events" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentEventManagement /></ProtectedRoute>} />
                 <Route path="/department/volunteer-management/:eventId" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><VolunteerManagement /></ProtectedRoute>} />
-                <Route path="/department/events/:eventId/details" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><EventDetails /></ProtectedRoute>} />
+                <Route path="/department/events/:eventId/details" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentEventDetails /></ProtectedRoute>} />
                 <Route path="/department/donations" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentDonations /></ProtectedRoute>} />
                 <Route path="/department/reports" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentReports /></ProtectedRoute>} />
                 <Route path="/department/calendar" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><CalendarPage /></ProtectedRoute>} />
