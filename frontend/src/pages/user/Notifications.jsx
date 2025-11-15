@@ -463,45 +463,10 @@ const Notifications = () => {
 
                             <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
                                 <div className="mb-6">
-                                    <h3 className="text-sm font-semibold text-gray-600 mb-2">Message</h3>
-                                    <p className="text-gray-900 leading-relaxed">
+                                    <p className="text-gray-900 leading-relaxed text-base">
                                         {selectedNotification.message || 'No message content'}
                                     </p>
                                 </div>
-
-                                {selectedNotification.payload && Object.keys(selectedNotification.payload).length > 0 && (
-                                    <div className="mb-6">
-                                        <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                            <span className="w-1 h-4 bg-gradient-to-b from-[#800000] to-[#D4AF37] rounded"></span>
-                                            Details
-                                        </h3>
-                                        <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 border border-gray-200">
-                                            {formatNotificationPayload(selectedNotification.payload) ? (
-                                                <div className="space-y-3">
-                                                    {formatNotificationPayload(selectedNotification.payload).map((item, idx) => (
-                                                        <div key={idx} className="flex items-start gap-3 pb-3 border-b border-gray-200 last:border-0 last:pb-0">
-                                                            <span className="text-xs font-bold text-[#800000] min-w-[100px]">{item.label}:</span>
-                                                            <span className="text-xs text-gray-700 flex-1">{item.value}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="text-xs text-gray-600">
-                                                    <p className="font-medium mb-2">Notification Type:</p>
-                                                    <span className="px-2 py-1 bg-[#800000]/10 text-[#800000] rounded-lg font-semibold">
-                                                        {selectedNotification.payload.type || 'General'}
-                                                    </span>
-                                                    {selectedNotification.payload.eventId && (
-                                                        <div className="mt-3">
-                                                            <p className="font-medium mb-1">Event ID:</p>
-                                                            <span className="text-gray-700">{selectedNotification.payload.eventId}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div className="flex gap-3 pt-4 border-t">
                                     {selectedNotification.payload?.type === 'volunteer_invitation' && selectedNotification.payload?.eventId && (
