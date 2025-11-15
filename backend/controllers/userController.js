@@ -123,6 +123,21 @@ export const getAllUsers = async (req, res) => {
 };
 
 /**
+ * Get departments (Public - for donation form)
+ */
+export const getDepartments = async (req, res) => {
+    try {
+        const departments = await userModel.find({ role: "Department/Organization" })
+            .select("name email _id")
+            .sort({ name: 1 });
+
+        res.json({ success: true, departments });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
  * Update user role (System Admin only)
  */
 export const updateUserRole = async (req, res) => {

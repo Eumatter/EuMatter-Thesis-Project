@@ -45,8 +45,11 @@ const DonationHistory = () => {
         amount: '',
         message: '',
         paymentMethod: 'gcash',
-        eventId: null
+        eventId: null,
+        recipientType: 'crd', // 'crd', 'department', 'event'
+        departmentId: null
     })
+    const [departments, setDepartments] = useState([])
     const [inKindDonations, setInKindDonations] = useState([])
     const [inKindForm, setInKindForm] = useState({
         donationType: 'food',
@@ -70,7 +73,21 @@ const DonationHistory = () => {
         fetchDonations()
         fetchEvents()
         fetchInKindDonations()
+        fetchDepartments()
     }, [backendUrl])
+
+    const fetchDepartments = async () => {
+        try {
+            axios.defaults.withCredentials = true
+            const { data } = await axios.get(`${backendUrl}api/users/departments`)
+            if (data.success) {
+                setDepartments(data.departments || [])
+            }
+        } catch (err) {
+            console.error('Failed to fetch departments:', err)
+            // Fallback: departments will be empty, user can still donate to CRD or events
+        }
+    }
 
     useEffect(() => {
         filterDonations()
@@ -204,7 +221,13 @@ const DonationHistory = () => {
 
     const filterDonations = () => {
         // Filter out pending donations - only show successful/completed donations
-        let filtered = donations.filter(d => d.status !== 'pending')
+        // Include cash donations in all statuses (they have their own workflow)
+        let filtered = donations.filter(d => {
+            // Show all cash donations regardless of status
+            if (d.paymentMethod === 'cash') return true
+            // For other payment methods, exclude pending
+            return d.status !== 'pending'
+        })
 
         // Search filter
         if (searchTerm) {
@@ -270,13 +293,30 @@ const DonationHistory = () => {
         setDonating(true)
         try {
             axios.defaults.withCredentials = true
+            // Determine recipient type
+            let recipientType = 'crd'
+            let departmentId = null
+            let eventId = null
+
+            if (donationForm.eventId) {
+                recipientType = 'event'
+                eventId = donationForm.eventId
+            } else if (donationForm.recipientType === 'department' && donationForm.departmentId) {
+                recipientType = 'department'
+                departmentId = donationForm.departmentId
+            } else {
+                recipientType = 'crd'
+            }
+
             const { data } = await axios.post(`${backendUrl}api/donations`, {
                 donorName: userData?.name || '',
                 donorEmail: userData?.email || '',
                 amount: donationForm.amount,
                 message: donationForm.message || '',
                 paymentMethod: donationForm.paymentMethod,
-                eventId: donationForm.eventId || null
+                eventId: eventId,
+                recipientType: recipientType,
+                departmentId: departmentId
             })
 
             if (!data.success) {
@@ -288,8 +328,20 @@ const DonationHistory = () => {
                 return
             }
 
-            toast.success('Donation created successfully')
-            setDonationForm({ amount: '', message: '', paymentMethod: 'gcash', eventId: null })
+            if (data.type === 'cash') {
+                toast.success(data.message || 'Cash donation submitted successfully. It will be verified by the recipient.')
+            } else {
+                toast.success('Donation created successfully')
+            }
+
+            setDonationForm({ 
+                amount: '', 
+                message: '', 
+                paymentMethod: 'gcash', 
+                eventId: null,
+                recipientType: 'crd',
+                departmentId: null
+            })
             fetchDonations()
             setActiveTab('history')
         } catch (err) {
@@ -338,9 +390,13 @@ const DonationHistory = () => {
     const getStatusIcon = (status) => {
         switch (status) {
             case 'succeeded':
+            case 'cash_completed':
                 return <FaCheckCircle className="text-green-500" />
             case 'pending':
+            case 'cash_pending_verification':
                 return <FaClock className="text-yellow-500" />
+            case 'cash_verified':
+                return <FaCheckCircle className="text-blue-500" />
             case 'failed':
             case 'canceled':
                 return <FaTimesCircle className="text-red-500" />
@@ -352,9 +408,13 @@ const DonationHistory = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'succeeded':
+            case 'cash_completed':
                 return 'bg-green-100 text-green-800 border-green-200'
             case 'pending':
+            case 'cash_pending_verification':
                 return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+            case 'cash_verified':
+                return 'bg-blue-100 text-blue-800 border-blue-200'
             case 'failed':
             case 'canceled':
                 return 'bg-red-100 text-red-800 border-red-200'
@@ -383,9 +443,20 @@ const DonationHistory = () => {
             gcash: 'GCash',
             paymaya: 'PayMaya',
             card: 'Debit/Credit Card',
-            bank: 'Bank Transfer'
+            bank: 'Bank Transfer',
+            cash: 'Cash'
         }
         return labels[method] || method
+    }
+    
+    const getRecipientLabel = (donation) => {
+        if (donation.recipientType === 'event' && donation.event) {
+            return `Event: ${donation.event.title}`
+        }
+        if (donation.recipientType === 'department' && donation.department) {
+            return `Department: ${donation.department.name}`
+        }
+        return 'CRD'
     }
 
     const formatDate = (dateString) => {
@@ -408,14 +479,14 @@ const DonationHistory = () => {
     }
 
     const totalDonated = donations
-        .filter(d => d.status === 'succeeded')
+        .filter(d => d.status === 'succeeded' || d.status === 'cash_completed')
         .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
 
     // Only count non-pending donations in stats
-    const nonPendingDonations = donations.filter(d => d.status !== 'pending')
+    const nonPendingDonations = donations.filter(d => d.status !== 'pending' && d.status !== 'cash_pending_verification')
     const stats = {
         total: nonPendingDonations.length,
-        succeeded: nonPendingDonations.filter(d => d.status === 'succeeded').length,
+        succeeded: nonPendingDonations.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length,
         pending: 0, // Don't show pending count
         failed: nonPendingDonations.filter(d => d.status === 'failed' || d.status === 'canceled').length
     }
@@ -560,6 +631,9 @@ const DonationHistory = () => {
                                                 >
                                                     <option value="all">All Status</option>
                                                     <option value="succeeded">Succeeded</option>
+                                                    <option value="cash_pending_verification">Cash - Pending Verification</option>
+                                                    <option value="cash_verified">Cash - Verified</option>
+                                                    <option value="cash_completed">Cash - Completed</option>
                                                     <option value="failed">Failed</option>
                                                     <option value="canceled">Canceled</option>
                                                 </select>
@@ -574,6 +648,7 @@ const DonationHistory = () => {
                                                     <option value="paymaya">PayMaya</option>
                                                     <option value="card">Card</option>
                                                     <option value="bank">Bank</option>
+                                                    <option value="cash">Cash</option>
                                                 </select>
                                                 
                                                 <select
@@ -619,6 +694,7 @@ const DonationHistory = () => {
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation Method</th>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                                                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Message</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Recipient</th>
                                                         <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                                                     </tr>
                                                 </thead>
@@ -648,10 +724,23 @@ const DonationHistory = () => {
                                                             <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
                                                                 {donation.message || '-'}
                                                             </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                                                {getRecipientLabel(donation)}
+                                                            </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                                {donation.status === 'succeeded' && (
+                                                                {(donation.status === 'succeeded' || donation.status === 'cash_completed') && (
                                                                     <span className="text-green-600 text-xs font-medium">
                                                                         ✓ Receipt sent to email
+                                                                    </span>
+                                                                )}
+                                                                {donation.status === 'cash_pending_verification' && (
+                                                                    <span className="text-yellow-600 text-xs font-medium">
+                                                                        ⏳ Pending verification
+                                                                    </span>
+                                                                )}
+                                                                {donation.status === 'cash_verified' && (
+                                                                    <span className="text-blue-600 text-xs font-medium">
+                                                                        ✓ Verified
                                                                     </span>
                                                                 )}
                                                             </td>
@@ -687,13 +776,17 @@ const DonationHistory = () => {
                                                         <span>{getPaymentMethodLabel(donation.paymentMethod)}</span>
                                                     </div>
                                                     
+                                                    <div className="text-xs text-gray-500 mb-2">
+                                                        Recipient: {getRecipientLabel(donation)}
+                                                    </div>
+                                                    
                                                     {donation.message && (
                                                         <div className="text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
                                                             {donation.message}
                         </div>
                                                     )}
                                                     
-                                                    {donation.status === 'succeeded' && (
+                                                    {(donation.status === 'succeeded' || donation.status === 'cash_completed') && (
                                                         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                                                             <div className="flex items-center gap-2 text-green-700">
                                                                 <FaCheckCircle />
@@ -703,10 +796,34 @@ const DonationHistory = () => {
                                                                 Your official acknowledgment receipt has been sent to <strong>{donation.donorEmail}</strong>. Please check your email inbox.
                                                             </p>
                                                         </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+                                                    )}
+                                                    
+                                                    {donation.status === 'cash_pending_verification' && (
+                                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 text-yellow-700">
+                                                                <FaClock />
+                                                                <span className="text-sm font-medium">Pending Verification</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-600 mt-2">
+                                                                Your cash donation is pending verification by the recipient. You will be notified once it's verified.
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {donation.status === 'cash_verified' && (
+                                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 text-blue-700">
+                                                                <FaCheckCircle />
+                                                                <span className="text-sm font-medium">Verified</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-600 mt-2">
+                                                                Your cash donation has been verified. Receipt: <strong>{donation.cashVerification?.receiptNumber || 'N/A'}</strong>
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -753,32 +870,83 @@ const DonationHistory = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Select Event (Optional)
+                                            Donate To <span className="text-red-500">*</span>
                                         </label>
                                         <select
-                                            value={donationForm.eventId || ''}
-                                            onChange={(e) => setDonationForm({ ...donationForm, eventId: e.target.value || null })}
+                                            value={donationForm.recipientType}
+                                            onChange={(e) => {
+                                                const newRecipientType = e.target.value
+                                                setDonationForm({ 
+                                                    ...donationForm, 
+                                                    recipientType: newRecipientType,
+                                                    eventId: newRecipientType === 'event' ? donationForm.eventId : null,
+                                                    departmentId: newRecipientType === 'department' ? donationForm.departmentId : null
+                                                })
+                                            }}
                                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                         >
-                                            <option value="">General Donation</option>
-                                            {events.map((event) => (
-                                                <option key={event._id} value={event._id}>
-                                                    {event.title}
-                                                </option>
-                                            ))}
+                                            <option value="crd">CRD (Community Relations Department)</option>
+                                            <option value="department">Department/Organization</option>
+                                            <option value="event">Specific Event</option>
                                         </select>
                                     </div>
+
+                                    {donationForm.recipientType === 'department' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Select Department <span className="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                value={donationForm.departmentId || ''}
+                                                onChange={(e) => setDonationForm({ ...donationForm, departmentId: e.target.value || null })}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                required={donationForm.recipientType === 'department'}
+                                            >
+                                                <option value="">Select a department...</option>
+                                                {departments.map((dept) => (
+                                                    <option key={dept._id} value={dept._id}>
+                                                        {dept.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Your donation will go directly to this department. CRD will be notified for transparency.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {donationForm.recipientType === 'event' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                Select Event <span className="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                value={donationForm.eventId || ''}
+                                                onChange={(e) => setDonationForm({ ...donationForm, eventId: e.target.value || null })}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                required={donationForm.recipientType === 'event'}
+                                            >
+                                                <option value="">Select an event...</option>
+                                                {events.map((event) => (
+                                                    <option key={event._id} value={event._id}>
+                                                        {event.title}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Donation Method
                                         </label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                                             {[
                                                 { value: 'gcash', label: 'GCash', icon: <FaWallet /> },
                                                 { value: 'paymaya', label: 'PayMaya', icon: <FaCreditCard /> },
                                                 { value: 'card', label: 'Card', icon: <FaCreditCard /> },
-                                                { value: 'bank', label: 'Bank', icon: <FaMoneyBillWave /> }
+                                                { value: 'bank', label: 'Bank', icon: <FaMoneyBillWave /> },
+                                                { value: 'cash', label: 'Cash', icon: <FaMoneyBillWave /> }
                                             ].map((method) => (
                                                 <button
                                                     key={method.value}
@@ -795,6 +963,19 @@ const DonationHistory = () => {
                                                 </button>
                                             ))}
                                         </div>
+                                        {donationForm.paymentMethod === 'cash' && (
+                                            <div className="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                                                <div className="flex items-start">
+                                                    <FaInfoCircle className="text-yellow-600 text-lg mr-3 mt-0.5 flex-shrink-0" />
+                                                    <div>
+                                                        <h4 className="font-semibold text-yellow-900 mb-1">Cash Donation Process</h4>
+                                                        <p className="text-sm text-yellow-800">
+                                                            Your cash donation will be submitted for verification. The recipient (CRD or Department) will verify the cash receipt and update the status. You will be notified once verified.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>

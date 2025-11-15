@@ -47,8 +47,14 @@ const CRDDonations = () => {
     // Filters
     const [statusFilter, setStatusFilter] = useState('all')
     const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
+    const [recipientTypeFilter, setRecipientTypeFilter] = useState('all') // 'all', 'crd', 'department', 'event'
     const [searchTerm, setSearchTerm] = useState('')
     const [showFilters, setShowFilters] = useState(false)
+    
+    // Cash verification state
+    const [verifyingCash, setVerifyingCash] = useState(null)
+    const [verificationModal, setVerificationModal] = useState({ open: false, donation: null })
+    const [verificationForm, setVerificationForm] = useState({ receiptNumber: '', verificationNotes: '' })
     
     // Modal states
     const [selectedDonation, setSelectedDonation] = useState(null)
@@ -60,10 +66,27 @@ const CRDDonations = () => {
         } else if (activeTab === 'inkind') {
             fetchInKindDonations()
         } else if (activeTab === 'cashcheque') {
-            // Placeholder for cash/cheque donations
-            setCashChequeLoading(false)
+            fetchCashDonations()
         }
     }, [activeTab, backendUrl])
+    
+    const fetchCashDonations = async () => {
+        try {
+            setCashChequeLoading(true)
+            axios.defaults.withCredentials = true
+            const { data } = await axios.get(`${backendUrl}api/donations/all`)
+            if (data.success) {
+                // Filter only cash donations
+                const cashDonations = (data.donations || []).filter(d => d.paymentMethod === 'cash')
+                setCashChequeDonations(cashDonations)
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Failed to load cash donations')
+            setCashChequeDonations([])
+        } finally {
+            setCashChequeLoading(false)
+        }
+    }
     
     useEffect(() => {
         if (activeTab === 'wallet') {
@@ -71,7 +94,60 @@ const CRDDonations = () => {
         } else if (activeTab === 'inkind') {
             filterInKindDonations()
         }
-    }, [walletDonations, inKindDonations, statusFilter, paymentMethodFilter, searchTerm, activeTab])
+    }, [walletDonations, inKindDonations, statusFilter, paymentMethodFilter, recipientTypeFilter, searchTerm, activeTab])
+    
+    const handleVerifyCash = async () => {
+        if (!verificationForm.receiptNumber.trim()) {
+            toast.error('Please enter a receipt number')
+            return
+        }
+        
+        setVerifyingCash(verificationModal.donation._id)
+        try {
+            axios.defaults.withCredentials = true
+            const { data } = await axios.post(
+                `${backendUrl}api/donations/${verificationModal.donation._id}/verify-cash`,
+                {
+                    receiptNumber: verificationForm.receiptNumber,
+                    verificationNotes: verificationForm.verificationNotes
+                }
+            )
+            
+            if (data.success) {
+                toast.success('Cash donation verified successfully')
+                setVerificationModal({ open: false, donation: null })
+                setVerificationForm({ receiptNumber: '', verificationNotes: '' })
+                fetchWalletDonations()
+                fetchCashDonations()
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Failed to verify cash donation')
+        } finally {
+            setVerifyingCash(null)
+        }
+    }
+    
+    const handleCompleteCash = async (donationId) => {
+        if (!window.confirm('Mark this cash donation as completed? This will send the receipt email to the donor.')) {
+            return
+        }
+        
+        setVerifyingCash(donationId)
+        try {
+            axios.defaults.withCredentials = true
+            const { data } = await axios.post(`${backendUrl}api/donations/${donationId}/complete-cash`)
+            
+            if (data.success) {
+                toast.success('Cash donation completed successfully')
+                fetchWalletDonations()
+                fetchCashDonations()
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.message || 'Failed to complete cash donation')
+        } finally {
+            setVerifyingCash(null)
+        }
+    }
     
     const fetchWalletDonations = async () => {
         try {
@@ -115,12 +191,19 @@ const CRDDonations = () => {
     const filterWalletDonations = () => {
         let filtered = [...walletDonations]
         
+        // Recipient type filter
+        if (recipientTypeFilter !== 'all') {
+            filtered = filtered.filter(d => d.recipientType === recipientTypeFilter)
+        }
+        
         // Search filter
         if (searchTerm) {
             filtered = filtered.filter(d => 
                 d.donorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 d.donorEmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                d.message?.toLowerCase().includes(searchTerm.toLowerCase())
+                d.message?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                d.department?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                d.event?.title?.toLowerCase().includes(searchTerm.toLowerCase())
             )
         }
         
@@ -212,9 +295,33 @@ const CRDDonations = () => {
             gcash: 'GCash',
             paymaya: 'PayMaya',
             card: 'Credit/Debit Card',
-            bank: 'Bank Transfer'
+            bank: 'Bank Transfer',
+            cash: 'Cash'
         }
         return labels[method] || method
+    }
+    
+    const getRecipientLabel = (donation) => {
+        if (donation.recipientType === 'event' && donation.event) {
+            return `Event: ${donation.event.title}`
+        }
+        if (donation.recipientType === 'department' && donation.department) {
+            return `Department: ${donation.department.name}`
+        }
+        return 'CRD'
+    }
+    
+    const getRecipientTypeColor = (type) => {
+        switch (type) {
+            case 'crd':
+                return 'bg-[#800000]/10 text-[#800000] border-[#800000]/30'
+            case 'department':
+                return 'bg-blue-50 text-blue-700 border-blue-200'
+            case 'event':
+                return 'bg-purple-50 text-purple-700 border-purple-200'
+            default:
+                return 'bg-gray-50 text-gray-700 border-gray-200'
+        }
     }
     
     const formatDate = (dateString) => {
@@ -373,6 +480,9 @@ const CRDDonations = () => {
                                             <option value="succeeded">Succeeded</option>
                                             <option value="failed">Failed</option>
                                             <option value="canceled">Canceled</option>
+                                            <option value="cash_pending_verification">Cash - Pending Verification</option>
+                                            <option value="cash_verified">Cash - Verified</option>
+                                            <option value="cash_completed">Cash - Completed</option>
                                         </>
                                     ) : (
                                         <>
@@ -387,17 +497,30 @@ const CRDDonations = () => {
                                     )}
                                 </select>
                                 {activeTab === 'wallet' && (
-                                    <select
-                                        value={paymentMethodFilter}
-                                        onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                                        className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
-                                    >
-                                        <option value="all">All Methods</option>
-                                        <option value="gcash">GCash</option>
-                                        <option value="paymaya">PayMaya</option>
-                                        <option value="card">Card</option>
-                                        <option value="bank">Bank</option>
-                                    </select>
+                                    <>
+                                        <select
+                                            value={paymentMethodFilter}
+                                            onChange={(e) => setPaymentMethodFilter(e.target.value)}
+                                            className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
+                                        >
+                                            <option value="all">All Methods</option>
+                                            <option value="gcash">GCash</option>
+                                            <option value="paymaya">PayMaya</option>
+                                            <option value="card">Card</option>
+                                            <option value="bank">Bank</option>
+                                            <option value="cash">Cash</option>
+                                        </select>
+                                        <select
+                                            value={recipientTypeFilter}
+                                            onChange={(e) => setRecipientTypeFilter(e.target.value)}
+                                            className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
+                                        >
+                                            <option value="all">All Recipients</option>
+                                            <option value="crd">CRD</option>
+                                            <option value="department">Department</option>
+                                            <option value="event">Event</option>
+                                        </select>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -443,6 +566,11 @@ const CRDDonations = () => {
                                                                 {getPaymentMethodLabel(donation.paymentMethod)}
                                                             </span>
                                                         </div>
+                                                        <div className="mb-2">
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getRecipientTypeColor(donation.recipientType || 'crd')}`}>
+                                                                {getRecipientLabel(donation)}
+                                                            </span>
+                                                        </div>
                                                         <h3 className="text-xl font-bold text-gray-900 mb-1">
                                                             {donation.donorName}
                                                         </h3>
@@ -476,6 +604,39 @@ const CRDDonations = () => {
                                                         </p>
                                                     </div>
                                                 )}
+                                                {/* Cash Verification Actions */}
+                                                {donation.paymentMethod === 'cash' && donation.status === 'cash_pending_verification' && (
+                                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg mb-3">
+                                                        <p className="text-sm text-yellow-800 font-medium mb-2">Cash donation pending verification</p>
+                                                        <button
+                                                            onClick={() => setVerificationModal({ open: true, donation })}
+                                                            className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-semibold"
+                                                        >
+                                                            Verify Cash Donation
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                
+                                                {donation.paymentMethod === 'cash' && donation.status === 'cash_verified' && (
+                                                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg mb-3">
+                                                        <p className="text-sm text-blue-800 font-medium mb-1">
+                                                            Verified - Receipt: {donation.cashVerification?.receiptNumber || 'N/A'}
+                                                        </p>
+                                                        {donation.cashVerification?.verifiedAt && (
+                                                            <p className="text-xs text-blue-600">
+                                                                Verified: {formatDate(donation.cashVerification.verifiedAt)}
+                                                            </p>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleCompleteCash(donation._id)}
+                                                            disabled={verifyingCash === donation._id}
+                                                            className="w-full mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50"
+                                                        >
+                                                            {verifyingCash === donation._id ? 'Completing...' : 'Mark as Completed'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                
                                                 <div className="flex gap-3 pt-2">
                                                     <button
                                                         onClick={() => openDetailsModal(donation)}
@@ -484,7 +645,7 @@ const CRDDonations = () => {
                                                         <FaEye />
                                                         <span>View Details</span>
                                                     </button>
-                                                    {donation.status === 'succeeded' && (
+                                                    {(donation.status === 'succeeded' || donation.status === 'cash_completed') && (
                                                         <button
                                                             onClick={() => downloadReceipt(donation._id)}
                                                             disabled={downloadingReceipt === donation._id}
@@ -513,16 +674,172 @@ const CRDDonations = () => {
                     )}
                     
                     {activeTab === 'cashcheque' && (
-                        <div className="text-center py-16">
-                            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <FaMoneyBillWave className="text-5xl text-gray-400" />
-                            </div>
-                            <p className="text-gray-600 text-xl font-semibold mb-2">Cash/Cheque Donations</p>
-                            <p className="text-gray-500 text-base mb-4">This feature is coming soon</p>
-                            <div className="inline-block px-6 py-3 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white rounded-xl font-semibold shadow-lg">
-                                Stay tuned for updates!
-                            </div>
-                        </div>
+                        <>
+                            {cashChequeLoading ? (
+                                <div className="py-12">
+                                    <LoadingSpinner size="medium" text="Loading cash donations..." />
+                                </div>
+                            ) : cashChequeDonations.length === 0 ? (
+                                <div className="text-center py-16">
+                                    <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <FaMoneyBillWave className="text-5xl text-gray-400" />
+                                    </div>
+                                    <p className="text-gray-600 text-xl font-semibold mb-2">No cash donations found</p>
+                                    <p className="text-gray-500 text-sm">Cash donations will appear here once submitted</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                                    {cashChequeDonations.map((donation) => (
+                                        <div
+                                            key={donation._id}
+                                            className="bg-gradient-to-br from-white to-gray-50/50 border-2 border-gray-200 rounded-xl p-5 sm:p-6 hover:shadow-xl hover:border-[#800000]/30 transition-all duration-300 transform hover:-translate-y-1"
+                                        >
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-3">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="text-lg">
+                                                                    {getStatusIcon(donation.status)}
+                                                                </div>
+                                                                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 ${getStatusColor(donation.status)}`}>
+                                                                    {donation.status.replace(/_/g, ' ').toUpperCase()}
+                                                                </span>
+                                                            </div>
+                                                            <span className="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-semibold border border-blue-200">
+                                                                Cash
+                                                            </span>
+                                                        </div>
+                                                        <div className="mb-2">
+                                                            <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getRecipientTypeColor(donation.recipientType || 'crd')}`}>
+                                                                {getRecipientLabel(donation)}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                                            {donation.donorName}
+                                                        </h3>
+                                                        <p className="text-sm text-gray-600 mb-3">
+                                                            {donation.donorEmail}
+                                                        </p>
+                                                        <div className="mb-3">
+                                                            <p className="text-xs text-gray-500 mb-1">Amount</p>
+                                                            <p className="text-2xl font-extrabold text-[#800000]">
+                                                                {formatCurrency(donation.amount)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 border-t border-gray-200 pt-3">
+                                                    <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                        <FaCalendarAlt className="text-gray-400" />
+                                                        {formatDate(donation.createdAt)}
+                                                    </span>
+                                                    {donation.department && (
+                                                        <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                            <FaUser className="text-gray-400" />
+                                                            {donation.department.name}
+                                                        </span>
+                                                    )}
+                                                    {donation.event && (
+                                                        <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                                            <FaUser className="text-gray-400" />
+                                                            {donation.event.title}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {donation.message && (
+                                                    <div className="bg-gray-50/80 rounded-lg p-3 border border-gray-200">
+                                                        <p className="text-sm text-gray-700 line-clamp-2 italic">
+                                                            "{donation.message}"
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Cash Verification Actions */}
+                                                {donation.status === 'cash_pending_verification' && (
+                                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r-lg">
+                                                        <p className="text-sm text-yellow-800 font-medium mb-2">Cash donation pending verification</p>
+                                                        <button
+                                                            onClick={() => setVerificationModal({ open: true, donation })}
+                                                            className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-semibold"
+                                                        >
+                                                            Verify Cash Donation
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                
+                                                {donation.status === 'cash_verified' && (
+                                                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg">
+                                                        <p className="text-sm text-blue-800 font-medium mb-1">
+                                                            Verified - Receipt: {donation.cashVerification?.receiptNumber || 'N/A'}
+                                                        </p>
+                                                        {donation.cashVerification?.verifiedAt && (
+                                                            <p className="text-xs text-blue-600 mb-2">
+                                                                Verified: {formatDate(donation.cashVerification.verifiedAt)}
+                                                            </p>
+                                                        )}
+                                                        {donation.cashVerification?.verificationNotes && (
+                                                            <p className="text-xs text-blue-700 mb-2 italic">
+                                                                Notes: {donation.cashVerification.verificationNotes}
+                                                            </p>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleCompleteCash(donation._id)}
+                                                            disabled={verifyingCash === donation._id}
+                                                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50"
+                                                        >
+                                                            {verifyingCash === donation._id ? 'Completing...' : 'Mark as Completed'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                
+                                                {donation.status === 'cash_completed' && (
+                                                    <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-r-lg">
+                                                        <p className="text-sm text-green-800 font-medium mb-1">
+                                                            ✓ Completed
+                                                        </p>
+                                                        {donation.cashVerification?.completedAt && (
+                                                            <p className="text-xs text-green-600">
+                                                                Completed: {formatDate(donation.cashVerification.completedAt)}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                <div className="flex gap-3 pt-2">
+                                                    <button
+                                                        onClick={() => openDetailsModal(donation)}
+                                                        className="flex-1 px-4 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-200 flex items-center justify-center gap-2 font-semibold shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98]"
+                                                    >
+                                                        <FaEye />
+                                                        <span>View Details</span>
+                                                    </button>
+                                                    {donation.status === 'cash_completed' && (
+                                                        <button
+                                                            onClick={() => downloadReceipt(donation._id)}
+                                                            disabled={downloadingReceipt === donation._id}
+                                                            className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white rounded-xl hover:from-[#9c0000] hover:to-[#800000] transition-all duration-200 flex items-center justify-center gap-2 font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                                                        >
+                                                            {downloadingReceipt === donation._id ? (
+                                                                <>
+                                                                    <LoadingSpinner size="tiny" inline />
+                                                                    <span>Downloading...</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <FaFilePdf />
+                                                                    <span>Receipt</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </>
                     )}
                     
                     {activeTab === 'inkind' && (
@@ -604,6 +921,90 @@ const CRDDonations = () => {
                 </div>
             </main>
             
+            {/* Cash Verification Modal */}
+            {verificationModal.open && verificationModal.donation && (
+                <div 
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 md:pt-28 pb-8 backdrop-blur-md bg-white/30 animate-modal-in"
+                    onClick={() => setVerificationModal({ open: false, donation: null })}
+                    style={{ zIndex: 200 }}
+                >
+                    <div 
+                        className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200/50 animate-slide-down flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ zIndex: 201, maxHeight: 'calc(100vh - 6rem)' }}
+                    >
+                        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-5 sm:p-6 rounded-t-2xl">
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl sm:text-2xl font-bold">Verify Cash Donation</h2>
+                                <button
+                                    onClick={() => setVerificationModal({ open: false, donation: null })}
+                                    className="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 flex-shrink-0"
+                                >
+                                    <FaTimesCircle className="text-xl" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                                <p className="text-sm text-yellow-800 font-medium mb-1">Donation Details</p>
+                                <p className="text-lg font-bold text-yellow-900">{formatCurrency(verificationModal.donation.amount)}</p>
+                                <p className="text-xs text-yellow-700 mt-1">From: {verificationModal.donation.donorName}</p>
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Receipt Number <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={verificationForm.receiptNumber}
+                                    onChange={(e) => setVerificationForm({ ...verificationForm, receiptNumber: e.target.value })}
+                                    placeholder="Enter official receipt number"
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Verification Notes (Optional)
+                                </label>
+                                <textarea
+                                    value={verificationForm.verificationNotes}
+                                    onChange={(e) => setVerificationForm({ ...verificationForm, verificationNotes: e.target.value })}
+                                    placeholder="Add any notes about the verification..."
+                                    rows="4"
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                                />
+                            </div>
+                            
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setVerificationModal({ open: false, donation: null })}
+                                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleVerifyCash}
+                                    disabled={verifyingCash === verificationModal.donation._id || !verificationForm.receiptNumber.trim()}
+                                    className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {verifyingCash === verificationModal.donation._id ? (
+                                        <>
+                                            <LoadingSpinner size="tiny" inline />
+                                            <span className="ml-2">Verifying...</span>
+                                        </>
+                                    ) : (
+                                        'Verify Donation'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Details Modal - Higher z-index than header (z-[100]) */}
             {showModal && selectedDonation && (
                 <div 
@@ -676,6 +1077,35 @@ const CRDDonations = () => {
                                                 <p className="text-xs font-mono text-gray-600 break-all">{selectedDonation.paymongoReferenceId}</p>
                                             </div>
                                         )}
+                                        <div>
+                                            <p className="text-xs text-gray-500 mb-1">Recipient</p>
+                                            <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold border ${getRecipientTypeColor(selectedDonation.recipientType || 'crd')}`}>
+                                                {getRecipientLabel(selectedDonation)}
+                                            </span>
+                                        </div>
+                                        {selectedDonation.paymentMethod === 'cash' && selectedDonation.cashVerification && (
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2 mt-3">
+                                                <p className="text-sm font-semibold text-blue-900">Cash Verification Details</p>
+                                                {selectedDonation.cashVerification.receiptNumber && (
+                                                    <div>
+                                                        <p className="text-xs text-blue-700">Receipt Number</p>
+                                                        <p className="text-sm font-medium text-blue-900">{selectedDonation.cashVerification.receiptNumber}</p>
+                                                    </div>
+                                                )}
+                                                {selectedDonation.cashVerification.verifiedAt && (
+                                                    <div>
+                                                        <p className="text-xs text-blue-700">Verified At</p>
+                                                        <p className="text-sm text-blue-900">{formatDate(selectedDonation.cashVerification.verifiedAt)}</p>
+                                                    </div>
+                                                )}
+                                                {selectedDonation.cashVerification.verificationNotes && (
+                                                    <div>
+                                                        <p className="text-xs text-blue-700">Notes</p>
+                                                        <p className="text-sm text-blue-900">{selectedDonation.cashVerification.verificationNotes}</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 {activeTab === 'inkind' && (
@@ -726,7 +1156,7 @@ const CRDDonations = () => {
                             </div>
 
                             {/* Action Buttons */}
-                            {activeTab === 'wallet' && selectedDonation.status === 'succeeded' && (
+                            {activeTab === 'wallet' && (selectedDonation.status === 'succeeded' || selectedDonation.status === 'cash_completed') && (
                                 <div className="flex gap-3 pt-2">
                                     <button
                                         onClick={() => {

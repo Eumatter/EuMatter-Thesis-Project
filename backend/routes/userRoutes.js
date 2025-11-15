@@ -9,10 +9,16 @@ import {
     updateUserRole,
     updateProfileImage,
     sendChangePasswordOtp,
-    changePasswordWithOtp
+    changePasswordWithOtp,
+    getDepartments
 } from "../controllers/userController.js";
 
 const userRouter = express.Router();
+
+/**
+ * Public Routes
+ */
+userRouter.get("/departments", getDepartments); // Get list of departments (public - for donation form)
 
 /**
  * User Self-Service Routes
