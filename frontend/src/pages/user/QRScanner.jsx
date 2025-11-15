@@ -8,6 +8,18 @@ import Footer from '../../components/Footer'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { Html5Qrcode } from 'html5-qrcode'
 import { detectBrowser, getCameraConstraints } from '../../utils/browserCompatibility.js'
+import { 
+    isOnline, 
+    storeAttendanceOffline, 
+    initDB,
+    getPendingCount 
+} from '../../utils/offlineStorage.js'
+import { 
+    startAutoSync, 
+    syncPendingRecords,
+    onSyncStatusUpdate,
+    getSyncStatus
+} from '../../utils/offlineSync.js'
 
 const QRScanner = () => {
     const { backendUrl, userData } = useContext(AppContent)
@@ -32,6 +44,9 @@ const QRScanner = () => {
     const [activeScanner, setActiveScanner] = useState(null) // 'timein' or 'timeout' or null
     const [isMobile, setIsMobile] = useState(false)
     const [showCameraModal, setShowCameraModal] = useState(false) // Modal state for camera
+    const [isOffline, setIsOffline] = useState(!navigator.onLine)
+    const [pendingSyncCount, setPendingSyncCount] = useState(0)
+    const [isSyncing, setIsSyncing] = useState(false)
     
     const scannerRef = useRef(null)
     const html5QrCodeRef = useRef(null)
@@ -111,6 +126,71 @@ const QRScanner = () => {
             }
         }
     }, [event, userData?._id])
+
+    // Initialize offline storage and sync
+    useEffect(() => {
+        let cleanup = null;
+        let unsubscribe = null;
+        let countInterval = null;
+        
+        const initializeOffline = async () => {
+            try {
+                await initDB();
+                
+                // Start auto-sync
+                cleanup = startAutoSync(backendUrl);
+                
+                // Get initial pending count
+                const count = await getPendingCount();
+                setPendingSyncCount(count);
+                
+                // Subscribe to sync status updates
+                unsubscribe = onSyncStatusUpdate((status) => {
+                    setPendingSyncCount(status.pendingCount || 0);
+                    setIsSyncing(status.syncing || false);
+                });
+                
+                // Periodic check for pending count
+                countInterval = setInterval(async () => {
+                    const count = await getPendingCount();
+                    setPendingSyncCount(count);
+                }, 5000);
+            } catch (error) {
+                console.error('Error initializing offline storage:', error);
+            }
+        };
+        
+        initializeOffline();
+        
+        return () => {
+            if (cleanup) cleanup();
+            if (unsubscribe) unsubscribe();
+            if (countInterval) clearInterval(countInterval);
+        };
+    }, [backendUrl]);
+
+    // Monitor online/offline status
+    useEffect(() => {
+        const handleOnline = () => {
+            setIsOffline(false);
+            // Try to sync when coming back online
+            syncPendingRecords(backendUrl, true);
+        };
+        
+        const handleOffline = () => {
+            setIsOffline(true);
+        };
+        
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        
+        setIsOffline(!navigator.onLine);
+        
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, [backendUrl]);
 
     // Detect mobile/tablet using browser compatibility utility
     useEffect(() => {
@@ -231,6 +311,60 @@ const QRScanner = () => {
                 return
             }
             
+            // Check if device is online
+            const online = isOnline();
+            
+            if (!online) {
+                // Store offline
+                try {
+                    await storeAttendanceOffline({
+                        qrCode: qrCode.trim(),
+                        action: finalAction,
+                        eventId: eventId,
+                        userId: userData?._id
+                    });
+                    
+                    const count = await getPendingCount();
+                    setPendingSyncCount(count);
+                    
+                    toast.success('Attendance saved offline! It will sync automatically when you reconnect.', {
+                        autoClose: 5000
+                    });
+                    
+                    // Update UI to show timeout status (optimistic update)
+                    if (finalAction === 'timein') {
+                        setAttendanceStatus('timeout');
+                        setAttendanceData({
+                            _id: 'offline-pending',
+                            checkInTime: new Date().toISOString(),
+                            hoursWorked: 0,
+                            offline: true
+                        });
+                    } else {
+                        setAttendanceStatus('completed');
+                        setAttendanceData({
+                            _id: 'offline-pending',
+                            checkInTime: attendanceData?.checkInTime || new Date().toISOString(),
+                            checkOutTime: new Date().toISOString(),
+                            hoursWorked: 0,
+                            offline: true
+                        });
+                    }
+                    
+                    // Close camera modal after successful scan
+                    if (scanning) {
+                        await stopScanning();
+                    }
+                    
+                    return; // Exit early - don't try to sync yet
+                } catch (error) {
+                    console.error('Error storing offline:', error);
+                    toast.error('Failed to save attendance offline. Please try again when you have internet connection.');
+                    return;
+                }
+            }
+            
+            // Online - proceed with normal API call
             const response = await axios.post(`${backendUrl}api/volunteers/attendance/record`, 
                 { qrCode: qrCode.trim(), action: finalAction }, 
                 { withCredentials: true }
@@ -609,6 +743,62 @@ const QRScanner = () => {
             <Header />
             
             <main className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 lg:py-8">
+                {/* Offline Indicator */}
+                {isOffline && (
+                    <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="font-semibold text-yellow-900">Offline Mode</p>
+                                <p className="text-sm text-yellow-700">Your attendance will be saved locally and synced when you reconnect.</p>
+                            </div>
+                        </div>
+                        {pendingSyncCount > 0 && (
+                            <div className="flex items-center gap-2 bg-yellow-200 px-3 py-1.5 rounded-lg">
+                                <span className="text-sm font-bold text-yellow-900">{pendingSyncCount}</span>
+                                <span className="text-xs text-yellow-800">pending</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Pending Sync Indicator (when online) */}
+                {!isOffline && pendingSyncCount > 0 && (
+                    <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-4 mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                {isSyncing ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                )}
+                            </div>
+                            <div>
+                                <p className="font-semibold text-blue-900">
+                                    {isSyncing ? 'Syncing...' : `${pendingSyncCount} attendance record(s) pending sync`}
+                                </p>
+                                <p className="text-sm text-blue-700">
+                                    {isSyncing ? 'Please wait while we sync your attendance records.' : 'Your offline attendance records will sync automatically.'}
+                                </p>
+                            </div>
+                        </div>
+                        {!isSyncing && (
+                            <button
+                                onClick={() => syncPendingRecords(backendUrl, true)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all"
+                            >
+                                Sync Now
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* Header Section */}
                 <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-100 p-4 sm:p-6 mb-4 sm:mb-6">
                     <div className="flex items-center justify-between flex-wrap gap-4">
@@ -675,7 +865,14 @@ const QRScanner = () => {
                                     </svg>
                                     </div>
                                 <div className="flex-1">
-                                    <p className="font-semibold text-green-900 mb-1">Time In Recorded</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-semibold text-green-900 mb-1">Time In Recorded</p>
+                                        {attendanceData?.offline && (
+                                            <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-semibold rounded-full">
+                                                Offline
+                                            </span>
+                                        )}
+                                    </div>
                                     {attendanceData?.checkInTime && (
                                         <p className="text-sm text-green-700">
                                             {new Date(attendanceData.checkInTime).toLocaleString()}
@@ -864,7 +1061,14 @@ const QRScanner = () => {
                                     </svg>
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-semibold text-green-900 mb-1">Time Out Recorded</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-semibold text-green-900 mb-1">Time Out Recorded</p>
+                                        {attendanceData?.offline && (
+                                            <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-semibold rounded-full">
+                                                Offline
+                                            </span>
+                                        )}
+                                    </div>
                                     {attendanceData?.checkOutTime && (
                                         <p className="text-sm text-green-700">
                                             {new Date(attendanceData.checkOutTime).toLocaleString()}
