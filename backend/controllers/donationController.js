@@ -345,8 +345,11 @@ const sendReceiptEmail = async (donation, recipientEmail, recipientName, emailTy
 // Helper function to send donation notifications and email receipts
 const sendDonationNotifications = async (donation) => {
   try {
-    // Populate donation with event details for receipt generation
-    const donationWithEvent = await donationModel.findById(donation._id).populate('event', 'title createdBy').lean();
+    // Populate donation with event and department details for receipt generation
+    const donationWithEvent = await donationModel.findById(donation._id)
+      .populate('event', 'title createdBy')
+      .populate('department', 'name email role')
+      .lean();
     if (!donationWithEvent) {
       console.error('Donation not found for notifications');
       return;
@@ -442,6 +445,29 @@ const sendDonationNotifications = async (donation) => {
       }
     }
     
+    // Send receipt email to department (if department-specific donation)
+    if (donationWithEvent.recipientType === "department" && donationWithEvent.department) {
+      const department = donationWithEvent.department;
+      if (department.email) {
+        await sendReceiptEmail(donationWithEvent, department.email, department.name, 'organizer');
+        
+        // In-app notification to department
+        if (department._id) {
+          await notifyUsers({
+            userIds: [department._id],
+            title: "Donation Received",
+            message: `₱${donationWithEvent.amount.toLocaleString()} donation received directly to your department. Receipt sent to your email.`,
+            payload: {
+              donationId: donationWithEvent._id,
+              departmentId: department._id,
+              amount: donationWithEvent.amount,
+              type: "donation_received"
+            }
+          });
+        }
+      }
+    }
+    
     // Send receipt email to CRD Staff for transparency
     const crdStaff = await userModel.find({ 
       role: { $in: ["CRD Staff", "System Administrator"] } 
@@ -477,7 +503,16 @@ const sendDonationNotifications = async (donation) => {
 
 export const createDonation = async (req, res) => {
   try {
-    const { donorName, donorEmail, amount, message = "", paymentMethod, eventId = null } = req.body;
+    const { 
+      donorName, 
+      donorEmail, 
+      amount, 
+      message = "", 
+      paymentMethod, 
+      eventId = null,
+      recipientType = "crd", // "crd", "department", "event"
+      departmentId = null // Department/Organization user ID
+    } = req.body;
     const userId = req.user?._id || null;
     
     // Validate required fields
@@ -495,7 +530,132 @@ export const createDonation = async (req, res) => {
       });
     }
 
-    // Validate environment variables
+    // Validate recipient type and department
+    if (recipientType === "department" && !departmentId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Department ID is required when donating to a department" 
+      });
+    }
+
+    // Validate department exists and is a Department/Organization role
+    if (departmentId) {
+      const userModel = (await import("../models/userModel.js")).default;
+      const department = await userModel.findById(departmentId);
+      if (!department || department.role !== "Department/Organization") {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid department. Department must be a Department/Organization role." 
+        });
+      }
+    }
+
+    // Determine recipient type based on eventId and departmentId
+    let finalRecipientType = recipientType;
+    if (eventId) {
+      finalRecipientType = "event";
+    } else if (departmentId) {
+      finalRecipientType = "department";
+    } else {
+      finalRecipientType = "crd";
+    }
+
+    // Handle cash donations - no PayMongo processing needed
+    if (paymentMethod === "cash") {
+      const donation = await donationModel.create({
+        donorName,
+        donorEmail,
+        amount: Number(amount),
+        message,
+        paymentMethod: "cash",
+        status: "cash_pending_verification", // Cash donations need verification
+        user: userId,
+        event: eventId,
+        recipientType: finalRecipientType,
+        department: departmentId || null,
+        clientKey: ""
+      });
+
+      console.log("💵 Created cash donation entry:", donation._id);
+
+      // Send notifications for cash donation
+      try {
+        const notifyUsers = (await import("../utils/notify.js")).notifyUsers;
+        await notifyUsers({
+          userIds: userId ? [userId] : [],
+          title: "Cash Donation Submitted",
+          message: `Your cash donation of ₱${Number(amount).toLocaleString()} has been submitted and is pending verification. You will be notified once it's verified.`,
+          payload: {
+            donationId: donation._id,
+            type: "cash_donation_submitted",
+            recipientType: finalRecipientType
+          }
+        });
+
+        // Notify recipient (CRD or Department)
+        if (finalRecipientType === "crd") {
+          const userModel = (await import("../models/userModel.js")).default;
+          const crdStaff = await userModel.find({ 
+            role: { $in: ["CRD Staff", "System Administrator"] } 
+          }).select('_id').lean();
+          const staffIds = crdStaff.map(staff => staff._id);
+          if (staffIds.length > 0) {
+            await notifyUsers({
+              userIds: staffIds,
+              title: "New Cash Donation - Verification Required",
+              message: `A cash donation of ₱${Number(amount).toLocaleString()} from ${donorName} is pending verification.`,
+              payload: {
+                donationId: donation._id,
+                type: "cash_donation_pending",
+                recipientType: "crd"
+              }
+            });
+          }
+        } else if (finalRecipientType === "department" && departmentId) {
+          await notifyUsers({
+            userIds: [departmentId],
+            title: "New Cash Donation - Verification Required",
+            message: `A cash donation of ₱${Number(amount).toLocaleString()} from ${donorName} is pending verification.`,
+            payload: {
+              donationId: donation._id,
+              type: "cash_donation_pending",
+              recipientType: "department"
+            }
+          });
+
+          // Also notify CRD for transparency
+          const userModel = (await import("../models/userModel.js")).default;
+          const crdStaff = await userModel.find({ 
+            role: { $in: ["CRD Staff", "System Administrator"] } 
+          }).select('_id').lean();
+          const staffIds = crdStaff.map(staff => staff._id);
+          if (staffIds.length > 0) {
+            await notifyUsers({
+              userIds: staffIds,
+              title: "Department Cash Donation - For Transparency",
+              message: `A cash donation of ₱${Number(amount).toLocaleString()} from ${donorName} to a department is pending verification.`,
+              payload: {
+                donationId: donation._id,
+                type: "cash_donation_transparency",
+                recipientType: "department"
+              }
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error("Error sending cash donation notifications:", notifError);
+      }
+
+      return res.json({
+        success: true,
+        message: "Cash donation submitted successfully. It will be verified by the recipient.",
+        donation: donation,
+        type: "cash",
+        requiresVerification: true
+      });
+    }
+
+    // For non-cash payments, validate PayMongo environment variables
     if (!process.env.PAYMONGO_SECRET_KEY) {
       console.error("❌ PAYMONGO_SECRET_KEY is not set");
       return res.status(500).json({ 
@@ -533,6 +693,8 @@ export const createDonation = async (req, res) => {
       status: "pending",
       user: userId,
       event: eventId,
+      recipientType: finalRecipientType,
+      department: departmentId || null,
       clientKey: process.env.PAYMONGO_PUBLIC_KEY || ""
     });
     console.log("🟢 Created donation entry:", donation._id);
@@ -1192,6 +1354,174 @@ export const getMyDonations = async (req, res) => {
     }
 };
 
+// Verify cash donation (CRD Staff or Department can verify)
+export const verifyCashDonation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { receiptNumber, verificationNotes } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const donation = await donationModel.findById(id).populate('department', 'name email role');
+    if (!donation) {
+      return res.status(404).json({ success: false, message: "Donation not found" });
+    }
+
+    if (donation.paymentMethod !== "cash") {
+      return res.status(400).json({ success: false, message: "This donation is not a cash donation" });
+    }
+
+    if (donation.status !== "cash_pending_verification") {
+      return res.status(400).json({ success: false, message: "This donation is not pending verification" });
+    }
+
+    // Check if user has permission to verify
+    const userModel = (await import("../models/userModel.js")).default;
+    const user = await userModel.findById(userId);
+    const isCRDStaff = user?.role === "CRD Staff" || user?.role === "System Administrator";
+    const isDepartmentOwner = donation.recipientType === "department" && 
+                              donation.department?._id?.toString() === userId.toString();
+
+    if (!isCRDStaff && !isDepartmentOwner) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You don't have permission to verify this donation" 
+      });
+    }
+
+    // Update donation status
+    donation.status = "cash_verified";
+    donation.cashVerification.verifiedBy = userId;
+    donation.cashVerification.verifiedAt = new Date();
+    donation.cashVerification.receiptNumber = receiptNumber || "";
+    donation.cashVerification.verificationNotes = verificationNotes || "";
+    await donation.save();
+
+    // Send notifications
+    try {
+      const notifyUsers = (await import("../utils/notify.js")).notifyUsers;
+      
+      // Notify donor
+      if (donation.user) {
+        await notifyUsers({
+          userIds: [donation.user],
+          title: "Cash Donation Verified",
+          message: `Your cash donation of ₱${donation.amount.toLocaleString()} has been verified. Receipt Number: ${receiptNumber || 'N/A'}`,
+          payload: {
+            donationId: donation._id,
+            type: "cash_donation_verified",
+            recipientType: donation.recipientType
+          }
+        });
+      }
+
+      // Notify CRD for transparency if verified by department
+      if (isDepartmentOwner) {
+        const crdStaff = await userModel.find({ 
+          role: { $in: ["CRD Staff", "System Administrator"] } 
+        }).select('_id').lean();
+        const staffIds = crdStaff.map(staff => staff._id);
+        if (staffIds.length > 0) {
+          await notifyUsers({
+            userIds: staffIds,
+            title: "Department Cash Donation Verified",
+            message: `A cash donation of ₱${donation.amount.toLocaleString()} to ${donation.department?.name || 'a department'} has been verified.`,
+            payload: {
+              donationId: donation._id,
+              type: "cash_donation_verified_transparency",
+              recipientType: "department"
+            }
+          });
+        }
+      }
+    } catch (notifError) {
+      console.error("Error sending verification notifications:", notifError);
+    }
+
+    return res.json({
+      success: true,
+      message: "Cash donation verified successfully",
+      donation: await donationModel.findById(donation._id)
+        .populate('user', 'name email')
+        .populate('department', 'name email')
+        .populate('event', 'title')
+        .populate('cashVerification.verifiedBy', 'name email')
+    });
+  } catch (error) {
+    console.error("Error verifying cash donation:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Complete cash donation (mark as completed after physical receipt)
+export const completeCashDonation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const donation = await donationModel.findById(id).populate('department', 'name email role');
+    if (!donation) {
+      return res.status(404).json({ success: false, message: "Donation not found" });
+    }
+
+    if (donation.paymentMethod !== "cash") {
+      return res.status(400).json({ success: false, message: "This donation is not a cash donation" });
+    }
+
+    if (donation.status !== "cash_verified") {
+      return res.status(400).json({ success: false, message: "Donation must be verified before completion" });
+    }
+
+    // Check if user has permission
+    const userModel = (await import("../models/userModel.js")).default;
+    const user = await userModel.findById(userId);
+    const isCRDStaff = user?.role === "CRD Staff" || user?.role === "System Administrator";
+    const isDepartmentOwner = donation.recipientType === "department" && 
+                              donation.department?._id?.toString() === userId.toString();
+
+    if (!isCRDStaff && !isDepartmentOwner) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "You don't have permission to complete this donation" 
+      });
+    }
+
+    // Update donation status
+    donation.status = "cash_completed";
+    donation.cashVerification.completedBy = userId;
+    donation.cashVerification.completedAt = new Date();
+    await donation.save();
+
+    // Send receipt email and notifications
+    try {
+      await sendDonationNotifications(donation);
+    } catch (emailError) {
+      console.error("Error sending receipt email and notifications:", emailError);
+    }
+
+    return res.json({
+      success: true,
+      message: "Cash donation completed successfully",
+      donation: await donationModel.findById(donation._id)
+        .populate('user', 'name email')
+        .populate('department', 'name email')
+        .populate('event', 'title')
+        .populate('cashVerification.verifiedBy', 'name email')
+        .populate('cashVerification.completedBy', 'name email')
+    });
+  } catch (error) {
+    console.error("Error completing cash donation:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getAllDonations = async (req, res) => {
     try {
         const user = req.user;
@@ -1203,10 +1533,13 @@ export const getAllDonations = async (req, res) => {
             return res.status(403).json({ success: false, message: "Access denied. CRD Staff or System Administrator required." });
         }
         
-        // Get all donations and populate user and event
+        // Get all donations for transparency - includes CRD, Department, and Event donations
         const donations = await donationModel.find({})
             .populate('user', 'name email profileImage')
-            .populate('event', 'title')
+            .populate('event', 'title createdBy')
+            .populate('department', 'name email role')
+            .populate('cashVerification.verifiedBy', 'name email')
+            .populate('cashVerification.completedBy', 'name email')
             .sort({ createdAt: -1 });
         
         return res.json({ success: true, donations });
