@@ -496,7 +496,34 @@ const Notifications = () => {
                                 )}
 
                                 <div className="flex gap-3 pt-4 border-t">
-                                    {selectedNotification.payload?.eventId && (
+                                    {selectedNotification.payload?.type === 'volunteer_invitation' && selectedNotification.payload?.eventId && (
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    axios.defaults.withCredentials = true;
+                                                    const response = await axios.post(
+                                                        `${backendUrl}api/volunteers/event/${selectedNotification.payload.eventId}/accept-invitation`,
+                                                        {},
+                                                        { withCredentials: true }
+                                                    );
+                                                    toast.success(response.data.message || 'Invitation accepted successfully');
+                                                    handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
+                                                    setShowDetailModal(false);
+                                                    fetchNotifications(); // Refresh notifications
+                                                    // Navigate to event details
+                                                    navigate(`/user/events/${selectedNotification.payload.eventId}`);
+                                                } catch (error) {
+                                                    console.error('Error accepting invitation:', error);
+                                                    toast.error(error.response?.data?.message || 'Failed to accept invitation');
+                                                }
+                                            }}
+                                            className="flex-1 px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                                        >
+                                            <FaCheckCircle />
+                                            Accept Invitation
+                                        </button>
+                                    )}
+                                    {selectedNotification.payload?.eventId && selectedNotification.payload?.type !== 'volunteer_invitation' && (
                                         <button
                                             onClick={() => handleNavigateFromPayload(selectedNotification.payload)}
                                             className="flex-1 px-4 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"

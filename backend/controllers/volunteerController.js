@@ -152,6 +152,12 @@ export const removeVolunteer = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
+        // Remove from volunteers array
+        event.volunteers = event.volunteers.filter(
+            v => v.toString() !== volunteerId
+        );
+
+        // Remove from volunteerRegistrations
         event.volunteerRegistrations = event.volunteerRegistrations.filter(
             reg => reg.user.toString() !== volunteerId
         );
@@ -161,6 +167,229 @@ export const removeVolunteer = async (req, res) => {
         return res.json({ success: true, message: "Volunteer removed successfully" });
     } catch (error) {
         console.error('Remove volunteer error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Invite volunteer by email
+export const inviteVolunteer = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const { email, autoApprove = false } = req.body; // autoApprove: if true, immediately approve when user accepts
+        const userId = req.user._id;
+
+        if (!email) {
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+
+        const event = await eventModel.findById(eventId)
+            .populate('createdBy', 'name email');
+        if (!event) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        // Get the creator ID (handle both populated and non-populated cases)
+        const creatorId = event.createdBy._id ? event.createdBy._id.toString() : event.createdBy.toString();
+        const currentUserId = userId.toString();
+
+        // Check if user is the event creator, System Administrator, or CRD Staff
+        if (creatorId !== currentUserId && 
+            req.user.role !== 'System Administrator' && 
+            req.user.role !== 'CRD Staff') {
+            return res.status(403).json({ success: false, message: "Unauthorized" });
+        }
+
+        // Check if event is open for volunteers
+        if (!event.isOpenForVolunteer) {
+            return res.status(400).json({ success: false, message: "This event is not open for volunteers" });
+        }
+
+        // Find user by email
+        const userModel = (await import("../models/userModel.js")).default;
+        const invitedUser = await userModel.findOne({ email: email.toLowerCase() });
+        
+        if (!invitedUser) {
+            return res.status(404).json({ 
+                success: false, 
+                message: `User with email ${email} not found. Please ensure the user has registered an account.` 
+            });
+        }
+
+        const invitedUserId = invitedUser._id.toString();
+
+        // Check if user is already a volunteer
+        const isAlreadyVolunteer = event.volunteers.some(v => v.toString() === invitedUserId);
+        const existingRegistration = event.volunteerRegistrations.find(
+            reg => reg.user && reg.user.toString() === invitedUserId
+        );
+
+        if (isAlreadyVolunteer || (existingRegistration && ['approved', 'accepted'].includes(existingRegistration.status))) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "This user is already a volunteer for this event" 
+            });
+        }
+
+        // Check if there's a pending invitation
+        if (existingRegistration && existingRegistration.status === 'invited') {
+            return res.status(400).json({ 
+                success: false, 
+                message: "An invitation has already been sent to this user" 
+            });
+        }
+
+        // Check max volunteers limit
+        const maxVolunteers = event?.volunteerSettings?.maxVolunteers;
+        if (maxVolunteers && event.volunteers.length >= maxVolunteers) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Volunteer slots are full" 
+            });
+        }
+
+        // Create or update volunteer registration with invitation status
+        const now = new Date();
+        if (existingRegistration) {
+            // Update existing registration
+            existingRegistration.status = 'invited';
+            existingRegistration.invitedBy = userId;
+            existingRegistration.invitedAt = now;
+            existingRegistration.email = email.toLowerCase();
+            existingRegistration.name = invitedUser.name;
+        } else {
+            // Create new invitation registration
+            event.volunteerRegistrations.push({
+                user: invitedUserId,
+                name: invitedUser.name,
+                email: email.toLowerCase(),
+                status: 'invited',
+                invitedBy: userId,
+                invitedAt: now,
+                joinedAt: now
+            });
+        }
+
+        // If autoApprove is true, add to volunteers array immediately
+        if (autoApprove) {
+            if (!event.volunteers.includes(invitedUserId)) {
+                event.volunteers.push(invitedUserId);
+            }
+            const reg = event.volunteerRegistrations.find(
+                r => r.user && r.user.toString() === invitedUserId
+            );
+            if (reg) {
+                reg.status = 'approved';
+            }
+        }
+
+        await event.save();
+
+        // Send notification to invited user
+        try {
+            const { notifyUsers } = await import("../utils/notify.js");
+            await notifyUsers({
+                userIds: [invitedUserId],
+                title: "Volunteer Invitation",
+                message: `You have been invited to volunteer for "${event.title}". ${autoApprove ? 'You have been automatically approved.' : 'Please accept the invitation to join.'}`,
+                payload: {
+                    eventId: event._id,
+                    type: "volunteer_invitation",
+                    autoApprove: autoApprove,
+                    invitedBy: userId
+                }
+            });
+        } catch (notifError) {
+            console.error("Error sending notification:", notifError);
+            // Don't fail the request if notification fails
+        }
+
+        return res.json({ 
+            success: true, 
+            message: autoApprove 
+                ? "Volunteer invited and approved successfully" 
+                : "Volunteer invitation sent successfully",
+            volunteer: {
+                user: invitedUser._id,
+                name: invitedUser.name,
+                email: invitedUser.email,
+                status: autoApprove ? 'approved' : 'invited'
+            }
+        });
+    } catch (error) {
+        console.error('Invite volunteer error:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Accept volunteer invitation
+export const acceptInvitation = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const userId = req.user._id;
+
+        const event = await eventModel.findById(eventId)
+            .populate('createdBy', 'name email');
+        if (!event) {
+            return res.status(404).json({ success: false, message: "Event not found" });
+        }
+
+        // Find the invitation registration
+        const invitationIndex = event.volunteerRegistrations.findIndex(
+            reg => reg.user && reg.user.toString() === userId.toString() && reg.status === 'invited'
+        );
+
+        if (invitationIndex === -1) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "No pending invitation found for this event" 
+            });
+        }
+
+        const invitation = event.volunteerRegistrations[invitationIndex];
+        const now = new Date();
+
+        // Add user to volunteers array if not already there
+        const userIdStr = userId.toString();
+        if (!event.volunteers.includes(userIdStr)) {
+            event.volunteers.push(userIdStr);
+        }
+
+        // Update status - if auto-approved, mark as approved, otherwise mark as accepted
+        // Check if this was an auto-approve invitation (user was already in volunteers array)
+        const wasAutoApproved = event.volunteers.includes(userIdStr) && invitation.status === 'invited';
+        invitation.status = wasAutoApproved ? 'approved' : 'accepted';
+        invitation.acceptedAt = now;
+
+        await event.save();
+
+        // Send notification to event creator
+        try {
+            const { notifyUsers } = await import("../utils/notify.js");
+            const userModel = (await import("../models/userModel.js")).default;
+            const acceptingUser = await userModel.findById(userId).select('name email');
+            
+            await notifyUsers({
+                userIds: [event.createdBy],
+                title: "Volunteer Invitation Accepted",
+                message: `${acceptingUser?.name || 'A user'} has accepted your volunteer invitation for "${event.title}"`,
+                payload: {
+                    eventId: event._id,
+                    userId: userId,
+                    type: "volunteer_invitation_accepted"
+                }
+            });
+        } catch (notifError) {
+            console.error("Error sending notification:", notifError);
+            // Don't fail the request if notification fails
+        }
+
+        return res.json({ 
+            success: true, 
+            message: "Invitation accepted successfully. You are now a volunteer for this event.",
+            volunteer: invitation
+        });
+    } catch (error) {
+        console.error('Accept invitation error:', error);
         return res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -1033,7 +1262,7 @@ export const getVolunteerAttendance = async (req, res) => {
         const userId = req.user._id;
 
         const event = await eventModel.findById(eventId)
-            .populate('volunteerRegistrations.user', 'name email profileImage');
+            .populate('volunteerRegistrations.user', 'name email profileImage department course');
 
         if (!event) {
             return res.status(404).json({ success: false, message: "Event not found" });
@@ -1050,22 +1279,139 @@ export const getVolunteerAttendance = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized" });
         }
 
-        // Process attendance records for each volunteer
-        const volunteerAttendance = event.volunteerRegistrations.map(reg => {
-            const totalHours = reg.attendanceRecords.reduce((sum, record) => {
-                return sum + (record.totalHours || 0);
-            }, 0);
+        // Fetch attendance records from volunteerAttendanceModel (source of truth)
+        const attendanceRecords = await volunteerAttendanceModel.find({ 
+            event: eventId,
+            eventId: eventId 
+        })
+            .populate('volunteer', 'name email profileImage department course')
+            .populate('userId', 'name email profileImage department course')
+            .sort({ date: 1, timeIn: 1 }) // Sort by date, then by time in
+            .lean();
 
-            const validRecords = reg.attendanceRecords.filter(record => record.isValid);
-            const invalidRecords = reg.attendanceRecords.filter(record => !record.isValid);
+        // Group attendance by volunteer
+        const volunteerMap = new Map();
+
+        // Initialize map with all registered volunteers
+        event.volunteerRegistrations.forEach(reg => {
+            if (reg.user) {
+                const volunteerId = reg.user._id ? reg.user._id.toString() : reg.user.toString();
+                volunteerMap.set(volunteerId, {
+                    volunteer: reg.user,
+                    status: reg.status,
+                    totalHours: 0,
+                    attendanceByDate: new Map(), // Map of date -> attendance records
+                    validRecords: [],
+                    invalidRecords: [],
+                    totalRecords: 0
+                });
+            }
+        });
+
+        // Process attendance records from volunteerAttendanceModel
+        attendanceRecords.forEach(record => {
+            // Get volunteer ID (handle both legacy and new field names)
+            const volunteerId = record.userId 
+                ? (record.userId._id ? record.userId._id.toString() : record.userId.toString())
+                : (record.volunteer ? (record.volunteer._id ? record.volunteer._id.toString() : record.volunteer.toString()) : null);
+
+            if (!volunteerId) return;
+
+            // Get volunteer data (prioritize populated userId, fallback to volunteer)
+            const volunteerData = record.userId || record.volunteer;
+
+            // Ensure volunteer exists in map (in case they're not in volunteerRegistrations)
+            if (!volunteerMap.has(volunteerId)) {
+                volunteerMap.set(volunteerId, {
+                    volunteer: volunteerData,
+                    status: 'approved', // Default status
+                    totalHours: 0,
+                    attendanceByDate: new Map(),
+                    validRecords: [],
+                    invalidRecords: [],
+                    totalRecords: 0
+                });
+            }
+
+            const volunteerEntry = volunteerMap.get(volunteerId);
+
+            // Get date (handle both string and Date formats)
+            let dateStr = record.date;
+            if (dateStr instanceof Date) {
+                dateStr = `${dateStr.getFullYear()}-${String(dateStr.getMonth() + 1).padStart(2, '0')}-${String(dateStr.getDate()).padStart(2, '0')}`;
+            } else if (!dateStr || typeof dateStr !== 'string') {
+                // Fallback: use timeIn date if available
+                const timeInDate = record.checkInTime || record.timeIn;
+                if (timeInDate) {
+                    const d = new Date(timeInDate);
+                    dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                } else {
+                    dateStr = 'Unknown';
+                }
+            }
+
+            // Get check-in and check-out times
+            const checkIn = record.checkInTime || record.timeIn;
+            const checkOut = record.checkOutTime || record.timeOut;
+            const hours = record.voidedHours ? 0 : (record.hoursWorked || record.totalHours || 0);
+
+            // Create attendance record object
+            const attendanceRecord = {
+                _id: record._id,
+                date: dateStr,
+                checkIn: checkIn ? new Date(checkIn).toISOString() : null,
+                checkOut: checkOut ? new Date(checkOut).toISOString() : null,
+                timeIn: checkIn ? new Date(checkIn).toISOString() : null, // Legacy field
+                timeOut: checkOut ? new Date(checkOut).toISOString() : null, // Legacy field
+                hours: hours,
+                totalHours: record.totalHours || hours,
+                isValid: record.isValid !== false,
+                status: record.status || 'pending',
+                voidedHours: record.voidedHours || false
+            };
+
+            // Group by date
+            if (!volunteerEntry.attendanceByDate.has(dateStr)) {
+                volunteerEntry.attendanceByDate.set(dateStr, []);
+            }
+            volunteerEntry.attendanceByDate.get(dateStr).push(attendanceRecord);
+
+            // Update totals
+            if (attendanceRecord.isValid && !attendanceRecord.voidedHours) {
+                volunteerEntry.totalHours += hours;
+                volunteerEntry.validRecords.push(attendanceRecord);
+            } else {
+                volunteerEntry.invalidRecords.push(attendanceRecord);
+            }
+            volunteerEntry.totalRecords++;
+        });
+
+        // Convert to array format with nested date structure
+        const volunteerAttendance = Array.from(volunteerMap.values()).map(entry => {
+            // Convert attendanceByDate Map to sorted array
+            const attendanceByDateArray = Array.from(entry.attendanceByDate.entries())
+                .map(([date, records]) => ({
+                    date: date,
+                    records: records.sort((a, b) => {
+                        // Sort records by check-in time within each date
+                        const timeA = a.checkIn ? new Date(a.checkIn).getTime() : 0;
+                        const timeB = b.checkIn ? new Date(b.checkIn).getTime() : 0;
+                        return timeA - timeB;
+                    })
+                }))
+                .sort((a, b) => {
+                    // Sort dates chronologically
+                    return new Date(a.date) - new Date(b.date);
+                });
 
             return {
-                volunteer: reg.user,
-                status: reg.status,
-                totalHours,
-                validRecords,
-                invalidRecords,
-                totalRecords: reg.attendanceRecords.length
+                volunteer: entry.volunteer,
+                status: entry.status,
+                totalHours: Math.round(entry.totalHours * 100) / 100,
+                attendanceByDate: attendanceByDateArray,
+                validRecords: entry.validRecords,
+                invalidRecords: entry.invalidRecords,
+                totalRecords: entry.totalRecords
             };
         });
 

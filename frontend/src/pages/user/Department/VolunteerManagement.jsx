@@ -29,6 +29,10 @@ const VolunteerManagement = () => {
     // Modal states
     const [showQRModal, setShowQRModal] = useState(false)
     const [showAttendanceModal, setShowAttendanceModal] = useState(false)
+    const [showInviteModal, setShowInviteModal] = useState(false)
+    const [inviteEmail, setInviteEmail] = useState('')
+    const [autoApprove, setAutoApprove] = useState(false)
+    const [inviting, setInviting] = useState(false)
     const [selectedVolunteer, setSelectedVolunteer] = useState(null)
 
     useEffect(() => {
@@ -261,8 +265,37 @@ const VolunteerManagement = () => {
         switch (status) {
             case 'registered': return 'bg-yellow-100 text-yellow-800'
             case 'approved': return 'bg-green-100 text-green-800'
+            case 'accepted': return 'bg-blue-100 text-blue-800'
             case 'rejected': return 'bg-red-100 text-red-800'
+            case 'invited': return 'bg-purple-100 text-purple-800'
             default: return 'bg-gray-100 text-gray-800'
+        }
+    }
+
+    const handleInviteVolunteer = async () => {
+        if (!inviteEmail || !inviteEmail.trim()) {
+            toast.error('Please enter an email address')
+            return
+        }
+
+        setInviting(true)
+        try {
+            const response = await axios.post(
+                `${backendUrl}api/volunteers/event/${eventId}/invite`,
+                { email: inviteEmail.trim(), autoApprove },
+                { withCredentials: true }
+            )
+            
+            toast.success(response.data.message || 'Invitation sent successfully')
+            setShowInviteModal(false)
+            setInviteEmail('')
+            setAutoApprove(false)
+            fetchEventData() // Refresh volunteers list
+        } catch (error) {
+            console.error('Error inviting volunteer:', error)
+            toast.error(error.response?.data?.message || 'Failed to send invitation')
+        } finally {
+            setInviting(false)
         }
     }
 
@@ -485,9 +518,20 @@ const VolunteerManagement = () => {
                         <div className="px-4 sm:px-6 py-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900">Registered Volunteers</h2>
-                                <span className="text-sm text-gray-500">
-                                    {volunteers.filter(v => v.status === 'approved').length} approved, {volunteers.length} total
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm text-gray-500">
+                                        {volunteers.filter(v => v.status === 'approved' || v.status === 'accepted').length} approved, {volunteers.length} total
+                                    </span>
+                                    <button
+                                        onClick={() => setShowInviteModal(true)}
+                                        className="bg-[#800000] text-white px-4 py-2 rounded-lg hover:bg-[#900000] transition-colors flex items-center gap-2"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Invite Volunteer
+                                    </button>
+                                </div>
                             </div>
                             
                             {volunteers.length === 0 ? (
@@ -531,20 +575,29 @@ const VolunteerManagement = () => {
                                                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(volunteer.status)}`}>
                                                         {volunteer.status}
                                                     </span>
-                                                    {volunteer.status === 'registered' && (
+                                                    {(volunteer.status === 'registered' || volunteer.status === 'invited') && (
                                                         <div className="flex flex-wrap gap-2">
-                                                            <button
-                                                                onClick={() => handleVolunteerStatusChange(volunteer.user._id, 'approved')}
-                                                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                                                            >
-                                                                Approve
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleVolunteerStatusChange(volunteer.user._id, 'rejected')}
-                                                                className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                                                            >
-                                                                Reject
-                                                            </button>
+                                                            {volunteer.status === 'registered' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleVolunteerStatusChange(volunteer.user._id, 'approved')}
+                                                                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                                                                    >
+                                                                        Approve
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleVolunteerStatusChange(volunteer.user._id, 'rejected')}
+                                                                        className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+                                                                    >
+                                                                        Reject
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {volunteer.status === 'invited' && (
+                                                                <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded">
+                                                                    Pending Acceptance
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     )}
                                                     <button
@@ -862,40 +915,174 @@ const VolunteerManagement = () => {
                                     <p className="text-gray-500">Attendance records will appear here once volunteers start checking in.</p>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
-                                    {attendance.map(record => (
-                                        <div key={record.volunteer._id} className="border border-gray-200 rounded-lg p-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                <div className="flex items-center space-x-4 min-w-0">
-                                                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                                                        {record.volunteer.profileImage ? (
-                                                            <img 
-                                                                src={record.volunteer.profileImage} 
-                                                                alt={record.volunteer.name}
-                                                                className="w-12 h-12 rounded-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <h3 className="font-semibold text-gray-900">{record.volunteer.name}</h3>
-                                                        <p className="text-sm text-gray-600 truncate">{record.volunteer.email}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-left sm:text-right">
-                                                    <div className="text-lg font-semibold text-gray-900">
-                                                        {record.totalHours.toFixed(1)} hours
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        {record.validRecords.length} valid, {record.invalidRecords.length} invalid
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Volunteer</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Date</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Check In</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Check Out</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Hours</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Status</th>
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider border-b">Total Hours</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {attendance.map((record, volunteerIndex) => {
+                                                const hasMultipleDates = record.attendanceByDate && record.attendanceByDate.length > 1;
+                                                const totalRows = record.attendanceByDate 
+                                                    ? record.attendanceByDate.reduce((sum, dateEntry) => sum + dateEntry.records.length, 0)
+                                                    : (record.validRecords?.length || 0) + (record.invalidRecords?.length || 0);
+                                                
+                                                return record.attendanceByDate && record.attendanceByDate.length > 0 ? (
+                                                    record.attendanceByDate.map((dateEntry, dateIndex) => 
+                                                        dateEntry.records.map((attendanceRecord, recordIndex) => {
+                                                            const isFirstRow = dateIndex === 0 && recordIndex === 0;
+                                                            const showVolunteerCell = isFirstRow;
+                                                            const showTotalHours = isFirstRow && recordIndex === 0;
+                                                            
+                                                            // Format date
+                                                            const formatDate = (dateStr) => {
+                                                                if (!dateStr || dateStr === 'Unknown') return 'N/A';
+                                                                try {
+                                                                    const date = new Date(dateStr);
+                                                                    return date.toLocaleDateString('en-US', { 
+                                                                        year: 'numeric', 
+                                                                        month: 'short', 
+                                                                        day: 'numeric' 
+                                                                    });
+                                                                } catch {
+                                                                    return dateStr;
+                                                                }
+                                                            };
+                                                            
+                                                            // Format time
+                                                            const formatTime = (isoString) => {
+                                                                if (!isoString) return '-';
+                                                                try {
+                                                                    const date = new Date(isoString);
+                                                                    return date.toLocaleTimeString('en-US', { 
+                                                                        hour: '2-digit', 
+                                                                        minute: '2-digit',
+                                                                        hour12: true 
+                                                                    });
+                                                                } catch {
+                                                                    return '-';
+                                                                }
+                                                            };
+                                                            
+                                                            return (
+                                                                <tr 
+                                                                    key={`${record.volunteer._id}-${dateEntry.date}-${recordIndex}`}
+                                                                    className={`hover:bg-gray-50 ${!attendanceRecord.isValid || attendanceRecord.voidedHours ? 'bg-red-50' : ''}`}
+                                                                >
+                                                                    {showVolunteerCell && (
+                                                                        <td 
+                                                                            className="px-4 py-3 whitespace-nowrap border-r border-gray-200" 
+                                                                            rowSpan={totalRows}
+                                                                        >
+                                                                            <div className="flex items-center space-x-3">
+                                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                                                                    {record.volunteer.profileImage ? (
+                                                                                        <img 
+                                                                                            src={record.volunteer.profileImage} 
+                                                                                            alt={record.volunteer.name}
+                                                                                            className="w-10 h-10 rounded-full object-cover"
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                                        </svg>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="min-w-0">
+                                                                                    <div className="font-semibold text-gray-900 text-sm">{record.volunteer.name}</div>
+                                                                                    <div className="text-xs text-gray-500 truncate">{record.volunteer.email}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </td>
+                                                                    )}
+                                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                                        {formatDate(dateEntry.date)}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                                        {formatTime(attendanceRecord.checkIn || attendanceRecord.timeIn)}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                                        {formatTime(attendanceRecord.checkOut || attendanceRecord.timeOut)}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                                                                        {attendanceRecord.voidedHours ? (
+                                                                            <span className="text-red-600">0.0</span>
+                                                                        ) : (
+                                                                            (attendanceRecord.hours || 0).toFixed(1)
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                                        {!attendanceRecord.isValid || attendanceRecord.voidedHours ? (
+                                                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                                                Invalid
+                                                                            </span>
+                                                                        ) : (
+                                                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                                                Valid
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                    {showTotalHours && (
+                                                                        <td 
+                                                                            className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 border-l border-gray-200" 
+                                                                            rowSpan={totalRows}
+                                                                        >
+                                                                            {record.totalHours.toFixed(1)} hrs
+                                                                        </td>
+                                                                    )}
+                                                                </tr>
+                                                            );
+                                                        })
+                                                    )
+                                                ) : (
+                                                    // Fallback for old data format (without attendanceByDate)
+                                                    <tr key={record.volunteer._id} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                                                    {record.volunteer.profileImage ? (
+                                                                        <img 
+                                                                            src={record.volunteer.profileImage} 
+                                                                            alt={record.volunteer.name}
+                                                                            className="w-10 h-10 rounded-full object-cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                        </svg>
+                                                                    )}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <div className="font-semibold text-gray-900 text-sm">{record.volunteer.name}</div>
+                                                                    <div className="text-xs text-gray-500 truncate">{record.volunteer.email}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">-</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">-</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">-</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">-</td>
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                                No Records
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                                            {record.totalHours.toFixed(1)} hrs
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
                         </div>
@@ -1088,6 +1275,87 @@ const VolunteerManagement = () => {
                                     </button>
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invite Volunteer Modal */}
+            {showInviteModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900">Invite Volunteer</h3>
+                            <button
+                                onClick={() => {
+                                    setShowInviteModal(false)
+                                    setInviteEmail('')
+                                    setAutoApprove(false)
+                                }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2 hover:bg-gray-100"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    value={inviteEmail}
+                                    onChange={(e) => setInviteEmail(e.target.value)}
+                                    placeholder="user@example.com"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter' && !inviting) {
+                                            handleInviteVolunteer()
+                                        }
+                                    }}
+                                />
+                                <p className="mt-2 text-xs text-gray-500">
+                                    The user must have a registered account with this email address.
+                                </p>
+                            </div>
+                            <div className="mb-6">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={autoApprove}
+                                        onChange={(e) => setAutoApprove(e.target.checked)}
+                                        className="w-4 h-4 text-[#800000] border-gray-300 rounded focus:ring-[#800000]"
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                        Auto-approve when accepted
+                                    </span>
+                                </label>
+                                <p className="mt-1 text-xs text-gray-500 ml-6">
+                                    If checked, the volunteer will be automatically approved when they accept the invitation.
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowInviteModal(false)
+                                        setInviteEmail('')
+                                        setAutoApprove(false)
+                                    }}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    disabled={inviting}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleInviteVolunteer}
+                                    disabled={inviting || !inviteEmail.trim()}
+                                    className="flex-1 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                                >
+                                    {inviting ? 'Sending...' : 'Send Invitation'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

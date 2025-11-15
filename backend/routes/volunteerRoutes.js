@@ -3,6 +3,8 @@ import {
     getEventVolunteers,
     updateVolunteerStatus,
     removeVolunteer,
+    inviteVolunteer,
+    acceptInvitation,
     generateAttendanceQR,
     getQRStatus,
     closeEvaluationQR,
@@ -18,6 +20,8 @@ const router = express.Router();
 router.get("/event/:eventId", userAuth, getEventVolunteers);
 router.put("/event/:eventId/volunteer/:volunteerId/status", userAuth, updateVolunteerStatus);
 router.delete("/event/:eventId/volunteer/:volunteerId", userAuth, removeVolunteer);
+router.post("/event/:eventId/invite", userAuth, inviteVolunteer);
+router.post("/event/:eventId/accept-invitation", userAuth, acceptInvitation);
 
 // QR Code and attendance routes
 router.post("/event/:eventId/qr/generate", userAuth, generateAttendanceQR);

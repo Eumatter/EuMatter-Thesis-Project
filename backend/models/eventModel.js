@@ -31,7 +31,10 @@ const eventSchema = new mongoose.Schema({
         skills: [{ type: String }],
         additionalNotes: { type: String },
         joinedAt: { type: Date, default: Date.now },
-        status: { type: String, enum: ["registered", "approved", "rejected"], default: "registered" },
+        status: { type: String, enum: ["registered", "approved", "rejected", "invited", "accepted"], default: "registered" },
+        invitedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user" }, // Who sent the invitation
+        invitedAt: { type: Date }, // When the invitation was sent
+        acceptedAt: { type: Date }, // When the invitation was accepted
         attendanceRecords: [{
             date: { type: Date, required: true },
             timeIn: { type: Date },
