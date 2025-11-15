@@ -192,7 +192,7 @@ const QRScanner = () => {
             try {
                 qrData = JSON.parse(qrCode)
             } catch (e) {
-                // If not JSON, treat as legacy format
+                // If not JSON, treat as legacy format or primary key
                 qrData = { code: qrCode }
             }
             
@@ -207,8 +207,16 @@ const QRScanner = () => {
                 finalAction = attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'timeout' : 'timein'
             }
             
+            console.log('Recording attendance:', { qrCode: qrCode.substring(0, 50) + '...', action: finalAction, eventId })
+            
+            // Validate qrCode before sending
+            if (!qrCode || qrCode.trim().length === 0) {
+                toast.error('Invalid QR code. Please scan again.')
+                return
+            }
+            
             const response = await axios.post(`${backendUrl}api/volunteers/attendance/record`, 
-                { qrCode, action: finalAction }, 
+                { qrCode: qrCode.trim(), action: finalAction }, 
                 { withCredentials: true }
             )
             
@@ -246,7 +254,26 @@ const QRScanner = () => {
             
         } catch (error) {
             console.error('Error recording attendance:', error)
-            toast.error(error.response?.data?.message || 'Failed to record attendance')
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to record attendance'
+            
+            // Provide more specific error messages
+            if (error.response?.status === 400) {
+                if (errorMessage.includes('already recorded')) {
+                    toast.error('You have already recorded attendance for this event')
+                } else if (errorMessage.includes('must record time in')) {
+                    toast.error('Please record time in before time out')
+                } else if (errorMessage.includes('Invalid QR code')) {
+                    toast.error('Invalid QR code. Please scan the correct QR code for this event.')
+                } else {
+                    toast.error(errorMessage)
+                }
+            } else if (error.response?.status === 404) {
+                toast.error('Event not found. Please check the QR code.')
+            } else if (error.response?.status === 403) {
+                toast.error('You do not have permission to record attendance for this event')
+            } else {
+                toast.error(errorMessage)
+            }
         } finally {
             setProcessing(false)
             lastScannedCode.current = ''
@@ -258,6 +285,22 @@ const QRScanner = () => {
     
     const startScanning = async (action) => {
         if (processing || scanning) return
+        
+        // Wait a bit to ensure DOM is ready
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Check if qr-reader element exists
+        let qrReaderElement = document.getElementById("qr-reader")
+        if (!qrReaderElement) {
+            // Try again after a short delay
+            await new Promise(resolve => setTimeout(resolve, 200))
+            qrReaderElement = document.getElementById("qr-reader")
+            if (!qrReaderElement) {
+                toast.error('QR scanner element not found. Please refresh the page.')
+                console.error('QR reader element not found')
+                return
+            }
+        }
         
         if (html5QrCodeRef.current) {
             try {
@@ -296,59 +339,80 @@ const QRScanner = () => {
                 await html5QrCode.start(
                     { facingMode: "environment" },
                     config,
-                (decodedText) => {
+                    (decodedText) => {
                         handleQRScan(decodedText, action)
-                },
-                (errorMessage) => {
-                        // Ignore scan errors
-                }
-            )
-            setScanning(true)
-            setCameraError(null)
+                    },
+                    (errorMessage) => {
+                        // Ignore scan errors (they're just scanning attempts)
+                    }
+                )
+                setScanning(true)
+                setCameraError(null)
+                toast.success('Camera started successfully!')
             } catch (envError) {
+                console.log('Environment camera failed, trying user camera:', envError.message)
                 // If environment camera fails, try user camera (front camera)
                 if (envError.message?.includes('OverconstrainedError') || 
                     envError.message?.includes('NotReadableError') ||
-                    envError.message?.includes('NotFoundError')) {
+                    envError.message?.includes('NotFoundError') ||
+                    envError.message?.includes('Permission denied')) {
                     try {
                         await html5QrCode.start(
                             { facingMode: "user" },
                             config,
-                            (decodedText) => {
+                (decodedText) => {
                                 handleQRScan(decodedText, action)
-                            },
-                            () => {}
-                        )
-                        setScanning(true)
-                        setCameraError(null)
+                },
+                (errorMessage) => {
+                                // Ignore scan errors
+                }
+            )
+            setScanning(true)
+            setCameraError(null)
+                        toast.success('Camera started successfully!')
                     } catch (userError) {
-                        // If both fail, try without facingMode constraint (let browser choose)
+                        console.log('User camera failed, trying default camera:', userError.message)
+                        // If user camera also fails, try without facingMode constraint
                         try {
                             await html5QrCode.start(
-                                {},
+                                null, // Let browser choose any available camera
                                 config,
                                 (decodedText) => {
                                     handleQRScan(decodedText, action)
                                 },
-                                () => {}
+                                (errorMessage) => {
+                                    // Ignore scan errors
+                                }
                             )
                             setScanning(true)
                             setCameraError(null)
+                            toast.success('Camera started successfully!')
                         } catch (finalError) {
-                            throw finalError
+                            console.error('Error starting camera:', finalError)
+                            setCameraError(finalError.message || 'Failed to start camera')
+                            toast.error(`Error starting camera: ${finalError.message || 'Please check camera permissions and try again'}`)
+                            html5QrCodeRef.current = null
+                            setScanning(false)
+                            setActiveScanner(null)
                         }
                     }
                 } else {
-                    throw envError
+                    console.error('Error starting camera:', envError)
+                    setCameraError(envError.message || 'Failed to start camera')
+                    toast.error(`Error starting camera: ${envError.message || 'Please check camera permissions and try again'}`)
+                    html5QrCodeRef.current = null
+                    setScanning(false)
+                    setActiveScanner(null)
                 }
             }
         } catch (err) {
             console.error('Error starting camera:', err)
-            setCameraError('Failed to access camera. Please ensure camera permissions are granted and try again.')
+            setCameraError(err.message || 'Failed to access camera')
             setScanning(false)
             setActiveScanner(null)
             html5QrCodeRef.current = null
             scannerRef.current = null
+            toast.error(`Failed to access camera: ${err.message || 'Please ensure camera permissions are granted and try again'}`)
         }
     }
     
@@ -402,8 +466,32 @@ const QRScanner = () => {
 
         try {
             setProcessing(true)
-            // Use Html5Qrcode static method scanFile which doesn't require DOM element
-            const decodedText = await Html5Qrcode.scanFile(file, true)
+            
+            // Create or use qr-reader element for file scanning
+            let qrReaderElement = document.getElementById("qr-reader")
+            let tempElement = null
+            
+            if (!qrReaderElement) {
+                // Create a temporary hidden element for file scanning
+                tempElement = document.createElement('div')
+                tempElement.id = 'temp-qr-reader'
+                tempElement.style.display = 'none'
+                tempElement.style.position = 'absolute'
+                tempElement.style.visibility = 'hidden'
+                document.body.appendChild(tempElement)
+                qrReaderElement = tempElement
+            }
+            
+            // Create Html5Qrcode instance
+            const html5QrCodeInstance = new Html5Qrcode(qrReaderElement.id)
+            
+            // Use scanFile method - it's an instance method that works with file objects
+            const decodedText = await html5QrCodeInstance.scanFile(file, true)
+            
+            // Clean up temporary element if created
+            if (tempElement && document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement)
+            }
             
             if (decodedText) {
                 await handleQRScan(decodedText, action)
@@ -412,7 +500,18 @@ const QRScanner = () => {
             }
         } catch (error) {
             console.error('Error scanning image:', error)
-            toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code.')
+            // Clean up temporary element on error
+            const tempElement = document.getElementById('temp-qr-reader')
+            if (tempElement && document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement)
+            }
+            
+            // Provide more specific error message
+            if (error.message?.includes('No QR code found') || error.message?.includes('not found')) {
+                toast.error('No QR code found in the image. Please ensure the image contains a clear QR code.')
+            } else {
+                toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code.')
+            }
         } finally {
             setProcessing(false)
             // Reset file input

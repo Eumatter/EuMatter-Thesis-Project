@@ -167,26 +167,34 @@ const EventAttendance = () => {
     const handleSubmitFeedback = async () => {
         if (!pendingFeedback?._id) {
             toast.error('Feedback record not found')
+            console.error('Pending feedback missing:', pendingFeedback)
             return
         }
 
         if (!feedbackForm.rating || feedbackForm.rating < 1 || feedbackForm.rating > 5) {
             toast.error('Please select a rating from 1 to 5 stars')
+            console.error('Invalid rating:', feedbackForm.rating)
             return
         }
 
         if (!feedbackForm.comment || feedbackForm.comment.trim().length === 0) {
             toast.error('Please provide feedback message')
+            console.error('Empty comment:', feedbackForm.comment)
             return
         }
 
         setSubmittingFeedback(true)
         try {
+            console.log('Submitting feedback:', {
+                attendanceId: pendingFeedback._id,
+                rating: feedbackForm.rating,
+                comment: feedbackForm.comment
+            })
             const response = await axios.post(
                 `${backendUrl}api/feedback/${pendingFeedback._id}`,
                 {
                     rating: Number(feedbackForm.rating),
-                    comment: feedbackForm.comment || ''
+                    comment: feedbackForm.comment.trim()
                 },
                 { withCredentials: true }
             )
@@ -414,7 +422,7 @@ const EventAttendance = () => {
                                                     {feedbackForm.comment.length}/2000
                                                 </div>
                                             </div>
-                                            {!feedbackForm.comment && (
+                                            {(!feedbackForm.comment || feedbackForm.comment.trim().length === 0) && (
                                                 <p className="text-xs text-red-600 mt-1">Feedback message is required</p>
                                             )}
                                         </div>
@@ -422,8 +430,14 @@ const EventAttendance = () => {
                                         {/* Submit Button */}
                                         <button
                                             onClick={handleSubmitFeedback}
-                                            disabled={submittingFeedback || !feedbackForm.rating || !feedbackForm.comment || feedbackForm.comment.trim().length === 0 || (pendingFeedback.status === 'pending' && !pendingFeedback.timeOut && !pendingFeedback.checkOutTime)}
+                                            disabled={submittingFeedback || !feedbackForm.rating || !feedbackForm.comment || feedbackForm.comment.trim().length === 0}
                                             className="w-full bg-gradient-to-r from-[#800000] to-[#a00000] text-white px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3"
+                                            title={
+                                                submittingFeedback ? 'Submitting...' :
+                                                !feedbackForm.rating ? 'Please select a rating' :
+                                                !feedbackForm.comment || feedbackForm.comment.trim().length === 0 ? 'Please provide feedback message' :
+                                                'Submit feedback'
+                                            }
                                         >
                                             {submittingFeedback ? (
                                                 <>
