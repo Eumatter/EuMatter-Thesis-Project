@@ -44,7 +44,7 @@ const CRDDashboard = () => {
         totalDonations: 0,
         activeVolunteers: 0
     })
-    const [allEvents, setAllEvents] = useState([]) // For display (limited to 4)
+    const [allEvents, setAllEvents] = useState([]) // For display (limited to 4 events)
     const [allEventsData, setAllEventsData] = useState([]) // All events for calculations
     const [donations, setDonations] = useState([])
     const [currentDate, setCurrentDate] = useState(new Date())
@@ -120,8 +120,8 @@ const CRDDashboard = () => {
             
             // Store all events for calculations
             setAllEventsData(events)
-            // Set all events (limit to 6 for display)
-            setAllEvents(events.slice(0, 6))
+            // Set all events (limit to 4 for display)
+            setAllEvents(events.slice(0, 4))
             
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
@@ -1112,75 +1112,77 @@ const CRDDashboard = () => {
                                     <LoadingSpinner size="medium" text="Loading events..." />
                                 </div>
                             ) : allEvents.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 h-full">
                                     {allEvents.map((event, index) => (
                                         <div 
                                             key={event._id} 
-                                            className="group border rounded-lg sm:rounded-xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                                            className="group border rounded-lg sm:rounded-xl p-3 sm:p-4 lg:p-5 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 flex flex-col h-full"
                                             style={{ 
                                                 borderColor: THEME_COLORS.maroonBg,
                                                 backgroundColor: THEME_COLORS.whiteLight,
                                                 animationDelay: `${index * 100}ms` 
                                             }}
                                         >
-                                            <div className="flex items-start justify-between mb-3 sm:mb-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center space-x-2 mb-2">
-                                                        <h4 className="font-bold text-sm sm:text-base lg:text-lg truncate transition-colors" style={{ color: THEME_COLORS.maroon }}>
-                                                            {event.title}
-                                                        </h4>
-                                                    </div>
-                                                    <p className="text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray }}>
-                                                        {String(event.description || '').replace(/<[^>]*>/g, '').substring(0, 100)}...
+                                            <div className="flex-1 flex flex-col min-h-0">
+                                                <div className="mb-2 sm:mb-3">
+                                                    <h4 className="font-bold text-sm sm:text-base lg:text-lg line-clamp-2 transition-colors mb-2" style={{ color: THEME_COLORS.maroon, minHeight: '2.5rem' }}>
+                                                        {event.title}
+                                                    </h4>
+                                                    <p className="text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray, minHeight: '2.5rem' }}>
+                                                        {String(event.description || '').replace(/<[^>]*>/g, '').substring(0, 80)}...
                                                     </p>
-                                                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs" style={{ color: THEME_COLORS.gray }}>
-                                                        <span className="flex items-center space-x-1 px-2 py-1 rounded-lg" style={{ backgroundColor: THEME_COLORS.white }}>
-                                                            <FaCalendarAlt className="w-3 h-3" />
-                                                            <span>{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                                        </span>
-                                                        {event.location && (
-                                                            <span className="flex items-center space-x-1 px-2 py-1 rounded-lg truncate max-w-[120px] sm:max-w-[150px]" style={{ backgroundColor: THEME_COLORS.white }}>
-                                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                </svg>
-                                                                <span className="truncate">{event.location}</span>
-                                                            </span>
-                                                        )}
-                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center justify-between pt-3 border-t" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                <span className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-sm border ${
-                                                    event.status === 'Approved' ? 'text-green-800 border-green-200' :
-                                                    event.status === 'Pending' ? 'text-yellow-800 border-yellow-200' :
-                                                    'text-red-800 border-red-200'
-                                                }`}
-                                                style={event.status === 'Approved' ? { backgroundColor: '#D1FAE5' } :
-                                                    event.status === 'Pending' ? { backgroundColor: THEME_COLORS.goldBg } :
-                                                    { backgroundColor: '#FEE2E2' }}
-                                                >
-                                                    {event.status || 'Pending'}
-                                                </span>
-                                                <button
-                                                    onClick={() => navigate('/crd-staff/events')}
-                                                    className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs font-semibold border rounded-lg hover:scale-105 transition-all duration-200"
-                                                    style={{ 
-                                                        borderColor: THEME_COLORS.maroon, 
-                                                        color: THEME_COLORS.maroon,
-                                                        backgroundColor: 'transparent'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                                        e.target.style.color = THEME_COLORS.white;
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.target.style.backgroundColor = 'transparent';
-                                                        e.target.style.color = THEME_COLORS.maroon;
-                                                    }}
-                                                >
-                                                    Review →
-                                                </button>
+                                                
+                                                <div className="flex flex-wrap items-center gap-2 text-xs mb-3 sm:mb-4 flex-shrink-0" style={{ color: THEME_COLORS.gray }}>
+                                                    <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg shadow-sm" style={{ backgroundColor: THEME_COLORS.white, border: `1px solid ${THEME_COLORS.maroonBg}` }}>
+                                                        <FaCalendarAlt className="w-3 h-3 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                                        <span className="whitespace-nowrap">{new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    </span>
+                                                    {event.location && (
+                                                        <span className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg truncate max-w-full sm:max-w-[180px] shadow-sm" style={{ backgroundColor: THEME_COLORS.white, border: `1px solid ${THEME_COLORS.maroonBg}` }}>
+                                                            <svg className="w-3 h-3 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            <span className="truncate">{event.location}</span>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="flex items-center justify-between pt-3 border-t mt-auto flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                    <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-sm border flex-shrink-0 ${
+                                                        event.status === 'Approved' ? 'text-green-800 border-green-200' :
+                                                        event.status === 'Pending' ? 'text-yellow-800 border-yellow-200' :
+                                                        event.status === 'Upcoming' ? 'text-blue-800 border-blue-200' :
+                                                        'text-red-800 border-red-200'
+                                                    }`}
+                                                    style={event.status === 'Approved' ? { backgroundColor: '#D1FAE5' } :
+                                                        event.status === 'Pending' ? { backgroundColor: THEME_COLORS.goldBg } :
+                                                        event.status === 'Upcoming' ? { backgroundColor: '#DBEAFE' } :
+                                                        { backgroundColor: '#FEE2E2' }}
+                                                    >
+                                                        {event.status || 'Pending'}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => navigate('/crd-staff/events')}
+                                                        className="px-2.5 sm:px-3 lg:px-4 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold border rounded-lg hover:scale-105 active:scale-95 transition-all duration-200 whitespace-nowrap flex-shrink-0"
+                                                        style={{ 
+                                                            borderColor: THEME_COLORS.maroon, 
+                                                            color: THEME_COLORS.maroon,
+                                                            backgroundColor: 'transparent'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                                            e.target.style.color = THEME_COLORS.white;
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.target.style.backgroundColor = 'transparent';
+                                                            e.target.style.color = THEME_COLORS.maroon;
+                                                        }}
+                                                    >
+                                                        Review →
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
