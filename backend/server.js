@@ -60,34 +60,59 @@ if (process.env.NODE_ENV !== 'production') {
     }
 }
 
+// CORS configuration with proper error handling
 app.use(cors({
     origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('CORS: Allowing request with no origin');
+            }
             return callback(null, true);
         }
 
         const normalizedOrigin = normalizeOrigin(origin);
 
+        // Check against allowed origins list
         if (allowedOrigins.includes(normalizedOrigin)) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`CORS: Allowing origin from allowedOrigins: ${origin}`);
+            }
             return callback(null, true);
         }
 
+        // Allow all vercel.app subdomains (including preview deployments)
         if (allowVercelPreviews && normalizedOrigin.endsWith('.vercel.app')) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`CORS: Allowing Vercel preview domain: ${origin}`);
+            }
             return callback(null, true);
         }
 
-        // Allow all vercel.app subdomains
+        // Additional check for any vercel.app domain
         if (normalizedOrigin.includes('vercel.app')) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`CORS: Allowing Vercel domain: ${origin}`);
+            }
             return callback(null, true);
         }
 
-        console.warn(`Blocked CORS origin: ${origin}`);
+        // Log and allow in development, block in production
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn(`CORS: Unknown origin (allowing in dev): ${origin} (normalized: ${normalizedOrigin})`);
+            console.warn(`CORS: Allowed origins:`, allowedOrigins);
+            return callback(null, true);
+        }
+        
+        // In production, block unknown origins
+        console.warn(`CORS: Blocked origin: ${origin}`);
         return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Content-Range', 'X-Content-Range']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 }));
 
 // API Endpoints
@@ -108,15 +133,30 @@ app.use("/api/facebook", facebookRouter); // Mount Facebook routes
 app.use("/api/system-settings", systemSettingsRouter); // System settings routes
 app.use("/api/feedback", feedbackRouter);
 
-// Enhanced Error Handler
+// Enhanced Error Handler with CORS headers
 app.use((err, req, res, next) => {
     console.error("Server Error:", {
         message: err.message,
         stack: err.stack,
         path: req.path,
         method: req.method,
-        body: req.body
+        body: req.body,
+        origin: req.headers.origin
     });
+
+    // Ensure CORS headers are set even in error responses
+    const origin = req.headers.origin;
+    if (origin) {
+        const normalizedOrigin = normalizeOrigin(origin);
+        const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
+                         (allowVercelPreviews && normalizedOrigin.endsWith('.vercel.app')) ||
+                         normalizedOrigin.includes('vercel.app');
+        
+        if (isAllowed || !origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        }
+    }
 
     // Handle Multer errors
     if (err instanceof multer.MulterError) {
@@ -124,6 +164,15 @@ app.use((err, req, res, next) => {
             success: false,
             message: "File upload error",
             error: err.message
+        });
+    }
+
+    // Handle CORS errors specifically
+    if (err.message === 'Not allowed by CORS') {
+        return res.status(403).json({
+            success: false,
+            message: "CORS policy: Origin not allowed",
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
 

@@ -7,29 +7,19 @@ export async function getMyAttendanceSummary(req, res) {
         const volunteerId = req.user?._id
         if (!volunteerId) return res.status(401).json({ success: false, message: 'Not authenticated' })
 
-        // Find records using both legacy and new field names
-        const records = await volunteerAttendanceModel.find({ 
-            $or: [
-                { volunteer: volunteerId },
-                { userId: volunteerId }
-            ]
-        })
-            .populate('event', 'title startDate endDate location feedbackSummary image')
-            .populate('eventId', 'title startDate endDate location feedbackSummary image')
-            .sort({ createdAt: -1, date: -1 })
+        const records = await volunteerAttendanceModel.find({ volunteer: volunteerId })
+            .populate('event', 'title startDate endDate location feedbackSummary')
+            .sort({ date: -1 })
             .lean()
 
         let totalHours = 0
         const eventsMap = new Map()
 
         records.forEach(record => {
-            // Get event info (support both legacy and new field names)
-            const event = record.event || record.eventId
-            const eventId = event?._id?.toString() || record.eventId?.toString() || record.event?.toString()
-            if (!eventId || !event) return
+            const eventId = record.event?._id?.toString()
+            if (!eventId) return
 
-            // Get hours (support both legacy and new field names)
-            const hours = record.voidedHours ? 0 : (record.hoursWorked || record.totalHours || 0)
+            const hours = record.voidedHours ? 0 : (record.totalHours || 0)
             if (!record.voidedHours) {
                 totalHours += hours
             }
@@ -37,12 +27,11 @@ export async function getMyAttendanceSummary(req, res) {
             if (!eventsMap.has(eventId)) {
                 eventsMap.set(eventId, {
                     eventId,
-                    title: event.title || 'Unknown Event',
-                    startDate: event.startDate,
-                    endDate: event.endDate,
-                    location: event.location || '',
-                    image: event.image || '',
-                    feedbackSummary: event.feedbackSummary || {},
+                    title: record.event.title,
+                    startDate: record.event.startDate,
+                    endDate: record.event.endDate,
+                    location: record.event.location,
+                    feedbackSummary: record.event.feedbackSummary || {},
                     totalHours: 0,
                     records: []
                 })
@@ -50,24 +39,15 @@ export async function getMyAttendanceSummary(req, res) {
 
             const eventEntry = eventsMap.get(eventId)
             eventEntry.totalHours += hours
-            
-            // Get date (support both string and Date formats)
-            let recordDate = record.date
-            if (typeof recordDate === 'string') {
-                recordDate = new Date(recordDate)
-            }
-            
             eventEntry.records.push({
                 attendanceId: record._id,
-                date: recordDate || record.createdAt,
-                timeIn: record.checkInTime || record.timeIn,
-                timeOut: record.checkOutTime || record.timeOut,
+                date: record.date,
+                timeIn: record.timeIn,
+                timeOut: record.timeOut,
                 totalHours: hours,
-                status: record.status || 'pending',
+                status: record.status,
                 deadlineAt: record.deadlineAt,
-                feedback: record.feedback,
-                isValid: record.isValid !== false,
-                voidedHours: record.voidedHours || false
+                feedback: record.feedback
             })
         })
 
