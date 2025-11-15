@@ -544,7 +544,7 @@ const DonationHistory = () => {
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
                     <div className="border-b border-gray-200">
                         <div 
-                            className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-1.5 sm:gap-0 -mx-4 px-3 sm:mx-0 sm:px-0 scrollbar-hide"
+                            className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible gap-1 sm:gap-0 -mx-4 px-2 sm:mx-0 sm:px-0 scrollbar-hide"
                             style={{ 
                                 WebkitOverflowScrolling: 'touch',
                                 scrollbarWidth: 'none',
@@ -553,42 +553,57 @@ const DonationHistory = () => {
                         >
                         <button
                             onClick={() => setActiveTab('history')}
-                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
+                            title="My Donations"
+                            className={`flex-1 sm:flex-1 min-w-[60px] sm:min-w-0 px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[50px] sm:min-h-[44px] relative ${
                                 activeTab === 'history'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    ? 'text-[#800000] border-b-2 sm:border-b-2 border-[#800000] bg-red-50 sm:bg-transparent shadow-sm sm:shadow-none'
                                     : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
-                                <FaHandHoldingHeart className="text-base sm:text-base md:text-lg flex-shrink-0" />
-                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">My Donations</span>
+                            <div className="flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2">
+                                <FaHandHoldingHeart className="text-xl sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="hidden sm:inline truncate text-xs md:text-sm">My Donations</span>
                             </div>
+                            {/* Active indicator for mobile */}
+                            {activeTab === 'history' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:hidden bg-[#800000]"></div>
+                            )}
                         </button>
                         <button
                             onClick={() => setActiveTab('donate')}
-                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
+                            title="Make a Donation"
+                            className={`flex-1 sm:flex-1 min-w-[60px] sm:min-w-0 px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[50px] sm:min-h-[44px] relative ${
                                 activeTab === 'donate'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    ? 'text-[#800000] border-b-2 sm:border-b-2 border-[#800000] bg-red-50 sm:bg-transparent shadow-sm sm:shadow-none'
                                     : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
-                                <FaMoneyBillWave className="text-base sm:text-base md:text-lg flex-shrink-0" />
-                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">Make a Donation</span>
+                            <div className="flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2">
+                                <FaMoneyBillWave className="text-xl sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="hidden sm:inline truncate text-xs md:text-sm">Make a Donation</span>
                             </div>
+                            {/* Active indicator for mobile */}
+                            {activeTab === 'donate' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:hidden bg-[#800000]"></div>
+                            )}
                         </button>
                         <button
                             onClick={() => setActiveTab('inkind')}
-                            className={`flex-none sm:flex-1 min-w-[140px] sm:min-w-0 px-3 sm:px-4 md:px-6 py-2.5 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[44px] ${
+                            title="In-Kind Donation"
+                            className={`flex-1 sm:flex-1 min-w-[60px] sm:min-w-0 px-2 sm:px-4 md:px-6 py-3 sm:py-3 md:py-4 text-xs sm:text-sm md:text-base font-medium transition-all duration-200 rounded-lg sm:rounded-none touch-manipulation whitespace-nowrap min-h-[50px] sm:min-h-[44px] relative ${
                                 activeTab === 'inkind'
-                                    ? 'text-[#800000] border-b-2 border-[#800000] bg-red-50 shadow-sm sm:shadow-none'
+                                    ? 'text-[#800000] border-b-2 sm:border-b-2 border-[#800000] bg-red-50 sm:bg-transparent shadow-sm sm:shadow-none'
                                     : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50 active:bg-gray-100'
                             }`}
                         >
-                            <div className="flex flex-col items-center justify-center gap-1 sm:flex-row sm:gap-2 sm:space-x-2">
-                                <FaBoxOpen className="text-base sm:text-base md:text-lg flex-shrink-0" />
-                                <span className="truncate text-[10px] leading-tight sm:text-xs md:text-sm">In-Kind Donation</span>
+                            <div className="flex flex-col items-center justify-center gap-0.5 sm:flex-row sm:gap-2">
+                                <FaBoxOpen className="text-xl sm:text-base md:text-lg flex-shrink-0" />
+                                <span className="hidden sm:inline truncate text-xs md:text-sm">In-Kind Donation</span>
                             </div>
+                            {/* Active indicator for mobile */}
+                            {activeTab === 'inkind' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:hidden bg-[#800000]"></div>
+                            )}
                         </button>
                         </div>
                     </div>
