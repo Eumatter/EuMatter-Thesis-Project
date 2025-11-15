@@ -61,7 +61,8 @@ export async function submitFeedback(req, res) {
             return res.status(403).json({ success: false, message: 'Forbidden' })
         }
 
-        if (!attendance.timeOut) {
+        // Check both timeOut and checkOutTime for backward compatibility
+        if (!attendance.timeOut && !attendance.checkOutTime) {
             return res.status(400).json({ success: false, message: 'Attendance not completed yet' })
         }
 

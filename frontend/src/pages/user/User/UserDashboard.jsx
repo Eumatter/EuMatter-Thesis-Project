@@ -583,34 +583,6 @@ const UserDashboard = () => {
             <Header />
 
             <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 min-h-[calc(100vh-80px)]">
-                {/* Pending Feedback Alert - Link to Volunteer History */}
-                {pendingFeedback.length > 0 && (
-                    <section className="mb-6 sm:mb-8">
-                        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-2 border-yellow-200 rounded-2xl shadow-sm p-5 sm:p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-1">Pending Volunteer Feedback</h2>
-                                        <p className="text-sm text-gray-700">You have {pendingFeedback.length} pending feedback {pendingFeedback.length === 1 ? 'task' : 'tasks'}. Submit your feedback to keep your volunteer hours valid.</p>
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="maroon"
-                                    onClick={() => navigate('/user/volunteer-history')}
-                                    className="w-full sm:w-auto"
-                                >
-                                    View & Submit Feedback
-                                </Button>
-                            </div>
-                        </div>
-                    </section>
-                )}
-
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
                     {/* Left Column: Profile + Stats - Responsive */}
                     <aside className="lg:col-span-3 space-y-4 sm:space-y-6 lg:sticky lg:top-20 lg:self-start lg:h-[calc(100vh-120px)] lg:overflow-y-auto">
@@ -645,7 +617,16 @@ const UserDashboard = () => {
                                 </div>
                                  {/* Pending Feedback */}
                                  <button 
-                                     onClick={() => navigate('/user/volunteer-history')}
+                                     onClick={() => {
+                                         // Navigate to the first pending feedback's event attendance page
+                                         const firstFeedback = pendingFeedback[0]
+                                         const eventId = firstFeedback?.event?._id || firstFeedback?.event
+                                         if (eventId) {
+                                             navigate(`/volunteer/attendance/${eventId}`)
+                                         } else {
+                                             navigate('/user/volunteer-history')
+                                         }
+                                     }}
                                      className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50 hover:bg-yellow-100 cursor-pointer w-full"
                                  >
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
@@ -909,6 +890,41 @@ const UserDashboard = () => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Pending Feedback Alert - Below Calendar */}
+                        {pendingFeedback.length > 0 && (
+                            <div className="bg-gradient-to-br from-yellow-50 via-amber-50/80 to-yellow-50 border-2 border-yellow-200/60 rounded-xl shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-xl">
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-base sm:text-lg font-bold text-[#800000] mb-1">Pending Volunteer Feedback</h3>
+                                        <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                                            You have {pendingFeedback.length} pending feedback {pendingFeedback.length === 1 ? 'task' : 'tasks'}. Submit your feedback to keep your volunteer hours valid.
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    variant="maroon"
+                                    onClick={() => {
+                                        // Navigate to the first pending feedback's event attendance page
+                                        const firstFeedback = pendingFeedback[0]
+                                        const eventId = firstFeedback?.event?._id || firstFeedback?.event
+                                        if (eventId) {
+                                            navigate(`/volunteer/attendance/${eventId}`)
+                                        } else {
+                                            navigate('/user/volunteer-history')
+                                        }
+                                    }}
+                                    className="w-full text-sm py-2.5"
+                                >
+                                    View & Submit Feedback
+                                </Button>
+                            </div>
+                        )}
 
                     </aside>
                 </div>
