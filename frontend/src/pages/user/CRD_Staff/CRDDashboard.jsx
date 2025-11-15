@@ -742,23 +742,52 @@ const CRDDashboard = () => {
                     {/* Right Column - Users Chart - Same height as Donations */}
                     <div className="lg:col-span-5">
                         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border hover:shadow-xl transition-all duration-300 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
-                                    <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                        <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-lg sm:text-xl lg:text-2xl font-bold truncate" style={{ color: THEME_COLORS.maroon }}>Users</h3>
+                                        <p className="text-xs sm:text-sm truncate" style={{ color: THEME_COLORS.gray }}>User distribution</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold" style={{ color: THEME_COLORS.maroon }}>Users</h3>
-                                    <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>User distribution</p>
-                                </div>
+                                
+                                {/* Summary Stats - Mobile View */}
+                                {!isLoading && pieChartData.length > 0 && (
+                                    <div className="flex sm:hidden items-center gap-2 w-full">
+                                        <div className="flex-1 bg-gradient-to-r from-[#800020] to-[#9c0000] rounded-lg p-2.5 text-center shadow-sm">
+                                            <div className="text-lg font-bold text-white">{usersChartData.total}</div>
+                                            <div className="text-[10px] text-white/90 font-medium">Total</div>
+                                        </div>
+                                        <div className="flex-1 bg-blue-50 rounded-lg p-2.5 text-center border border-blue-200 shadow-sm">
+                                            <div className="text-base font-bold text-blue-700">{usersChartData.volunteers}</div>
+                                            <div className="text-[10px] text-blue-600 font-medium">Volunteers</div>
+                                        </div>
+                                        <div className="flex-1 bg-amber-50 rounded-lg p-2.5 text-center border border-amber-200 shadow-sm">
+                                            <div className="text-base font-bold text-amber-700">{usersChartData.donators}</div>
+                                            <div className="text-[10px] text-amber-600 font-medium">Donators</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                             
                             {isLoading ? (
-                                <div className="flex-1 flex items-center justify-center min-h-[250px] sm:min-h-[300px]">
+                                <div className="flex-1 flex items-center justify-center min-h-[200px] sm:min-h-[250px] lg:min-h-[300px]">
                                     <LoadingSpinner size="medium" />
+                                </div>
+                            ) : pieChartData.length === 0 ? (
+                                <div className="flex-1 flex flex-col items-center justify-center min-h-[200px] sm:min-h-[250px] lg:min-h-[300px] rounded-xl p-6 border" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
+                                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
+                                        <FaUsers className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
+                                    </div>
+                                    <p className="text-sm sm:text-base font-medium mb-1" style={{ color: THEME_COLORS.gray }}>No user data available</p>
+                                    <p className="text-xs sm:text-sm text-center" style={{ color: THEME_COLORS.grayLight }}>User statistics will appear here once users register</p>
                                 </div>
                             ) : (
                                 <>
-                                    <div className="flex justify-center mb-4 sm:mb-6 rounded-xl p-4 sm:p-6 border relative flex-1 min-h-[200px] sm:min-h-[250px]" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
+                                    {/* Chart Container - Responsive */}
+                                    <div className="flex justify-center mb-4 sm:mb-6 rounded-xl p-3 sm:p-4 lg:p-6 border relative flex-1 min-h-[180px] sm:min-h-[220px] md:min-h-[250px] lg:min-h-[280px]" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
                                                 <defs>
@@ -770,9 +799,9 @@ const CRDDashboard = () => {
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius={70}
-                                                    outerRadius={100}
-                                                    paddingAngle={5}
+                                                    innerRadius="40%"
+                                                    outerRadius="70%"
+                                                    paddingAngle={3}
                                                     dataKey="value"
                                                     animationBegin={0}
                                                     animationDuration={1500}
@@ -791,41 +820,55 @@ const CRDDashboard = () => {
                                                 <Tooltip content={<CustomPieTooltip />} />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Center label */}
+                                        {/* Center label - Responsive */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="text-center">
-                                                <div className="text-2xl sm:text-3xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
-                                                <div className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Total Users</div>
+                                            <div className="text-center px-2">
+                                                <div className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
+                                                <div className="text-[10px] sm:text-xs lg:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Total Users</div>
                                             </div>
                                         </div>
                                     </div>
                                     
-                                    {/* Legend */}
-                                    <div className="space-y-2 sm:space-y-3">
+                                    {/* Legend - Responsive Grid Layout */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                                         {pieChartData.map((item, index) => (
                                             <div 
                                                 key={index}
-                                                className="flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl border hover:shadow-md hover:scale-[1.01] transition-all duration-200 group"
+                                                className="flex items-center justify-between p-2.5 sm:p-3 lg:p-4 rounded-lg sm:rounded-xl border hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group cursor-pointer"
                                                 style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}
                                             >
-                                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                                                     <div 
-                                                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full shadow-sm group-hover:scale-125 transition-transform duration-200"
+                                                        className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 rounded-full shadow-sm group-hover:scale-125 transition-transform duration-200 flex-shrink-0"
                                                         style={{ backgroundColor: item.fill }}
                                                     ></div>
-                                                    <div>
-                                                        <span className="text-xs sm:text-sm font-bold block" style={{ color: THEME_COLORS.maroon }}>{item.name}</span>
-                                                        <span className="text-xs" style={{ color: THEME_COLORS.gray }}>{item.percentage}%</span>
+                                                    <div className="min-w-0 flex-1">
+                                                        <span className="text-xs sm:text-sm font-bold block truncate" style={{ color: THEME_COLORS.maroon }}>{item.name}</span>
+                                                        <span className="text-[10px] sm:text-xs truncate" style={{ color: THEME_COLORS.gray }}>{item.percentage}% of total</span>
                                                     </div>
                                                 </div>
                                                 <span 
-                                                    className="text-lg sm:text-xl font-bold"
+                                                    className="text-base sm:text-lg lg:text-xl font-bold ml-2 flex-shrink-0"
                                                     style={{ color: item.fill }}
                                                 >
                                                     {item.value}
                                                 </span>
                                             </div>
                                         ))}
+                                    </div>
+                                    
+                                    {/* Additional Stats - Desktop View */}
+                                    <div className="hidden sm:grid grid-cols-2 gap-3 mt-4">
+                                        <div className="bg-gradient-to-br from-[#800020]/10 to-[#800020]/5 rounded-lg p-3 border" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                            <div className="text-xs font-semibold mb-1" style={{ color: THEME_COLORS.gray }}>Total Users</div>
+                                            <div className="text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-[#D4AF37]/10 to-[#D4AF37]/5 rounded-lg p-3 border" style={{ borderColor: THEME_COLORS.goldBg }}>
+                                            <div className="text-xs font-semibold mb-1" style={{ color: THEME_COLORS.gray }}>Active</div>
+                                            <div className="text-xl font-bold" style={{ color: THEME_COLORS.gold }}>
+                                                {usersChartData.volunteers + usersChartData.donators}
+                                            </div>
+                                        </div>
                                     </div>
                                 </>
                             )}
