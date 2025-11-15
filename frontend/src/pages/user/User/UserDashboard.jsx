@@ -74,10 +74,18 @@ const UserDashboard = () => {
             setFeedbackLoading(true);
             const { data } = await api.get('/api/feedback/me/pending');
             if (data?.success) {
-                setPendingFeedback(data.records || []);
+                // Ensure we always set an array, even if records is undefined or null
+                const records = Array.isArray(data.records) ? data.records : [];
+                setPendingFeedback(records);
+                console.log('Pending feedback updated:', records.length, 'items');
+            } else {
+                // If no success, set empty array
+                setPendingFeedback([]);
             }
         } catch (error) {
             console.error('Error fetching pending feedback:', error);
+            // On error, set empty array to hide notification
+            setPendingFeedback([]);
         } finally {
             setFeedbackLoading(false);
         }
@@ -575,7 +583,8 @@ const UserDashboard = () => {
         minimumFractionDigits: 0,
         maximumFractionDigits: 1
     });
-    const pendingFeedbackCount = pendingFeedback.length;
+    // Ensure pendingFeedback is an array and get count
+    const pendingFeedbackCount = Array.isArray(pendingFeedback) ? pendingFeedback.length : 0;
 
     // Main component render
     return (
@@ -615,7 +624,8 @@ const UserDashboard = () => {
                                         {eventsJoined}
                                     </span>
                                 </div>
-                                 {/* Pending Feedback */}
+                                 {/* Pending Feedback - Only show if there are pending feedbacks */}
+                                 {Array.isArray(pendingFeedback) && pendingFeedback.length > 0 && (
                                  <button 
                                      onClick={() => {
                                          // Navigate to the first pending feedback's event attendance page
@@ -637,6 +647,7 @@ const UserDashboard = () => {
                                         {pendingFeedbackCount}
                                     </span>
                                 </button>
+                                 )}
                                  {/* Hours Volunteered */}
                                  <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-green-50">
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
@@ -892,7 +903,8 @@ const UserDashboard = () => {
                         </div>
 
                         {/* Pending Feedback Alert - Below Calendar */}
-                        {pendingFeedback.length > 0 && (
+                        {/* Only show if there are pending feedbacks and not loading */}
+                        {!feedbackLoading && Array.isArray(pendingFeedback) && pendingFeedback.length > 0 && (
                             <div className="bg-gradient-to-br from-yellow-50 via-amber-50/80 to-yellow-50 border-2 border-yellow-200/60 rounded-xl shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-xl">
                                 <div className="flex items-start gap-3 mb-3">
                                     <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
