@@ -52,14 +52,18 @@ const CRDDashboard = () => {
     
     // Donations chart filters
     const [donationFilter, setDonationFilter] = useState('monthly') // weekly, monthly, yearly
-    const [donationDateRange, setDonationDateRange] = useState({
-        start: new Date(new Date().getFullYear(), 0, 1), // January 1st
-        end: new Date()
-    })
+    const [selectedWeekDate, setSelectedWeekDate] = useState(new Date()) // For weekly filter - date to determine which week
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()) // For monthly filter - year to display
+    const [selectedYearForYearly, setSelectedYearForYearly] = useState(new Date().getFullYear()) // For yearly filter - specific year
 
     useEffect(() => {
         fetchDashboardData()
     }, [])
+
+    // Recalculate chart data when filter or date changes
+    useEffect(() => {
+        // Chart data will be recalculated on render via getDonationsChartData()
+    }, [donationFilter, selectedWeekDate, selectedYear, donations])
 
     const fetchDashboardData = async () => {
         try {
@@ -91,7 +95,7 @@ const CRDDashboard = () => {
             const pendingEvents = events.filter(event => event.status === 'Pending').length
             const approvedEvents = events.filter(event => event.status === 'Approved').length
             const totalDonations = donationsData
-                .filter(d => d.status === 'succeeded')
+                .filter(d => d.status === 'succeeded' || d.status === 'cash_completed')
                 .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
             
             // Calculate active volunteers from events (users who registered as volunteers)
@@ -182,23 +186,149 @@ const CRDDashboard = () => {
         return days
     }
 
-    // Process donations data for chart
-    const getDonationsChartData = () => {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        const monthData = months.map(() => 0)
+    // Get start of week (Sunday)
+    const getStartOfWeek = (date) => {
+        const d = new Date(date)
+        const day = d.getDay()
+        const diff = d.getDate() - day
+        return new Date(d.setDate(diff))
+    }
+
+    // Get end of week (Saturday)
+    const getEndOfWeek = (date) => {
+        const start = getStartOfWeek(date)
+        const end = new Date(start)
+        end.setDate(start.getDate() + 6)
+        return end
+    }
+
+    // Get all weeks in a month
+    const getWeeksInMonth = (year, month) => {
+        const weeks = []
+        const firstDay = new Date(year, month, 1)
+        const lastDay = new Date(year, month + 1, 0)
+        const startOfFirstWeek = getStartOfWeek(firstDay)
+        const endOfLastWeek = getEndOfWeek(lastDay)
         
+        let currentWeekStart = new Date(startOfFirstWeek)
+        
+        while (currentWeekStart <= endOfLastWeek) {
+            const weekEnd = new Date(currentWeekStart)
+            weekEnd.setDate(currentWeekStart.getDate() + 6)
+            
+            weeks.push({
+                start: new Date(currentWeekStart),
+                end: new Date(weekEnd),
+                label: `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+            })
+            
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7)
+        }
+        
+        return weeks
+    }
+
+    // Get all years from donations
+    const getAvailableYears = () => {
+        const years = new Set()
         donations
-            .filter(d => d.status === 'succeeded')
+            .filter(d => d.status === 'succeeded' || d.status === 'cash_completed')
             .forEach(donation => {
                 const date = new Date(donation.createdAt)
-                const month = date.getMonth()
-                monthData[month] += parseFloat(donation.amount) || 0
+                years.add(date.getFullYear())
             })
+        // If no years found, include current year
+        if (years.size === 0) {
+            years.add(new Date().getFullYear())
+        }
+        return Array.from(years).sort((a, b) => b - a) // Sort descending
+    }
+
+    // Process donations data for chart
+    const getDonationsChartData = () => {
+        const successfulDonations = donations.filter(d => 
+            d.status === 'succeeded' || d.status === 'cash_completed'
+        )
+
+        if (donationFilter === 'weekly') {
+            // Get the week containing selectedWeekDate
+            const weekStart = getStartOfWeek(selectedWeekDate)
+            const weekEnd = getEndOfWeek(selectedWeekDate)
+            
+            // Get all weeks in the month of selectedWeekDate
+            const year = selectedWeekDate.getFullYear()
+            const month = selectedWeekDate.getMonth()
+            const weeks = getWeeksInMonth(year, month)
+            
+            // Filter to show only weeks that have data or the selected week
+            const weekData = weeks.map(week => {
+                const weekDonations = successfulDonations.filter(donation => {
+                    const donationDate = new Date(donation.createdAt)
+                    return donationDate >= week.start && donationDate <= week.end
+                })
+                
+                const total = weekDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                
+                return {
+                    label: week.label,
+                    amount: total,
+                    weekStart: week.start,
+                    weekEnd: week.end
+                }
+            }).filter(week => week.amount > 0 || 
+                (week.weekStart <= weekEnd && week.weekEnd >= weekStart)) // Include selected week even if no data
+            
+            return weekData.length > 0 ? weekData : [{
+                label: `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                amount: 0,
+                weekStart,
+                weekEnd
+            }]
+        } else if (donationFilter === 'monthly') {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            const monthData = months.map(() => 0)
+            
+            successfulDonations.forEach(donation => {
+                const date = new Date(donation.createdAt)
+                if (date.getFullYear() === selectedYear) {
+                    const month = date.getMonth()
+                    monthData[month] += parseFloat(donation.amount) || 0
+                }
+            })
+            
+            return months.map((month, index) => ({
+                label: month,
+                amount: monthData[index]
+            }))
+        } else if (donationFilter === 'yearly') {
+            const availableYears = getAvailableYears()
+            
+            if (availableYears.length === 0) {
+                return [{
+                    label: selectedYearForYearly.toString(),
+                    amount: 0
+                }]
+            }
+            
+            const yearData = availableYears.map(year => {
+                const yearDonations = successfulDonations.filter(donation => {
+                    const date = new Date(donation.createdAt)
+                    return date.getFullYear() === year
+                })
+                
+                const total = yearDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                
+                return {
+                    label: year.toString(),
+                    amount: total
+                }
+            })
+            
+            return yearData
+        }
         
-        return months.map((month, index) => ({
-            month,
-            amount: monthData[index]
-        }))
+        // Default to monthly
+        return []
     }
 
     // Get users data for chart
@@ -421,14 +551,21 @@ const CRDDashboard = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-lg sm:text-xl lg:text-2xl font-bold" style={{ color: THEME_COLORS.maroon }}>Donations</h3>
-                                        <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>Monthly donation trends</p>
+                                        <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>
+                                            {donationFilter === 'weekly' ? 'Weekly donation trends' :
+                                             donationFilter === 'monthly' ? 'Monthly donation trends' :
+                                             'Yearly donation trends'}
+                                        </p>
                                     </div>
                                 </div>
                                 
                                 {/* Filter Buttons */}
                                 <div className="flex items-center space-x-1 sm:space-x-2 rounded-lg sm:rounded-xl p-1 sm:p-1.5" style={{ backgroundColor: THEME_COLORS.grayBg }}>
                                     <button
-                                        onClick={() => setDonationFilter('weekly')}
+                                        onClick={() => {
+                                            setDonationFilter('weekly')
+                                            setSelectedWeekDate(new Date())
+                                        }}
                                         className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'weekly'
                                                 ? 'text-white shadow-md'
@@ -439,7 +576,15 @@ const CRDDashboard = () => {
                                         Weekly
                                     </button>
                                     <button
-                                        onClick={() => setDonationFilter('monthly')}
+                                        onClick={() => {
+                                            setDonationFilter('monthly')
+                                            const years = getAvailableYears()
+                                            if (years.length > 0) {
+                                                setSelectedYear(years[0]) // Set to most recent year
+                                            } else {
+                                                setSelectedYear(new Date().getFullYear())
+                                            }
+                                        }}
                                         className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'monthly'
                                                 ? 'text-white shadow-md'
@@ -450,7 +595,13 @@ const CRDDashboard = () => {
                                         Monthly
                                     </button>
                                     <button
-                                        onClick={() => setDonationFilter('yearly')}
+                                        onClick={() => {
+                                            setDonationFilter('yearly')
+                                            const years = getAvailableYears()
+                                            if (years.length > 0) {
+                                                setSelectedYearForYearly(years[0])
+                                            }
+                                        }}
                                         className={`px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-md sm:rounded-lg transition-all duration-200 ${
                                             donationFilter === 'yearly'
                                                 ? 'text-white shadow-md'
@@ -463,14 +614,77 @@ const CRDDashboard = () => {
                                 </div>
                             </div>
                             
-                            {/* Date Range Selector */}
-                            <div className="mb-4 sm:mb-6 flex items-center space-x-2 sm:space-x-4 rounded-lg sm:rounded-xl p-2 sm:p-3 border" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
-                                <div className="flex items-center space-x-2">
-                                    <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
-                                    <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>
-                                        {donationDateRange.start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - {donationDateRange.end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                    </span>
-                                </div>
+                            {/* Date/Year Selector */}
+                            <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-lg sm:rounded-xl p-2 sm:p-3 border" style={{ backgroundColor: THEME_COLORS.whiteLight, borderColor: THEME_COLORS.maroonBg }}>
+                                {donationFilter === 'weekly' && (
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                        <div className="flex items-center space-x-2">
+                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Select Date:</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="month"
+                                                value={`${selectedWeekDate.getFullYear()}-${String(selectedWeekDate.getMonth() + 1).padStart(2, '0')}`}
+                                                onChange={(e) => {
+                                                    const [year, month] = e.target.value.split('-')
+                                                    setSelectedWeekDate(new Date(parseInt(year), parseInt(month) - 1, 1))
+                                                }}
+                                                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
+                                                style={{ borderColor: THEME_COLORS.maroonBg }}
+                                            />
+                                            <input
+                                                type="date"
+                                                value={selectedWeekDate.toISOString().split('T')[0]}
+                                                onChange={(e) => setSelectedWeekDate(new Date(e.target.value))}
+                                                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
+                                                style={{ borderColor: THEME_COLORS.maroonBg }}
+                                            />
+                                        </div>
+                                        <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
+                                            Week: {getStartOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {getEndOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
+                                    </div>
+                                )}
+                                
+                                {donationFilter === 'monthly' && (
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                        <div className="flex items-center space-x-2">
+                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Select Year:</span>
+                                        </div>
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] bg-white"
+                                            style={{ borderColor: THEME_COLORS.maroonBg }}
+                                        >
+                                            {getAvailableYears().map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                            {getAvailableYears().length === 0 && (
+                                                <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+                                            )}
+                                        </select>
+                                        <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
+                                            Showing: {selectedYear}
+                                        </span>
+                                    </div>
+                                )}
+                                
+                                {donationFilter === 'yearly' && (
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                        <div className="flex items-center space-x-2">
+                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>All Years:</span>
+                                        </div>
+                                        <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
+                                            {getAvailableYears().length > 0 
+                                                ? `Showing ${getAvailableYears().length} year(s): ${getAvailableYears().join(', ')}`
+                                                : 'No donation data available'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                             
                             {/* Chart - Flex grow to fill space */}
@@ -493,10 +707,13 @@ const CRDDashboard = () => {
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
                                             <XAxis 
-                                                dataKey="month" 
+                                                dataKey="label" 
                                                 stroke="#6b7280"
                                                 style={{ fontSize: '12px', fontWeight: 500 }}
                                                 tick={{ fill: '#6b7280' }}
+                                                angle={donationFilter === 'weekly' ? -45 : 0}
+                                                textAnchor={donationFilter === 'weekly' ? 'end' : 'middle'}
+                                                height={donationFilter === 'weekly' ? 60 : 30}
                                             />
                                             <YAxis 
                                                 stroke="#6b7280"
