@@ -35,26 +35,37 @@ async function processMissedFeedback(now) {
 
     for (const attendance of overdue) {
         const event = attendance.event
-        attendance.status = 'missed'
-        attendance.voidedHours = true
-        attendance.totalHours = 0
-        attendance.isValid = false
-        await attendance.save().catch(err => console.error('Missed feedback save error', err))
+        
+        // Check if feedback is required for this event
+        const requiresFeedback = event.feedbackRules?.requireFeedback !== false
+        
+        // Only void hours if feedback is required
+        if (requiresFeedback) {
+            attendance.status = 'missed'
+            attendance.voidedHours = true
+            attendance.totalHours = 0
+            attendance.isValid = false
+            await attendance.save().catch(err => console.error('Missed feedback save error', err))
 
-        await notifyUsers({
-            userIds: [attendance.volunteer],
-            title: 'Feedback deadline missed',
-            message: `Your volunteer hours for ${event.title} were voided because feedback was not submitted in time.`,
-            payload: { eventId: String(event._id), attendanceId: String(attendance._id) }
-        })
-
-        if (event?.createdBy) {
             await notifyUsers({
-                userIds: [event.createdBy],
-                title: 'Volunteer missed feedback',
-                message: `A volunteer missed the feedback deadline for ${event.title}.`,
+                userIds: [attendance.volunteer],
+                title: 'Feedback deadline missed',
+                message: `Your volunteer hours for ${event.title} were voided because feedback was not submitted within 24 hours after the event ended. Please contact the event organizer to reinstate your hours.`,
                 payload: { eventId: String(event._id), attendanceId: String(attendance._id) }
             })
+
+            if (event?.createdBy) {
+                await notifyUsers({
+                    userIds: [event.createdBy],
+                    title: 'Volunteer missed feedback deadline',
+                    message: `A volunteer missed the 24-hour feedback deadline for ${event.title}. Their hours have been automatically voided. You can override this decision if needed.`,
+                    payload: { eventId: String(event._id), attendanceId: String(attendance._id) }
+                })
+            }
+        } else {
+            // Feedback not required - mark as not_required instead of missed
+            attendance.status = 'not_required'
+            await attendance.save().catch(err => console.error('Not required save error', err))
         }
     }
 }

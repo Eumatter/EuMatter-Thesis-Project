@@ -625,8 +625,23 @@ const VolunteerManagement = () => {
                                 <div>
                                     <h2 className="text-xl font-semibold text-gray-900">Feedback & Evaluation Management</h2>
                                     <p className="text-sm text-gray-500 mt-1">
-                                        Review and manage volunteer feedback, ratings, and attendance hours. Volunteers must submit feedback within 24 hours after the event ends.
+                                        Review and manage volunteer feedback, ratings, and attendance hours.
                                     </p>
+                                    <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                        <div className="flex items-start">
+                                            <svg className="w-5 h-5 text-yellow-600 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                            </svg>
+                                            <div className="text-xs text-yellow-800">
+                                                <p className="font-semibold mb-1">Feedback Deadline Policy:</p>
+                                                <ul className="list-disc list-inside space-y-1">
+                                                    <li>Volunteers must submit feedback within <strong>24 hours after the event ends</strong></li>
+                                                    <li>Failure to submit feedback within the deadline results in <strong>volunteer hours being voided</strong></li>
+                                                    <li>Organizers can override this policy to reinstate hours if needed</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="bg-gradient-to-br from-[#800000] to-[#a00000] rounded-lg p-4 text-white shadow-lg">
                                     <div className="text-xs uppercase tracking-wide opacity-90 mb-1">Average Rating</div>
@@ -721,8 +736,30 @@ const VolunteerManagement = () => {
                                                         }`}>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="flex items-center">
-                                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-[#800000] to-[#a00000] flex items-center justify-center text-white font-semibold">
-                                                                        {(record.volunteer?.name || 'V')[0].toUpperCase()}
+                                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#800000] to-[#a00000]">
+                                                                        {record.volunteer?.profileImage ? (
+                                                                            <img 
+                                                                                src={record.volunteer.profileImage} 
+                                                                                alt={record.volunteer?.name || 'Volunteer'}
+                                                                                className="w-10 h-10 rounded-full object-cover"
+                                                                                onError={(e) => {
+                                                                                    // Fallback to initials if image fails to load
+                                                                                    e.target.style.display = 'none';
+                                                                                    const parent = e.target.parentElement;
+                                                                                    if (parent && !parent.querySelector('.initials')) {
+                                                                                        const initials = (record.volunteer?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                                                                                        const initialsDiv = document.createElement('div');
+                                                                                        initialsDiv.className = 'initials text-white text-xs font-semibold';
+                                                                                        initialsDiv.textContent = initials;
+                                                                                        parent.appendChild(initialsDiv);
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="text-white text-xs font-semibold">
+                                                                                {(record.volunteer?.name || 'V').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                     <div className="ml-4">
                                                                         <div className="text-sm font-medium text-gray-900">{record.volunteer?.name || 'Volunteer'}</div>
@@ -744,11 +781,18 @@ const VolunteerManagement = () => {
                                                                 </div>
                                                     </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="text-sm font-semibold text-gray-900">
-                                                                    {hoursWorked.toFixed(1)} hrs
+                                                                <div className={`text-sm font-semibold ${record.voidedHours ? 'text-red-600 line-through' : 'text-gray-900'}`}>
+                                                                    {record.voidedHours ? '0.0' : hoursWorked.toFixed(1)} hrs
                                                                 </div>
                                                                 {record.voidedHours && (
-                                                                    <div className="text-xs text-red-600 font-medium">Voided</div>
+                                                                    <div className="text-xs text-red-600 font-medium mt-1">
+                                                                        {record.status === 'missed' ? 'Voided (Deadline Missed)' : 'Voided'}
+                                                                    </div>
+                                                                )}
+                                                                {!record.voidedHours && isOverdue && record.status === 'pending' && (
+                                                                    <div className="text-xs text-yellow-600 font-medium mt-1">
+                                                                        Will be voided if not submitted
+                                                                    </div>
                                                                 )}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -814,22 +858,33 @@ const VolunteerManagement = () => {
                                                                         <div className={`text-sm ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-700'}`}>
                                                                             {deadline.toLocaleDateString('en-US', { 
                                                                                 month: 'short', 
-                                                                                day: 'numeric' 
+                                                                                day: 'numeric',
+                                                                                year: 'numeric'
                                                                             })}
                                                                         </div>
-                                                                        <div className={`text-xs ${isOverdue ? 'text-red-500' : 'text-gray-500'}`}>
+                                                                        <div className={`text-xs ${isOverdue ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
                                                                             {deadline.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                         </div>
-                                                                        {isOverdue && (
-                                                                            <div className="text-xs text-red-600 font-medium mt-1">
-                                                                                Overdue
+                                                                        {isOverdue && record.status === 'pending' && (
+                                                                            <div className="text-xs text-red-600 font-semibold mt-1 bg-red-50 px-2 py-1 rounded">
+                                                                                ⚠️ Overdue - Hours will be voided
+                                                                            </div>
+                                                                        )}
+                                                                        {isOverdue && record.status === 'missed' && (
+                                                                            <div className="text-xs text-red-600 font-semibold mt-1 bg-red-50 px-2 py-1 rounded">
+                                                                                ❌ Deadline Missed - Hours Voided
+                                                                            </div>
+                                                                        )}
+                                                                        {!isOverdue && record.status === 'pending' && (
+                                                                            <div className="text-xs text-yellow-600 font-medium mt-1">
+                                                                                {Math.ceil((deadline - now) / (1000 * 60 * 60))}h remaining
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 ) : (
                                                                     <span className="text-gray-400 text-sm">—</span>
                                                                 )}
-                                                    </td>
+                                                            </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                                 <div className="flex flex-col gap-2">
                                                                     {record.status === 'missed' || record.status === 'voided' ? (
@@ -847,23 +902,23 @@ const VolunteerManagement = () => {
                                                                         <>
                                                         <button
                                                                                 onClick={() => {
-                                                                                    if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours despite missing the deadline.`)) {
+                                                                                    if (window.confirm(`Reinstate hours for ${record.volunteer?.name || 'this volunteer'}? This will restore ${hoursWorked.toFixed(1)} hours despite missing the 24-hour feedback deadline. The volunteer can still submit feedback.`)) {
                                                                                         handleOverrideFeedback(record._id, true);
                                                                                     }
                                                                                 }}
                                                                                 className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm"
                                                                             >
-                                                                                Reinstate Hours
+                                                                                Override & Reinstate Hours
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => {
-                                                                                    if (window.confirm(`Void hours for ${record.volunteer?.name || 'this volunteer'}? This will remove ${hoursWorked.toFixed(1)} hours.`)) {
+                                                                                    if (window.confirm(`Void hours for ${record.volunteer?.name || 'this volunteer'}? This will permanently remove ${hoursWorked.toFixed(1)} hours due to missing the feedback deadline.`)) {
                                                                                         handleOverrideFeedback(record._id, false);
                                                                                     }
                                                                                 }}
                                                                                 className="px-3 py-1.5 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors shadow-sm"
                                                         >
-                                                            Void Hours
+                                                            Void Hours (Enforce Deadline)
                                                         </button>
                                                                         </>
                                                                     ) : record.status === 'submitted' || record.status === 'overridden' ? (

@@ -170,9 +170,19 @@ export async function submitFeedback(req, res) {
             return res.status(400).json({ success: false, message: 'Feedback already submitted' })
         }
 
-        // Allow feedback submission anytime after attendance is completed
-        // Removed deadline restriction - volunteers can submit feedback even after event completion
-        // The deadline is only used for reminders, not for blocking submissions
+        // Enforce 24-hour deadline: Feedback must be submitted within 24 hours after event ends
+        // Only organizers can override this restriction
+        if (isVolunteer && !organizer) {
+            const deadline = attendance.deadlineAt
+            if (deadline && new Date() > deadline) {
+                // Deadline has passed - volunteer cannot submit feedback
+                // Hours will be voided by scheduler unless organizer overrides
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Feedback deadline has passed. Please contact the event organizer to submit feedback or reinstate your hours.' 
+                })
+            }
+        }
 
         const parsedRating = Number(rating)
         if (!parsedRating || parsedRating < 1 || parsedRating > 5) {
