@@ -28,9 +28,13 @@ const QRScanner = () => {
         comment: ''
     })
     const [submittingFeedback, setSubmittingFeedback] = useState(false)
+    const [primaryKeyInput, setPrimaryKeyInput] = useState('')
+    const [showPrimaryKeyInput, setShowPrimaryKeyInput] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
     const scannerRef = useRef(null)
     const html5QrCodeRef = useRef(null)
     const lastScannedCode = useRef('')
+    const fileInputRef = useRef(null)
 
     // Fetch event data
     const fetchEventData = useCallback(async () => {
@@ -108,6 +112,19 @@ const QRScanner = () => {
             }
         }
     }, [event, userData?._id])
+
+    // Detect mobile/tablet
+    useEffect(() => {
+        const checkMobile = () => {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera
+            const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase())
+            const isSmallScreen = window.innerWidth <= 768
+            setIsMobile(isMobileDevice || isSmallScreen)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
 
     useEffect(() => {
         if (eventId) {
@@ -260,17 +277,23 @@ const QRScanner = () => {
             html5QrCodeRef.current = html5QrCode
             scannerRef.current = true
             
+            // For mobile/tablet, use environment (back camera) directly
+            // For desktop, try environment first, fallback to user (front camera)
+            const cameraConfig = isMobile 
+                ? { facingMode: "environment" } // Mobile: use back camera directly
+                : { facingMode: { exact: "environment" } } // Desktop: prefer back camera
+            
             await html5QrCode.start(
-                { facingMode: "environment" }, // Use back camera
+                cameraConfig,
                 {
                     fps: 10,
-                    qrbox: { width: 280, height: 280 },
+                    qrbox: { width: isMobile ? 250 : 280, height: isMobile ? 250 : 280 },
                     aspectRatio: 1.0,
                     disableFlip: false,
                     videoConstraints: {
-                        facingMode: "environment",
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: isMobile ? "environment" : { exact: "environment" },
+                        width: { ideal: isMobile ? 1280 : 1920 },
+                        height: { ideal: isMobile ? 720 : 1080 }
                     }
                 },
                 (decodedText) => {
@@ -284,6 +307,30 @@ const QRScanner = () => {
             setCameraError(null)
         } catch (err) {
             console.error('Error starting camera:', err)
+            // Try fallback for desktop if environment camera fails
+            if (!isMobile && err.message?.includes('environment')) {
+                try {
+                    const html5QrCode = new Html5Qrcode("qr-reader")
+                    html5QrCodeRef.current = html5QrCode
+                    await html5QrCode.start(
+                        { facingMode: "user" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 280, height: 280 },
+                            aspectRatio: 1.0
+                        },
+                        (decodedText) => {
+                            handleQRScan(decodedText)
+                        },
+                        () => {}
+                    )
+                    setScanning(true)
+                    setCameraError(null)
+                    return
+                } catch (fallbackErr) {
+                    console.error('Fallback camera also failed:', fallbackErr)
+                }
+            }
             setCameraError('Failed to access camera. Please ensure camera permissions are granted and try again.')
             setScanning(false)
             html5QrCodeRef.current = null
@@ -313,10 +360,46 @@ const QRScanner = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const handleManualQR = () => {
-        const qrCode = prompt('Enter QR code data:')
-        if (qrCode) {
-            handleQRScan(qrCode)
+    const handlePrimaryKeySubmit = () => {
+        if (!primaryKeyInput.trim()) {
+            toast.error('Please enter a primary key code')
+            return
+        }
+        handleQRScan(primaryKeyInput.trim())
+        setPrimaryKeyInput('')
+        setShowPrimaryKeyInput(false)
+    }
+
+    const handleImageUpload = async (event) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file')
+            return
+        }
+
+        try {
+            setProcessing(true)
+            const html5QrCode = new Html5Qrcode("qr-reader")
+            
+            // Scan QR code from uploaded image
+            const decodedText = await html5QrCode.scanFile(file, true)
+            
+            if (decodedText) {
+                await handleQRScan(decodedText)
+            } else {
+                toast.error('No QR code found in the image')
+            }
+        } catch (error) {
+            console.error('Error scanning image:', error)
+            toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code.')
+        } finally {
+            setProcessing(false)
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ''
+            }
         }
     }
 
@@ -517,34 +600,107 @@ const QRScanner = () => {
                                     <div className="flex-1">
                                         <p className="text-red-800 font-semibold mb-2">Camera Access Error</p>
                                         <p className="text-red-700 text-sm mb-4">{cameraError}</p>
-                            <button
-                                onClick={handleManualQR}
-                                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
-                            >
-                                Enter QR Code Manually
-                            </button>
-                        </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Instructions when not scanning */}
-                        {!scanning && !cameraError && (
-                            <div className="mt-6 text-center">
-                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-                                    <p className="text-gray-700 font-medium mb-4">
-                                        Click "Start Camera" to begin scanning QR codes for attendance
-                                    </p>
-                                    <button
-                                        onClick={handleManualQR}
-                                        className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold transform hover:scale-105 active:scale-95"
-                                    >
-                                        Enter QR Code Manually
-                                    </button>
+                                        <p className="text-red-700 text-sm mb-4">You can still record attendance using the options below.</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
                     </div>
+
+                    {/* Alternative Input Methods */}
+                    <div className="mt-6 space-y-4">
+                        {/* Primary Key Input */}
+                        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                Enter Primary Key Code
+                            </h3>
+                            {showPrimaryKeyInput ? (
+                                <div className="space-y-3">
+                                    <input
+                                        type="text"
+                                        value={primaryKeyInput}
+                                        onChange={(e) => setPrimaryKeyInput(e.target.value)}
+                                        onKeyPress={(e) => e.key === 'Enter' && handlePrimaryKeySubmit()}
+                                        placeholder="Enter the primary key code from the QR code"
+                                        className="w-full px-4 py-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                        autoFocus
+                                    />
+                                    <div className="flex gap-3">
+                            <button
+                                            onClick={handlePrimaryKeySubmit}
+                                            disabled={processing || !primaryKeyInput.trim()}
+                                            className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            Submit
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setShowPrimaryKeyInput(false)
+                                                setPrimaryKeyInput('')
+                                            }}
+                                            className="px-6 py-3 border-2 border-blue-300 text-blue-700 rounded-xl hover:bg-blue-100 transition-all duration-200 font-semibold"
+                                        >
+                                            Cancel
+                            </button>
+                        </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setShowPrimaryKeyInput(true)}
+                                    className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-200 font-semibold transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                    </svg>
+                                    Enter Primary Key Code
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Image Upload */}
+                        <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
+                            <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center gap-2">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Upload QR Code Image
+                            </h3>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageUpload}
+                                className="hidden"
+                                id="qr-image-upload"
+                            />
+                            <label
+                                htmlFor="qr-image-upload"
+                                className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Upload Image
+                            </label>
+                            <p className="text-purple-700 text-sm mt-2 text-center">Upload an image containing a QR code to scan</p>
+                        </div>
+                    </div>
+
+                        {/* Instructions when not scanning */}
+                        {!scanning && !cameraError && (
+                            <div className="mt-6 text-center">
+                            <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
+                                <p className="text-gray-700 font-medium mb-2">
+                                    {isMobile 
+                                        ? 'Click "Start Camera" to use your device camera, or use the options above'
+                                        : 'Click "Start Camera" to begin scanning QR codes, or use the options above'}
+                                </p>
+                                </div>
+                            </div>
+                        )}
                 </div>
 
                 {/* Attendance Status - Modern Card Design */}
@@ -685,22 +841,26 @@ const QRScanner = () => {
                     <ul className="space-y-3 text-blue-900">
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-blue-600 mt-1">1.</span>
-                            <span>Click "Start Camera" to activate your device camera</span>
+                            <span><strong>Camera Scanner:</strong> Click "Start Camera" to activate your device camera and scan QR codes directly</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-blue-600 mt-1">2.</span>
-                            <span>Point your camera at the QR code when you arrive (Time In)</span>
+                            <span><strong>Primary Key Code:</strong> If you have the QR code's primary key, enter it manually using the "Enter Primary Key Code" option</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-blue-600 mt-1">3.</span>
-                            <span>Scan the QR code again when you leave (Time Out)</span>
+                            <span><strong>Image Upload:</strong> Upload an image containing a QR code to scan it from the image file</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-blue-600 mt-1">4.</span>
-                            <span>Your volunteer hours will be calculated automatically</span>
+                            <span>Scan or enter the QR code when you arrive (Time In) and again when you leave (Time Out)</span>
                         </li>
                         <li className="flex items-start gap-3">
                             <span className="font-bold text-blue-600 mt-1">5.</span>
+                            <span>Your volunteer hours will be calculated automatically</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                            <span className="font-bold text-blue-600 mt-1">6.</span>
                             <span>After checkout, you'll be asked to provide feedback</span>
                         </li>
                     </ul>

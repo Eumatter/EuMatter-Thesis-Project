@@ -34,6 +34,7 @@ import DepartmentDonations from './pages/user/Department/DepartmentDonations'
 import DepartmentReports from './pages/user/Department/DepartmentReports'
 import VolunteerManagement from './pages/user/Department/VolunteerManagement'
 import QRScanner from './pages/user/QRScanner'
+import EventAttendance from './pages/user/EventAttendance'
 import DonationForm from './components/DonationForm.jsx'
 import DonationHistory from './pages/user/User/DonationHistory.jsx'
 import PaymentProcessing from './pages/PaymentProcessing.jsx'
@@ -200,6 +201,7 @@ const AppContent = () => {
                 <Route path="/department/calendar" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><CalendarPage /></ProtectedRoute>} />
 
                 {/* Volunteer Routes */}
+                <Route path="/volunteer/attendance/:eventId" element={<ProtectedRoute><EventAttendance /></ProtectedRoute>} />
                 <Route path="/volunteer/qr-scanner/:eventId" element={<ProtectedRoute><QRScanner /></ProtectedRoute>} />
 
                     {/* Donations */}
