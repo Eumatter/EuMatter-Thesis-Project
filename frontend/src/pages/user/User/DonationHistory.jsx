@@ -258,15 +258,6 @@ const DonationHistory = () => {
         setFilteredDonations(filtered)
     }
 
-    const downloadReceipt = async (id) => {
-        try {
-            const url = `${backendUrl}api/donations/${id}/receipt`
-            window.open(url, '_blank')
-            toast.success('Receipt download started')
-        } catch (err) {
-            toast.error('Failed to download receipt')
-        }
-    }
 
     const handleDonate = async (e) => {
         e.preventDefault()
@@ -659,13 +650,9 @@ const DonationHistory = () => {
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                                 {donation.status === 'succeeded' && (
-                                                                    <button
-                                                                        onClick={() => downloadReceipt(donation._id)}
-                                                                        className="inline-flex items-center space-x-2 text-[#800000] hover:text-[#9c0000] transition-colors"
-                                                                    >
-                                                                        <FaFilePdf />
-                                                                        <span>Receipt</span>
-                                                                    </button>
+                                                                    <span className="text-green-600 text-xs font-medium">
+                                                                        ✓ Receipt sent to email
+                                                                    </span>
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -707,13 +694,15 @@ const DonationHistory = () => {
                                                     )}
                                                     
                                                     {donation.status === 'succeeded' && (
-                                                        <button
-                                                            onClick={() => downloadReceipt(donation._id)}
-                                                            className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#9c0000] transition-colors"
-                                                        >
-                                                            <FaFilePdf />
-                                                            <span>Download Receipt</span>
-                                                        </button>
+                                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 text-green-700">
+                                                                <FaCheckCircle />
+                                                                <span className="text-sm font-medium">Receipt sent to your email</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-600 mt-2">
+                                                                Your official acknowledgment receipt has been sent to <strong>{donation.donorEmail}</strong>. Please check your email inbox.
+                                                            </p>
+                                                        </div>
                         )}
                     </div>
                 ))}

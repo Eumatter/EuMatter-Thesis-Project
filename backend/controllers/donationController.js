@@ -5,48 +5,395 @@ import donationModel from "../models/donationModel.js";
 import paymongoClient, { getPaymongoPublicKey } from "../config/paymongo.js";
 import { notifyUsers } from "../utils/notify.js";
 import eventModel from "../models/eventModel.js";
+import transporter from "../config/nodemailer.js";
+import userModel from "../models/userModel.js";
 
 
 
 const toCentavos = (amount) => Math.round(Number(amount) * 100);
 
-// Helper function to send donation notifications
+// Generate receipt PDF as buffer (in-memory, not saved to disk)
+const generateReceiptPDF = async (donation) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const doc = new pdfkit({ size: "A4", margin: 60 });
+            const chunks = [];
+            
+            doc.on('data', chunk => chunks.push(chunk));
+            doc.on('end', () => resolve(Buffer.concat(chunks)));
+            doc.on('error', reject);
+            
+            // Header Section with Maroon Background
+            doc.save();
+            doc.fillColor('#800020');
+            doc.rect(0, 0, 612, 130);
+            doc.fill();
+            doc.restore();
+            
+            // Header Text (White)
+            doc.fillColor('#FFFFFF');
+            doc.fontSize(34).font('Helvetica-Bold');
+            doc.text('EUMATTER', 60, 40, { align: 'center', width: 492 });
+            doc.fontSize(15).font('Helvetica');
+            doc.text('Community Relations Department', 60, 75, { align: 'center', width: 492 });
+            doc.fontSize(12);
+            doc.text('Enverga University', 60, 95, { align: 'center', width: 492 });
+            
+            // Reset color for body
+            doc.fillColor('#000000');
+            doc.strokeColor('#000000');
+            
+            // Receipt Title
+            doc.y = 160;
+            doc.fontSize(28).font('Helvetica-Bold');
+            doc.text('DONATION RECEIPT', 60, doc.y, { align: 'center', width: 492 });
+            
+            // Receipt Number
+            doc.y += 30;
+            doc.fontSize(12).font('Helvetica');
+            doc.fillColor('#666666');
+            doc.text(`Receipt No: ${donation._id.toString().substring(0, 8).toUpperCase()}`, 60, doc.y, { align: 'center', width: 492 });
+            doc.fillColor('#000000');
+            
+            // Separator Line
+            doc.y += 25;
+            doc.strokeColor('#800020');
+            doc.lineWidth(2);
+            doc.moveTo(60, doc.y);
+            doc.lineTo(552, doc.y);
+            doc.stroke();
+            
+            // Donor Information Section
+            doc.y += 25;
+            doc.fontSize(16).font('Helvetica-Bold');
+            doc.text('Donor Information', 60, doc.y, { underline: true });
+            
+            doc.y += 25;
+            doc.fontSize(13).font('Helvetica');
+            doc.text(`Name: ${donation.donorName}`, 85, doc.y);
+            doc.y += 20;
+            doc.text(`Email: ${donation.donorEmail}`, 85, doc.y);
+            
+            // Donation Details Section
+            doc.y += 30;
+            doc.fontSize(16).font('Helvetica-Bold');
+            doc.text('Donation Details', 60, doc.y, { underline: true });
+            
+            doc.y += 25;
+            // Amount - Large and prominent
+            doc.fontSize(20).font('Helvetica-Bold');
+            doc.fillColor('#800020');
+            doc.text(`Amount: PHP ${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 85, doc.y);
+            doc.fillColor('#000000');
+            
+            doc.y += 25;
+            doc.fontSize(13).font('Helvetica');
+            doc.text(`Payment Method: ${donation.paymentMethod.charAt(0).toUpperCase() + donation.paymentMethod.slice(1)}`, 85, doc.y);
+            
+            if (donation.event && donation.event.title) {
+                doc.y += 20;
+                doc.text(`Event: ${donation.event.title}`, 85, doc.y);
+            }
+            
+            // Date and Time
+            doc.y += 20;
+            const date = new Date(donation.createdAt);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(`Date: ${formattedDate}`, 85, doc.y);
+            
+            if (donation.paymongoReferenceId) {
+                doc.y += 20;
+                doc.fontSize(10);
+                doc.fillColor('#666666');
+                doc.text(`Payment Transaction ID: ${donation.paymongoReferenceId}`, 85, doc.y);
+                doc.y += 15;
+                doc.fontSize(9);
+                doc.fillColor('#888888');
+                doc.text(`Note: For payment transaction details, please refer to your ${donation.paymentMethod === 'gcash' ? 'GCash' : donation.paymentMethod === 'paymaya' ? 'PayMaya' : donation.paymentMethod.toUpperCase()} receipt.`, 85, doc.y, { width: 472, align: 'left' });
+                doc.fillColor('#000000');
+            }
+            
+            // Message Section (if exists)
+            if (donation.message && donation.message.trim() !== '') {
+                doc.y += 30;
+                doc.fontSize(16).font('Helvetica-Bold');
+                doc.text('Message', 60, doc.y, { underline: true });
+                doc.y += 25;
+                doc.fontSize(12).font('Helvetica');
+                doc.fillColor('#333333');
+                doc.text(donation.message, 85, doc.y, { width: 472, align: 'left' });
+                doc.y += 40;
+                doc.fillColor('#000000');
+            }
+            
+            // Separator Line
+            doc.y += 25;
+            doc.strokeColor('#800020');
+            doc.lineWidth(2);
+            doc.moveTo(60, doc.y);
+            doc.lineTo(552, doc.y);
+            doc.stroke();
+            
+            // Status Badge
+            doc.y += 25;
+            const statusY = doc.y;
+            const statusWidth = 220;
+            const statusX = (612 - statusWidth) / 2;
+            const statusHeight = 35;
+            
+            doc.save();
+            doc.fillColor('#E6F7E6');
+            doc.rect(statusX, statusY, statusWidth, statusHeight);
+            doc.fill();
+            
+            doc.strokeColor('#006600');
+            doc.lineWidth(2);
+            doc.rect(statusX, statusY, statusWidth, statusHeight);
+            doc.stroke();
+            doc.restore();
+            
+            doc.fillColor('#006600');
+            doc.fontSize(14).font('Helvetica-Bold');
+            doc.text('✓ PAYMENT SUCCEEDED', statusX, statusY + 11, { 
+                width: statusWidth, 
+                align: 'center'
+            });
+            doc.fillColor('#000000');
+            
+            doc.y = statusY + statusHeight + 20;
+            
+            // Footer Section
+            doc.fontSize(12).font('Helvetica');
+            doc.fillColor('#666666');
+            doc.text('Thank you for your generous donation!', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 20;
+            doc.fontSize(11);
+            doc.text('This is an official acknowledgment receipt from EUMATTER.', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 15;
+            doc.fontSize(10);
+            doc.fillColor('#555555');
+            doc.text('This receipt serves as official proof of your donation for organizational records.', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 15;
+            doc.text('For payment transaction details, please refer to your payment provider receipt', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 15;
+            doc.text('(GCash/PayMaya/Card transaction receipt).', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 20;
+            doc.fontSize(11);
+            doc.fillColor('#666666');
+            doc.text('For any inquiries, please contact the Community Relations Department.', 60, doc.y, { align: 'center', width: 492 });
+            
+            // Footer with organization info
+            doc.y += 35;
+            doc.fontSize(9);
+            doc.fillColor('#999999');
+            doc.text('EUMATTER - Community Relations Department', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 15;
+            doc.text('Enverga University | www.mseuf.edu.ph', 60, doc.y, { align: 'center', width: 492 });
+            doc.y += 15;
+            doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 60, doc.y, { align: 'center', width: 492 });
+            
+            doc.end();
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
+// Send receipt via email
+const sendReceiptEmail = async (donation, recipientEmail, recipientName, emailType = 'donor') => {
+    try {
+        if (!recipientEmail) {
+            console.log('No email address provided for receipt');
+            return { sent: false, reason: 'No email address' };
+        }
+
+        // Generate PDF buffer
+        const pdfBuffer = await generateReceiptPDF(donation);
+        
+        // Determine email subject and body based on recipient type
+        let subject, htmlBody;
+        const receiptFileName = `EUMATTER-Donation-Receipt-${donation._id.toString().substring(0, 8).toUpperCase()}.pdf`;
+        
+        if (emailType === 'donor') {
+            subject = `Thank You for Your Donation - Official Receipt`;
+            htmlBody = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #800020 0%, #a00030 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">EUMATTER</h1>
+                        <p style="color: #f0f0f0; margin: 5px 0 0 0;">Community Relations Department</p>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #800020; margin-top: 0;">Thank You for Your Generous Donation!</h2>
+                        <p style="color: #333; line-height: 1.6;">
+                            Dear ${donation.donorName},
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            We are grateful for your donation of <strong>₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong>${donation.event && donation.event.title ? ` to "${donation.event.title}"` : ''}.
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            Your official acknowledgment receipt is attached to this email. This receipt serves as official proof of your donation for organizational records.
+                        </p>
+                        <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                            <strong>Note:</strong> For payment transaction details, please refer to your ${donation.paymentMethod === 'gcash' ? 'GCash' : donation.paymentMethod === 'paymaya' ? 'PayMaya' : donation.paymentMethod.toUpperCase()} receipt.
+                        </p>
+                        <p style="color: #333; line-height: 1.6; margin-top: 20px;">
+                            Your contribution makes a significant difference in our community initiatives.
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            For any inquiries, please contact the Community Relations Department.
+                        </p>
+                        <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                            Best regards,<br>
+                            <strong>EUMATTER - Community Relations Department</strong><br>
+                            Enverga University
+                        </p>
+                    </div>
+                </div>
+            `;
+        } else if (emailType === 'organizer') {
+            subject = `Donation Received for Your Event - Receipt`;
+            htmlBody = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #800020 0%, #a00030 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">EUMATTER</h1>
+                        <p style="color: #f0f0f0; margin: 5px 0 0 0;">Community Relations Department</p>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #800020; margin-top: 0;">Donation Received for Your Event</h2>
+                        <p style="color: #333; line-height: 1.6;">
+                            Dear ${recipientName || 'Event Organizer'},
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            A donation of <strong>₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</strong> has been received for your event <strong>"${donation.event?.title || 'N/A'}"</strong>.
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            <strong>Donor:</strong> ${donation.donorName} (${donation.donorEmail})
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            The official acknowledgment receipt is attached for your records.
+                        </p>
+                        <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                            Best regards,<br>
+                            <strong>EUMATTER - Community Relations Department</strong><br>
+                            Enverga University
+                        </p>
+                    </div>
+                </div>
+            `;
+        } else { // CRD staff
+            subject = `Donation Transaction - Receipt for Transparency`;
+            htmlBody = `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #800020 0%, #a00030 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 28px;">EUMATTER</h1>
+                        <p style="color: #f0f0f0; margin: 5px 0 0 0;">Community Relations Department</p>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #800020; margin-top: 0;">Donation Transaction Record</h2>
+                        <p style="color: #333; line-height: 1.6;">
+                            A new donation has been processed in the system.
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            <strong>Amount:</strong> ₱${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}<br>
+                            <strong>Donor:</strong> ${donation.donorName} (${donation.donorEmail})<br>
+                            <strong>Payment Method:</strong> ${donation.paymentMethod.charAt(0).toUpperCase() + donation.paymentMethod.slice(1)}<br>
+                            ${donation.event?.title ? `<strong>Event:</strong> ${donation.event.title}<br>` : ''}
+                            <strong>Transaction ID:</strong> ${donation.paymongoReferenceId || 'N/A'}
+                        </p>
+                        <p style="color: #333; line-height: 1.6;">
+                            The official acknowledgment receipt is attached for transparency and record-keeping purposes.
+                        </p>
+                        <p style="color: #666; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                            This is an automated notification for transparency monitoring.<br>
+                            <strong>EUMATTER - Community Relations Department</strong><br>
+                            Enverga University
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+            to: recipientEmail,
+            subject: subject,
+            html: htmlBody,
+            attachments: [
+                {
+                    filename: receiptFileName,
+                    content: pdfBuffer,
+                    contentType: 'application/pdf'
+                }
+            ]
+        };
+        
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Receipt email sent to ${recipientEmail} (${emailType})`);
+        return { sent: true };
+    } catch (error) {
+        console.error(`❌ Error sending receipt email to ${recipientEmail}:`, error);
+        return { sent: false, error: error.message };
+    }
+};
+
+// Helper function to send donation notifications and email receipts
 const sendDonationNotifications = async (donation) => {
   try {
-    const eventTitle = donation.event ? (await eventModel.findById(donation.event).select('title').lean())?.title : 'General';
+    // Populate donation with event details for receipt generation
+    const donationWithEvent = await donationModel.findById(donation._id).populate('event', 'title createdBy').lean();
+    if (!donationWithEvent) {
+      console.error('Donation not found for notifications');
+      return;
+    }
     
-    // Notify donor (if logged in) with confirmation message
-    if (donation.user) {
-      const donorId = donation.user._id || donation.user;
+    const eventTitle = donationWithEvent.event?.title || 'General';
+    
+    // Send receipt email to donor
+    if (donationWithEvent.donorEmail) {
+      await sendReceiptEmail(donationWithEvent, donationWithEvent.donorEmail, donationWithEvent.donorName, 'donor');
+    }
+    
+    // Notify donor (if logged in) with in-app notification
+    if (donationWithEvent.user) {
+      const donorId = donationWithEvent.user._id || donationWithEvent.user;
       if (donorId) {
         await notifyUsers({
           userIds: [donorId],
           title: "Donation Successful",
-          message: `Thank you for your donation of ₱${donation.amount.toLocaleString()}${donation.event ? ` to "${eventTitle}"` : ''}. Your contribution makes a difference!`,
+          message: `Thank you for your donation of ₱${donationWithEvent.amount.toLocaleString()}${donationWithEvent.event ? ` to "${eventTitle}"` : ''}. Your receipt has been sent to your email.`,
           payload: {
-            donationId: donation._id,
-            eventId: donation.event,
-            amount: donation.amount,
+            donationId: donationWithEvent._id,
+            eventId: donationWithEvent.event?._id,
+            amount: donationWithEvent.amount,
             type: "donation_success"
           }
         });
       }
     }
     
-    // Notify event creator (if event-specific donation)
-    if (donation.event) {
-      const event = await eventModel.findById(donation.event).populate('createdBy', '_id').lean();
-      if (event && event.createdBy) {
+    // Send receipt email to event organizer (if event-specific donation)
+    if (donationWithEvent.event && donationWithEvent.event.createdBy) {
+      const event = await eventModel.findById(donationWithEvent.event._id || donationWithEvent.event).populate('createdBy', 'name email').lean();
+      if (event && event.createdBy && event.createdBy.email) {
+        await sendReceiptEmail(donationWithEvent, event.createdBy.email, event.createdBy.name, 'organizer');
+        
+        // In-app notification
         const creatorId = event.createdBy._id || event.createdBy;
         if (creatorId) {
           await notifyUsers({
             userIds: [creatorId],
             title: "Donation Received",
-            message: `₱${donation.amount.toLocaleString()} donation received for your event "${eventTitle}"`,
+            message: `₱${donationWithEvent.amount.toLocaleString()} donation received for your event "${eventTitle}". Receipt sent to your email.`,
             payload: {
-              donationId: donation._id,
-              eventId: donation.event,
-              amount: donation.amount,
+              donationId: donationWithEvent._id,
+              eventId: donationWithEvent.event._id || donationWithEvent.event,
+              amount: donationWithEvent.amount,
               type: "donation_received"
             }
           });
@@ -54,28 +401,35 @@ const sendDonationNotifications = async (donation) => {
       }
     }
     
-    // Notify CRD Staff for tracking
-    const userModel = (await import("../models/userModel.js")).default;
+    // Send receipt email to CRD Staff for transparency
     const crdStaff = await userModel.find({ 
       role: { $in: ["CRD Staff", "System Administrator"] } 
-    }).select('_id').lean();
-    const staffIds = crdStaff.map(staff => staff._id);
+    }).select('_id email name').lean();
     
+    // Send email receipts to CRD staff
+    for (const staff of crdStaff) {
+      if (staff.email) {
+        await sendReceiptEmail(donationWithEvent, staff.email, staff.name, 'crd');
+      }
+    }
+    
+    // In-app notifications for CRD staff
+    const staffIds = crdStaff.map(staff => staff._id);
     if (staffIds.length > 0) {
       await notifyUsers({
         userIds: staffIds,
         title: "Donation Received",
-        message: `₱${donation.amount.toLocaleString()} donation received${donation.event ? ` for "${eventTitle}"` : ''}`,
+        message: `₱${donationWithEvent.amount.toLocaleString()} donation received${donationWithEvent.event ? ` for "${eventTitle}"` : ''}. Receipt sent to your email for transparency.`,
         payload: {
-          donationId: donation._id,
-          eventId: donation.event,
-          amount: donation.amount,
+          donationId: donationWithEvent._id,
+          eventId: donationWithEvent.event?._id,
+          amount: donationWithEvent.amount,
           type: "donation_received"
         }
       });
     }
   } catch (error) {
-    console.error("Error sending donation notifications:", error);
+    console.error("Error sending donation notifications and receipts:", error);
     // Don't fail the donation process if notifications fail
   }
 };
@@ -670,189 +1024,33 @@ export const getDonationById = async (req, res) => {
     }
 };
 
+// Keep download receipt for CRD staff only (for transparency/monitoring)
 export const downloadReceipt = async (req, res) => {
     try {
         const { id } = req.params;
+        const user = req.user;
+        
+        // Only allow CRD Staff and System Administrators to download receipts
+        const allowedRoles = ['CRD Staff', 'System Administrator'];
+        if (!allowedRoles.includes(user?.role)) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "Access denied. Receipts are sent via email. Please check your email for the receipt." 
+            });
+        }
+        
         const donation = await donationModel.findById(id).populate('event', 'title');
         if (!donation) return res.status(404).json({ success: false, message: "Not found" });
         if (donation.status !== "succeeded") {
             return res.status(400).json({ success: false, message: "Receipt available only for completed donations" });
         }
-        const receiptsDir = path.join(process.cwd(), "backend", "uploads", "receipts");
-        if (!fs.existsSync(receiptsDir)) fs.mkdirSync(receiptsDir, { recursive: true });
-        const filePath = path.join(receiptsDir, `${donation._id}.pdf`);
-        const doc = new pdfkit({ size: "A4", margin: 60 });
-        const stream = fs.createWriteStream(filePath);
-        doc.pipe(stream);
         
-        // Header Section with Maroon Background
-        doc.save();
-        doc.fillColor('#800020');
-        doc.rect(0, 0, 612, 130);
-        doc.fill();
-        doc.restore();
+        // Generate PDF buffer
+        const pdfBuffer = await generateReceiptPDF(donation);
         
-        // Header Text (White)
-        doc.fillColor('#FFFFFF');
-        doc.fontSize(34).font('Helvetica-Bold');
-        doc.text('EUMATTER', 60, 40, { align: 'center', width: 492 });
-        doc.fontSize(15).font('Helvetica');
-        doc.text('Community Relations Department', 60, 75, { align: 'center', width: 492 });
-        doc.fontSize(12);
-        doc.text('Enverga University', 60, 95, { align: 'center', width: 492 });
-        
-        // Reset color for body
-        doc.fillColor('#000000');
-        doc.strokeColor('#000000');
-        
-        // Receipt Title
-        doc.y = 160;
-        doc.fontSize(28).font('Helvetica-Bold');
-        doc.text('DONATION RECEIPT', 60, doc.y, { align: 'center', width: 492 });
-        
-        // Receipt Number
-        doc.y += 30;
-        doc.fontSize(12).font('Helvetica');
-        doc.fillColor('#666666');
-        doc.text(`Receipt No: ${donation._id.toString().substring(0, 8).toUpperCase()}`, 60, doc.y, { align: 'center', width: 492 });
-        doc.fillColor('#000000');
-        
-        // Separator Line
-        doc.y += 25;
-        doc.strokeColor('#800020');
-        doc.lineWidth(2);
-        doc.moveTo(60, doc.y);
-        doc.lineTo(552, doc.y);
-        doc.stroke();
-        
-        // Donor Information Section
-        doc.y += 25;
-        doc.fontSize(16).font('Helvetica-Bold');
-        doc.text('Donor Information', 60, doc.y, { underline: true });
-        
-        doc.y += 25;
-        doc.fontSize(13).font('Helvetica');
-        doc.text(`Name: ${donation.donorName}`, 85, doc.y);
-        doc.y += 20;
-        doc.text(`Email: ${donation.donorEmail}`, 85, doc.y);
-        
-        // Donation Details Section
-        doc.y += 30;
-        doc.fontSize(16).font('Helvetica-Bold');
-        doc.text('Donation Details', 60, doc.y, { underline: true });
-        
-        doc.y += 25;
-        // Amount - Large and prominent
-        doc.fontSize(20).font('Helvetica-Bold');
-        doc.fillColor('#800020');
-        doc.text(`Amount: PHP ${donation.amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 85, doc.y);
-        doc.fillColor('#000000');
-        
-        doc.y += 25;
-        doc.fontSize(13).font('Helvetica');
-        doc.text(`Payment Method: ${donation.paymentMethod.charAt(0).toUpperCase() + donation.paymentMethod.slice(1)}`, 85, doc.y);
-        
-        if (donation.event && donation.event.title) {
-            doc.y += 20;
-            doc.text(`Event: ${donation.event.title}`, 85, doc.y);
-        }
-        
-        // Date and Time
-        doc.y += 20;
-        const date = new Date(donation.createdAt);
-        const formattedDate = date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        doc.text(`Date: ${formattedDate}`, 85, doc.y);
-        
-        if (donation.paymongoReferenceId) {
-            doc.y += 20;
-            doc.fontSize(10);
-            doc.fillColor('#666666');
-            doc.text(`Transaction ID: ${donation.paymongoReferenceId}`, 85, doc.y);
-            doc.fillColor('#000000');
-        }
-        
-        // Message Section (if exists)
-        if (donation.message && donation.message.trim() !== '') {
-            doc.y += 30;
-            doc.fontSize(16).font('Helvetica-Bold');
-            doc.text('Message', 60, doc.y, { underline: true });
-            doc.y += 25;
-            doc.fontSize(12).font('Helvetica');
-            doc.fillColor('#333333');
-            doc.text(donation.message, 85, doc.y, { width: 472, align: 'left' });
-            doc.y += 40; // Approximate height for message
-            doc.fillColor('#000000');
-        }
-        
-        // Separator Line
-        doc.y += 25;
-        doc.strokeColor('#800020');
-        doc.lineWidth(2);
-        doc.moveTo(60, doc.y);
-        doc.lineTo(552, doc.y);
-        doc.stroke();
-        
-        // Status Badge
-        doc.y += 25;
-        const statusY = doc.y;
-        const statusWidth = 220;
-        const statusX = (612 - statusWidth) / 2;
-        const statusHeight = 35;
-        
-        // Draw filled rectangle with border
-        doc.save();
-        doc.fillColor('#E6F7E6');
-        doc.rect(statusX, statusY, statusWidth, statusHeight);
-        doc.fill();
-        
-        doc.strokeColor('#006600');
-        doc.lineWidth(2);
-        doc.rect(statusX, statusY, statusWidth, statusHeight);
-        doc.stroke();
-        doc.restore();
-        
-        // Add text on top
-        doc.fillColor('#006600');
-        doc.fontSize(14).font('Helvetica-Bold');
-        doc.text('✓ PAYMENT SUCCEEDED', statusX, statusY + 11, { 
-            width: statusWidth, 
-            align: 'center'
-        });
-        doc.fillColor('#000000');
-        
-        // Move cursor below badge
-        doc.y = statusY + statusHeight + 20;
-        
-        // Footer Section
-        doc.fontSize(12).font('Helvetica');
-        doc.fillColor('#666666');
-        doc.text('Thank you for your generous donation!', 60, doc.y, { align: 'center', width: 492 });
-        doc.y += 20;
-        doc.fontSize(11);
-        doc.text('This receipt serves as proof of your donation to EUMATTER.', 60, doc.y, { align: 'center', width: 492 });
-        doc.y += 18;
-        doc.text('For any inquiries, please contact the Community Relations Department.', 60, doc.y, { align: 'center', width: 492 });
-        
-        // Footer with organization info
-        doc.y += 35;
-        doc.fontSize(9);
-        doc.fillColor('#999999');
-        doc.text('EUMATTER - Community Relations Department', 60, doc.y, { align: 'center', width: 492 });
-        doc.y += 15;
-        doc.text('Enverga University | www.mseuf.edu.ph', 60, doc.y, { align: 'center', width: 492 });
-        doc.y += 15;
-        doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, 60, doc.y, { align: 'center', width: 492 });
-        
-        doc.end();
-        stream.on("finish", () => {
-            res.download(filePath, `donation-receipt-${donation._id}.pdf`);
-        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=EUMATTER-Donation-Receipt-${donation._id.toString().substring(0, 8).toUpperCase()}.pdf`);
+        res.send(pdfBuffer);
     } catch (error) {
         console.error('Receipt generation error:', error);
         return res.status(500).json({ success: false, message: error.message });
