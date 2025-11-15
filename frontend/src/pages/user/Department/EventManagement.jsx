@@ -2900,6 +2900,15 @@ const EventManagement = () => {
                                             </div>
                                             <div className="flex flex-col gap-2 lg:items-end">
                                                 <div className="flex flex-wrap gap-2">
+                                                    <button 
+                                                        className="px-3 py-2 rounded-lg bg-gradient-to-r from-[#800000] to-[#900000] text-white hover:shadow-lg font-semibold transition-all flex items-center gap-1.5" 
+                                                        onClick={() => navigate(`/department/events/${event._id}/details`)}
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                        </svg>
+                                                        Analytics
+                                                    </button>
                                                     {event.status === 'Ongoing' && (
                                                         <button className="px-3 py-2 rounded-lg border border-green-200 text-green-700 bg-white hover:bg-green-50 hover:shadow" onClick={() => { setAttendanceForEvent(event); setShowAttendanceModal(true); }}>Attendance QR</button>
                                                     )}
@@ -2952,6 +2961,12 @@ const EventManagement = () => {
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex flex-wrap gap-2">
+                                                        <button 
+                                                            className="px-3 py-1.5 rounded-full bg-gradient-to-r from-[#800000] to-[#900000] text-white text-xs font-semibold hover:shadow-md transition-all" 
+                                                            onClick={() => navigate(`/department/events/${event._id}/details`)}
+                                                        >
+                                                            Analytics
+                                                        </button>
                                                         <button className="px-3 py-1.5 rounded-full bg-[#800000] text-white text-xs font-semibold" onClick={() => handleEditClick(event)}>Edit</button>
                                                         <button className="px-3 py-1.5 rounded-full border border-gray-300 text-xs font-semibold" onClick={() => handlePostFromProposal(event)}>Post</button>
                                                         <button className="px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-600 font-semibold" onClick={() => handleCloneEvent(event)}>Duplicate</button>

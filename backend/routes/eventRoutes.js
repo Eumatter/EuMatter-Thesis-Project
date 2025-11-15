@@ -17,6 +17,7 @@ import {
     duplicateEvent,
     updateEventStatus
 } from "../controllers/eventController.js";
+import { getEventAnalytics } from "../controllers/eventAnalyticsController.js";
 
 const router = express.Router();
 
@@ -49,6 +50,9 @@ router.get("/", getEvents);
 
 // GET Events Created by Authenticated User - Only for Department/Organization users
 router.get("/my-events", userAuth, requireRole(["Department/Organization"]), getUserEvents);
+
+// GET Event Analytics - Department/Organization, CRD Staff, System Administrator
+router.get("/:eventId/analytics", userAuth, requireRole(["Department/Organization", "CRD Staff", "System Administrator"]), getEventAnalytics);
 
 // GET Event by ID
 router.get("/:id", getEventById);
