@@ -1006,7 +1006,7 @@ const QRScanner = () => {
                         <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                             {activeScanner === 'timein' ? 'Scanning for Time In' : 'Scanning for Time Out'}
                         </h3>
-                        <button
+                                <button
                             onClick={stopScanning}
                             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold flex items-center gap-2"
                         >
@@ -1014,8 +1014,8 @@ const QRScanner = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                             Stop
-                        </button>
-                    </div>
+                                </button>
+                            </div>
                     <div className="relative">
                         <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl overflow-hidden shadow-2xl">
                             {/* Always render qr-reader element - it must be in DOM for Html5Qrcode to work */}
@@ -1040,8 +1040,8 @@ const QRScanner = () => {
                         <div className="mt-4 bg-red-50 border-2 border-red-200 rounded-xl p-4">
                             <p className="text-red-800 font-semibold mb-2">Camera Error</p>
                             <p className="text-red-700 text-sm">{cameraError}</p>
-                        </div>
-                    )}
+                </div>
+            )}
                 </div>
 
                 {/* Processing Overlay */}

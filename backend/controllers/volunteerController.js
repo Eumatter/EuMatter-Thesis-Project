@@ -896,14 +896,20 @@ export const recordAttendance = async (req, res) => {
             }
 
         } else if (action === 'timeout') {
-            if (!attendanceRecord || !attendanceRecord.timeIn) {
+            // Check attendanceDoc first (source of truth) - it's the standalone collection
+            // Then check attendanceRecord as fallback
+            const hasTimeIn = attendanceDoc?.checkInTime || attendanceDoc?.timeIn || attendanceRecord?.timeIn;
+            
+            if (!hasTimeIn) {
                 return res.status(400).json({ 
                     success: false, 
                     message: "You must record time in before time out" 
                 });
             }
-
-            if (attendanceRecord.timeOut) {
+            
+            // Check if already timed out
+            const hasTimeOut = attendanceDoc?.checkOutTime || attendanceDoc?.timeOut || attendanceRecord?.timeOut;
+            if (hasTimeOut) {
                 return res.status(400).json({ 
                     success: false, 
                     message: "You have already recorded time out for today" 
@@ -917,10 +923,8 @@ export const recordAttendance = async (req, res) => {
             const lastDay = new Date(event.endDate.getFullYear(), event.endDate.getMonth(), event.endDate.getDate());
             const isLastDay = !isMultiDay || (today.getTime() === lastDay.getTime());
 
-            attendanceRecord.timeOut = now;
-            
-            // Calculate hours worked for this day
-            const timeIn = attendanceRecord.timeIn || attendanceDoc?.checkInTime || attendanceDoc?.timeIn;
+            // Get time in from any available source (prioritize attendanceDoc)
+            const timeIn = attendanceDoc?.checkInTime || attendanceDoc?.timeIn || attendanceRecord?.timeIn;
             if (!timeIn) {
                 return res.status(400).json({ 
                     success: false, 
@@ -937,19 +941,53 @@ export const recordAttendance = async (req, res) => {
                 totalHours = attendanceDoc.previousDayHours + hoursWorkedTodayRounded;
             }
             
-            attendanceRecord.totalHours = totalHours;
-
-            if (!attendanceDoc || (!attendanceDoc.checkInTime && !attendanceDoc.timeIn)) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "You must record time in before time out" 
-                });
+            // Update or create attendanceRecord
+            if (!attendanceRecord) {
+                // Create attendanceRecord if it doesn't exist
+                attendanceRecord = {
+                    date: today,
+                    timeIn: timeIn,
+                    timeOut: now,
+                    qrCode: actualQRCode,
+                    isValid: true,
+                    totalHours: totalHours
+                };
+                volunteerReg.attendanceRecords.push(attendanceRecord);
+            } else {
+                // Update existing attendanceRecord
+                attendanceRecord.timeOut = now;
+                attendanceRecord.totalHours = totalHours;
+                // Ensure timeIn is set if it wasn't before
+                if (!attendanceRecord.timeIn) {
+                    attendanceRecord.timeIn = timeIn;
+                }
             }
-            if (attendanceDoc.checkOutTime || attendanceDoc.timeOut) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "You have already recorded time out for today" 
-                });
+
+            // Ensure attendanceDoc exists - if not, create it from timeIn data
+            if (!attendanceDoc) {
+                // Create attendanceDoc with time in data
+                attendanceDoc = await volunteerAttendanceModel.create({
+                    event: event._id,
+                    volunteer: userId,
+                    eventId: event._id,
+                    userId: userId,
+                    date: todayStr,
+                    timeIn: timeIn,
+                    checkInTime: timeIn,
+                    qrCode: actualQRCode,
+                    status: requiresFeedback ? 'pending' : 'not_required',
+                    isValid: true,
+                    voidedHours: false,
+                    hoursWorked: 0,
+                    totalHours: 0
+                })
+            } else {
+                // Verify time in exists in attendanceDoc and sync if needed
+                if (!attendanceDoc.checkInTime && !attendanceDoc.timeIn) {
+                    // Sync time in if missing
+                    attendanceDoc.timeIn = timeIn
+                    attendanceDoc.checkInTime = timeIn
+                }
             }
             
             attendanceDoc.timeOut = now
