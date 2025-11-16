@@ -253,31 +253,34 @@ const PublicCampaigns = () => {
 
             <AnimatePresence>
                 {activeCampaign && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        onClick={() => setActiveCampaign(null)}
-                    >
+                    <>
                         {/* Backdrop with blur effect */}
                         <motion.div
-                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            className="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => setActiveCampaign(null)}
                         />
                         
-                        {/* Modal Container - Responsive and Scrollable */}
+                        {/* Modal Container - Fixed below header, responsive and scrollable */}
                         <motion.div
-                            className="relative z-10 w-full max-w-4xl max-h-[90vh] sm:max-h-[95vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
-                            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-                            animate={{ scale: 1, y: 0, opacity: 1 }}
-                            exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                            onClick={(e) => e.stopPropagation()}
+                            className="fixed inset-0 z-[151] flex items-start justify-center pt-20 sm:pt-24 md:pt-28 pb-4 sm:pb-6 px-4 sm:px-6 pointer-events-none"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => setActiveCampaign(null)}
                         >
+                            <motion.div
+                                className="relative w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-7rem)] md:max-h-[calc(100vh-8rem)] pointer-events-auto"
+                                initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                                animate={{ scale: 1, y: 0, opacity: 1 }}
+                                exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
                             {/* Close Button - Top Right */}
                             <button
                                 onClick={() => setActiveCampaign(null)}
@@ -453,8 +456,9 @@ const PublicCampaigns = () => {
                                     Close
                                 </Button>
                             </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
