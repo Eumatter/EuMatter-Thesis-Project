@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useCallback } from 'react'
+import React, { useState, useContext, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { AppContent } from '../../context/AppContext'
 import axios from 'axios'
@@ -7,6 +7,20 @@ import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { FaStar } from 'react-icons/fa'
+import { Html5Qrcode } from 'html5-qrcode'
+import { detectBrowser, getCameraConstraints } from '../../utils/browserCompatibility.js'
+import { 
+    isOnline, 
+    storeAttendanceOffline, 
+    initDB,
+    getPendingCount 
+} from '../../utils/offlineStorage.js'
+import { 
+    startAutoSync, 
+    syncPendingRecords,
+    onSyncStatusUpdate,
+    getSyncStatus
+} from '../../utils/offlineSync.js'
 
 const EventAttendance = () => {
     const { backendUrl, userData } = useContext(AppContent)
@@ -29,6 +43,22 @@ const EventAttendance = () => {
     const [showExceptionModal, setShowExceptionModal] = useState(false)
     const [exceptionReason, setExceptionReason] = useState('')
     const [submittingException, setSubmittingException] = useState(false)
+    const [processing, setProcessing] = useState(false)
+    
+    // QR Scanning states
+    const [scanning, setScanning] = useState(false)
+    const [cameraError, setCameraError] = useState(null)
+    const [activeScanner, setActiveScanner] = useState(null) // 'timein' or 'timeout' or null
+    const [isMobile, setIsMobile] = useState(false)
+    const [showCameraModal, setShowCameraModal] = useState(false)
+    const [isOffline, setIsOffline] = useState(!navigator.onLine)
+    const [pendingSyncCount, setPendingSyncCount] = useState(0)
+    const [isSyncing, setIsSyncing] = useState(false)
+    
+    const html5QrCodeRef = useRef(null)
+    const lastScannedCode = useRef('')
+    const timeInFileInputRef = useRef(null)
+    const timeOutFileInputRef = useRef(null)
 
     // Fetch event data
     const fetchEventData = useCallback(async () => {
@@ -371,6 +401,492 @@ const EventAttendance = () => {
             }
         } finally {
             setSubmittingFeedback(false)
+        }
+    }
+
+    // Initialize offline storage
+    useEffect(() => {
+        const initializeOffline = async () => {
+            await initDB()
+            const count = await getPendingCount()
+            setPendingSyncCount(count)
+            
+            // Set up sync status listener
+            onSyncStatusUpdate((status) => {
+                setIsSyncing(status.syncing)
+                if (status.pendingCount !== undefined) {
+                    setPendingSyncCount(status.pendingCount)
+                }
+            })
+            
+            // Start auto-sync if online
+            if (isOnline()) {
+                startAutoSync()
+            }
+        }
+        initializeOffline()
+    }, [])
+
+    // Detect mobile device
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
+
+    // Handle QR scan
+    const handleQRScan = async (qrCode, action) => {
+        // Prevent duplicate scans
+        if (processing || qrCode === lastScannedCode.current) return
+        
+        lastScannedCode.current = qrCode
+        setProcessing(true)
+        
+        // Stop scanning temporarily
+        if (html5QrCodeRef.current && scanning) {
+            try {
+                await html5QrCodeRef.current.stop()
+                setScanning(false)
+                setActiveScanner(null)
+            } catch (err) {
+                console.error('Error stopping scanner:', err)
+            }
+        }
+        
+        try {
+            // Parse QR code to validate type
+            let qrData
+            try {
+                qrData = JSON.parse(qrCode)
+            } catch (e) {
+                toast.error('Invalid QR code format. Please scan a valid QR code.')
+                return
+            }
+            
+            // Validate QR code type matches the intended action
+            if (qrData.type) {
+                const qrType = qrData.type.toLowerCase()
+                const expectedType = action === 'timein' ? 'checkin' : 'checkout'
+                
+                if ((qrType === 'checkout' && action === 'timein') || (qrType === 'checkin' && action === 'timeout')) {
+                    toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    return
+                }
+            }
+            
+            const finalAction = action
+            
+            // Check if device is online
+            const online = isOnline()
+            
+            if (!online) {
+                // Store offline
+                try {
+                    await storeAttendanceOffline({
+                        qrCode: qrCode.trim(),
+                        action: finalAction,
+                        eventId: eventId,
+                        userId: userData?._id
+                    })
+                    
+                    const count = await getPendingCount()
+                    setPendingSyncCount(count)
+                    
+                    toast.success('Attendance saved offline! It will sync automatically when you reconnect.', {
+                        autoClose: 5000
+                    })
+                    
+                    // Update UI optimistically
+                    if (finalAction === 'timein') {
+                        setAttendanceStatus('timeout')
+                        setAttendanceData({
+                            _id: 'offline-pending',
+                            checkInTime: new Date().toISOString(),
+                            hoursWorked: 0,
+                            offline: true
+                        })
+                    } else {
+                        setAttendanceStatus('completed')
+                        setAttendanceData({
+                            _id: 'offline-pending',
+                            checkInTime: attendanceData?.checkInTime || new Date().toISOString(),
+                            checkOutTime: new Date().toISOString(),
+                            hoursWorked: 0,
+                            offline: true
+                        })
+                    }
+                    
+                    if (scanning) {
+                        await stopScanning()
+                    }
+                    
+                    return
+                } catch (error) {
+                    console.error('Error storing offline:', error)
+                    toast.error('Failed to save attendance offline. Please try again when you have internet connection.')
+                    return
+                }
+            }
+            
+            // Online - proceed with normal API call
+            const response = await axios.post(`${backendUrl}api/volunteers/attendance/record`, 
+                { qrCode: qrCode.trim(), action: finalAction }, 
+                { withCredentials: true }
+            )
+            
+            toast.success(response.data.message || 'Attendance recorded successfully!')
+            
+            // Close camera modal after successful scan
+            if (scanning) {
+                await stopScanning()
+            }
+            
+            // Refresh attendance status
+            await fetchAttendanceStatus()
+            await fetchEventData()
+            
+        } catch (error) {
+            console.error('Error recording attendance:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to record attendance'
+            
+            if (error.response?.status === 400) {
+                if (errorMessage.includes('already recorded')) {
+                    toast.error('You have already recorded attendance for this event')
+                } else if (errorMessage.includes('must record time in')) {
+                    toast.error('Please record time in before time out')
+                } else if (errorMessage.includes('Invalid QR code')) {
+                    toast.error('Invalid QR code. Please scan the correct QR code for this event.')
+                } else {
+                    toast.error(errorMessage)
+                }
+            } else if (error.response?.status === 404) {
+                toast.error('Event not found. Please check the QR code.')
+            } else if (error.response?.status === 403) {
+                toast.error('You do not have permission to record attendance for this event')
+            } else {
+                toast.error(errorMessage)
+            }
+        } finally {
+            setProcessing(false)
+            lastScannedCode.current = ''
+            setTimeout(() => {
+                lastScannedCode.current = ''
+            }, 3000)
+        }
+    }
+
+    // Start scanning
+    const startScanning = async (action) => {
+        if (processing || scanning) return
+        
+        setShowCameraModal(true)
+        setActiveScanner(action)
+        
+        await new Promise(resolve => setTimeout(resolve, 300))
+        
+        let qrReaderElement = document.getElementById("qr-reader-modal")
+        if (!qrReaderElement) {
+            await new Promise(resolve => setTimeout(resolve, 200))
+            qrReaderElement = document.getElementById("qr-reader-modal")
+            if (!qrReaderElement) {
+                toast.error('QR scanner element not found. Please refresh the page.')
+                setShowCameraModal(false)
+                return
+            }
+        }
+        
+        if (html5QrCodeRef.current) {
+            try {
+                await html5QrCodeRef.current.stop()
+                await html5QrCodeRef.current.clear()
+            } catch (err) {
+                // Ignore stop errors
+            }
+        }
+        
+        try {
+            const html5QrCode = new Html5Qrcode("qr-reader-modal")
+            html5QrCodeRef.current = html5QrCode
+            
+            const browser = detectBrowser()
+            const config = {
+                fps: 10,
+                qrbox: { width: isMobile ? 250 : 280, height: isMobile ? 250 : 280 },
+                aspectRatio: 1.0,
+                disableFlip: false
+            }
+            
+            if (browser.isSafariIOS) {
+                config.qrbox = { width: 250, height: 250 }
+            }
+            
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText) => {
+                        handleQRScan(decodedText, action)
+                    },
+                    (errorMessage) => {
+                        // Ignore scan errors
+                    }
+                )
+                setScanning(true)
+                setCameraError(null)
+            } catch (envError) {
+                console.log('Environment camera failed, trying user camera:', envError.message)
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "user" },
+                        config,
+                        (decodedText) => {
+                            handleQRScan(decodedText, action)
+                        },
+                        (errorMessage) => {
+                            // Ignore scan errors
+                        }
+                    )
+                    setScanning(true)
+                    setCameraError(null)
+                } catch (userError) {
+                    console.log('User camera failed, trying default camera:', userError.message)
+                    try {
+                        await html5QrCode.start(
+                            null,
+                            config,
+                            (decodedText) => {
+                                handleQRScan(decodedText, action)
+                            },
+                            (errorMessage) => {
+                                // Ignore scan errors
+                            }
+                        )
+                        setScanning(true)
+                        setCameraError(null)
+                    } catch (finalError) {
+                        console.error('Error starting camera:', finalError)
+                        setCameraError(finalError.message || 'Failed to start camera')
+                        toast.error(`Error starting camera: ${finalError.message || 'Please check camera permissions and try again'}`)
+                        html5QrCodeRef.current = null
+                        setScanning(false)
+                        setActiveScanner(null)
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('Error starting camera:', err)
+            setCameraError(err.message || 'Failed to access camera')
+            setScanning(false)
+            setActiveScanner(null)
+            html5QrCodeRef.current = null
+            toast.error(`Failed to access camera: ${err.message || 'Please ensure camera permissions are granted and try again'}`)
+        }
+    }
+    
+    const stopScanning = async () => {
+        if (html5QrCodeRef.current) {
+            try {
+                await html5QrCodeRef.current.stop()
+                await html5QrCodeRef.current.clear()
+                html5QrCodeRef.current = null
+            } catch (err) {
+                console.error('Error stopping scanner:', err)
+            }
+        }
+        setScanning(false)
+        setActiveScanner(null)
+        setShowCameraModal(false)
+    }
+    
+    const closeCameraModal = async () => {
+        await stopScanning()
+    }
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (html5QrCodeRef.current) {
+                stopScanning()
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Helper function to preprocess image for better QR code detection
+    const preprocessImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image()
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            let objectUrl = null
+            
+            img.onload = () => {
+                try {
+                    const maxDimension = 2000
+                    let width = img.width
+                    let height = img.height
+                    
+                    if (width > maxDimension || height > maxDimension) {
+                        if (width > height) {
+                            height = (height * maxDimension) / width
+                            width = maxDimension
+                        } else {
+                            width = (width * maxDimension) / height
+                            height = maxDimension
+                        }
+                    }
+                    
+                    canvas.width = width
+                    canvas.height = height
+                    
+                    ctx.imageSmoothingEnabled = true
+                    ctx.imageSmoothingQuality = 'high'
+                    ctx.drawImage(img, 0, 0, width, height)
+                    
+                    if (objectUrl) {
+                        URL.revokeObjectURL(objectUrl)
+                    }
+                    
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob)
+                        } else {
+                            reject(new Error('Failed to process image'))
+                        }
+                    }, file.type || 'image/jpeg', 0.95)
+                } catch (error) {
+                    if (objectUrl) {
+                        URL.revokeObjectURL(objectUrl)
+                    }
+                    reject(error)
+                }
+            }
+            
+            img.onerror = () => {
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl)
+                }
+                reject(new Error('Failed to load image'))
+            }
+            
+            objectUrl = URL.createObjectURL(file)
+            img.src = objectUrl
+        })
+    }
+
+    const handleImageUpload = async (event, action) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please upload an image file')
+            return
+        }
+
+        try {
+            setProcessing(true)
+            
+            let qrReaderElement = document.getElementById("qr-reader")
+            let tempElement = null
+            
+            if (!qrReaderElement) {
+                tempElement = document.createElement('div')
+                tempElement.id = 'temp-qr-reader'
+                tempElement.style.display = 'none'
+                tempElement.style.position = 'absolute'
+                tempElement.style.visibility = 'hidden'
+                document.body.appendChild(tempElement)
+                qrReaderElement = tempElement
+            }
+            
+            const html5QrCodeInstance = new Html5Qrcode(qrReaderElement.id)
+            
+            let decodedText = null
+            let lastError = null
+            
+            try {
+                decodedText = await html5QrCodeInstance.scanFile(file, false)
+            } catch (error) {
+                lastError = error
+            }
+            
+            if (!decodedText) {
+                try {
+                    const processedImage = await preprocessImage(file)
+                    decodedText = await html5QrCodeInstance.scanFile(processedImage, false)
+                } catch (error) {
+                    lastError = error
+                }
+            }
+            
+            if (!decodedText) {
+                try {
+                    const reader = new FileReader()
+                    const imageDataUrl = await new Promise((resolve, reject) => {
+                        reader.onload = (e) => resolve(e.target.result)
+                        reader.onerror = reject
+                        reader.readAsDataURL(file)
+                    })
+                    
+                    decodedText = await html5QrCodeInstance.scanFile(imageDataUrl, false)
+                } catch (error) {
+                    lastError = error
+                    
+                    try {
+                        const processedImage = await preprocessImage(file)
+                        const reader = new FileReader()
+                        const processedDataUrl = await new Promise((resolve, reject) => {
+                            reader.onload = (e) => resolve(e.target.result)
+                            reader.onerror = reject
+                            reader.readAsDataURL(processedImage)
+                        })
+                        decodedText = await html5QrCodeInstance.scanFile(processedDataUrl, false)
+                    } catch (finalError) {
+                        lastError = finalError
+                    }
+                }
+            }
+            
+            if (tempElement && document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement)
+            }
+            
+            try {
+                await html5QrCodeInstance.clear()
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+            
+            if (decodedText) {
+                await handleQRScan(decodedText, action)
+            } else {
+                if (lastError?.message?.includes('No QR code found') || lastError?.message?.includes('not found')) {
+                    toast.error('No QR code found in the image. Please ensure the image contains a clear QR code.')
+                } else {
+                    toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code and try again.')
+                }
+            }
+        } catch (error) {
+            console.error('Error scanning image:', error)
+            const tempElement = document.getElementById('temp-qr-reader')
+            if (tempElement && document.body.contains(tempElement)) {
+                document.body.removeChild(tempElement)
+            }
+            
+            if (error.message?.includes('No QR code found') || error.message?.includes('not found')) {
+                toast.error('No QR code found in the image. Please ensure the image contains a clear QR code.')
+            } else {
+                toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code.')
+            }
+        } finally {
+            setProcessing(false)
+            const fileInput = action === 'timein' ? timeInFileInputRef.current : timeOutFileInputRef.current
+            if (fileInput) {
+                fileInput.value = ''
+            }
         }
     }
 
@@ -819,30 +1335,172 @@ const EventAttendance = () => {
                     </div>
                 </div>
 
-                {/* QR Scanner Section */}
-                {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && (
-                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 mb-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-green-900 mb-1">Scan QR Code for Attendance</h3>
-                                    <p className="text-green-700 text-sm">Record your time in and time out for this event</p>
+                {/* Time In Recording Section */}
+                {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
+                 attendanceStatus !== 'timeout' && attendanceStatus !== 'completed' && (
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            Record Time In
+                        </h2>
+                        
+                        <div className="space-y-4">
+                            {/* QR Scanner Option */}
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-blue-900">Scan QR Code</h3>
+                                            <p className="text-sm text-blue-700">Use your camera to scan the QR code</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => startScanning('timein')}
+                                        disabled={processing || (scanning && activeScanner === 'timein')}
+                                        className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {scanning && activeScanner === 'timein' ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Scanning...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                Start Camera
+                                            </>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => navigate(`/volunteer/qr-scanner/${eventId}`)}
-                                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center gap-2 w-full sm:w-auto justify-center"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+
+                            {/* Image Upload Option */}
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-green-900">Upload QR Image</h3>
+                                        <p className="text-sm text-green-700">Upload an image containing the QR code</p>
+                                    </div>
+                                </div>
+                                <input
+                                    ref={timeInFileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageUpload(e, 'timein')}
+                                    className="hidden"
+                                    id="timein-image-upload"
+                                />
+                                <label
+                                    htmlFor="timein-image-upload"
+                                    className="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Upload Image
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Time Out Recording Section */}
+                {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
+                 attendanceStatus === 'timeout' && (
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
-                                Open Scanner
-                            </button>
+                            </div>
+                            Record Time Out
+                        </h2>
+                        
+                        <div className="space-y-4">
+                            {/* QR Scanner Option */}
+                            <div className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl p-4 sm:p-6">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-orange-900">Scan QR Code</h3>
+                                            <p className="text-sm text-orange-700">Use your camera to scan the QR code</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => startScanning('timeout')}
+                                        disabled={processing || (scanning && activeScanner === 'timeout')}
+                                        className="w-full sm:w-auto bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {scanning && activeScanner === 'timeout' ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                Scanning...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                                Start Camera
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Image Upload Option */}
+                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-green-900">Upload QR Image</h3>
+                                        <p className="text-sm text-green-700">Upload an image containing the QR code</p>
+                                    </div>
+                                </div>
+                                <input
+                                    ref={timeOutFileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleImageUpload(e, 'timeout')}
+                                    className="hidden"
+                                    id="timeout-image-upload"
+                                />
+                                <label
+                                    htmlFor="timeout-image-upload"
+                                    className="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Upload Image
+                                </label>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -931,33 +1589,104 @@ const EventAttendance = () => {
                     </div>
                 )}
 
-                {/* Instructions */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        How to Record Attendance
-                    </h3>
-                    <ul className="space-y-3 text-blue-900">
-                        <li className="flex items-start gap-3">
-                            <span className="font-bold text-blue-600 mt-1">1.</span>
-                            <span>Click "Open Scanner" to access the QR code scanner</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="font-bold text-blue-600 mt-1">2.</span>
-                            <span>Scan the QR code when you arrive (Time In)</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="font-bold text-blue-600 mt-1">3.</span>
-                            <span>Scan the QR code again when you leave (Time Out)</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                            <span className="font-bold text-blue-600 mt-1">4.</span>
-                            <span>Your volunteer hours will be calculated automatically</span>
-                        </li>
-                    </ul>
-                </div>
+                {/* Camera Scanner Modal */}
+                {showCameraModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg sm:text-xl font-bold text-white">
+                                            {activeScanner === 'timein' ? 'Scan QR Code for Time In' : 'Scan QR Code for Time Out'}
+                                        </h3>
+                                        <p className="text-xs sm:text-sm text-blue-100">Position QR code within the frame</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={closeCameraModal}
+                                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-all duration-200 text-white"
+                                    aria-label="Close camera"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Camera View */}
+                            <div className="relative flex-1 bg-black flex items-center justify-center min-h-[400px] sm:min-h-[500px]">
+                                <div id="qr-reader-modal" className="w-full h-full"></div>
+                                
+                                {/* Scanning Overlay */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute inset-0 border-4 border-green-500 rounded-2xl animate-pulse"></div>
+                                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                        <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-green-400 rounded-xl"></div>
+                                    </div>
+                                    <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2">
+                                        <div className="bg-black/70 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
+                                            <p className="text-xs sm:text-sm font-semibold flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                Scanning...
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Camera Error Display */}
+                                {cameraError && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 max-w-md mx-4">
+                                            <p className="text-red-800 font-semibold mb-2 text-lg">Camera Error</p>
+                                            <p className="text-red-700 text-sm mb-4">{cameraError}</p>
+                                            <button
+                                                onClick={closeCameraModal}
+                                                className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Modal Footer */}
+                            <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+                                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <p className="text-sm text-gray-600 text-center sm:text-left">
+                                        Point your camera at the QR code. Make sure it's well-lit and in focus.
+                                    </p>
+                                    <button
+                                        onClick={closeCameraModal}
+                                        className="w-full sm:w-auto bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Stop Camera
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Processing Overlay */}
+                {processing && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm mx-4">
+                            <div className="w-16 h-16 border-4 border-[#800000] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-lg font-semibold text-gray-900">Processing...</p>
+                            <p className="text-sm text-gray-600 mt-2">Please wait while we record your attendance</p>
+                        </div>
+                    </div>
+                )}
             </main>
 
             <Footer />
