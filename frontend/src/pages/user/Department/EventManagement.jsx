@@ -392,6 +392,11 @@ const EventManagement = () => {
                 toast.error('End date/time must be after start date/time')
                 return
             }
+            // Validate donation target if donations are enabled
+            if (formData.isOpenForDonation && (!formData.donationTarget || parseFloat(formData.donationTarget) <= 0)) {
+                toast.error('Please enter a valid donation target amount when donations are enabled')
+                return
+            }
             // Build one or many payloads based on recurrence
             const buildPayload = (s, e, seriesId, index) => {
                 const fd = new FormData()
@@ -403,8 +408,8 @@ const EventManagement = () => {
                 fd.append('isOpenForDonation', formData.isOpenForDonation ? 'true' : 'false')
                 fd.append('isOpenForVolunteer', formData.isOpenForVolunteer ? 'true' : 'false')
                 fd.append('eventCategory', formData.eventCategory || 'community_relations') // Include event category
-                if (formData.isOpenForDonation && formData.donationTarget) {
-                    fd.append('donationTarget', formData.donationTarget)
+                if (formData.isOpenForDonation) {
+                    fd.append('donationTarget', formData.donationTarget || '0')
                 }
                 if (formData.isOpenForVolunteer) {
                     fd.append('volunteerSettings', JSON.stringify(formData.volunteerSettings))
@@ -1208,6 +1213,46 @@ const EventManagement = () => {
                                         </button>
                                     </div>
                                             </div>
+
+                                            {/* Donation Target - Show when donations are enabled */}
+                                            {formData.isOpenForDonation && (
+                                                <div className="mt-6 bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-6 animate-slide-down shadow-sm">
+                                                    <div className="flex items-center space-x-3 mb-5">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-[#800020] to-[#a0002a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]/30">
+                                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold text-[#800020]">Donation Goal</p>
+                                                            <p className="text-xs text-gray-600">Set the target amount for donations</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="block text-sm font-semibold text-[#800020]">
+                                                            Target Amount (PHP) <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <div className="relative">
+                                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                                <span className="text-gray-500 font-semibold">₱</span>
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.01"
+                                                                value={formData.donationTarget}
+                                                                onChange={e => setFormData(prev => ({ ...prev, donationTarget: e.target.value }))}
+                                                                className="w-full rounded-xl border-2 border-gray-200 pl-10 pr-4 py-3.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                                placeholder="Enter target donation amount (e.g., 50000)"
+                                                                required={formData.isOpenForDonation}
+                                                            />
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            This amount will be displayed as the donation goal for this event. Users will see how much has been raised towards this goal.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {/* Volunteers Toggle */}
                                             <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
