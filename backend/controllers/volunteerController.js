@@ -176,10 +176,17 @@ export const inviteVolunteer = async (req, res) => {
     try {
         const { eventId } = req.params;
         const { email, autoApprove = false } = req.body; // autoApprove: if true, immediately approve when user accepts
-        const userId = req.user._id;
+        const userId = req.user?._id;
+
+        console.log('Invite volunteer called:', { eventId, email, userId, autoApprove });
+
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Not authenticated" });
+        }
 
         // Validate eventId format (MongoDB ObjectId)
         if (!eventId || !/^[0-9a-fA-F]{24}$/.test(eventId)) {
+            console.log('Invalid eventId format:', eventId);
             return res.status(400).json({ success: false, message: "Invalid event ID format" });
         }
 
@@ -211,24 +218,55 @@ export const inviteVolunteer = async (req, res) => {
 
         // Find user by email - only verified users can be invited
         const userModel = (await import("../models/userModel.js")).default;
-        const invitedUser = await userModel.findOne({ 
-            email: email.toLowerCase(),
-            isAccountVerified: true 
-        });
+        
+        // Normalize email (trim and lowercase)
+        const normalizedEmail = email.trim().toLowerCase();
+        console.log('Looking for user with email:', normalizedEmail);
+        
+        // Find user by email (try exact match first, then case-insensitive)
+        let invitedUser = await userModel.findOne({ email: normalizedEmail });
+        
+        // If not found, try case-insensitive search as fallback
+        if (!invitedUser) {
+            console.log('Exact match not found, trying case-insensitive search');
+            invitedUser = await userModel.findOne({ 
+                email: { $regex: new RegExp(`^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+            });
+        }
         
         if (!invitedUser) {
-            // Check if user exists but is not verified
-            const unverifiedUser = await userModel.findOne({ email: email.toLowerCase() });
-            if (unverifiedUser && !unverifiedUser.isAccountVerified) {
+            console.log('User not found with email:', normalizedEmail);
+            return res.status(404).json({ 
+                success: false, 
+                message: `No user found with email ${email}. Please ensure the user has registered an account.` 
+            });
+        }
+        
+        console.log('User found:', { 
+            id: invitedUser._id, 
+            email: invitedUser.email, 
+            role: invitedUser.role, 
+            isAccountVerified: invitedUser.isAccountVerified 
+        });
+
+        // Roles that do NOT require email verification (auto-verified)
+        const rolesNotRequiringVerification = ['CRD Staff', 'System Administrator', 'Department/Organization'];
+        const isRoleExempt = rolesNotRequiringVerification.includes(invitedUser.role);
+        
+        // Check if user is verified (either explicitly verified or has exempt role)
+        const isVerified = invitedUser.isAccountVerified === true || isRoleExempt;
+        
+        if (!isVerified) {
+            // Auto-verify exempt roles if not already set
+            if (isRoleExempt && !invitedUser.isAccountVerified) {
+                invitedUser.isAccountVerified = true;
+                await invitedUser.save();
+            } else {
                 return res.status(400).json({ 
                     success: false, 
                     message: `User with email ${email} exists but their account is not verified. Please ask them to verify their email address first.` 
                 });
             }
-            return res.status(404).json({ 
-                success: false, 
-                message: `No verified user found with email ${email}. Please ensure the user has registered and verified their account.` 
-            });
         }
 
         const invitedUserId = invitedUser._id.toString();
