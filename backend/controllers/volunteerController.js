@@ -910,9 +910,7 @@ export const recordAttendance = async (req, res) => {
             volunteerReg.attendanceRecords = []
         }
 
-        // Get today's date string (YYYY-MM-DD format) - this is the unique identifier per day
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        // todayStr is already declared at line 762, no need to redeclare
         
         // Find existing attendance record for today using date string comparison
         let attendanceRecord = volunteerReg.attendanceRecords.find(
