@@ -270,7 +270,7 @@ const Header = () => {
                     setIsMobileMenuOpen(false);
                     setIsBellOpen(false);
                 }}
-                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group
+                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group mb-2
                     ${isActive 
                         ? 'bg-gradient-to-r from-[#800000] to-[#9c0000] text-white shadow-lg shadow-[#800000]/30 scale-[1.02]' 
                         : 'bg-white/50 text-gray-800 hover:bg-gradient-to-r hover:from-[#800000]/10 hover:to-[#800000]/5 active:bg-[#800000]/15 border border-gray-200 hover:border-[#800000]/30 hover:shadow-md'
@@ -801,9 +801,9 @@ const Header = () => {
                                 animation: 'fadeIn 0.25s ease-out'
                             }}
                         />
-                        {/* Slider menu from right - positioned below header */}
+                        {/* Slider menu from right - full height from top to bottom */}
                         <div 
-                            className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-14 sm:top-16 md:top-20'} right-0 bottom-0 z-[151] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200`}
+                            className="fixed top-0 right-0 bottom-0 z-[151] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200"
                             style={{
                                 animation: 'slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                                 transform: 'translateX(0)',
@@ -838,7 +838,7 @@ const Header = () => {
                             <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white">
                                 {/* Primary links for logged out users */}
                                 {!isLoggedIn && (
-                                    <div className="py-3 px-2">
+                                    <div className="py-3 px-3">
                                         <MobileNavLink to="/" icon={<FaHome />}>Home</MobileNavLink>
                                         <MobileNavLink to="/program" icon={<FaBookOpen />}>Program</MobileNavLink>
                                         <MobileNavLink to="/nstp" icon={<FaClipboardList />}>NSTP</MobileNavLink>
@@ -858,7 +858,7 @@ const Header = () => {
 
                                 {/* Role-aware navigation for logged in users */}
                                 {isLoggedIn && (
-                                    <div className="py-3 px-2">
+                                    <div className="py-3 px-3">
                                         {isUser && (
                                             <>
                                                 <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
@@ -900,7 +900,7 @@ const Header = () => {
 
                                         {/* Account section - Enhanced styling */}
                                         <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
-                                            <div className="px-3 py-1 mb-2">
+                                            <div className="px-3 py-1 mb-3">
                                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account</span>
                                             </div>
                                             <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
