@@ -586,7 +586,14 @@ const Header = () => {
                         {/* User Dropdown */}
                         <div className="relative" ref={dropdownRef}>
                             <button
-                                onClick={() => setIsDropdownOpen(v => { const next = !v; if (next) setIsBellOpen(false); return next; })}
+                                onClick={() => {
+                                    const next = !isDropdownOpen;
+                                    setIsDropdownOpen(next);
+                                    if (next) {
+                                        setIsBellOpen(false);
+                                        setIsMobileMenuOpen(false); // Close mobile menu when user dropdown opens
+                                    }
+                                }}
                                 className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 p-1 sm:p-1.5 md:p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px]"
                                 aria-label="User menu"
                             >
@@ -610,8 +617,9 @@ const Header = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
+                            {/* Desktop Dropdown - Keep for desktop screens */}
                             {isDropdownOpen && (
-                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-72 md:w-80 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120] animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="hidden lg:block fixed lg:absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120]">
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
                                             <div className="flex items-center gap-3">
@@ -630,8 +638,8 @@ const Header = () => {
                                         </button>
                                     </div>
                                     <div className="py-2">
-                                        {/* Navigation Links Based on User Role - MOBILE ONLY (hidden on desktop) */}
-                                        <div className="lg:hidden">
+                                        {/* Desktop Navigation Links */}
+                                        <div>
                                             {isUser && (
                                                 <>
                                                     <button onClick={() => { navigate(getDashboardRoute(userData.role)); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
@@ -756,6 +764,154 @@ const Header = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Mobile Slider Menu for User Dropdown - Slides from right */}
+                            {isDropdownOpen && (
+                                <>
+                                    {/* Backdrop overlay */}
+                                    <div 
+                                        className="lg:hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    />
+                                    {/* Slider menu from right */}
+                                    <div 
+                                        className="lg:hidden fixed top-0 right-0 bottom-0 z-[151] w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200"
+                                        style={{
+                                            animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                                            transform: 'translateX(0)',
+                                            boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
+                                        }}
+                                    >
+                                        {/* Header with close button */}
+                                        <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
+                                            <div className="flex items-center gap-3">
+                                                {userData?.profileImage ? (
+                                                    <img 
+                                                        src={userData.profileImage} 
+                                                        alt={userData.name} 
+                                                        className="w-10 h-10 rounded-full object-cover border-2 border-white/30 shadow-md" 
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-md text-white font-bold text-sm">
+                                                        {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="text-sm font-extrabold tracking-tight">{userData.name}</div>
+                                                    <div className="text-xs opacity-90 font-medium">{userData.role}</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => setIsDropdownOpen(false)}
+                                                className="p-2.5 rounded-xl hover:bg-white/25 active:bg-white/35 active:scale-95 transition-all duration-200 touch-manipulation shadow-md hover:shadow-lg"
+                                                aria-label="Close menu"
+                                            >
+                                                <FaTimes className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Scrollable menu content */}
+                                        <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white">
+                                            <div className="py-3 px-3">
+                                                {/* Navigation Links Based on User Role */}
+                                                {isUser && (
+                                                    <>
+                                                        <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                        <MobileNavLink to="/user/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                        <MobileNavLink to="/user/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
+                                                        <MobileNavLink to="/user/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                                    </>
+                                                )}
+
+                                                {isDept && (
+                                                    <>
+                                                        <MobileNavLink to="/department/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                        <MobileNavLink to="/department/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                        <MobileNavLink to="/department/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
+                                                        <MobileNavLink to="/department/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
+                                                        <MobileNavLink to="/department/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                                    </>
+                                                )}
+
+                                                {isCRD && (
+                                                    <>
+                                                        <MobileNavLink to="/crd-staff/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                        <MobileNavLink to="/crd-staff/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                        <MobileNavLink to="/crd-staff/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
+                                                        <MobileNavLink to="/crd-staff/leaderboard" icon={<FaTrophy />}>Leaderboard</MobileNavLink>
+                                                        <MobileNavLink to="/crd-staff/donations" icon={<FaBoxOpen />}>Donations</MobileNavLink>
+                                                        <MobileNavLink to="/crd-staff/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                                    </>
+                                                )}
+
+                                                {userData?.role && userData.role.toLowerCase().includes('system admin') && (
+                                                    <>
+                                                        <MobileNavLink to="/system-admin/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                        <MobileNavLink to="/system-admin/users" icon={<FaUsers />}>User Management</MobileNavLink>
+                                                        <MobileNavLink to="/system-admin/settings" icon={<FaCogs />}>System Settings</MobileNavLink>
+                                                        <MobileNavLink to="/system-admin/reports" icon={<FaChartLine />}>System Reports</MobileNavLink>
+                                                    </>
+                                                )}
+
+                                                {/* Account section */}
+                                                <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
+                                                    <div className="px-3 py-1 mb-3">
+                                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account</span>
+                                                    </div>
+                                                    <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
+                                                    <MobileNavLink to={getProfileRoute()} icon={<FaCog />}>Account Settings</MobileNavLink>
+                                                    {userData.role && !userData.role.toLowerCase().includes('system admin') && (
+                                                        <MobileNavLink to="/system-settings" icon={<FaSlidersH />}>System Settings</MobileNavLink>
+                                                    )}
+                                                    {userData.role === 'User' && !userData.isAccountVerified && (
+                                                        <MobileNavLink to="/email-verify" icon={<FaCheckCircle />} className="text-orange-700 hover:bg-orange-50">Verify Account</MobileNavLink>
+                                                    )}
+                                                </div>
+
+                                                {/* Logout */}
+                                                <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
+                                                    <button 
+                                                        onClick={() => {
+                                                            handleLogout();
+                                                            setIsDropdownOpen(false);
+                                                        }} 
+                                                        className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation bg-gradient-to-r from-red-50 to-red-50/50 text-red-700 hover:from-red-100 hover:to-red-100/50 active:from-red-200 active:to-red-200/50 border-2 border-red-200 hover:border-red-300 font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] group"
+                                                    >
+                                                        <FaSignOutAlt className="text-xl flex-shrink-0 group-hover:rotate-12 transition-transform duration-300" />
+                                                        <span className="text-base font-semibold flex-1 text-left">Logout</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Footer with user info */}
+                                        <div className="px-5 py-4 border-t-2 border-gray-200 bg-gradient-to-br from-gray-50 via-white to-gray-50 shadow-inner">
+                                            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition-all duration-200 cursor-pointer" onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }}>
+                                                {userData?.profileImage ? (
+                                                    <div className="relative">
+                                                        <img 
+                                                            src={userData.profileImage} 
+                                                            alt={userData.name} 
+                                                            className="w-12 h-12 rounded-full object-cover border-2 border-[#800000] shadow-md" 
+                                                        />
+                                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#800000] to-[#9c0000] text-white flex items-center justify-center font-bold text-base shadow-md">
+                                                        {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold text-gray-900 truncate">{userData.name}</div>
+                                                    <div className="text-xs text-gray-600 truncate">{userData.email}</div>
+                                                    <div className="text-xs text-[#800000] font-semibold mt-0.5">{userData.role}</div>
+                                                </div>
+                                                <FaChevronRight className="text-gray-400 flex-shrink-0" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 ) : (
@@ -775,7 +931,14 @@ const Header = () => {
                         {/* Mobile Menu Button */}
                         <button 
                             className="lg:hidden p-1.5 sm:p-2 md:p-2.5 text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 rounded-lg transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
-                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                            onClick={() => {
+                                const next = !isMobileMenuOpen;
+                                setIsMobileMenuOpen(next);
+                                if (next) {
+                                    setIsDropdownOpen(false); // Close user dropdown when mobile menu opens
+                                    setIsBellOpen(false);
+                                }
+                            }}
                             aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
                             aria-expanded={isMobileMenuOpen}
                         >
@@ -795,17 +958,14 @@ const Header = () => {
                     <>
                         {/* Backdrop overlay */}
                         <div 
-                            className="fixed inset-0 z-[150] lg:hidden bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+                            className="fixed inset-0 z-[150] lg:hidden bg-black/60 backdrop-blur-sm"
                             onClick={() => setIsMobileMenuOpen(false)}
-                            style={{
-                                animation: 'fadeIn 0.25s ease-out'
-                            }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
                             className="fixed top-0 right-0 bottom-0 z-[151] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200"
                             style={{
-                                animation: 'slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                                animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                                 transform: 'translateX(0)',
                                 boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
                             }}
