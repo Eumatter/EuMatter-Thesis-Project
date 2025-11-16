@@ -240,6 +240,12 @@ export async function submitExceptionRequest(req, res) {
         const userId = req.user?._id
 
         if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+        
+        // Validate attendanceId format (MongoDB ObjectId)
+        if (!attendanceId || !/^[0-9a-fA-F]{24}$/.test(attendanceId)) {
+            return res.status(400).json({ success: false, message: 'Invalid attendance record ID' })
+        }
+        
         if (!reason || !reason.trim()) {
             return res.status(400).json({ success: false, message: 'Reason is required' })
         }
@@ -364,6 +370,12 @@ export async function reviewExceptionRequest(req, res) {
         const userId = req.user?._id
 
         if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+        
+        // Validate attendanceId format (MongoDB ObjectId)
+        if (!attendanceId || !/^[0-9a-fA-F]{24}$/.test(attendanceId)) {
+            return res.status(400).json({ success: false, message: 'Invalid attendance record ID' })
+        }
+        
         if (!['approve', 'reject'].includes(action)) {
             return res.status(400).json({ success: false, message: 'Invalid action. Must be "approve" or "reject"' })
         }
@@ -474,6 +486,11 @@ export async function getExceptionRequest(req, res) {
         const userId = req.user?._id
 
         if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        // Validate attendanceId format (MongoDB ObjectId)
+        if (!attendanceId || !/^[0-9a-fA-F]{24}$/.test(attendanceId)) {
+            return res.status(400).json({ success: false, message: 'Invalid attendance record ID' })
+        }
 
         const attendance = await volunteerAttendanceModel.findById(attendanceId)
             .populate('event', 'title createdBy')

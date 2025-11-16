@@ -65,57 +65,105 @@ const EventAttendance = () => {
 
     // Fetch attendance status
     const fetchAttendanceStatus = useCallback(async () => {
-        if (!event || !userData?._id) return
+        if (!event || !userData?._id || !eventId) return
         
-        if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
-            const userReg = event.volunteerRegistrations.find(reg => 
-                String(reg.user?._id || reg.user) === String(userData._id)
-            )
-            if (userReg?.attendanceRecords && userReg.attendanceRecords.length > 0) {
-                const today = new Date()
-                today.setHours(0, 0, 0, 0)
-                const todayRecord = userReg.attendanceRecords.find(record => {
-                    const recordDate = new Date(record.date)
-                    recordDate.setHours(0, 0, 0, 0)
-                    return recordDate.getTime() === today.getTime()
-                }) || userReg.attendanceRecords[userReg.attendanceRecords.length - 1]
+        try {
+            // Fetch attendance summary to get proper attendance record IDs
+            const summaryResponse = await axios.get(`${backendUrl}api/attendance/me/summary`, { 
+                withCredentials: true 
+            })
+            
+            if (summaryResponse.data?.success && summaryResponse.data.events) {
+                // Find the event in the summary
+                const eventSummary = summaryResponse.data.events.find(e => 
+                    String(e.eventId) === String(eventId)
+                )
                 
-                if (todayRecord) {
-                    // Fetch exception request if attendance record exists
-                    if (todayRecord._id) {
+                if (eventSummary?.records && eventSummary.records.length > 0) {
+                    // Get today's record or the most recent record
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    const todayRecord = eventSummary.records.find(record => {
+                        const recordDate = new Date(record.date)
+                        recordDate.setHours(0, 0, 0, 0)
+                        return recordDate.getTime() === today.getTime()
+                    }) || eventSummary.records[eventSummary.records.length - 1]
+                    
+                    if (todayRecord && todayRecord.attendanceId) {
+                        // Fetch exception request if attendance record exists
                         try {
-                            const response = await axios.get(`${backendUrl}api/attendance/${todayRecord._id}/exception-request`, { 
-                                withCredentials: true 
-                            })
-                            if (response.data?.success && response.data.exceptionRequest) {
-                                setExceptionRequest(response.data.exceptionRequest)
+                            const exceptionResponse = await axios.get(
+                                `${backendUrl}api/attendance/${todayRecord.attendanceId}/exception-request`, 
+                                { withCredentials: true }
+                            )
+                            if (exceptionResponse.data?.success && exceptionResponse.data.exceptionRequest) {
+                                setExceptionRequest(exceptionResponse.data.exceptionRequest)
                             }
                         } catch (error) {
-                            // Exception request doesn't exist or error - that's okay
-                            console.log('No exception request found or error:', error.response?.status)
+                            // Exception request doesn't exist or error - that's okay, just log it
+                            if (error.response?.status !== 404) {
+                                console.log('Error fetching exception request:', error.response?.status)
+                            }
+                        }
+
+                        if (todayRecord.timeOut) {
+                            setAttendanceStatus('completed')
+                            setAttendanceData({
+                                _id: todayRecord.attendanceId,
+                                checkInTime: todayRecord.timeIn,
+                                checkOutTime: todayRecord.timeOut,
+                                hoursWorked: todayRecord.totalHours || 0
+                            })
+                        } else if (todayRecord.timeIn) {
+                            setAttendanceStatus('timeout')
+                            setAttendanceData({
+                                _id: todayRecord.attendanceId,
+                                checkInTime: todayRecord.timeIn,
+                                hoursWorked: 0
+                            })
                         }
                     }
-
-                    if (todayRecord.timeOut) {
-                        setAttendanceStatus('completed')
-                        setAttendanceData({
-                            _id: todayRecord._id,
-                            checkInTime: todayRecord.timeIn,
-                            checkOutTime: todayRecord.timeOut,
-                            hoursWorked: todayRecord.totalHours || 0
-                        })
-                    } else if (todayRecord.timeIn) {
-                        setAttendanceStatus('timeout')
-                        setAttendanceData({
-                            _id: todayRecord._id,
-                            checkInTime: todayRecord.timeIn,
-                            hoursWorked: 0
-                        })
+                }
+            }
+        } catch (error) {
+            // Fallback to using embedded attendance records if summary API fails
+            console.log('Error fetching attendance summary, using fallback:', error.response?.status)
+            
+            if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                const userReg = event.volunteerRegistrations.find(reg => 
+                    String(reg.user?._id || reg.user) === String(userData._id)
+                )
+                if (userReg?.attendanceRecords && userReg.attendanceRecords.length > 0) {
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+                    const todayRecord = userReg.attendanceRecords.find(record => {
+                        const recordDate = new Date(record.date)
+                        recordDate.setHours(0, 0, 0, 0)
+                        return recordDate.getTime() === today.getTime()
+                    }) || userReg.attendanceRecords[userReg.attendanceRecords.length - 1]
+                    
+                    if (todayRecord) {
+                        if (todayRecord.timeOut) {
+                            setAttendanceStatus('completed')
+                            setAttendanceData({
+                                _id: null, // No ID available in embedded records
+                                checkInTime: todayRecord.timeIn,
+                                checkOutTime: todayRecord.timeOut,
+                                hoursWorked: todayRecord.totalHours || 0
+                            })
+                        } else if (todayRecord.timeIn) {
+                            setAttendanceStatus('timeout')
+                            setAttendanceData({
+                                _id: null, // No ID available in embedded records
+                                checkInTime: todayRecord.timeIn,
+                                hoursWorked: 0
+                            })
+                        }
                     }
                 }
             }
         }
-    }, [event, userData?._id, backendUrl])
+    }, [event, userData?._id, eventId, backendUrl])
 
     useEffect(() => {
         if (eventId) {
@@ -190,7 +238,7 @@ const EventAttendance = () => {
         }
 
         if (!attendanceData?._id) {
-            toast.error('Attendance record not found')
+            toast.error('Attendance record not found. Please try refreshing the page.')
             return
         }
 
@@ -207,11 +255,19 @@ const EventAttendance = () => {
                 setExceptionRequest(response.data.exceptionRequest)
                 setShowExceptionModal(false)
                 setExceptionReason('')
+                // Refresh attendance status to get updated data
+                fetchAttendanceStatus()
             }
         } catch (error) {
             console.error('Error submitting exception request:', error)
             const errorMessage = error.response?.data?.message || 'Failed to submit exception request'
-            toast.error(errorMessage)
+            if (error.response?.status === 400 && errorMessage.includes('already exists')) {
+                toast.error('An exception request already exists for this attendance record.')
+                // Refresh to get the existing request
+                fetchAttendanceStatus()
+            } else {
+                toast.error(errorMessage)
+            }
         } finally {
             setSubmittingException(false)
         }
@@ -658,7 +714,7 @@ const EventAttendance = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                {!attendanceData?.checkOutTime && !exceptionRequest && attendanceStatus === 'timeout' && (
+                                {!attendanceData?.checkOutTime && !exceptionRequest && attendanceStatus === 'timeout' && attendanceData?._id && (
                                     <button
                                         onClick={() => setShowExceptionModal(true)}
                                         className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold text-sm hover:bg-amber-600 transition-all duration-200"
