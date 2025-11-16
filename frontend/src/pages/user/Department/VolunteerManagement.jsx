@@ -325,7 +325,7 @@ const VolunteerManagement = () => {
             case 'approved': return 'bg-green-100 text-green-800'
             case 'accepted': return 'bg-blue-100 text-blue-800'
             case 'rejected': return 'bg-red-100 text-red-800'
-            case 'invited': return 'bg-purple-100 text-purple-800'
+            case 'invited': return 'bg-purple-100 text-purple-800 border border-purple-300'
             default: return 'bg-gray-100 text-gray-800'
         }
     }
@@ -351,7 +351,20 @@ const VolunteerManagement = () => {
             fetchEventData() // Refresh volunteers list
         } catch (error) {
             console.error('Error inviting volunteer:', error)
-            toast.error(error.response?.data?.message || 'Failed to send invitation')
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to send invitation'
+            
+            // Provide more helpful error messages
+            if (error.response?.status === 404) {
+                if (errorMessage.includes('not found') || errorMessage.includes('not verified')) {
+                    toast.error(errorMessage)
+                } else {
+                    toast.error('User not found or account not verified. Please ensure the user has registered and verified their email address.')
+                }
+            } else if (error.response?.status === 400) {
+                toast.error(errorMessage)
+            } else {
+                toast.error(errorMessage)
+            }
         } finally {
             setInviting(false)
         }
@@ -653,9 +666,17 @@ const VolunteerManagement = () => {
                                                                 </>
                                                             )}
                                                             {volunteer.status === 'invited' && (
-                                                                <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded">
-                                                                    Pending Acceptance
-                                                                </span>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full border border-purple-300 font-medium">
+                                                                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                        </svg>
+                                                                        Invitation Sent
+                                                                    </span>
+                                                                    <p className="text-xs text-purple-600">
+                                                                        Waiting for user to accept
+                                                                    </p>
+                                                                </div>
                                                             )}
                                                         </div>
                                                     )}
@@ -1682,7 +1703,7 @@ const VolunteerManagement = () => {
                                     }}
                                 />
                                 <p className="mt-2 text-xs text-gray-500">
-                                    The user must have a registered account with this email address.
+                                    The user must have a registered and verified account with this email address. Only verified users can be invited.
                                 </p>
                             </div>
                             <div className="mb-6">

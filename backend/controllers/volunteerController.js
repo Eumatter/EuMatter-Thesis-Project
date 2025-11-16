@@ -178,7 +178,12 @@ export const inviteVolunteer = async (req, res) => {
         const { email, autoApprove = false } = req.body; // autoApprove: if true, immediately approve when user accepts
         const userId = req.user._id;
 
-        if (!email) {
+        // Validate eventId format (MongoDB ObjectId)
+        if (!eventId || !/^[0-9a-fA-F]{24}$/.test(eventId)) {
+            return res.status(400).json({ success: false, message: "Invalid event ID format" });
+        }
+
+        if (!email || !email.trim()) {
             return res.status(400).json({ success: false, message: "Email is required" });
         }
 
@@ -204,14 +209,25 @@ export const inviteVolunteer = async (req, res) => {
             return res.status(400).json({ success: false, message: "This event is not open for volunteers" });
         }
 
-        // Find user by email
+        // Find user by email - only verified users can be invited
         const userModel = (await import("../models/userModel.js")).default;
-        const invitedUser = await userModel.findOne({ email: email.toLowerCase() });
+        const invitedUser = await userModel.findOne({ 
+            email: email.toLowerCase(),
+            isAccountVerified: true 
+        });
         
         if (!invitedUser) {
+            // Check if user exists but is not verified
+            const unverifiedUser = await userModel.findOne({ email: email.toLowerCase() });
+            if (unverifiedUser && !unverifiedUser.isAccountVerified) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `User with email ${email} exists but their account is not verified. Please ask them to verify their email address first.` 
+                });
+            }
             return res.status(404).json({ 
                 success: false, 
-                message: `User with email ${email} not found. Please ensure the user has registered an account.` 
+                message: `No verified user found with email ${email}. Please ensure the user has registered and verified their account.` 
             });
         }
 
@@ -284,7 +300,7 @@ export const inviteVolunteer = async (req, res) => {
 
         await event.save();
 
-        // Send notification to invited user
+        // Send notification to invited user (both system notification and email)
         try {
             const { notifyUsers } = await import("../utils/notify.js");
             await notifyUsers({
@@ -292,10 +308,11 @@ export const inviteVolunteer = async (req, res) => {
                 title: "Volunteer Invitation",
                 message: `You have been invited to volunteer for "${event.title}". ${autoApprove ? 'You have been automatically approved.' : 'Please accept the invitation to join.'}`,
                 payload: {
-                    eventId: event._id,
+                    eventId: String(event._id),
                     type: "volunteer_invitation",
                     autoApprove: autoApprove,
-                    invitedBy: userId
+                    invitedBy: String(userId),
+                    url: `/user/events/${event._id}`
                 }
             });
         } catch (notifError) {
@@ -386,7 +403,10 @@ export const acceptInvitation = async (req, res) => {
         return res.json({ 
             success: true, 
             message: "Invitation accepted successfully. You are now a volunteer for this event.",
-            volunteer: invitation
+            volunteer: invitation,
+            eventId: event._id,
+            eventTitle: event.title,
+            redirectUrl: `/user/events/${event._id}`
         });
     } catch (error) {
         console.error('Accept invitation error:', error);
