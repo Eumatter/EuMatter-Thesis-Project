@@ -166,8 +166,24 @@ export async function submitFeedback(req, res) {
             return res.status(400).json({ success: false, message: 'Feedback not required for this attendance' })
         }
 
-        if (attendance.status === 'submitted' && !organizer) {
-            return res.status(400).json({ success: false, message: 'Feedback already submitted' })
+        // Check if feedback was already submitted (multiple checks for robustness)
+        const hasFeedback = attendance.feedback && attendance.feedback.rating && attendance.feedback.comment
+        const isSubmitted = attendance.status === 'submitted' || attendance.status === 'overridden'
+        
+        if ((isSubmitted || hasFeedback) && !organizer) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Feedback has already been submitted for this attendance. Please refresh the page to see your submission.' 
+            })
+        }
+        
+        // Double-check: if feedback exists and was submitted by the same user (prevent duplicate submission)
+        if (hasFeedback && attendance.feedback.submittedBy && 
+            String(attendance.feedback.submittedBy) === String(userId) && !organizer) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'You have already submitted feedback for this attendance.' 
+            })
         }
 
         // Enforce 24-hour deadline: Feedback must be submitted within 24 hours after event ends

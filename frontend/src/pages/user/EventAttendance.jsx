@@ -274,9 +274,23 @@ const EventAttendance = () => {
     }
 
     const handleSubmitFeedback = async () => {
+        // Prevent duplicate submissions
+        if (submittingFeedback) {
+            toast.warning('Feedback submission in progress. Please wait...')
+            return
+        }
+
         if (!pendingFeedback?._id) {
             toast.error('Feedback record not found')
             console.error('Pending feedback missing:', pendingFeedback)
+            return
+        }
+
+        // Check if feedback was already submitted (status should be 'submitted' or 'overridden')
+        if (pendingFeedback.status === 'submitted' || pendingFeedback.status === 'overridden') {
+            toast.error('Feedback has already been submitted for this attendance')
+            // Refresh to get updated status
+            fetchPendingFeedback()
             return
         }
 
@@ -289,6 +303,14 @@ const EventAttendance = () => {
         if (!feedbackForm.comment || feedbackForm.comment.trim().length === 0) {
             toast.error('Please provide feedback message')
             console.error('Empty comment:', feedbackForm.comment)
+            return
+        }
+
+        // Ensure attendance is completed before allowing feedback
+        if (!pendingFeedback.timeOut && !pendingFeedback.checkOutTime) {
+            toast.error('Please complete your attendance (Time Out) before submitting feedback')
+            fetchAttendanceStatus()
+            fetchPendingFeedback()
             return
         }
 
@@ -310,11 +332,12 @@ const EventAttendance = () => {
 
             if (response.data?.success) {
                 toast.success('Thank you for your feedback!')
-                setPendingFeedback(null)
+                // Clear feedback form immediately to prevent duplicate submission
                 setFeedbackForm({ rating: 0, comment: '' })
+                setPendingFeedback(null)
                 // Refresh attendance status and feedback
-                fetchAttendanceStatus()
-                fetchPendingFeedback()
+                await fetchAttendanceStatus()
+                await fetchPendingFeedback()
             }
         } catch (error) {
             console.error('Error submitting feedback:', error)
@@ -324,8 +347,13 @@ const EventAttendance = () => {
             if (error.response?.status === 400) {
                 if (errorMessage.includes('not completed')) {
                     toast.error('Please complete your attendance (Time Out) before submitting feedback')
-                } else if (errorMessage.includes('already submitted')) {
+                    // Refresh status to check completion
+                    fetchAttendanceStatus()
+                    fetchPendingFeedback()
+                } else if (errorMessage.includes('already submitted') || errorMessage.includes('Feedback already submitted')) {
                     toast.error('Feedback has already been submitted for this attendance')
+                    // Refresh to get updated status
+                    fetchPendingFeedback()
                 } else if (errorMessage.includes('Rating must be')) {
                     toast.error('Please select a valid rating from 1 to 5 stars')
                 } else if (errorMessage.includes('Feedback message is required')) {
@@ -337,6 +365,7 @@ const EventAttendance = () => {
                 toast.error('You do not have permission to submit feedback for this attendance')
             } else if (error.response?.status === 404) {
                 toast.error('Attendance record not found. Please refresh the page.')
+                fetchPendingFeedback()
             } else {
                 toast.error(errorMessage)
             }
@@ -429,19 +458,53 @@ const EventAttendance = () => {
                                     </div>
                                 )}
 
-                                {!feedbackLoading && pendingFeedback && (
-                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-yellow-200/60 p-6 sm:p-8 shadow-lg">
-                                        {/* Warning if attendance not completed */}
-                                        {pendingFeedback.status === 'pending' && !pendingFeedback.timeOut && !pendingFeedback.checkOutTime && (
-                                            <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
-                                                <p className="text-sm text-amber-800 font-semibold flex items-center gap-2">
-                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                                    </svg>
-                                                    You need to complete your attendance (Time Out) before submitting feedback. Please scan the Time Out QR code first.
-                                                </p>
+                                {!feedbackLoading && pendingFeedback && (() => {
+                                    // Check if attendance is completed - need both time in and time out
+                                    const hasTimeIn = !!(pendingFeedback.timeIn || pendingFeedback.checkInTime)
+                                    const hasTimeOut = !!(pendingFeedback.timeOut || pendingFeedback.checkOutTime)
+                                    const isAttendanceComplete = hasTimeIn && hasTimeOut
+                                    
+                                    // Also check if feedback was already submitted
+                                    const isAlreadySubmitted = pendingFeedback.status === 'submitted' || pendingFeedback.status === 'overridden'
+                                    
+                                    // Show warning if attendance not completed
+                                    if (!isAttendanceComplete && !isAlreadySubmitted) {
+                                        return (
+                                            <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-amber-200/60 p-6 sm:p-8 shadow-lg">
+                                                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
+                                                    <p className="text-sm text-amber-800 font-semibold flex items-center gap-2">
+                                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                        </svg>
+                                                        You need to complete your attendance (both Time In and Time Out) before submitting feedback. Please scan both QR codes first.
+                                                    </p>
+                                                </div>
+                                                <div className="text-center py-4">
+                                                    <p className="text-gray-600">Complete your attendance to unlock the feedback form.</p>
+                                                </div>
                                             </div>
-                                        )}
+                                        )
+                                    }
+                                    
+                                    // Show success message if already submitted
+                                    if (isAlreadySubmitted) {
+                                        return (
+                                            <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-green-200/60 p-6 sm:p-8 shadow-lg">
+                                                <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-xl">
+                                                    <p className="text-sm text-green-800 font-semibold flex items-center gap-2">
+                                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                        Feedback has already been submitted for this attendance.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )
+                                    }
+                                    
+                                    // Show feedback form only if attendance is complete AND not already submitted
+                                    return (
+                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-yellow-200/60 p-6 sm:p-8 shadow-lg">
                                         
                                         {/* Event Info */}
                                         <div className="mb-6 pb-6 border-b-2 border-gray-100">
@@ -573,8 +636,9 @@ const EventAttendance = () => {
                                                 </p>
                                             </div>
                                         )}
-                                    </div>
-                                )}
+                                        </div>
+                                    )
+                                })()}
 
                                 {!feedbackLoading && !pendingFeedback && (
                                     <div className="text-center py-8">

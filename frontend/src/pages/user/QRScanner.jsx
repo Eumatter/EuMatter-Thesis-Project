@@ -230,10 +230,27 @@ const QRScanner = () => {
                     const response = await axios.post(`${backendUrl}api/attendance/check-in`, { token }, { withCredentials: true })
                     toast.success(response.data?.message || 'Attendance recorded')
                     const status = response.data?.status
-                    if (status === 'timein') setAttendanceStatus('timeout')
-                    else if (status === 'timeout') {
-                        setAttendanceStatus('completed')
-                        setShowFeedbackModal(true)
+                    const attendance = response.data?.attendance
+                    
+                    // Verify attendance completion before showing feedback
+                    if (status === 'timein') {
+                        setAttendanceStatus('timeout')
+                    } else if (status === 'timeout') {
+                        // Check if both time in and time out are complete
+                        const hasTimeIn = !!(attendance?.timeIn || attendance?.checkInTime)
+                        const hasTimeOut = !!(attendance?.timeOut || attendance?.checkOutTime)
+                        const isComplete = hasTimeIn && hasTimeOut
+                        
+                        if (isComplete) {
+                            setAttendanceStatus('completed')
+                            // Redirect to attendance page for feedback instead of showing modal
+                            setTimeout(() => {
+                                navigate(`/volunteer/attendance/${eventId}?fromQR=true`)
+                            }, 1500)
+                        } else {
+                            setAttendanceStatus('timeout')
+                            toast.warning('Please complete both Time In and Time Out before submitting feedback.')
+                        }
                     }
                     if (eventId && userData?._id) {
                         fetchAttendanceStatus()
@@ -391,14 +408,26 @@ const QRScanner = () => {
             } else {
                 setAttendanceStatus('completed')
                 setAttendanceData(response.data.attendance || null)
-                fetchEventData().then(() => {
-                    // Check if there's pending feedback for this event
-                    // Redirect to event attendance page for feedback
-                    setTimeout(() => {
-                        toast.success('Time out recorded successfully! Redirecting to submit feedback...')
-                        navigate(`/volunteer/attendance/${eventId}?fromQR=true`)
-                    }, 1500)
-                })
+                
+                // Verify attendance is complete before redirecting
+                const attendance = response.data.attendance
+                const hasTimeIn = !!(attendance?.timeIn || attendance?.checkInTime)
+                const hasTimeOut = !!(attendance?.timeOut || attendance?.checkOutTime)
+                const isComplete = hasTimeIn && hasTimeOut
+                
+                if (isComplete) {
+                    fetchEventData().then(() => {
+                        // Only redirect if attendance is fully complete
+                        setTimeout(() => {
+                            toast.success('Time out recorded successfully! Redirecting to submit feedback...')
+                            navigate(`/volunteer/attendance/${eventId}?fromQR=true`)
+                        }, 1500)
+                    })
+                } else {
+                    // Attendance not complete yet - don't redirect
+                    toast.warning('Please complete both Time In and Time Out before submitting feedback.')
+                    fetchEventData()
+                }
             }
             
         } catch (error) {
