@@ -858,7 +858,6 @@ const Header = () => {
                                                     <div className="px-3 py-1 mb-3">
                                                         <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account</span>
                                                     </div>
-                                                    <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
                                                     <MobileNavLink to={getProfileRoute()} icon={<FaCog />}>Account Settings</MobileNavLink>
                                                     {userData.role && !userData.role.toLowerCase().includes('system admin') && (
                                                         <MobileNavLink to="/system-settings" icon={<FaSlidersH />}>System Settings</MobileNavLink>
@@ -881,32 +880,6 @@ const Header = () => {
                                                         <span className="text-base font-semibold flex-1 text-left">Logout</span>
                                                     </button>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Footer with user info */}
-                                        <div className="px-5 py-4 border-t-2 border-gray-200 bg-gradient-to-br from-gray-50 via-white to-gray-50 shadow-inner">
-                                            <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition-all duration-200 cursor-pointer" onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }}>
-                                                {userData?.profileImage ? (
-                                                    <div className="relative">
-                                                        <img 
-                                                            src={userData.profileImage} 
-                                                            alt={userData.name} 
-                                                            className="w-12 h-12 rounded-full object-cover border-2 border-[#800000] shadow-md" 
-                                                        />
-                                                        <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#800000] to-[#9c0000] text-white flex items-center justify-center font-bold text-base shadow-md">
-                                                        {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
-                                                    </div>
-                                                )}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm font-bold text-gray-900 truncate">{userData.name}</div>
-                                                    <div className="text-xs text-gray-600 truncate">{userData.email}</div>
-                                                    <div className="text-xs text-[#800000] font-semibold mt-0.5">{userData.role}</div>
-                                                </div>
-                                                <FaChevronRight className="text-gray-400 flex-shrink-0" />
                                             </div>
                                         </div>
                                     </div>
