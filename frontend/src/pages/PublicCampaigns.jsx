@@ -235,35 +235,14 @@ const PublicCampaigns = () => {
                                             </div>
                                         )}
                                         
-                                        {/* Action Button */}
-                                        {/* Show "Donate Now" only when donations ONLY (no volunteer) */}
-                                        {/* Show "Volunteer Now" when volunteer is enabled (even if donations also enabled) */}
-                                        {/* Otherwise show "View Details" */}
-                                        {c.isOpenForDonation && !c.isOpenForVolunteer ? (
-                                            <Button
-                                                variant="maroon"
-                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
-                                                onClick={() => setActiveCampaign(c)}
-                                            >
-                                                Donate Now
-                                            </Button>
-                                        ) : c.isOpenForVolunteer ? (
-                                            <Button
-                                                variant="maroon"
-                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
-                                                onClick={() => setActiveCampaign(c)}
-                                            >
-                                                Volunteer Now
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                variant="maroon"
-                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
-                                                onClick={() => setActiveCampaign(c)}
-                                            >
-                                                View Details
-                                            </Button>
-                                        )}
+                                        {/* Action Button - Always show "View Details" */}
+                                        <Button
+                                            variant="maroon"
+                                            className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
+                                            onClick={() => setActiveCampaign(c)}
+                                        >
+                                            View Details
+                                        </Button>
                                     </div>
                                 </motion.div>
                             );
@@ -275,108 +254,204 @@ const PublicCampaigns = () => {
             <AnimatePresence>
                 {activeCampaign && (
                     <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setActiveCampaign(null)}
                     >
-                        <div
-                            className="absolute inset-0 bg-black/50"
-                            onClick={() => setActiveCampaign(null)}
-                        />
+                        {/* Backdrop with blur effect */}
                         <motion.div
-                            className="relative z-10 w-[95%] max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden"
-                            initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        />
+                        
+                        {/* Modal Container - Responsive and Scrollable */}
+                        <motion.div
+                            className="relative z-10 w-full max-w-4xl max-h-[90vh] sm:max-h-[95vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+                            initial={{ scale: 0.9, y: 20, opacity: 0 }}
                             animate={{ scale: 1, y: 0, opacity: 1 }}
-                            exit={{ scale: 0.95, y: 20, opacity: 0 }}
-                            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+                            exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <div
-                                className="h-56 bg-gray-200 bg-cover bg-center relative"
-                                style={{ 
-                                    backgroundImage: `url('${activeCampaign.image 
-                                        ? (activeCampaign.image.startsWith('data:image') 
-                                            ? activeCampaign.image 
-                                            : `data:image/jpeg;base64,${activeCampaign.image}`)
-                                        : "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"}')` 
-                                }}
+                            {/* Close Button - Top Right */}
+                            <button
+                                onClick={() => setActiveCampaign(null)}
+                                className="absolute top-4 right-4 z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 active:scale-95 transition-all duration-200 group"
+                                aria-label="Close modal"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                            </div>
-                            <div className="p-6 max-h-[calc(100vh-400px)] overflow-y-auto">
-                                <h2 className="text-2xl font-bold text-black mb-3">{activeCampaign.title}</h2>
-                                {activeCampaign.location && (
-                                    <p className="text-sm text-gray-600 mb-2">
-                                        📍 {activeCampaign.location}
-                                    </p>
-                                )}
-                                {activeCampaign.startDate && (
-                                    <p className="text-sm text-gray-600 mb-2">
-                                        📅 {new Date(activeCampaign.startDate).toLocaleDateString('en-US', { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
-                                        })}
-                                        {activeCampaign.endDate && ` - ${new Date(activeCampaign.endDate).toLocaleDateString('en-US', { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
-                                        })}`}
-                                    </p>
-                                )}
-                                <div className="mt-3 mb-4">
-                                    {activeCampaign.description ? (
-                                        <div 
-                                            className="text-gray-700 prose prose-sm max-w-none"
-                                            dangerouslySetInnerHTML={{ __html: activeCampaign.description }}
-                                        />
-                                    ) : (
-                                        <p className="text-gray-700">{activeCampaign.summary}</p>
-                                    )}
-                                </div>
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 group-hover:text-[#800000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
+                            {/* Image Header */}
+                            <div className="relative h-48 sm:h-56 md:h-64 lg:h-72 bg-gray-200 overflow-hidden">
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transform transition-transform duration-700"
+                                    style={{ 
+                                        backgroundImage: `url('${activeCampaign.image 
+                                            ? (activeCampaign.image.startsWith('data:image') || activeCampaign.image.startsWith('http')
+                                                ? activeCampaign.image 
+                                                : `data:image/jpeg;base64,${activeCampaign.image}`)
+                                            : "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"}')` 
+                                    }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                                 
-                                {/* Donation Tag - Show only when donations are enabled */}
-                                {activeCampaign.isOpenForDonation && (
-                                    <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-[#d4af37]/10 to-[#f4d03f]/10 border border-[#d4af37]/30 rounded-full mb-4">
-                                        <span className="text-sm font-semibold text-[#800000]">
-                                            This event is open for donations.
+                                {/* Days Remaining Badge */}
+                                {activeCampaign.daysRemaining > 0 && (
+                                    <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                                        <span className="text-sm font-bold text-[#800000]">
+                                            {activeCampaign.daysRemaining} {activeCampaign.daysRemaining === 1 ? 'day' : 'days'} remaining
                                         </span>
                                     </div>
                                 )}
-                                
-                                {/* Volunteer Progress Bar - Show only when volunteering is enabled */}
-                                {activeCampaign.isOpenForVolunteer && (
-                                    <div className="space-y-2 mb-4">
-                                        {activeCampaign.maxVolunteers ? (
-                                            <>
-                                                <div className="flex justify-between items-center text-sm">
-                                                    <span className="font-semibold text-[#800000]">
-                                                        {activeCampaign.volunteerCount || 0} volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''}
+                            </div>
+
+                            {/* Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto overscroll-contain">
+                                <div className="p-6 sm:p-8 md:p-10 space-y-6">
+                                    {/* Title */}
+                                    <div>
+                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4">
+                                            {activeCampaign.title}
+                                        </h2>
+                                        
+                                        {/* Metadata Icons */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm sm:text-base">
+                                            {activeCampaign.location && (
+                                                <div className="flex items-center gap-2 text-gray-700">
+                                                    <svg className="w-5 h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    <span className="font-medium">{activeCampaign.location}</span>
+                                                </div>
+                                            )}
+                                            {activeCampaign.startDate && (
+                                                <div className="flex items-center gap-2 text-gray-700">
+                                                    <svg className="w-5 h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span className="font-medium">
+                                                        {new Date(activeCampaign.startDate).toLocaleDateString('en-US', { 
+                                                            year: 'numeric', 
+                                                            month: 'short', 
+                                                            day: 'numeric' 
+                                                        })}
+                                                        {activeCampaign.endDate && ` - ${new Date(activeCampaign.endDate).toLocaleDateString('en-US', { 
+                                                            year: 'numeric', 
+                                                            month: 'short', 
+                                                            day: 'numeric' 
+                                                        })}`}
                                                     </span>
-                                                    <span className="text-gray-500">
-                                                        of {activeCampaign.maxVolunteers} needed
-                                                    </span>
                                                 </div>
-                                                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                                                    <div 
-                                                        className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
-                                                        style={{ width: `${Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100)}%` }}
-                                                    ></div>
-                                                </div>
-                                                <div className="text-xs text-gray-500">
-                                                    {Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100).toFixed(0)}% volunteers
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="text-sm text-gray-600">
-                                                <span className="font-semibold text-[#800000]">{activeCampaign.volunteerCount || 0}</span> volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''} joined
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Tags Section */}
+                                    <div className="flex flex-wrap gap-3">
+                                        {/* Donation Tag */}
+                                        {activeCampaign.isOpenForDonation && (
+                                            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#d4af37]/15 to-[#f4d03f]/15 border-2 border-[#d4af37]/40 rounded-full shadow-sm">
+                                                <svg className="w-5 h-5 text-[#d4af37] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span className="text-sm font-semibold text-[#800000]">
+                                                    Open for Donations
+                                                </span>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Volunteer Tag */}
+                                        {activeCampaign.isOpenForVolunteer && (
+                                            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#800000]/10 to-[#9c0000]/10 border-2 border-[#800000]/30 rounded-full shadow-sm">
+                                                <svg className="w-5 h-5 text-[#800000] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                </svg>
+                                                <span className="text-sm font-semibold text-[#800000]">
+                                                    Open for Volunteers
+                                                </span>
                                             </div>
                                         )}
                                     </div>
-                                )}
-                                <div className="mt-6 flex justify-end gap-3">
-                                    <Button variant="maroonOutline" onClick={() => setActiveCampaign(null)}>Close</Button>
+
+                                    {/* Description */}
+                                    <div className="prose prose-sm sm:prose-base max-w-none">
+                                        <div className="border-l-4 border-[#800000] pl-4 sm:pl-6">
+                                            {activeCampaign.description ? (
+                                                <div 
+                                                    className="text-gray-700 leading-relaxed"
+                                                    dangerouslySetInnerHTML={{ __html: activeCampaign.description }}
+                                                    style={{
+                                                        wordWrap: 'break-word',
+                                                        overflowWrap: 'break-word'
+                                                    }}
+                                                />
+                                            ) : (
+                                                <p className="text-gray-700 leading-relaxed">{activeCampaign.summary}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Volunteer Progress Bar */}
+                                    {activeCampaign.isOpenForVolunteer && (
+                                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 sm:p-6 border border-gray-200 shadow-sm">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <svg className="w-6 h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                    <h3 className="text-lg font-bold text-gray-900">Volunteer Participation</h3>
+                                                </div>
+                                                {activeCampaign.maxVolunteers ? (
+                                                    <>
+                                                        <div className="flex justify-between items-center text-base">
+                                                            <span className="font-bold text-[#800000]">
+                                                                {activeCampaign.volunteerCount || 0} volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''}
+                                                            </span>
+                                                            <span className="text-gray-600">
+                                                                of {activeCampaign.maxVolunteers} needed
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                                            <motion.div 
+                                                                className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full"
+                                                                initial={{ width: 0 }}
+                                                                animate={{ width: `${Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100)}%` }}
+                                                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                                            />
+                                                        </div>
+                                                        <div className="text-sm text-gray-600 font-medium">
+                                                            {Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100).toFixed(0)}% complete
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="text-base text-gray-700">
+                                                        <span className="font-bold text-[#800000]">{activeCampaign.volunteerCount || 0}</span> volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''} have joined this event
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* Footer with Close Button */}
+                            <div className="border-t border-gray-200 bg-gray-50 px-6 sm:px-8 md:px-10 py-4 sm:py-5 flex justify-end">
+                                <Button 
+                                    variant="maroon" 
+                                    onClick={() => setActiveCampaign(null)}
+                                    className="px-6 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transition-all duration-200"
+                                >
+                                    Close
+                                </Button>
                             </div>
                         </motion.div>
                     </motion.div>
