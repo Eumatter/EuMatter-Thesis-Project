@@ -471,36 +471,6 @@ const VolunteerManagement = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-2 sm:gap-3">
-                            <button
-                                onClick={validateAttendance}
-                                className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full md:w-auto"
-                            >
-                                Validate Attendance
-                            </button>
-                            <button
-                                onClick={() => generateQRCode('checkIn')}
-                                disabled={!canGenerateCheckInQR() || qrGenerating}
-                                className={`px-4 sm:px-5 py-2 rounded-lg transition-colors w-full md:w-auto ${
-                                    canGenerateCheckInQR() && !qrGenerating
-                                        ? 'bg-green-600 text-white hover:bg-green-700'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                {qrGenerating ? 'Generating...' : 'Generate Check-In QR'}
-                            </button>
-                            <button
-                                onClick={() => generateQRCode('checkOut')}
-                                disabled={!canGenerateCheckOutQR() || qrGenerating}
-                                className={`px-4 sm:px-5 py-2 rounded-lg transition-colors w-full md:w-auto ${
-                                    canGenerateCheckOutQR() && !qrGenerating
-                                        ? 'bg-purple-600 text-white hover:bg-purple-700'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                {qrGenerating ? 'Generating...' : 'Generate Evaluation QR'}
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -1031,6 +1001,15 @@ const VolunteerManagement = () => {
                         <div className="px-4 sm:px-6 py-6">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
                                 <h2 className="text-xl font-semibold text-gray-900">Attendance Records</h2>
+                                <button
+                                    onClick={validateAttendance}
+                                    className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Validate Attendance
+                                </button>
                             </div>
                             
                             {attendance.length === 0 ? (
