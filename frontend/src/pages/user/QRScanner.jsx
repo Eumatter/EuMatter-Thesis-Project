@@ -613,6 +613,73 @@ const QRScanner = () => {
         }
     }
 
+    // Helper function to preprocess image for better QR code detection
+    const preprocessImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image()
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+            let objectUrl = null
+            
+            img.onload = () => {
+                try {
+                    // Calculate optimal size (keep aspect ratio, max dimension 2000px for quality)
+                    const maxDimension = 2000
+                    let width = img.width
+                    let height = img.height
+                    
+                    if (width > maxDimension || height > maxDimension) {
+                        if (width > height) {
+                            height = (height * maxDimension) / width
+                            width = maxDimension
+                        } else {
+                            width = (width * maxDimension) / height
+                            height = maxDimension
+                        }
+                    }
+                    
+                    // Set canvas size
+                    canvas.width = width
+                    canvas.height = height
+                    
+                    // Draw image with smoothing
+                    ctx.imageSmoothingEnabled = true
+                    ctx.imageSmoothingQuality = 'high'
+                    ctx.drawImage(img, 0, 0, width, height)
+                    
+                    // Clean up object URL
+                    if (objectUrl) {
+                        URL.revokeObjectURL(objectUrl)
+                    }
+                    
+                    // Convert to blob
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob)
+                        } else {
+                            reject(new Error('Failed to process image'))
+                        }
+                    }, file.type || 'image/jpeg', 0.95)
+                } catch (error) {
+                    if (objectUrl) {
+                        URL.revokeObjectURL(objectUrl)
+                    }
+                    reject(error)
+                }
+            }
+            
+            img.onerror = () => {
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl)
+                }
+                reject(new Error('Failed to load image'))
+            }
+            
+            objectUrl = URL.createObjectURL(file)
+            img.src = objectUrl
+        })
+    }
+
     const handleImageUpload = async (event, action) => {
         const file = event.target.files?.[0]
         if (!file) return
@@ -643,12 +710,71 @@ const QRScanner = () => {
             // Create Html5Qrcode instance
             const html5QrCodeInstance = new Html5Qrcode(qrReaderElement.id)
             
-            // Use scanFile method - it's an instance method that works with file objects
-            const decodedText = await html5QrCodeInstance.scanFile(file, true)
+            let decodedText = null
+            let lastError = null
+            
+            // Try scanning with original file first
+            try {
+                decodedText = await html5QrCodeInstance.scanFile(file, false)
+            } catch (error) {
+                lastError = error
+                console.log('First scan attempt failed, trying with preprocessed image...')
+            }
+            
+            // If first attempt failed, try with preprocessed image
+            if (!decodedText) {
+                try {
+                    const processedImage = await preprocessImage(file)
+                    decodedText = await html5QrCodeInstance.scanFile(processedImage, false)
+                } catch (error) {
+                    lastError = error
+                    console.log('Preprocessed scan attempt failed, trying with different options...')
+                }
+            }
+            
+            // If still failed, try with data URL (different format might work better)
+            if (!decodedText) {
+                try {
+                    const reader = new FileReader()
+                    const imageDataUrl = await new Promise((resolve, reject) => {
+                        reader.onload = (e) => resolve(e.target.result)
+                        reader.onerror = reject
+                        reader.readAsDataURL(file)
+                    })
+                    
+                    // Try scanning with data URL directly
+                    decodedText = await html5QrCodeInstance.scanFile(imageDataUrl, false)
+                } catch (error) {
+                    lastError = error
+                    console.log('Data URL scan attempt failed')
+                    
+                    // Last attempt: try with preprocessed image as data URL
+                    try {
+                        const processedImage = await preprocessImage(file)
+                        const reader = new FileReader()
+                        const processedDataUrl = await new Promise((resolve, reject) => {
+                            reader.onload = (e) => resolve(e.target.result)
+                            reader.onerror = reject
+                            reader.readAsDataURL(processedImage)
+                        })
+                        decodedText = await html5QrCodeInstance.scanFile(processedDataUrl, false)
+                    } catch (finalError) {
+                        lastError = finalError
+                        console.log('All scan attempts failed')
+                    }
+                }
+            }
             
             // Clean up temporary element if created
             if (tempElement && document.body.contains(tempElement)) {
                 document.body.removeChild(tempElement)
+            }
+            
+            // Clean up Html5Qrcode instance
+            try {
+                await html5QrCodeInstance.clear()
+            } catch (e) {
+                // Ignore cleanup errors
             }
             
             if (decodedText) {
@@ -668,7 +794,12 @@ const QRScanner = () => {
                 
                 await handleQRScan(decodedText, action)
             } else {
-                toast.error('No QR code found in the image')
+                // Provide more specific error message
+                if (lastError?.message?.includes('No QR code found') || lastError?.message?.includes('not found')) {
+                    toast.error('No QR code found in the image. Please ensure the image contains a clear QR code.')
+                } else {
+                    toast.error('Failed to scan QR code from image. Please ensure the image contains a valid QR code and try again.')
+                }
             }
         } catch (error) {
             console.error('Error scanning image:', error)
