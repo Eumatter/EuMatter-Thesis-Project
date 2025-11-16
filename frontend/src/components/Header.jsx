@@ -303,9 +303,9 @@ const Header = () => {
         <>
         {/* CSS Animations for slider menu */}
         <style>{`
-            @keyframes slideInLeft {
+            @keyframes slideInRight {
                 from {
-                    transform: translateX(-100%);
+                    transform: translateX(100%);
                 }
                 to {
                     transform: translateX(0);
@@ -769,7 +769,7 @@ const Header = () => {
 
             {/* No compact menubar; mobile uses hamburger menu overlay */}
         </header>
-        {/* Mobile slider menu - slides in from left */}
+        {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
                     <>
                         {/* Backdrop overlay */}
@@ -780,11 +780,11 @@ const Header = () => {
                                 animation: 'fadeIn 0.3s ease-out'
                             }}
                         />
-                        {/* Slider menu from left */}
+                        {/* Slider menu from right */}
                         <div 
-                            className={`fixed top-0 ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 bottom-0 z-[95] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col`}
+                            className={`fixed top-0 ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} right-0 bottom-0 z-[95] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col`}
                             style={{
-                                animation: 'slideInLeft 0.3s ease-out',
+                                animation: 'slideInRight 0.3s ease-out',
                                 transform: 'translateX(0)'
                             }}
                         >
