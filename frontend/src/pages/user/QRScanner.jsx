@@ -37,10 +37,6 @@ const QRScanner = () => {
     const [cameraError, setCameraError] = useState(null)
     
     // Separate states for Time In and Time Out
-    const [timeInPrimaryKey, setTimeInPrimaryKey] = useState('')
-    const [timeOutPrimaryKey, setTimeOutPrimaryKey] = useState('')
-    const [showTimeInPrimaryKey, setShowTimeInPrimaryKey] = useState(false)
-    const [showTimeOutPrimaryKey, setShowTimeOutPrimaryKey] = useState(false)
     const [activeScanner, setActiveScanner] = useState(null) // 'timein' or 'timeout' or null
     const [isMobile, setIsMobile] = useState(false)
     const [showCameraModal, setShowCameraModal] = useState(false) // Modal state for camera
@@ -626,21 +622,6 @@ const QRScanner = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    const handlePrimaryKeySubmit = (action) => {
-        const primaryKey = action === 'timein' ? timeInPrimaryKey : timeOutPrimaryKey
-        if (!primaryKey.trim()) {
-            toast.error('Please enter a primary key code')
-            return
-        }
-        handleQRScan(primaryKey.trim(), action)
-        if (action === 'timein') {
-            setTimeInPrimaryKey('')
-            setShowTimeInPrimaryKey(false)
-        } else {
-            setTimeOutPrimaryKey('')
-            setShowTimeOutPrimaryKey(false)
-        }
-    }
 
     // Helper function to preprocess image for better QR code detection
     const preprocessImage = (file) => {
@@ -1079,64 +1060,6 @@ const QRScanner = () => {
                                 </div>
                         </div>
 
-                            {/* Primary Key Input Option */}
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 sm:p-6">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </div>
-                                    <div className="flex-1">
-                                            <h3 className="font-bold text-purple-900">Enter Primary Key</h3>
-                                            <p className="text-sm text-purple-700">Manually enter the primary key code</p>
-                                        </div>
-                                    </div>
-                                    {showTimeInPrimaryKey ? (
-                                        <div className="space-y-3">
-                                            <input
-                                                type="text"
-                                                value={timeInPrimaryKey}
-                                                onChange={(e) => setTimeInPrimaryKey(e.target.value)}
-                                                onKeyPress={(e) => e.key === 'Enter' && handlePrimaryKeySubmit('timein')}
-                                                placeholder="Enter primary key code"
-                                                className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                                                autoFocus
-                                            />
-                                            <div className="flex gap-3">
-                            <button
-                                                    onClick={() => handlePrimaryKeySubmit('timein')}
-                                                    disabled={processing || !timeInPrimaryKey.trim()}
-                                                    className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                                    Submit
-                            </button>
-                                    <button
-                                                    onClick={() => {
-                                                        setShowTimeInPrimaryKey(false)
-                                                        setTimeInPrimaryKey('')
-                                                    }}
-                                                    className="px-6 py-3 border-2 border-purple-300 text-purple-700 rounded-xl hover:bg-purple-100 transition-all duration-200 font-semibold"
-                                                >
-                                                    Cancel
-                                    </button>
-                                </div>
-                            </div>
-                            ) : (
-                                <button
-                                            onClick={() => setShowTimeInPrimaryKey(true)}
-                                            className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                    </svg>
-                                            Enter Primary Key
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                    
                             {/* Image Upload Option */}
                             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">
@@ -1280,64 +1203,6 @@ const QRScanner = () => {
                                 </div>
                             </div>
 
-                            {/* Primary Key Input Option */}
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-4 sm:p-6">
-                                <div className="flex flex-col gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-purple-900">Enter Primary Key</h3>
-                                            <p className="text-sm text-purple-700">Manually enter the primary key code</p>
-                        </div>
-                </div>
-                                    {showTimeOutPrimaryKey ? (
-                                        <div className="space-y-3">
-                                            <input
-                                                type="text"
-                                                value={timeOutPrimaryKey}
-                                                onChange={(e) => setTimeOutPrimaryKey(e.target.value)}
-                                                onKeyPress={(e) => e.key === 'Enter' && handlePrimaryKeySubmit('timeout')}
-                                                placeholder="Enter primary key code"
-                                                className="w-full px-4 py-3 border-2 border-purple-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                                                autoFocus
-                                            />
-                            <div className="flex gap-3">
-                                                <button
-                                                    onClick={() => handlePrimaryKeySubmit('timeout')}
-                                                    disabled={processing || !timeOutPrimaryKey.trim()}
-                                                    className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Submit
-                                                </button>
-                                <button
-                                    onClick={() => {
-                                                        setShowTimeOutPrimaryKey(false)
-                                                        setTimeOutPrimaryKey('')
-                                    }}
-                                                    className="px-6 py-3 border-2 border-purple-300 text-purple-700 rounded-xl hover:bg-purple-100 transition-all duration-200 font-semibold"
-                                >
-                                                    Cancel
-                                </button>
-                </div>
-                        </div>
-                                    ) : (
-                                <button
-                                            onClick={() => setShowTimeOutPrimaryKey(true)}
-                                            className="w-full bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
-                                >
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                            </svg>
-                                            Enter Primary Key
-                                </button>
-                                    )}
-                            </div>
-                    </div>
-                    
                             {/* Image Upload Option */}
                             <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">

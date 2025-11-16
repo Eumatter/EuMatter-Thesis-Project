@@ -28,12 +28,8 @@ const VolunteerManagement = () => {
     const [reviewing, setReviewing] = useState(false)
     
     // QR Code states
-    const [qrCode, setQrCode] = useState(null)
     const [qrGeneratingCheckIn, setQrGeneratingCheckIn] = useState(false)
     const [qrGeneratingCheckOut, setQrGeneratingCheckOut] = useState(false)
-    
-    // Modal states
-    const [showQRModal, setShowQRModal] = useState(false)
     const [showAttendanceModal, setShowAttendanceModal] = useState(false)
     const [showInviteModal, setShowInviteModal] = useState(false)
     const [inviteEmail, setInviteEmail] = useState('')
@@ -133,9 +129,6 @@ const VolunteerManagement = () => {
                 }
             })
             setQrStatus(response.data)
-            if (response.data.qrCode) {
-                setQrCode(response.data.qrCode)
-            }
         } catch (error) {
             console.error('Error fetching QR status:', error)
             console.log('QR status error (this is normal if no QR generated yet):', error.response?.data)
@@ -231,11 +224,9 @@ const VolunteerManagement = () => {
                 { withCredentials: true }
             )
             
-            setQrCode(response.data.qrCode)
-            setQrStatus(response.data)
-            setShowQRModal(true)
             toast.success(`${type === 'checkIn' ? 'Check-in' : 'Evaluation/Check-out'} QR code generated successfully`)
-            fetchQRStatus() // Refresh QR status
+            // Fetch updated QR status to get the complete status with image URLs
+            await fetchQRStatus()
         } catch (error) {
             console.error('Error generating QR code:', error)
             toast.error(error.response?.data?.message || 'Failed to generate QR code')
@@ -246,6 +237,69 @@ const VolunteerManagement = () => {
             } else {
                 setQrGeneratingCheckOut(false)
             }
+        }
+    }
+
+    // Download QR code as PDF
+    const downloadQRAsPDF = async (qrImageSrc, qrType) => {
+        try {
+            // Dynamically import jsPDF and html2canvas
+            const [{ default: jsPDF }, html2canvas] = await Promise.all([
+                import('jspdf'),
+                import('html2canvas')
+            ])
+            
+            // Create a temporary image element to get the QR code
+            const img = new Image()
+            img.crossOrigin = 'anonymous'
+            
+            await new Promise((resolve, reject) => {
+                img.onload = resolve
+                img.onerror = reject
+                img.src = qrImageSrc
+            })
+            
+            // Create PDF
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [210, 297] // A4 size
+            })
+            
+            // Calculate dimensions to center the QR code
+            const pdfWidth = pdf.internal.pageSize.getWidth()
+            const pdfHeight = pdf.internal.pageSize.getHeight()
+            const qrSize = 150 // QR code size in mm
+            const x = (pdfWidth - qrSize) / 2
+            const y = (pdfHeight - qrSize) / 2 - 20
+            
+            // Add title
+            pdf.setFontSize(18)
+            pdf.text(`${qrType === 'checkIn' ? 'Check-In' : 'Check-Out'} QR Code`, pdfWidth / 2, 30, { align: 'center' })
+            
+            // Add event title if available
+            if (event?.title) {
+                pdf.setFontSize(14)
+                pdf.text(event.title, pdfWidth / 2, 40, { align: 'center' })
+            }
+            
+            // Add QR code image
+            pdf.addImage(img, 'PNG', x, y, qrSize, qrSize)
+            
+            // Add instructions
+            pdf.setFontSize(12)
+            pdf.text('Scan this QR code to record your attendance', pdfWidth / 2, y + qrSize + 15, { align: 'center' })
+            
+            // Generate filename
+            const eventTitle = event?.title?.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'event'
+            const filename = `${eventTitle}_${qrType}_qr_code.pdf`
+            
+            // Save PDF
+            pdf.save(filename)
+            toast.success('QR code downloaded as PDF')
+        } catch (error) {
+            console.error('Error downloading QR code as PDF:', error)
+            toast.error('Failed to download QR code as PDF. Please try again.')
         }
     }
 
@@ -1257,7 +1311,7 @@ const VolunteerManagement = () => {
                                                 src={qrStatus.checkInQR} 
                                                 alt="Check-In QR Code" 
                                             className="mx-auto mb-4 max-w-full"
-                                            style={{ maxWidth: '300px' }}
+                                            style={{ maxWidth: '400px', minHeight: '300px' }}
                                         />
                                         <p className="text-sm text-gray-600 mb-2">
                                                 Generated: {qrStatus.generatedAt ? formatDate(qrStatus.generatedAt) : 'N/A'}
@@ -1266,15 +1320,17 @@ const VolunteerManagement = () => {
                                                 Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
                                         </p>
                                     </div>
-                                        <button
-                                            onClick={() => {
-                                                setQrCode(qrStatus.checkInQR)
-                                                setShowQRModal(true)
-                                            }}
-                                            className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                                        >
-                                            View Full Size
-                                        </button>
+                                        <div className="flex flex-col sm:flex-row justify-center gap-3">
+                                            <button
+                                                onClick={() => downloadQRAsPDF(qrStatus.checkInQR, 'checkIn')}
+                                                className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                Download PDF
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="text-center py-8 bg-gray-50 rounded-lg">
@@ -1304,7 +1360,7 @@ const VolunteerManagement = () => {
                                                 src={qrStatus.checkOutQR} 
                                                 alt="Evaluation QR Code" 
                                                 className="mx-auto mb-4 max-w-full"
-                                                style={{ maxWidth: '300px' }}
+                                                style={{ maxWidth: '400px', minHeight: '300px' }}
                                             />
                                             <p className="text-sm text-gray-600 mb-2">
                                                 Generated: {qrStatus.generatedAt ? formatDate(qrStatus.generatedAt) : 'N/A'}
@@ -1315,13 +1371,13 @@ const VolunteerManagement = () => {
                                     </div>
                                         <div className="flex flex-col sm:flex-row justify-center gap-3">
                                             <button
-                                                onClick={() => {
-                                                    setQrCode(qrStatus.checkOutQR)
-                                                    setShowQRModal(true)
-                                                }}
-                                                className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                                onClick={() => downloadQRAsPDF(qrStatus.checkOutQR, 'checkOut')}
+                                                className="bg-blue-600 text-white px-4 sm:px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                                             >
-                                                View Full Size
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                Download PDF
                                             </button>
                                             <button
                                                 onClick={closeEvaluationQR}
@@ -1598,64 +1654,6 @@ const VolunteerManagement = () => {
                 </div>
             )}
 
-            {/* QR Code Modal */}
-            {showQRModal && qrCode && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900">Attendance QR Code</h3>
-                            <button
-                                onClick={() => setShowQRModal(false)}
-                                className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2 hover:bg-gray-100"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-6 text-center">
-                            <img 
-                                src={qrCode} 
-                                alt="Attendance QR Code" 
-                                className="mx-auto mb-4"
-                                style={{ maxWidth: '100%' }}
-                            />
-                            <p className="text-sm text-gray-600 mb-4">
-                                Volunteers can scan this QR code to record their attendance
-                            </p>
-                            
-                            {/* Primary Key Display */}
-                            {qrStatus?.primaryKey && (
-                                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-                                    <p className="text-sm font-semibold text-blue-900 mb-2">Primary Key Code (for manual entry):</p>
-                                    <div className="bg-white border border-blue-300 rounded-lg p-3 mb-2">
-                                        <code className="text-lg font-mono font-bold text-blue-800 break-all">
-                                            {qrStatus.primaryKey}
-                                        </code>
-                                    </div>
-                                    <p className="text-xs text-blue-700">
-                                        Volunteers can enter this code manually if they cannot scan the QR code
-                                    </p>
-                                    <button
-                                        onClick={async () => {
-                                            const { copyToClipboard } = await import('../../../utils/browserCompatibility.js');
-                                            const success = await copyToClipboard(qrStatus.primaryKey);
-                                            if (success) {
-                                                toast.success('Primary key copied to clipboard!');
-                                            } else {
-                                                toast.error('Failed to copy. Please copy manually.');
-                                            }
-                                        }}
-                                        className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-semibold"
-                                    >
-                                        Copy Primary Key
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Invite Volunteer Modal */}
             {showInviteModal && (
