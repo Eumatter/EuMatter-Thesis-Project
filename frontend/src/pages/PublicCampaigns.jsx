@@ -60,13 +60,16 @@ const PublicCampaigns = () => {
                         ? event.description.replace(/<[^>]*>/g, '').substring(0, 150) + '...'
                         : '';
 
+                    // Calculate volunteer count
+                    const volunteerCount = event.volunteers?.length || 0;
+                    const maxVolunteers = event.volunteerSettings?.maxVolunteers || null;
+
                     return {
                         id: event._id,
                         title: event.title,
                         image: event.image || "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
                         summary: description || event.title,
                         raised: event.totalDonations || 0,
-                        goal: 10000, // Default goal since donationGoal field doesn't exist in model
                         daysRemaining: daysRemaining,
                         status: event.status,
                         description: event.description || '',
@@ -75,6 +78,8 @@ const PublicCampaigns = () => {
                         endDate: event.endDate || '',
                         isOpenForDonation: event.isOpenForDonation || false,
                         isOpenForVolunteer: event.isOpenForVolunteer || false,
+                        volunteerCount: volunteerCount,
+                        maxVolunteers: maxVolunteers,
                         createdBy: event.createdBy || null,
                         createdAt: event.createdAt || new Date(),
                     };
@@ -157,9 +162,10 @@ const PublicCampaigns = () => {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filtered.map((c, index) => {
-                            const progressPercentage = Math.min(100, (c.raised / c.goal) * 100);
                             const imageUrl = c.image 
-                                ? (c.image.startsWith('data:image') ? c.image : `data:image/jpeg;base64,${c.image}`)
+                                ? (c.image.startsWith('data:image') || c.image.startsWith('http://') || c.image.startsWith('https://')
+                                    ? c.image 
+                                    : `data:image/jpeg;base64,${c.image}`)
                                 : "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80";
                             
                             return (
@@ -188,27 +194,76 @@ const PublicCampaigns = () => {
                                     <div className="p-5">
                                         <h3 className="text-lg font-semibold text-black line-clamp-2 mb-2">{c.title}</h3>
                                         <p className="text-sm text-gray-600 line-clamp-2 mb-4">{c.summary}</p>
+                                        
+                                        {/* Donation Tag - Show only when donations are enabled */}
                                         {c.isOpenForDonation && (
-                                            <div className="mt-4 mb-4">
-                                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500"
-                                                        style={{ width: `${progressPercentage}%` }}
-                                                    />
-                                                </div>
-                                                <p className="text-xs text-gray-600 mt-2">
-                                                    ₱{c.raised.toLocaleString()} raised of ₱{c.goal.toLocaleString()} goal
-                                                    {c.daysRemaining > 0 && ` · ${c.daysRemaining} days left`}
-                                                </p>
+                                            <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-[#d4af37]/10 to-[#f4d03f]/10 border border-[#d4af37]/30 rounded-full mb-3">
+                                                <span className="text-xs font-semibold text-[#800000]">
+                                                    This event is open for donations.
+                                                </span>
                                             </div>
                                         )}
-                                        <Button
-                                            variant="maroon"
-                                            className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
-                                            onClick={() => setActiveCampaign(c)}
-                                        >
-                                            View Details
-                                        </Button>
+                                        
+                                        {/* Volunteer Progress Bar - Show only when volunteering is enabled */}
+                                        {c.isOpenForVolunteer && (
+                                            <div className="space-y-2 mb-3">
+                                                {c.maxVolunteers ? (
+                                                    <>
+                                                        <div className="flex justify-between items-center text-sm">
+                                                            <span className="font-semibold text-[#800000]">
+                                                                {c.volunteerCount} volunteer{c.volunteerCount !== 1 ? 's' : ''}
+                                                            </span>
+                                                            <span className="text-gray-500">
+                                                                of {c.maxVolunteers} needed
+                                                            </span>
+                                                        </div>
+                                                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                                            <div 
+                                                                className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
+                                                                style={{ width: `${Math.min(100, (c.volunteerCount / c.maxVolunteers) * 100)}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {Math.min(100, (c.volunteerCount / c.maxVolunteers) * 100).toFixed(0)}% volunteers
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="text-sm text-gray-600">
+                                                        <span className="font-semibold text-[#800000]">{c.volunteerCount}</span> volunteer{c.volunteerCount !== 1 ? 's' : ''} joined
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        
+                                        {/* Action Button */}
+                                        {/* Show "Donate Now" only when donations ONLY (no volunteer) */}
+                                        {/* Show "Volunteer Now" when volunteer is enabled (even if donations also enabled) */}
+                                        {/* Otherwise show "View Details" */}
+                                        {c.isOpenForDonation && !c.isOpenForVolunteer ? (
+                                            <Button
+                                                variant="maroon"
+                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
+                                                onClick={() => setActiveCampaign(c)}
+                                            >
+                                                Donate Now
+                                            </Button>
+                                        ) : c.isOpenForVolunteer ? (
+                                            <Button
+                                                variant="maroon"
+                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
+                                                onClick={() => setActiveCampaign(c)}
+                                            >
+                                                Volunteer Now
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="maroon"
+                                                className="w-full mt-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000] focus-visible:ring-offset-2"
+                                                onClick={() => setActiveCampaign(c)}
+                                            >
+                                                View Details
+                                            </Button>
+                                        )}
                                     </div>
                                 </motion.div>
                             );
@@ -279,21 +334,43 @@ const PublicCampaigns = () => {
                                         <p className="text-gray-700">{activeCampaign.summary}</p>
                                     )}
                                 </div>
+                                
+                                {/* Donation Tag - Show only when donations are enabled */}
                                 {activeCampaign.isOpenForDonation && (
-                                    <div className="mt-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                                        <div className="h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500"
-                                                style={{ width: `${Math.min(100, (activeCampaign.raised / activeCampaign.goal) * 100)}%` }}
-                                            />
-                                        </div>
-                                        <p className="text-sm text-gray-700 font-medium">
-                                            ₱{activeCampaign.raised.toLocaleString()} raised of ₱{activeCampaign.goal.toLocaleString()} goal
-                                        </p>
-                                        {activeCampaign.daysRemaining > 0 && (
-                                            <p className="text-xs text-gray-600 mt-1">
-                                                {activeCampaign.daysRemaining} {activeCampaign.daysRemaining === 1 ? 'day' : 'days'} remaining
-                                            </p>
+                                    <div className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-[#d4af37]/10 to-[#f4d03f]/10 border border-[#d4af37]/30 rounded-full mb-4">
+                                        <span className="text-sm font-semibold text-[#800000]">
+                                            This event is open for donations.
+                                        </span>
+                                    </div>
+                                )}
+                                
+                                {/* Volunteer Progress Bar - Show only when volunteering is enabled */}
+                                {activeCampaign.isOpenForVolunteer && (
+                                    <div className="space-y-2 mb-4">
+                                        {activeCampaign.maxVolunteers ? (
+                                            <>
+                                                <div className="flex justify-between items-center text-sm">
+                                                    <span className="font-semibold text-[#800000]">
+                                                        {activeCampaign.volunteerCount || 0} volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''}
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        of {activeCampaign.maxVolunteers} needed
+                                                    </span>
+                                                </div>
+                                                <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-full transition-all duration-500 shadow-inner"
+                                                        style={{ width: `${Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {Math.min(100, ((activeCampaign.volunteerCount || 0) / activeCampaign.maxVolunteers) * 100).toFixed(0)}% volunteers
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="text-sm text-gray-600">
+                                                <span className="font-semibold text-[#800000]">{activeCampaign.volunteerCount || 0}</span> volunteer{(activeCampaign.volunteerCount || 0) !== 1 ? 's' : ''} joined
+                                            </div>
                                         )}
                                     </div>
                                 )}
