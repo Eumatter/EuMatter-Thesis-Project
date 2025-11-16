@@ -301,6 +301,25 @@ const Header = () => {
 
 	return (
         <>
+        {/* CSS Animations for slider menu */}
+        <style>{`
+            @keyframes slideInLeft {
+                from {
+                    transform: translateX(-100%);
+                }
+                to {
+                    transform: translateX(0);
+                }
+            }
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+        `}</style>
         {/* Maintenance Mode Banner for System Admin and CRD Staff */}
         {showMaintenanceBanner && (
             <div className="fixed top-0 left-0 right-0 z-[101] bg-gradient-to-r from-[#800000] to-[#EE1212] text-white shadow-lg">
@@ -750,84 +769,163 @@ const Header = () => {
 
             {/* No compact menubar; mobile uses hamburger menu overlay */}
         </header>
-        {/* Mobile glassmorphic menu with smooth animation */}
+        {/* Mobile slider menu - slides in from left */}
                 {isMobileMenuOpen && (
                     <>
+                        {/* Backdrop overlay */}
                         <div 
-                    className="fixed inset-0 z-[90] lg:hidden bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+                            className="fixed inset-0 z-[90] lg:hidden bg-black/50 backdrop-blur-sm transition-opacity duration-300"
                             onClick={() => setIsMobileMenuOpen(false)}
+                            style={{
+                                animation: 'fadeIn 0.3s ease-out'
+                            }}
                         />
-                <div className={`fixed ${showMaintenanceBanner ? 'top-28 sm:top-32 md:top-36' : 'top-14 sm:top-16 md:top-20'} left-0 right-0 z-[95] lg:hidden p-2 sm:p-3 md:p-4 animate-in fade-in slide-in-from-top-2 duration-200`}>
-                    <div className="mx-auto w-full max-w-md md:max-w-xl rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl ring-1 ring-[#800000]/10 overflow-hidden max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] md:max-h-[calc(100vh-6rem)] lg:max-h-[calc(100vh-7rem)] flex flex-col">
-                        <div className="px-4 py-3 flex items-center justify-start border-b border-white/60 bg-gradient-to-r from-[#800000]/90 to-[#9c0000]/90 text-white">
-                            <div className="text-sm font-semibold">Menu</div>
+                        {/* Slider menu from left */}
+                        <div 
+                            className={`fixed top-0 ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 bottom-0 z-[95] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col`}
+                            style={{
+                                animation: 'slideInLeft 0.3s ease-out',
+                                transform: 'translateX(0)'
+                            }}
+                        >
+                            {/* Header with close button */}
+                            <div className="px-4 py-4 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white">
+                                <div className="flex items-center gap-2">
+                                    <img 
+                                        src={EnvergaLogo} 
+                                        alt="Enverga University Logo" 
+                                        className="w-8 h-8 object-contain"
+                                    />
+                                    <div>
+                                        <div className="text-sm font-bold">EUMATTER</div>
+                                        <div className="text-xs opacity-90">Menu</div>
+                                    </div>
                                 </div>
-
-                        {/* Primary links */}
-                        <div className="py-1 divide-y divide-white/60 overflow-y-auto overflow-x-hidden">
-                            <MobileNavLink to="/" icon={<FaHome />} className="bg-white/0 text-[#800000] hover:bg-[#800000]/25 active:bg-[#800000]/35">Home</MobileNavLink>
-                            <MobileNavLink to="/program" icon={<FaBookOpen />} className="bg-white/0 text-[#800000] hover:bg-[#800000]/25 active:bg-[#800000]/35">Program</MobileNavLink>
-                            <MobileNavLink to="/nstp" icon={<FaClipboardList />} className="bg-white/0 text-[#800000] hover:bg-[#800000]/25 active:bg-[#800000]/35">NSTP</MobileNavLink>
-                            <MobileNavLink to="/about" icon={<FaInfoCircle />} className="bg-white/0 text-[#800000] hover:bg-[#800000]/25 active:bg-[#800000]/35">About</MobileNavLink>
-                        </div>
-
-                        {/* CTA or role-aware quick links */}
-                        {!isLoggedIn ? (
-                            <div className="p-3 bg-white/40 border-t border-white/60">
-                                <Button
-                                    onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
-                                    variant="gold"
-                                    size="lg"
-                                    className="w-full"
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="p-2 rounded-lg hover:bg-white/20 active:bg-white/30 transition-colors touch-manipulation"
+                                    aria-label="Close menu"
                                 >
-                                    Join Us
-                                </Button>
+                                    <FaTimes className="w-5 h-5" />
+                                </button>
                             </div>
-                        ) : (
-                            <div className="p-2 bg-white/40 border-t border-white/60 space-y-2">
-                                {isUser && (
-                                    <>
-                                        <MobileNavLink to={getDashboardRoute(userData.role)} className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Dashboard</MobileNavLink>
-                                        <MobileNavLink to="/user/donations" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Donations</MobileNavLink>
-                                        <MobileNavLink to="/user/events" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Events</MobileNavLink>
-                                    </>
+
+                            {/* Scrollable menu content */}
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                                {/* Primary links for logged out users */}
+                                {!isLoggedIn && (
+                                    <div className="py-2">
+                                        <MobileNavLink to="/" icon={<FaHome />}>Home</MobileNavLink>
+                                        <MobileNavLink to="/program" icon={<FaBookOpen />}>Program</MobileNavLink>
+                                        <MobileNavLink to="/nstp" icon={<FaClipboardList />}>NSTP</MobileNavLink>
+                                        <MobileNavLink to="/about" icon={<FaInfoCircle />}>About</MobileNavLink>
+                                        <div className="px-4 py-3 mt-2">
+                                            <Button
+                                                onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
+                                                variant="gold"
+                                                size="lg"
+                                                className="w-full"
+                                            >
+                                                Join Us
+                                            </Button>
+                                        </div>
+                                    </div>
                                 )}
 
-                                {isDept && (
-                                    <>
-                                        <MobileNavLink to="/department/dashboard" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Dashboard</MobileNavLink>
-                                        <MobileNavLink to="/department/events" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Events</MobileNavLink>
-                                        <MobileNavLink to="/department/donations" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Donations</MobileNavLink>
-                                        <MobileNavLink to="/department/reports" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Reports</MobileNavLink>
-                                    </>
-                                )}
+                                {/* Role-aware navigation for logged in users */}
+                                {isLoggedIn && (
+                                    <div className="py-2">
+                                        {isUser && (
+                                            <>
+                                                <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                <MobileNavLink to="/user/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                <MobileNavLink to="/user/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
+                                                <MobileNavLink to="/user/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                            </>
+                                        )}
 
-                                {isCRD && (
-                                    <>
-                                        <MobileNavLink to="/crd-staff/dashboard" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Dashboard</MobileNavLink>
-                                        <MobileNavLink to="/crd-staff/events" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Events</MobileNavLink>
-                                        <MobileNavLink to="/crd-staff/reports" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Reports</MobileNavLink>
-                                        <MobileNavLink to="/crd-staff/leaderboard" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Leaderboard</MobileNavLink>
-                                        <MobileNavLink to="/crd-staff/donations" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Donations</MobileNavLink>
-                                    </>
-                                )}
+                                        {isDept && (
+                                            <>
+                                                <MobileNavLink to="/department/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                <MobileNavLink to="/department/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                <MobileNavLink to="/department/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
+                                                <MobileNavLink to="/department/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
+                                                <MobileNavLink to="/department/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                            </>
+                                        )}
 
-                                {userData?.role && userData.role.toLowerCase().includes('system admin') && (
-                                    <>
-                                        <MobileNavLink to="/system-admin/dashboard" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">Dashboard</MobileNavLink>
-                                        <MobileNavLink to="/system-admin/users" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">User Management</MobileNavLink>
-                                        <MobileNavLink to="/system-admin/settings" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">System Settings</MobileNavLink>
-                                        <MobileNavLink to="/system-admin/reports" className="text-[#800000] hover:bg-[#800000]/20 active:bg-[#800000]/30 transition-transform hover:translate-x-1">System Reports</MobileNavLink>
-                                    </>
-                                )}
+                                        {isCRD && (
+                                            <>
+                                                <MobileNavLink to="/crd-staff/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                <MobileNavLink to="/crd-staff/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
+                                                <MobileNavLink to="/crd-staff/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
+                                                <MobileNavLink to="/crd-staff/leaderboard" icon={<FaTrophy />}>Leaderboard</MobileNavLink>
+                                                <MobileNavLink to="/crd-staff/donations" icon={<FaBoxOpen />}>Donations</MobileNavLink>
+                                                <MobileNavLink to="/crd-staff/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
+                                            </>
+                                        )}
 
-                                <div className="pt-1">
-                                    <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-sm text-red-700 hover:bg-red-50 rounded-lg">Logout</button>
+                                        {userData?.role && userData.role.toLowerCase().includes('system admin') && (
+                                            <>
+                                                <MobileNavLink to="/system-admin/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
+                                                <MobileNavLink to="/system-admin/users" icon={<FaUsers />}>User Management</MobileNavLink>
+                                                <MobileNavLink to="/system-admin/settings" icon={<FaCogs />}>System Settings</MobileNavLink>
+                                                <MobileNavLink to="/system-admin/reports" icon={<FaChartLine />}>System Reports</MobileNavLink>
+                                            </>
+                                        )}
+
+                                        {/* Account section */}
+                                        <div className="border-t border-gray-200 my-2 pt-2">
+                                            <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
+                                            <MobileNavLink to={getProfileRoute()} icon={<FaCog />}>Account Settings</MobileNavLink>
+                                            {userData.role && !userData.role.toLowerCase().includes('system admin') && (
+                                                <MobileNavLink to="/system-settings" icon={<FaSlidersH />}>System Settings</MobileNavLink>
+                                            )}
+                                            {userData.role === 'User' && !userData.isAccountVerified && (
+                                                <MobileNavLink to="/email-verify" icon={<FaCheckCircle />} className="text-orange-700 hover:bg-orange-50">Verify Account</MobileNavLink>
+                                            )}
+                                        </div>
+
+                                        {/* Logout */}
+                                        <div className="border-t border-gray-200 my-2 pt-2">
+                                            <button 
+                                                onClick={() => {
+                                                    handleLogout();
+                                                    setIsMobileMenuOpen(false);
+                                                }} 
+                                                className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-200 touch-manipulation bg-white text-red-700 hover:bg-red-50 active:bg-red-100 border border-red-200 font-medium"
+                                            >
+                                                <FaSignOutAlt className="text-xl flex-shrink-0" />
+                                                <span className="text-base font-medium flex-1 text-left">Logout</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer with user info if logged in */}
+                            {isLoggedIn && userData && (
+                                <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                    <div className="flex items-center gap-3">
+                                        {userData?.profileImage ? (
+                                            <img 
+                                                src={userData.profileImage} 
+                                                alt={userData.name} 
+                                                className="w-10 h-10 rounded-full object-cover border-2 border-[#800000]" 
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold text-sm">
+                                                {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-sm font-semibold text-gray-900 truncate">{userData.name}</div>
+                                            <div className="text-xs text-gray-600 truncate">{userData.email}</div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                            )}
+                        </div>
                     </>
                 )}
         {/* Spacer to offset fixed header height */}
