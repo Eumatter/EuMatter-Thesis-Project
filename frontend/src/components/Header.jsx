@@ -269,8 +269,9 @@ const Header = () => {
                     navigate(to);
                     setIsMobileMenuOpen(false);
                     setIsBellOpen(false);
+                    setIsDropdownOpen(false); // Close dropdown menu when navigating
                 }}
-                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group mb-2
+                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group mb-2 px-3
                     ${isActive 
                         ? 'bg-gradient-to-r from-[#800000] to-[#9c0000] text-white shadow-lg shadow-[#800000]/30 scale-[1.02]' 
                         : 'bg-white/50 text-gray-800 hover:bg-gradient-to-r hover:from-[#800000]/10 hover:to-[#800000]/5 active:bg-[#800000]/15 border border-gray-200 hover:border-[#800000]/30 hover:shadow-md'
@@ -617,9 +618,9 @@ const Header = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            {/* Desktop Dropdown - Keep for desktop screens */}
+                            {/* Desktop Dropdown - Keep for desktop screens only */}
                             {isDropdownOpen && (
-                                <div className="hidden lg:block fixed lg:absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120]">
+                                <div className="hidden lg:block absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120]">
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
                                             <div className="flex items-center gap-3">
@@ -772,13 +773,15 @@ const Header = () => {
                                     <div 
                                         className="lg:hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
                                         onClick={() => setIsDropdownOpen(false)}
+                                        style={{
+                                            animation: 'fadeIn 0.25s ease-out'
+                                        }}
                                     />
                                     {/* Slider menu from right */}
                                     <div 
-                                        className="lg:hidden fixed top-0 right-0 bottom-0 z-[151] w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200"
+                                        className="lg:hidden fixed top-0 right-0 bottom-0 z-[151] w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col"
                                         style={{
                                             animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                                            transform: 'translateX(0)',
                                             boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
                                         }}
                                     >

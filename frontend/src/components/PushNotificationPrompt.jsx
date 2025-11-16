@@ -44,8 +44,14 @@ const PushNotificationPrompt = () => {
                 try {
                     await subscribeToPushNotifications();
                 } catch (error) {
-                    // Silently fail if VAPID is not configured - push notifications are optional
-                    if (!error.message?.includes('not configured') && !error.message?.includes('not supported')) {
+                    // Silently fail if VAPID is not configured or service unavailable - push notifications are optional
+                    const errorMessage = error.message || '';
+                    const isNotConfigured = errorMessage.includes('not configured') || 
+                                           errorMessage.includes('not supported') ||
+                                           errorMessage.includes('503') ||
+                                           errorMessage.includes('404');
+                    if (!isNotConfigured) {
+                        // Only log actual errors, not configuration issues
                         console.error('Error auto-subscribing:', error);
                     }
                 }

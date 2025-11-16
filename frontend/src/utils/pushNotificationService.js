@@ -15,8 +15,13 @@ export async function getVapidPublicKey() {
         const response = await axios.get(url);
         return response.data.publicKey;
     } catch (error) {
-        // Silently fail if VAPID is not configured - don't spam console
-        if (error.response?.status !== 404 && error.response?.status !== 503) {
+        // Silently fail if VAPID is not configured - push notifications are optional
+        const status = error.response?.status;
+        const isNotConfigured = status === 404 || status === 503 || 
+                               error.message?.includes('not configured') ||
+                               error.message?.includes('not supported');
+        if (!isNotConfigured) {
+            // Only log actual errors, not configuration issues
             console.error('Error getting VAPID key:', error);
         }
         return null;
