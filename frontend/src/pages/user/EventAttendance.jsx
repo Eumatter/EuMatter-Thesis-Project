@@ -25,6 +25,10 @@ const EventAttendance = () => {
         comment: ''
     })
     const [submittingFeedback, setSubmittingFeedback] = useState(false)
+    const [exceptionRequest, setExceptionRequest] = useState(null)
+    const [showExceptionModal, setShowExceptionModal] = useState(false)
+    const [exceptionReason, setExceptionReason] = useState('')
+    const [submittingException, setSubmittingException] = useState(false)
 
     // Fetch event data
     const fetchEventData = useCallback(async () => {
@@ -60,7 +64,7 @@ const EventAttendance = () => {
     }, [eventId, backendUrl])
 
     // Fetch attendance status
-    const fetchAttendanceStatus = useCallback(() => {
+    const fetchAttendanceStatus = useCallback(async () => {
         if (!event || !userData?._id) return
         
         if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
@@ -77,6 +81,21 @@ const EventAttendance = () => {
                 }) || userReg.attendanceRecords[userReg.attendanceRecords.length - 1]
                 
                 if (todayRecord) {
+                    // Fetch exception request if attendance record exists
+                    if (todayRecord._id) {
+                        try {
+                            const response = await axios.get(`${backendUrl}api/attendance/${todayRecord._id}/exception-request`, { 
+                                withCredentials: true 
+                            })
+                            if (response.data?.success && response.data.exceptionRequest) {
+                                setExceptionRequest(response.data.exceptionRequest)
+                            }
+                        } catch (error) {
+                            // Exception request doesn't exist or error - that's okay
+                            console.log('No exception request found or error:', error.response?.status)
+                        }
+                    }
+
                     if (todayRecord.timeOut) {
                         setAttendanceStatus('completed')
                         setAttendanceData({
@@ -96,7 +115,7 @@ const EventAttendance = () => {
                 }
             }
         }
-    }, [event, userData?._id])
+    }, [event, userData?._id, backendUrl])
 
     useEffect(() => {
         if (eventId) {
@@ -162,6 +181,40 @@ const EventAttendance = () => {
             ...prev,
             [field]: value
         }))
+    }
+
+    const handleSubmitExceptionRequest = async () => {
+        if (!exceptionReason.trim()) {
+            toast.error('Please provide a reason for your exception request')
+            return
+        }
+
+        if (!attendanceData?._id) {
+            toast.error('Attendance record not found')
+            return
+        }
+
+        setSubmittingException(true)
+        try {
+            const response = await axios.post(
+                `${backendUrl}api/attendance/${attendanceData._id}/exception-request`,
+                { reason: exceptionReason.trim() },
+                { withCredentials: true }
+            )
+
+            if (response.data?.success) {
+                toast.success('Exception request submitted successfully. The event organizer will review it.')
+                setExceptionRequest(response.data.exceptionRequest)
+                setShowExceptionModal(false)
+                setExceptionReason('')
+            }
+        } catch (error) {
+            console.error('Error submitting exception request:', error)
+            const errorMessage = error.response?.data?.message || 'Failed to submit exception request'
+            toast.error(errorMessage)
+        } finally {
+            setSubmittingException(false)
+        }
     }
 
     const handleSubmitFeedback = async () => {
@@ -575,22 +628,52 @@ const EventAttendance = () => {
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <p className="font-semibold text-gray-900">Time Out</p>
                                     {attendanceData?.checkOutTime && (
                                         <p className="text-sm text-gray-600">
                                             {new Date(attendanceData.checkOutTime).toLocaleString()}
                                         </p>
                                     )}
+                                    {!attendanceData?.checkOutTime && exceptionRequest && (
+                                        <div className="mt-2">
+                                            {exceptionRequest.status === 'pending' && (
+                                                <p className="text-sm text-amber-600 font-medium">
+                                                    Exception request pending review
+                                                </p>
+                                            )}
+                                            {exceptionRequest.status === 'approved' && (
+                                                <p className="text-sm text-green-600 font-medium">
+                                                    Exception request approved
+                                                </p>
+                                            )}
+                                            {exceptionRequest.status === 'rejected' && (
+                                                <p className="text-sm text-red-600 font-medium">
+                                                    Exception request rejected
+                                                    {exceptionRequest.reviewNotes && `: ${exceptionRequest.reviewNotes}`}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                                attendanceStatus === 'completed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-200 text-gray-600'
-                            }`}>
-                                {attendanceStatus === 'completed' ? '✓ Completed' : 'Pending'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                {!attendanceData?.checkOutTime && !exceptionRequest && attendanceStatus === 'timeout' && (
+                                    <button
+                                        onClick={() => setShowExceptionModal(true)}
+                                        className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold text-sm hover:bg-amber-600 transition-all duration-200"
+                                    >
+                                        Request Exception
+                                    </button>
+                                )}
+                                <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
+                                    attendanceStatus === 'completed'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-gray-200 text-gray-600'
+                                }`}>
+                                    {attendanceStatus === 'completed' ? '✓ Completed' : 'Pending'}
+                                </span>
+                            </div>
                         </div>
 
                         {/* Hours Worked */}
@@ -640,6 +723,90 @@ const EventAttendance = () => {
                                 </svg>
                                 Open Scanner
                             </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Exception Request Modal */}
+                {showExceptionModal && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-2xl font-bold text-gray-900">Request Exception for Missed Time-Out</h3>
+                                    <button
+                                        onClick={() => {
+                                            setShowExceptionModal(false)
+                                            setExceptionReason('')
+                                        }}
+                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                                    <p className="text-sm text-amber-800 font-semibold flex items-start gap-2">
+                                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span>
+                                            If you missed your time-out due to an emergency or other valid reason, you can submit an exception request. 
+                                            The event organizer will review your request and may approve it to record your attendance hours.
+                                        </span>
+                                    </p>
+                                </div>
+                                <div className="mb-6">
+                                    <label className="block text-base font-bold text-gray-900 mb-3">
+                                        Reason for Exception <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        rows={6}
+                                        value={exceptionReason}
+                                        onChange={(e) => setExceptionReason(e.target.value)}
+                                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] outline-none resize-none transition-all duration-200"
+                                        placeholder="Please provide a detailed explanation for missing your time-out (e.g., medical emergency, family emergency, transportation issues, etc.)..."
+                                        maxLength={1000}
+                                        required
+                                    />
+                                    <div className="mt-2 text-xs text-gray-400 text-right">
+                                        {exceptionReason.length}/1000
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => {
+                                            setShowExceptionModal(false)
+                                            setExceptionReason('')
+                                        }}
+                                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSubmitExceptionRequest}
+                                        disabled={submittingException || !exceptionReason.trim()}
+                                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#800000] to-[#a00000] text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                                    >
+                                        {submittingException ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Submitting...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <span>Submit Request</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

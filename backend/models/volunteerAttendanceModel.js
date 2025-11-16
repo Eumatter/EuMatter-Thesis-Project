@@ -91,6 +91,34 @@ const volunteerAttendanceSchema = new mongoose.Schema({
     },
     feedbackReminderSentAt: {
         type: Date
+    },
+    // Exception request for missed time-out
+    exceptionRequest: {
+        reason: {
+            type: String,
+            trim: true,
+            maxlength: 1000
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'approved', 'rejected'],
+            default: null
+        },
+        requestedAt: {
+            type: Date
+        },
+        reviewedAt: {
+            type: Date
+        },
+        reviewedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user'
+        },
+        reviewNotes: {
+            type: String,
+            trim: true,
+            maxlength: 500
+        }
     }
 }, { timestamps: true });
 

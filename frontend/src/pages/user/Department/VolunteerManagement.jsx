@@ -17,10 +17,15 @@ const VolunteerManagement = () => {
     const [attendance, setAttendance] = useState([])
     const [qrStatus, setQrStatus] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState('volunteers') // 'volunteers', 'attendance', 'qr'
+    const [activeTab, setActiveTab] = useState('volunteers') // 'volunteers', 'attendance', 'qr', 'feedback', 'exceptions'
     const [feedbackData, setFeedbackData] = useState(null)
     const [feedbackLoading, setFeedbackLoading] = useState(false)
     const [feedbackError, setFeedbackError] = useState(null)
+    const [exceptionRequests, setExceptionRequests] = useState([])
+    const [exceptionLoading, setExceptionLoading] = useState(false)
+    const [selectedException, setSelectedException] = useState(null)
+    const [reviewNotes, setReviewNotes] = useState('')
+    const [reviewing, setReviewing] = useState(false)
     
     // QR Code states
     const [qrCode, setQrCode] = useState(null)
@@ -43,6 +48,9 @@ const VolunteerManagement = () => {
     useEffect(() => {
         if (activeTab === 'feedback' && !feedbackData && !feedbackLoading) {
             fetchFeedbackData()
+        }
+        if (activeTab === 'exceptions' && exceptionRequests.length === 0 && !exceptionLoading) {
+            fetchExceptionRequests()
         }
     }, [activeTab])
 
@@ -258,6 +266,56 @@ const VolunteerManagement = () => {
         } catch (error) {
             console.error('Error validating attendance:', error)
             toast.error('Failed to validate attendance')
+        }
+    }
+
+    const fetchExceptionRequests = async () => {
+        setExceptionLoading(true)
+        try {
+            const response = await axios.get(`${backendUrl}api/attendance/exception-requests`, {
+                withCredentials: true
+            })
+            if (response.data?.success) {
+                // Filter to only show requests for this event
+                const eventRequests = response.data.requests.filter(req => 
+                    String(req.event?.id) === String(eventId)
+                )
+                setExceptionRequests(eventRequests)
+            }
+        } catch (error) {
+            console.error('Error fetching exception requests:', error)
+            toast.error('Failed to fetch exception requests')
+        } finally {
+            setExceptionLoading(false)
+        }
+    }
+
+    const handleReviewException = async (action) => {
+        if (!selectedException) return
+
+        setReviewing(true)
+        try {
+            const response = await axios.put(
+                `${backendUrl}api/attendance/${selectedException.attendanceId}/exception-request`,
+                {
+                    action,
+                    reviewNotes: reviewNotes.trim() || undefined
+                },
+                { withCredentials: true }
+            )
+
+            if (response.data?.success) {
+                toast.success(`Exception request ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
+                setSelectedException(null)
+                setReviewNotes('')
+                fetchExceptionRequests()
+                fetchEventData() // Refresh attendance data
+            }
+        } catch (error) {
+            console.error('Error reviewing exception:', error)
+            toast.error(error.response?.data?.message || 'Failed to review exception request')
+        } finally {
+            setReviewing(false)
         }
     }
 
@@ -492,6 +550,7 @@ const VolunteerManagement = () => {
                             {[
                                 { id: 'volunteers', label: 'Volunteers', count: volunteers.length },
                                 { id: 'attendance', label: 'Attendance', count: attendance.length },
+                                { id: 'exceptions', label: 'Exception Requests', count: exceptionRequests.length },
                                 { id: 'feedback', label: 'Feedback', count: feedbackData?.records?.length || 0 },
                                 { id: 'qr', label: 'QR Code', count: qrStatus?.hasQR ? 1 : 0 }
                             ].map(tab => (
@@ -1291,8 +1350,241 @@ const VolunteerManagement = () => {
                             </div>
                         </div>
                     )}
+
+                    {/* Exception Requests Tab */}
+                    {activeTab === 'exceptions' && (
+                        <div className="px-4 sm:px-6 py-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+                                <h2 className="text-xl font-semibold text-gray-900">Exception Requests</h2>
+                                <button
+                                    onClick={fetchExceptionRequests}
+                                    disabled={exceptionLoading}
+                                    className="bg-[#800000] text-white px-4 py-2 rounded-lg hover:bg-[#900000] transition-colors flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    <svg className={`w-4 h-4 ${exceptionLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Refresh
+                                </button>
+                            </div>
+                            
+                            {exceptionLoading ? (
+                                <div className="text-center py-12">
+                                    <LoadingSpinner size="medium" />
+                                    <p className="mt-4 text-gray-600">Loading exception requests...</p>
+                                </div>
+                            ) : exceptionRequests.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-gray-600 mb-2">No pending exception requests</h3>
+                                    <p className="text-gray-500">All exception requests have been reviewed or no requests have been submitted yet.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {exceptionRequests.map((request) => (
+                                        <div key={request.attendanceId} className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex items-start gap-4 mb-4">
+                                                        {request.volunteer?.profileImage ? (
+                                                            <img 
+                                                                src={request.volunteer.profileImage} 
+                                                                alt={request.volunteer.name}
+                                                                className="w-12 h-12 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#800000] to-[#a00000] flex items-center justify-center">
+                                                                <span className="text-white font-semibold text-sm">
+                                                                    {request.volunteer?.name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'V'}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        <div className="flex-1">
+                                                            <h3 className="text-lg font-semibold text-gray-900">{request.volunteer?.name || 'Unknown Volunteer'}</h3>
+                                                            <p className="text-sm text-gray-600">{request.volunteer?.email || ''}</p>
+                                                            <p className="text-sm text-gray-500 mt-1">
+                                                                Event: {request.event?.title || 'Unknown Event'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                                                        <p className="text-sm font-semibold text-amber-900 mb-2">Reason for Exception:</p>
+                                                        <p className="text-sm text-amber-800 whitespace-pre-wrap">{request.exceptionRequest?.reason || 'No reason provided'}</p>
+                                                    </div>
+                                                    
+                                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                                        <div>
+                                                            <p className="text-gray-500">Date:</p>
+                                                            <p className="font-semibold text-gray-900">
+                                                                {new Date(request.date).toLocaleDateString(undefined, {
+                                                                    year: 'numeric',
+                                                                    month: 'long',
+                                                                    day: 'numeric'
+                                                                })}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-500">Time In:</p>
+                                                            <p className="font-semibold text-gray-900">
+                                                                {request.timeIn ? new Date(request.timeIn).toLocaleTimeString([], { 
+                                                                    hour: 'numeric', 
+                                                                    minute: '2-digit' 
+                                                                }) : 'Not recorded'}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-gray-500">Requested At:</p>
+                                                            <p className="font-semibold text-gray-900">
+                                                                {request.exceptionRequest?.requestedAt 
+                                                                    ? new Date(request.exceptionRequest.requestedAt).toLocaleString()
+                                                                    : 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                                                request.exceptionRequest?.status === 'pending' 
+                                                                    ? 'bg-yellow-100 text-yellow-800'
+                                                                    : request.exceptionRequest?.status === 'approved'
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : 'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {request.exceptionRequest?.status || 'pending'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {request.exceptionRequest?.status === 'pending' && (
+                                                    <div className="flex flex-col gap-2 lg:flex-shrink-0">
+                                                        <button
+                                                            onClick={() => setSelectedException(request)}
+                                                            className="px-6 py-2 bg-[#800000] text-white rounded-lg font-semibold hover:bg-[#900000] transition-colors"
+                                                        >
+                                                            Review Request
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </main>
+
+            {/* Exception Review Modal */}
+            {selectedException && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-2xl font-bold text-gray-900">Review Exception Request</h3>
+                                <button
+                                    onClick={() => {
+                                        setSelectedException(null)
+                                        setReviewNotes('')
+                                    }}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="mb-6">
+                                <h4 className="font-semibold text-gray-900 mb-2">Volunteer Information</h4>
+                                <p className="text-gray-700">{selectedException.volunteer?.name}</p>
+                                <p className="text-sm text-gray-600">{selectedException.volunteer?.email}</p>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <h4 className="font-semibold text-gray-900 mb-2">Reason Provided</h4>
+                                <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+                                    <p className="text-sm text-amber-800 whitespace-pre-wrap">
+                                        {selectedException.exceptionRequest?.reason || 'No reason provided'}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <label className="block text-base font-bold text-gray-900 mb-3">
+                                    Review Notes (Optional)
+                                </label>
+                                <textarea
+                                    rows={4}
+                                    value={reviewNotes}
+                                    onChange={(e) => setReviewNotes(e.target.value)}
+                                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] outline-none resize-none transition-all duration-200"
+                                    placeholder="Add any notes about your decision (e.g., reason for rejection)..."
+                                    maxLength={500}
+                                />
+                                <div className="mt-2 text-xs text-gray-400 text-right">
+                                    {reviewNotes.length}/500
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setSelectedException(null)
+                                        setReviewNotes('')
+                                    }}
+                                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleReviewException('reject')}
+                                    disabled={reviewing}
+                                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {reviewing ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            <span>Reject</span>
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={() => handleReviewException('approve')}
+                                    disabled={reviewing}
+                                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {reviewing ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Processing...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>Approve</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* QR Code Modal */}
             {showQRModal && qrCode && (

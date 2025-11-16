@@ -1,6 +1,14 @@
 import eventModel from '../models/eventModel.js'
 import volunteerAttendanceModel from '../models/volunteerAttendanceModel.js'
 import { issueAttendanceToken, verifyAttendanceToken } from '../utils/qrToken.js'
+import { notifyUsers } from '../utils/notify.js'
+
+function isOrganizer(user, event) {
+    if (!user || !event) return false
+    if (String(event.createdBy) === String(user._id)) return true
+    const privileged = ['CRD Staff', 'System Administrator']
+    return privileged.includes(user.role)
+}
 
 export async function getMyAttendanceSummary(req, res) {
     try {
@@ -219,6 +227,284 @@ export async function exportAttendanceCsv(req, res) {
         res.setHeader('Content-Disposition', 'attachment; filename="attendance.csv"')
         return res.send(csv)
     } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+// POST /api/attendance/:attendanceId/exception-request
+// Submit an exception request for missed time-out
+export async function submitExceptionRequest(req, res) {
+    try {
+        const { attendanceId } = req.params
+        const { reason } = req.body
+        const userId = req.user?._id
+
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+        if (!reason || !reason.trim()) {
+            return res.status(400).json({ success: false, message: 'Reason is required' })
+        }
+
+        const attendance = await volunteerAttendanceModel.findById(attendanceId)
+            .populate('event', 'title createdBy')
+        
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance record not found' })
+        }
+
+        // Verify the attendance belongs to the requesting user
+        if (String(attendance.volunteer || attendance.userId) !== String(userId)) {
+            return res.status(403).json({ success: false, message: 'You can only submit exception requests for your own attendance' })
+        }
+
+        // Check if there's already a time-out recorded
+        if (attendance.timeOut || attendance.checkOutTime) {
+            return res.status(400).json({ success: false, message: 'Time-out is already recorded. Exception requests are only for missed time-outs.' })
+        }
+
+        // Check if there's already a pending or approved exception request
+        if (attendance.exceptionRequest?.status === 'pending' || attendance.exceptionRequest?.status === 'approved') {
+            return res.status(400).json({ success: false, message: 'An exception request already exists for this attendance record' })
+        }
+
+        // Create or update exception request
+        attendance.exceptionRequest = {
+            reason: reason.trim(),
+            status: 'pending',
+            requestedAt: new Date()
+        }
+        await attendance.save()
+
+        // Notify event organizer
+        const event = attendance.event
+        if (event?.createdBy) {
+            await notifyUsers({
+                userIds: [event.createdBy],
+                title: 'New Exception Request',
+                message: `A volunteer has submitted an exception request for missed time-out in "${event.title}". Please review the request.`,
+                payload: { 
+                    eventId: String(event._id), 
+                    attendanceId: String(attendance._id),
+                    type: 'exception_request'
+                }
+            })
+        }
+
+        return res.json({ 
+            success: true, 
+            message: 'Exception request submitted successfully',
+            exceptionRequest: attendance.exceptionRequest
+        })
+    } catch (error) {
+        console.error('Submit exception request error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+// GET /api/attendance/exception-requests
+// Get all pending exception requests (for organizers)
+export async function getExceptionRequests(req, res) {
+    try {
+        const userId = req.user?._id
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        const role = req.user?.role || 'User'
+        const isAdmin = ['CRD Staff', 'System Administrator'].includes(role)
+
+        let query = {
+            'exceptionRequest.status': 'pending'
+        }
+
+        // If not admin, only show requests for events created by the user
+        if (!isAdmin) {
+            const events = await eventModel.find({ createdBy: userId }).select('_id').lean()
+            const eventIds = events.map(e => e._id)
+            query.event = { $in: eventIds }
+        }
+
+        const requests = await volunteerAttendanceModel.find(query)
+            .populate('event', 'title startDate endDate createdBy')
+            .populate('volunteer', 'name email profileImage')
+            .populate('userId', 'name email profileImage')
+            .sort({ 'exceptionRequest.requestedAt': -1 })
+            .lean()
+
+        const formatted = requests.map(req => ({
+            attendanceId: req._id,
+            event: {
+                id: req.event?._id,
+                title: req.event?.title,
+                startDate: req.event?.startDate,
+                endDate: req.event?.endDate
+            },
+            volunteer: {
+                id: req.volunteer?._id || req.userId?._id,
+                name: req.volunteer?.name || req.userId?.name,
+                email: req.volunteer?.email || req.userId?.email,
+                profileImage: req.volunteer?.profileImage || req.userId?.profileImage
+            },
+            date: req.date,
+            timeIn: req.timeIn || req.checkInTime,
+            timeOut: req.timeOut || req.checkOutTime,
+            exceptionRequest: req.exceptionRequest
+        }))
+
+        return res.json({ success: true, requests: formatted })
+    } catch (error) {
+        console.error('Get exception requests error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+// PUT /api/attendance/:attendanceId/exception-request
+// Approve or reject an exception request
+export async function reviewExceptionRequest(req, res) {
+    try {
+        const { attendanceId } = req.params
+        const { action, reviewNotes } = req.body // action: 'approve' or 'reject'
+        const userId = req.user?._id
+
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ success: false, message: 'Invalid action. Must be "approve" or "reject"' })
+        }
+
+        const attendance = await volunteerAttendanceModel.findById(attendanceId)
+            .populate('event', 'title createdBy endDate')
+        
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance record not found' })
+        }
+
+        // Check if user is organizer or admin
+        const event = attendance.event
+        if (!isOrganizer(req.user, event)) {
+            return res.status(403).json({ success: false, message: 'Only event organizers can review exception requests' })
+        }
+
+        // Check if exception request exists
+        if (!attendance.exceptionRequest || attendance.exceptionRequest.status !== 'pending') {
+            return res.status(400).json({ success: false, message: 'No pending exception request found for this attendance record' })
+        }
+
+        // Update exception request
+        attendance.exceptionRequest.status = action === 'approve' ? 'approved' : 'rejected'
+        attendance.exceptionRequest.reviewedAt = new Date()
+        attendance.exceptionRequest.reviewedBy = userId
+        attendance.exceptionRequest.reviewNotes = reviewNotes ? reviewNotes.trim() : ''
+
+        // If approved, set a reasonable time-out time (e.g., end of event day or current time)
+        if (action === 'approve') {
+            const eventEndDate = new Date(event.endDate)
+            const attendanceDate = new Date(attendance.date)
+            
+            // Set time-out to the end of the event day or event end date, whichever is earlier
+            let timeOutDate = new Date(attendanceDate)
+            timeOutDate.setHours(23, 59, 59, 999)
+            
+            if (timeOutDate > eventEndDate) {
+                timeOutDate = eventEndDate
+            }
+
+            attendance.timeOut = timeOutDate
+            attendance.checkOutTime = timeOutDate
+
+            // Recalculate total hours
+            const timeIn = attendance.timeIn || attendance.checkInTime
+            if (timeIn) {
+                const ms = Math.max(0, timeOutDate.getTime() - new Date(timeIn).getTime())
+                attendance.totalHours = Math.round((ms / 3600000) * 100) / 100
+                attendance.hoursWorked = attendance.totalHours
+            }
+
+            attendance.voidedHours = false
+            attendance.isValid = true
+
+            // Set feedback status if needed
+            const requiresFeedback = event.feedbackRules?.requireFeedback !== false
+            if (requiresFeedback) {
+                const deadlineHours = Number(event.feedbackRules?.deadlineHours) || 24
+                const base = new Date(Math.min(eventEndDate.getTime(), timeOutDate.getTime()))
+                attendance.deadlineAt = new Date(base.getTime() + deadlineHours * 3600000)
+                attendance.status = 'pending'
+            } else {
+                attendance.status = 'not_required'
+            }
+        }
+
+        await attendance.save()
+
+        // Notify the volunteer
+        const volunteerId = attendance.volunteer || attendance.userId
+        if (volunteerId) {
+            await notifyUsers({
+                userIds: [volunteerId],
+                title: `Exception Request ${action === 'approve' ? 'Approved' : 'Rejected'}`,
+                message: action === 'approve' 
+                    ? `Your exception request for "${event.title}" has been approved. Your attendance hours have been recorded.`
+                    : `Your exception request for "${event.title}" has been rejected. ${reviewNotes ? `Reason: ${reviewNotes}` : ''}`,
+                payload: { 
+                    eventId: String(event._id), 
+                    attendanceId: String(attendance._id),
+                    type: 'exception_reviewed'
+                }
+            })
+        }
+
+        return res.json({ 
+            success: true, 
+            message: `Exception request ${action === 'approve' ? 'approved' : 'rejected'} successfully`,
+            attendance: {
+                attendanceId: attendance._id,
+                timeOut: attendance.timeOut,
+                totalHours: attendance.totalHours,
+                exceptionRequest: attendance.exceptionRequest
+            }
+        })
+    } catch (error) {
+        console.error('Review exception request error:', error)
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+// GET /api/attendance/:attendanceId/exception-request
+// Get exception request details for a specific attendance record
+export async function getExceptionRequest(req, res) {
+    try {
+        const { attendanceId } = req.params
+        const userId = req.user?._id
+
+        if (!userId) return res.status(401).json({ success: false, message: 'Not authenticated' })
+
+        const attendance = await volunteerAttendanceModel.findById(attendanceId)
+            .populate('event', 'title createdBy')
+            .populate('exceptionRequest.reviewedBy', 'name email')
+            .lean()
+
+        if (!attendance) {
+            return res.status(404).json({ success: false, message: 'Attendance record not found' })
+        }
+
+        // Check if user has permission (either the volunteer or organizer/admin)
+        const isVolunteer = String(attendance.volunteer || attendance.userId) === String(userId)
+        const isOrg = isOrganizer(req.user, attendance.event)
+        
+        if (!isVolunteer && !isOrg) {
+            return res.status(403).json({ success: false, message: 'You do not have permission to view this exception request' })
+        }
+
+        return res.json({ 
+            success: true, 
+            exceptionRequest: attendance.exceptionRequest || null,
+            attendance: {
+                attendanceId: attendance._id,
+                date: attendance.date,
+                timeIn: attendance.timeIn || attendance.checkInTime,
+                timeOut: attendance.timeOut || attendance.checkOutTime,
+                totalHours: attendance.totalHours
+            }
+        })
+    } catch (error) {
+        console.error('Get exception request error:', error)
         return res.status(500).json({ success: false, message: error.message })
     }
 }
