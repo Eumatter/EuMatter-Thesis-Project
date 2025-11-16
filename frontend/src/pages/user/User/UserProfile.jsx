@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useRef } from 'react'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
@@ -6,7 +6,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import { FaEdit, FaTimes } from 'react-icons/fa'
+import { FaEdit, FaTimes, FaCamera, FaImage, FaCheck, FaUndo, FaUpload } from 'react-icons/fa'
 
 const UserProfile = () => {
     const navigate = useNavigate()
@@ -27,6 +27,14 @@ const UserProfile = () => {
     const [isOtpSent, setIsOtpSent] = useState(false)
     const [profileImage, setProfileImage] = useState('')
     const [isImageLoading, setIsImageLoading] = useState(false)
+    const [showImageModal, setShowImageModal] = useState(false)
+    const [imageSource, setImageSource] = useState(null) // 'upload' or 'camera'
+    const [cameraStream, setCameraStream] = useState(null)
+    const [capturedImage, setCapturedImage] = useState(null)
+    const [previewImage, setPreviewImage] = useState(null)
+    const videoRef = useRef(null)
+    const fileInputRef = useRef(null)
+    const canvasRef = useRef(null)
 
     useEffect(() => {
         if (userData) {
@@ -37,6 +45,29 @@ const UserProfile = () => {
             setProfileImage(userData.profileImage || '')
         }
     }, [userData])
+
+    // Fetch fresh user data on component mount to ensure createdAt is available
+    useEffect(() => {
+        const loadUserData = async () => {
+            try {
+                axios.defaults.withCredentials = true
+                const { data } = await axios.get(backendUrl + 'api/auth/is-authenticated')
+                if (data.success && data.user) {
+                    // Only update if we got createdAt or if current userData doesn't have it
+                    if (data.user.createdAt || !userData?.createdAt) {
+                        setUserData(data.user)
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error)
+            }
+        }
+        // Only fetch if createdAt is missing
+        if (!userData?.createdAt) {
+            loadUserData()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     const fetchUserData = async () => {
         try {
@@ -194,10 +225,117 @@ const UserProfile = () => {
         })
     }
 
+    // Cleanup camera stream on unmount
+    useEffect(() => {
+        return () => {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop())
+            }
+        }
+    }, [cameraStream])
+
+    const handleOpenImageModal = () => {
+        setShowImageModal(true)
+        setImageSource(null)
+        setCapturedImage(null)
+        setPreviewImage(null)
+    }
+
+    const handleCloseImageModal = () => {
+        // Stop camera if running
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop())
+            setCameraStream(null)
+        }
+        setShowImageModal(false)
+        setImageSource(null)
+        setCapturedImage(null)
+        setPreviewImage(null)
+    }
+
+    const handleChooseUpload = () => {
+        setImageSource('upload')
+        fileInputRef.current?.click()
+    }
+
+    const handleChooseCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 1280 }
+                } 
+            })
+            setCameraStream(stream)
+            setImageSource('camera')
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream
+            }
+        } catch (error) {
+            console.error('Error accessing camera:', error)
+            toast.error('Unable to access camera. Please check permissions.')
+            setImageSource(null)
+        }
+    }
+
+    const handleCapturePhoto = () => {
+        if (videoRef.current && canvasRef.current) {
+            const video = videoRef.current
+            const canvas = canvasRef.current
+            const ctx = canvas.getContext('2d')
+
+            // Set canvas size to video size
+            canvas.width = video.videoWidth
+            canvas.height = video.videoHeight
+
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0)
+
+            // Convert to data URL
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.95)
+            setCapturedImage(dataUrl)
+            setPreviewImage(dataUrl)
+
+            // Stop camera stream
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop())
+                setCameraStream(null)
+            }
+        }
+    }
+
+    const handleRetakePhoto = () => {
+        setCapturedImage(null)
+        setPreviewImage(null)
+        handleChooseCamera()
+    }
+
+    const handleFileSelect = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size must be less than 5MB')
+            return
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            toast.error('Please select a valid image file')
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            setPreviewImage(e.target.result)
+        }
+        reader.readAsDataURL(file)
+    }
+
     const handleImageChange = (e) => {
         const file = e.target.files[0]
         if (file) {
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            if (file.size > 5 * 1024 * 1024) {
                 toast.error('Image size must be less than 5MB')
                 return
             }
@@ -212,6 +350,13 @@ const UserProfile = () => {
                 setProfileImage(e.target.result)
             }
             reader.readAsDataURL(file)
+        }
+    }
+
+    const handleConfirmImage = () => {
+        if (previewImage) {
+            setProfileImage(previewImage)
+            handleCloseImageModal()
         }
     }
 
@@ -247,6 +392,33 @@ const UserProfile = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* CSS Animations */}
+            <style>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                @keyframes scaleIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 0.3s ease-out;
+                }
+                .animate-scaleIn {
+                    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+            `}</style>
             <Header />
             
             <main className="max-w-4xl mx-auto px-6 py-8">
@@ -264,49 +436,67 @@ const UserProfile = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Profile Overview */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-xl shadow-md p-6">
+                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
                             <div className="text-center">
-                                <div className="relative w-24 h-24 mx-auto mb-4">
-                                    {(profileImage || userData?.profileImage) ? (
-                                        <img
-                                            src={profileImage || userData?.profileImage}
-                                            alt={userData?.name || 'User'}
-                                            className="w-24 h-24 rounded-full object-cover border-4 border-red-900"
-                                        />
-                                    ) : (
-                                        <div className="w-24 h-24 rounded-full border-4 border-red-900 bg-red-900 text-white flex items-center justify-center text-2xl font-bold">
-                                            {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
-                                        </div>
-                                    )}
-                                    <label className="absolute bottom-0 right-0 w-8 h-8 bg-red-900 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-800 transition-colors duration-200">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                            className="hidden"
-                                        />
-                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    </label>
+                                {/* Enhanced Profile Picture Section */}
+                                <div className="relative inline-block mb-6">
+                                    <div className="relative w-32 h-32 mx-auto">
+                                        {(profileImage || userData?.profileImage) ? (
+                                            <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-[#800000] ring-offset-4 ring-offset-white shadow-xl">
+                                                <img
+                                                    src={profileImage || userData?.profileImage}
+                                                    alt={userData?.name || 'User'}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-full"></div>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] flex items-center justify-center text-4xl font-bold text-white shadow-xl ring-4 ring-[#800000] ring-offset-4 ring-offset-white">
+                                                {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
+                                            </div>
+                                        )}
+                                        
+                                        {/* Change Photo Button */}
+                                        <button
+                                            onClick={handleOpenImageModal}
+                                            className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center cursor-pointer hover:from-[#900000] hover:to-[#800000] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 group border-4 border-white"
+                                            aria-label="Change profile picture"
+                                        >
+                                            <FaCamera className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
+                                        </button>
+                                    </div>
                                 </div>
-                                
-                                {profileImage !== userData?.profileImage && (
-                                    <div className="mb-4">
+
+                                {/* Update Button */}
+                                {profileImage && profileImage !== userData?.profileImage && (
+                                    <div className="mb-4 animate-fadeIn">
                                         <Button
                                             onClick={handleUpdateProfileImage}
                                             disabled={isImageLoading}
                                             size="sm"
+                                            className="shadow-md hover:shadow-lg transition-all duration-300"
                                         >
-                                            {isImageLoading ? 'Updating...' : 'Update Image'}
+                                            {isImageLoading ? (
+                                                <span className="flex items-center gap-2">
+                                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Updating...
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-2">
+                                                    <FaUpload className="w-4 h-4" />
+                                                    Save Changes
+                                                </span>
+                                            )}
                                         </Button>
                                     </div>
                                 )}
                                 
-                                <h2 className="text-xl font-semibold text-black mb-1">{userData?.name || 'User'}</h2>
-                                <p className="text-gray-600 mb-2">{userData?.email || 'user@example.com'}</p>
-                                <span className="inline-block px-3 py-1 bg-red-100 text-red-900 rounded-full text-sm font-medium">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">{userData?.name || 'User'}</h2>
+                                <p className="text-gray-600 mb-3 text-sm">{userData?.email || 'user@example.com'}</p>
+                                <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#800000]/10 to-[#900000]/10 text-[#800000] rounded-full text-sm font-semibold border border-[#800000]/20">
                                     {userData?.role || 'User'}
                                 </span>
                             </div>
@@ -322,8 +512,27 @@ const UserProfile = () => {
                                 </div>
                                 <div className="flex items-center justify-between py-2 border-b border-gray-200">
                                     <span className="text-gray-600">Member Since</span>
-                                    <span className="text-sm text-gray-800">
-                                        {userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString() : 'N/A'}
+                                    <span className="text-sm text-gray-800 font-medium">
+                                        {(() => {
+                                            // Try multiple possible date field names
+                                            const createdAt = userData?.createdAt || userData?.created_at || userData?.joinedAt || userData?.joined_at;
+                                            
+                                            if (createdAt) {
+                                                try {
+                                                    const date = new Date(createdAt);
+                                                    if (!isNaN(date.getTime())) {
+                                                        return date.toLocaleDateString('en-US', { 
+                                                            year: 'numeric', 
+                                                            month: 'long', 
+                                                            day: 'numeric' 
+                                                        });
+                                                    }
+                                                } catch (error) {
+                                                    console.error('Error parsing date:', error);
+                                                }
+                                            }
+                                            return 'Loading...';
+                                        })()}
                                     </span>
                                 </div>
                             </div>
@@ -560,6 +769,151 @@ const UserProfile = () => {
                     </div>
                 </div>
             )}
+
+            {/* Image Upload/Camera Modal */}
+            {showImageModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scaleIn">
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#900000]">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-2xl font-bold text-white">Change Profile Picture</h3>
+                                <button
+                                    onClick={handleCloseImageModal}
+                                    className="p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
+                                    aria-label="Close"
+                                >
+                                    <FaTimes className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6">
+                            {!imageSource && (
+                                <div className="space-y-4">
+                                    <p className="text-gray-600 text-center mb-6">Choose how you want to update your profile picture</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Camera Option */}
+                                        <button
+                                            onClick={handleChooseCamera}
+                                            className="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-[#800000] hover:bg-[#800000]/5 transition-all duration-300 group"
+                                        >
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#800000] to-[#900000] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                                <FaCamera className="w-8 h-8 text-white" />
+                                            </div>
+                                            <h4 className="text-lg font-semibold text-gray-900 mb-2">Take Photo</h4>
+                                            <p className="text-sm text-gray-600 text-center">Use your device camera to take a new photo</p>
+                                        </button>
+
+                                        {/* Upload Option */}
+                                        <button
+                                            onClick={handleChooseUpload}
+                                            className="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-[#800000] hover:bg-[#800000]/5 transition-all duration-300 group"
+                                        >
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#800000] to-[#900000] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                                                <FaImage className="w-8 h-8 text-white" />
+                                            </div>
+                                            <h4 className="text-lg font-semibold text-gray-900 mb-2">Upload Photo</h4>
+                                            <p className="text-sm text-gray-600 text-center">Choose an existing photo from your device</p>
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Camera View */}
+                            {imageSource === 'camera' && !capturedImage && (
+                                <div className="space-y-4">
+                                    <div className="relative bg-black rounded-xl overflow-hidden">
+                                        <video
+                                            ref={videoRef}
+                                            autoPlay
+                                            playsInline
+                                            className="w-full h-auto max-h-[60vh]"
+                                        />
+                                        <div className="absolute inset-0 border-4 border-white/50 rounded-xl pointer-events-none"></div>
+                                    </div>
+                                    <div className="flex justify-center gap-4">
+                                        <button
+                                            onClick={handleCapturePhoto}
+                                            className="px-6 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 hover:scale-105 active:scale-95"
+                                        >
+                                            <FaCamera className="w-5 h-5" />
+                                            Capture Photo
+                                        </button>
+                                        <button
+                                            onClick={handleCloseImageModal}
+                                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Preview Section (for both camera and upload) */}
+                            {previewImage && (
+                                <div className="space-y-4">
+                                    <div className="relative bg-gray-100 rounded-xl overflow-hidden">
+                                        <img
+                                            src={previewImage}
+                                            alt="Preview"
+                                            className="w-full h-auto max-h-[60vh] object-contain mx-auto"
+                                        />
+                                    </div>
+                                    <div className="flex justify-center gap-4">
+                                        <button
+                                            onClick={handleConfirmImage}
+                                            className="px-6 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 hover:scale-105 active:scale-95"
+                                        >
+                                            <FaCheck className="w-5 h-5" />
+                                            Use This Photo
+                                        </button>
+                                        {imageSource === 'camera' ? (
+                                            <button
+                                                onClick={handleRetakePhoto}
+                                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300 flex items-center gap-2"
+                                            >
+                                                <FaUndo className="w-5 h-5" />
+                                                Retake
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    setPreviewImage(null)
+                                                    handleChooseUpload()
+                                                }}
+                                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300 flex items-center gap-2"
+                                            >
+                                                <FaUndo className="w-5 h-5" />
+                                                Choose Another
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={handleCloseImageModal}
+                                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Hidden Canvas for capturing photos */}
+            <canvas ref={canvasRef} className="hidden" />
+
+            {/* Hidden File Input */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+            />
 
             <Footer />
         </div>

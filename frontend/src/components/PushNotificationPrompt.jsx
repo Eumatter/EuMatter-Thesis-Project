@@ -44,7 +44,10 @@ const PushNotificationPrompt = () => {
                 try {
                     await subscribeToPushNotifications();
                 } catch (error) {
-                    console.error('Error auto-subscribing:', error);
+                    // Silently fail if VAPID is not configured - push notifications are optional
+                    if (!error.message?.includes('not configured') && !error.message?.includes('not supported')) {
+                        console.error('Error auto-subscribing:', error);
+                    }
                 }
             }
         }

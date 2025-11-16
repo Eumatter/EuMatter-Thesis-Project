@@ -655,6 +655,11 @@ export const isAuthenticated = async (req, res) => {
             userResponse.isAccountVerified = true;
         }
 
+        // Ensure createdAt is included (from timestamps: true)
+        if (!userResponse.createdAt && user.createdAt) {
+            userResponse.createdAt = user.createdAt;
+        }
+
         return res.json({ success: true, user: userResponse });
     } catch (error) {
         return res.json({ success: false, message: error.message });

@@ -8,10 +8,17 @@ const backendUrl = getBackendUrl();
  */
 export async function getVapidPublicKey() {
     try {
-        const response = await axios.get(`${backendUrl}/api/push/vapid-key`);
+        // backendUrl already ends with '/', so don't add another one
+        const url = backendUrl.endsWith('/') 
+            ? `${backendUrl}api/push/vapid-key` 
+            : `${backendUrl}/api/push/vapid-key`;
+        const response = await axios.get(url);
         return response.data.publicKey;
     } catch (error) {
-        console.error('Error getting VAPID key:', error);
+        // Silently fail if VAPID is not configured - don't spam console
+        if (error.response?.status !== 404 && error.response?.status !== 503) {
+            console.error('Error getting VAPID key:', error);
+        }
         return null;
     }
 }
@@ -47,7 +54,8 @@ export async function subscribeToPushNotifications() {
         // Get VAPID public key
         const publicKey = await getVapidPublicKey();
         if (!publicKey) {
-            throw new Error('Failed to get VAPID public key');
+            // Silently fail if VAPID is not configured - push notifications are optional
+            throw new Error('Push notifications not configured');
         }
 
         // Register service worker
@@ -81,8 +89,12 @@ export async function subscribeToPushNotifications() {
             throw new Error('User not authenticated');
         }
 
+        // backendUrl already ends with '/', so don't add another one
+        const subscribeUrl = backendUrl.endsWith('/') 
+            ? `${backendUrl}api/push/subscribe` 
+            : `${backendUrl}/api/push/subscribe`;
         await axios.post(
-            `${backendUrl}/api/push/subscribe`,
+            subscribeUrl,
             subscriptionData,
             {
                 headers: {
@@ -108,8 +120,12 @@ export async function unsubscribeFromPushNotifications(endpoint = null) {
             throw new Error('User not authenticated');
         }
 
+        // backendUrl already ends with '/', so don't add another one
+        const unsubscribeUrl = backendUrl.endsWith('/') 
+            ? `${backendUrl}api/push/unsubscribe` 
+            : `${backendUrl}/api/push/unsubscribe`;
         await axios.post(
-            `${backendUrl}/api/push/unsubscribe`,
+            unsubscribeUrl,
             { endpoint },
             {
                 headers: {
