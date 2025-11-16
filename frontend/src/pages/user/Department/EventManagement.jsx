@@ -396,14 +396,19 @@ const EventManagement = () => {
             const buildPayload = (s, e, seriesId, index) => {
                 const fd = new FormData()
                 fd.append('title', formData.title)
-                fd.append('description', formData.description)
+                fd.append('description', formData.description || '')
                 fd.append('location', formData.location)
                 fd.append('startDate', new Date(s).toISOString())
                 fd.append('endDate', new Date(e).toISOString())
-                fd.append('isOpenForDonation', formData.isOpenForDonation)
-                fd.append('isOpenForVolunteer', formData.isOpenForVolunteer)
+                fd.append('isOpenForDonation', formData.isOpenForDonation ? 'true' : 'false')
+                fd.append('isOpenForVolunteer', formData.isOpenForVolunteer ? 'true' : 'false')
                 fd.append('eventCategory', formData.eventCategory || 'community_relations') // Include event category
-                if (formData.isOpenForVolunteer) fd.append('volunteerSettings', JSON.stringify(formData.volunteerSettings))
+                if (formData.isOpenForDonation && formData.donationTarget) {
+                    fd.append('donationTarget', formData.donationTarget)
+                }
+                if (formData.isOpenForVolunteer) {
+                    fd.append('volunteerSettings', JSON.stringify(formData.volunteerSettings))
+                }
                 // Optional: default reminder offsets in seconds (24h, 1h)
                 fd.append('reminderOffsets', JSON.stringify([86400, 3600]))
                 if (imageFile) fd.append('image', imageFile)
@@ -455,11 +460,12 @@ const EventManagement = () => {
                 withCredentials: true
             }))
 
-            const results = await Promise.all(createPromises)
-            const anySuccess = results.some(r => r?.data?.message?.toLowerCase().includes('success'))
+            const results = await Promise.allSettled(createPromises)
+            const successful = results.filter(r => r.status === 'fulfilled' && r.value?.data?.message?.toLowerCase().includes('success'))
+            const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value?.data?.message?.toLowerCase().includes('success')))
 
-            if (anySuccess) {
-                toast.success('Event proposal submitted!')
+            if (successful.length > 0) {
+                toast.success(`${successful.length} event proposal(s) submitted successfully!`)
                 // Reset form completely
                 setFormData({ 
                     title: '', 
@@ -498,10 +504,21 @@ const EventManagement = () => {
                 const eventsRes = await axios.get(backendUrl + 'api/events/my-events', { withCredentials: true })
                 setEvents(eventsRes.data || [])
             } else {
-                toast.error(res.data.message)
+                // Show detailed error message
+                const errorMessages = failed.map(r => {
+                    if (r.status === 'rejected') {
+                        return r.reason?.response?.data?.message || r.reason?.message || 'Unknown error'
+                    } else {
+                        return r.value?.data?.message || 'Failed to create event'
+                    }
+                })
+                const uniqueErrors = [...new Set(errorMessages)]
+                toast.error(uniqueErrors.length === 1 ? uniqueErrors[0] : `Failed to submit: ${uniqueErrors.join('; ')}`)
             }
         } catch (error) {
-            toast.error(error?.response?.data?.message || 'Error submitting event')
+            console.error('Error submitting event:', error)
+            const errorMessage = error?.response?.data?.message || error?.message || 'Failed to submit event proposal'
+            toast.error(errorMessage)
         }
     }
 
