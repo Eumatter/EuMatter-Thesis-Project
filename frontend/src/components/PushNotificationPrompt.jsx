@@ -42,18 +42,15 @@ const PushNotificationPrompt = () => {
             if (!subscribed) {
                 // User granted permission but not subscribed, try to subscribe
                 try {
-                    await subscribeToPushNotifications();
-                } catch (error) {
-                    // Silently fail if VAPID is not configured or service unavailable - push notifications are optional
-                    const errorMessage = error.message || '';
-                    const isNotConfigured = errorMessage.includes('not configured') || 
-                                           errorMessage.includes('not supported') ||
-                                           errorMessage.includes('503') ||
-                                           errorMessage.includes('404');
-                    if (!isNotConfigured) {
-                        // Only log actual errors, not configuration issues
-                        console.error('Error auto-subscribing:', error);
+                    const result = await subscribeToPushNotifications();
+                    // If subscription failed silently (not configured), don't log anything
+                    if (result && !result.success) {
+                        // Service not configured - silently skip
+                        return;
                     }
+                } catch (error) {
+                    // Silently fail for any error - push notifications are optional
+                    // Don't log anything to prevent console spam
                 }
             }
         }
@@ -67,13 +64,25 @@ const PushNotificationPrompt = () => {
 
             if (newPermission === 'granted') {
                 // Subscribe to push notifications
-                await subscribeToPushNotifications();
-                setShow(false);
-                localStorage.setItem('pushNotificationPromptDismissed', 'true');
-                // Show success message
-                window.dispatchEvent(new CustomEvent('toast', {
-                    detail: { message: 'Push notifications enabled!', type: 'success' }
-                }));
+                try {
+                    const result = await subscribeToPushNotifications();
+                    if (result && result.success) {
+                        setShow(false);
+                        localStorage.setItem('pushNotificationPromptDismissed', 'true');
+                        // Show success message
+                        window.dispatchEvent(new CustomEvent('toast', {
+                            detail: { message: 'Push notifications enabled!', type: 'success' }
+                        }));
+                    } else {
+                        // Service not configured - silently hide prompt
+                        setShow(false);
+                        localStorage.setItem('pushNotificationPromptDismissed', 'true');
+                    }
+                } catch (error) {
+                    // Silently handle errors - don't show error messages for unavailable service
+                    setShow(false);
+                    localStorage.setItem('pushNotificationPromptDismissed', 'true');
+                }
             } else if (newPermission === 'denied') {
                 // Show error message
                 window.dispatchEvent(new CustomEvent('toast', {

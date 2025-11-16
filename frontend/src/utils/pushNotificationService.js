@@ -12,18 +12,26 @@ export async function getVapidPublicKey() {
         const url = backendUrl.endsWith('/') 
             ? `${backendUrl}api/push/vapid-key` 
             : `${backendUrl}/api/push/vapid-key`;
-        const response = await axios.get(url);
-        return response.data.publicKey;
-    } catch (error) {
-        // Silently fail if VAPID is not configured - push notifications are optional
-        const status = error.response?.status;
-        const isNotConfigured = status === 404 || status === 503 || 
-                               error.message?.includes('not configured') ||
-                               error.message?.includes('not supported');
-        if (!isNotConfigured) {
-            // Only log actual errors, not configuration issues
-            console.error('Error getting VAPID key:', error);
+        
+        // Make request with error handling that suppresses 404/503
+        const response = await axios.get(url, {
+            validateStatus: function (status) {
+                // Don't throw errors for 404 or 503 - these mean VAPID is not configured
+                // Return true to prevent axios from throwing an error for these status codes
+                return (status >= 200 && status < 300) || status === 404 || status === 503;
+            }
+        });
+        
+        // Check if we got a valid response
+        if (response.status === 200 && response.data?.publicKey) {
+            return response.data.publicKey;
         }
+        
+        // Service unavailable or not configured - return null silently
+        return null;
+    } catch (error) {
+        // Silently fail for any error - push notifications are optional
+        // Don't log anything, just return null
         return null;
     }
 }
@@ -60,7 +68,8 @@ export async function subscribeToPushNotifications() {
         const publicKey = await getVapidPublicKey();
         if (!publicKey) {
             // Silently fail if VAPID is not configured - push notifications are optional
-            throw new Error('Push notifications not configured');
+            // Return early without throwing an error to prevent console spam
+            return { success: false, message: 'Push notifications not configured' };
         }
 
         // Register service worker
@@ -104,14 +113,27 @@ export async function subscribeToPushNotifications() {
             {
                 headers: {
                     Authorization: `Bearer ${token}`
+                },
+                validateStatus: function (status) {
+                    // Don't throw errors for 404 or 503 - these mean push notifications are not configured
+                    // Return true to prevent axios from throwing an error for these status codes
+                    return (status >= 200 && status < 300) || status === 404 || status === 503;
                 }
             }
         );
 
         return { success: true, subscription };
     } catch (error) {
-        console.error('Error subscribing to push notifications:', error);
-        throw error;
+        // Silently handle errors - push notifications are optional
+        // Don't log or throw errors for unavailable service
+        const status = error.response?.status;
+        const isServiceUnavailable = status === 404 || status === 503;
+        if (!isServiceUnavailable) {
+            // Only log actual errors, not service unavailability
+            console.error('Error subscribing to push notifications:', error);
+        }
+        // Return failure result instead of throwing
+        return { success: false, message: error.message || 'Push notifications not available' };
     }
 }
 

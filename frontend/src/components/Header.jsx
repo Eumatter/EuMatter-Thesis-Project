@@ -768,10 +768,10 @@ const Header = () => {
 
                             {/* Mobile Slider Menu for User Dropdown - Slides from right */}
                             {isDropdownOpen && (
-                                <>
+                                <div className="lg:hidden fixed inset-0 z-[9999] pointer-events-none">
                                     {/* Backdrop overlay */}
                                     <div 
-                                        className="lg:hidden fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm"
+                                        className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
                                         onClick={() => setIsDropdownOpen(false)}
                                         style={{
                                             animation: 'fadeIn 0.25s ease-out'
@@ -779,10 +779,11 @@ const Header = () => {
                                     />
                                     {/* Slider menu from right */}
                                     <div 
-                                        className="lg:hidden fixed top-0 right-0 bottom-0 z-[151] w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col"
+                                        className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto"
                                         style={{
                                             animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                                            boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
+                                            boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
+                                            zIndex: 10000
                                         }}
                                     >
                                         {/* Header with close button */}
@@ -886,7 +887,7 @@ const Header = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -931,19 +932,22 @@ const Header = () => {
         </header>
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
-                    <>
+                    <div className="lg:hidden fixed inset-0 z-[9998] pointer-events-none">
                         {/* Backdrop overlay */}
                         <div 
-                            className="fixed inset-0 z-[150] lg:hidden bg-black/60 backdrop-blur-sm"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
+                            style={{
+                                animation: 'fadeIn 0.25s ease-out'
+                            }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
-                            className="fixed top-0 right-0 bottom-0 z-[151] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200"
+                            className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto"
                             style={{
                                 animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                                transform: 'translateX(0)',
-                                boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
+                                boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
+                                zIndex: 9999
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
@@ -1094,7 +1098,7 @@ const Header = () => {
                                 </div>
                             )}
                         </div>
-                    </>
+                    </div>
                 )}
         {/* Spacer to offset fixed header height */}
         <div aria-hidden className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}></div>
