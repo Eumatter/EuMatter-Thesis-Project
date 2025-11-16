@@ -29,7 +29,8 @@ const VolunteerManagement = () => {
     
     // QR Code states
     const [qrCode, setQrCode] = useState(null)
-    const [qrGenerating, setQrGenerating] = useState(false)
+    const [qrGeneratingCheckIn, setQrGeneratingCheckIn] = useState(false)
+    const [qrGeneratingCheckOut, setQrGeneratingCheckOut] = useState(false)
     
     // Modal states
     const [showQRModal, setShowQRModal] = useState(false)
@@ -217,7 +218,13 @@ const VolunteerManagement = () => {
     }
 
     const generateQRCode = async (type = 'checkIn') => {
-        setQrGenerating(true)
+        // Set the appropriate loading state based on type
+        if (type === 'checkIn') {
+            setQrGeneratingCheckIn(true)
+        } else {
+            setQrGeneratingCheckOut(true)
+        }
+        
         try {
             const response = await axios.post(`${backendUrl}api/volunteers/event/${eventId}/qr/generate`, 
                 { type }, 
@@ -233,7 +240,12 @@ const VolunteerManagement = () => {
             console.error('Error generating QR code:', error)
             toast.error(error.response?.data?.message || 'Failed to generate QR code')
         } finally {
-            setQrGenerating(false)
+            // Clear the appropriate loading state based on type
+            if (type === 'checkIn') {
+                setQrGeneratingCheckIn(false)
+            } else {
+                setQrGeneratingCheckOut(false)
+            }
         }
     }
 
@@ -1269,14 +1281,14 @@ const VolunteerManagement = () => {
                                         <p className="text-gray-600 mb-4">No check-in QR code generated yet</p>
                                         <button
                                             onClick={() => generateQRCode('checkIn')}
-                                            disabled={!canGenerateCheckInQR() || qrGenerating}
+                                            disabled={!canGenerateCheckInQR() || qrGeneratingCheckIn}
                                             className={`px-6 py-3 rounded-lg transition-colors ${
-                                                canGenerateCheckInQR() && !qrGenerating
+                                                canGenerateCheckInQR() && !qrGeneratingCheckIn
                                                     ? 'bg-green-600 text-white hover:bg-green-700'
                                                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                             }`}
                                         >
-                                            {qrGenerating ? 'Generating...' : 'Generate Check-In QR'}
+                                            {qrGeneratingCheckIn ? 'Generating...' : 'Generate Check-In QR'}
                                         </button>
                                     </div>
                                 )}
@@ -1335,14 +1347,14 @@ const VolunteerManagement = () => {
                                         {canGenerateCheckOutQR() && (
                                     <button
                                                 onClick={() => generateQRCode('checkOut')}
-                                                disabled={qrGenerating}
+                                                disabled={qrGeneratingCheckOut}
                                         className={`px-6 py-3 rounded-lg transition-colors ${
-                                                    !qrGenerating
+                                                    !qrGeneratingCheckOut
                                                         ? 'bg-purple-600 text-white hover:bg-purple-700'
                                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         }`}
                                     >
-                                                {qrGenerating ? 'Generating...' : 'Generate Evaluation QR'}
+                                                {qrGeneratingCheckOut ? 'Generating...' : 'Generate Evaluation QR'}
                                     </button>
                                         )}
                                 </div>
