@@ -270,16 +270,25 @@ const Header = () => {
                     setIsMobileMenuOpen(false);
                     setIsBellOpen(false);
                 }}
-                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-200 touch-manipulation
+                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group
                     ${isActive 
-                        ? 'bg-gradient-to-r from-[#800000] to-[#9c0000] text-white shadow-lg' 
-                        : 'bg-white text-[#6b0000] hover:bg-[#6b0000]/15 active:bg-[#6b0000]/25 border border-[#800000]/10'
+                        ? 'bg-gradient-to-r from-[#800000] to-[#9c0000] text-white shadow-lg shadow-[#800000]/30 scale-[1.02]' 
+                        : 'bg-white/50 text-gray-800 hover:bg-gradient-to-r hover:from-[#800000]/10 hover:to-[#800000]/5 active:bg-[#800000]/15 border border-gray-200 hover:border-[#800000]/30 hover:shadow-md'
                     }
                     font-medium ${className}`}
             >
-                {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
-                <span className="text-base font-medium flex-1 text-left">{children}</span>
-                {isActive && <FaCheckCircle className="text-sm" />}
+                <span className={`text-xl flex-shrink-0 transition-all duration-300 ${isActive ? 'text-white scale-110' : 'text-[#800000] group-hover:scale-110 group-hover:rotate-3'}`}>
+                    {icon}
+                </span>
+                <span className={`text-base font-semibold flex-1 text-left transition-all duration-300 ${isActive ? 'text-white' : 'text-gray-800 group-hover:text-[#800000]'}`}>
+                    {children}
+                </span>
+                {isActive && (
+                    <FaCheckCircle className="text-lg flex-shrink-0 animate-pulse" />
+                )}
+                {!isActive && (
+                    <FaChevronRight className="text-xs text-gray-400 flex-shrink-0 group-hover:translate-x-1 transition-transform duration-300" />
+                )}
             </button>
         );
     };
@@ -306,9 +315,11 @@ const Header = () => {
             @keyframes slideInRight {
                 from {
                     transform: translateX(100%);
+                    opacity: 0;
                 }
                 to {
                     transform: translateX(0);
+                    opacity: 1;
                 }
             }
             @keyframes fadeIn {
@@ -316,6 +327,16 @@ const Header = () => {
                     opacity: 0;
                 }
                 to {
+                    opacity: 1;
+                }
+            }
+            @keyframes slideInUp {
+                from {
+                    transform: translateY(10px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
                     opacity: 1;
                 }
             }
@@ -774,57 +795,60 @@ const Header = () => {
                     <>
                         {/* Backdrop overlay */}
                         <div 
-                            className="fixed inset-0 z-[90] lg:hidden bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+                            className="fixed inset-0 z-[150] lg:hidden bg-black/60 backdrop-blur-sm transition-opacity duration-300"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
-                                animation: 'fadeIn 0.3s ease-out'
+                                animation: 'fadeIn 0.25s ease-out'
                             }}
                         />
-                        {/* Slider menu from right */}
+                        {/* Slider menu from right - positioned below header */}
                         <div 
-                            className={`fixed top-0 ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} right-0 bottom-0 z-[95] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col`}
+                            className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-14 sm:top-16 md:top-20'} right-0 bottom-0 z-[151] lg:hidden w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200`}
                             style={{
-                                animation: 'slideInRight 0.3s ease-out',
-                                transform: 'translateX(0)'
+                                animation: 'slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                                transform: 'translateX(0)',
+                                boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)'
                             }}
                         >
-                            {/* Header with close button */}
-                            <div className="px-4 py-4 flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white">
-                                <div className="flex items-center gap-2">
-                                    <img 
-                                        src={EnvergaLogo} 
-                                        alt="Enverga University Logo" 
-                                        className="w-8 h-8 object-contain"
-                                    />
+                            {/* Header with close button - Enhanced design */}
+                            <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-md">
+                                        <img 
+                                            src={EnvergaLogo} 
+                                            alt="Enverga University Logo" 
+                                            className="w-7 h-7 object-contain"
+                                        />
+                                    </div>
                                     <div>
-                                        <div className="text-sm font-bold">EUMATTER</div>
-                                        <div className="text-xs opacity-90">Menu</div>
+                                        <div className="text-base font-extrabold tracking-tight">EUMATTER</div>
+                                        <div className="text-xs opacity-90 font-medium">Navigation Menu</div>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setIsMobileMenuOpen(false)}
-                                    className="p-2 rounded-lg hover:bg-white/20 active:bg-white/30 transition-colors touch-manipulation"
+                                    className="p-2.5 rounded-xl hover:bg-white/25 active:bg-white/35 active:scale-95 transition-all duration-200 touch-manipulation shadow-md hover:shadow-lg"
                                     aria-label="Close menu"
                                 >
                                     <FaTimes className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            {/* Scrollable menu content */}
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                            {/* Scrollable menu content with improved styling */}
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white">
                                 {/* Primary links for logged out users */}
                                 {!isLoggedIn && (
-                                    <div className="py-2">
+                                    <div className="py-3 px-2">
                                         <MobileNavLink to="/" icon={<FaHome />}>Home</MobileNavLink>
                                         <MobileNavLink to="/program" icon={<FaBookOpen />}>Program</MobileNavLink>
                                         <MobileNavLink to="/nstp" icon={<FaClipboardList />}>NSTP</MobileNavLink>
                                         <MobileNavLink to="/about" icon={<FaInfoCircle />}>About</MobileNavLink>
-                                        <div className="px-4 py-3 mt-2">
+                                        <div className="px-3 py-4 mt-3">
                                             <Button
                                                 onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
                                                 variant="gold"
                                                 size="lg"
-                                                className="w-full"
+                                                className="w-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                                             >
                                                 Join Us
                                             </Button>
@@ -834,7 +858,7 @@ const Header = () => {
 
                                 {/* Role-aware navigation for logged in users */}
                                 {isLoggedIn && (
-                                    <div className="py-2">
+                                    <div className="py-3 px-2">
                                         {isUser && (
                                             <>
                                                 <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
@@ -874,8 +898,11 @@ const Header = () => {
                                             </>
                                         )}
 
-                                        {/* Account section */}
-                                        <div className="border-t border-gray-200 my-2 pt-2">
+                                        {/* Account section - Enhanced styling */}
+                                        <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
+                                            <div className="px-3 py-1 mb-2">
+                                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account</span>
+                                            </div>
                                             <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
                                             <MobileNavLink to={getProfileRoute()} icon={<FaCog />}>Account Settings</MobileNavLink>
                                             {userData.role && !userData.role.toLowerCase().includes('system admin') && (
@@ -886,42 +913,47 @@ const Header = () => {
                                             )}
                                         </div>
 
-                                        {/* Logout */}
-                                        <div className="border-t border-gray-200 my-2 pt-2">
+                                        {/* Logout - Enhanced styling */}
+                                        <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
                                             <button 
                                                 onClick={() => {
                                                     handleLogout();
                                                     setIsMobileMenuOpen(false);
                                                 }} 
-                                                className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-200 touch-manipulation bg-white text-red-700 hover:bg-red-50 active:bg-red-100 border border-red-200 font-medium"
+                                                className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation bg-gradient-to-r from-red-50 to-red-50/50 text-red-700 hover:from-red-100 hover:to-red-100/50 active:from-red-200 active:to-red-200/50 border-2 border-red-200 hover:border-red-300 font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] group"
                                             >
-                                                <FaSignOutAlt className="text-xl flex-shrink-0" />
-                                                <span className="text-base font-medium flex-1 text-left">Logout</span>
+                                                <FaSignOutAlt className="text-xl flex-shrink-0 group-hover:rotate-12 transition-transform duration-300" />
+                                                <span className="text-base font-semibold flex-1 text-left">Logout</span>
                                             </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Footer with user info if logged in */}
+                            {/* Footer with user info if logged in - Enhanced design */}
                             {isLoggedIn && userData && (
-                                <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-                                    <div className="flex items-center gap-3">
+                                <div className="px-5 py-4 border-t-2 border-gray-200 bg-gradient-to-br from-gray-50 via-white to-gray-50 shadow-inner">
+                                    <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/50 transition-all duration-200 cursor-pointer" onClick={() => { navigate(getProfileRoute()); setIsMobileMenuOpen(false); }}>
                                         {userData?.profileImage ? (
-                                            <img 
-                                                src={userData.profileImage} 
-                                                alt={userData.name} 
-                                                className="w-10 h-10 rounded-full object-cover border-2 border-[#800000]" 
-                                            />
+                                            <div className="relative">
+                                                <img 
+                                                    src={userData.profileImage} 
+                                                    alt={userData.name} 
+                                                    className="w-12 h-12 rounded-full object-cover border-2 border-[#800000] shadow-md" 
+                                                />
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                                            </div>
                                         ) : (
-                                            <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold text-sm">
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#800000] to-[#9c0000] text-white flex items-center justify-center font-bold text-base shadow-md">
                                                 {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-semibold text-gray-900 truncate">{userData.name}</div>
+                                            <div className="text-sm font-bold text-gray-900 truncate">{userData.name}</div>
                                             <div className="text-xs text-gray-600 truncate">{userData.email}</div>
+                                            <div className="text-xs text-[#800000] font-semibold mt-0.5">{userData.role}</div>
                                         </div>
+                                        <FaChevronRight className="text-gray-400 flex-shrink-0" />
                                     </div>
                                 </div>
                             )}
