@@ -910,31 +910,29 @@ export const recordAttendance = async (req, res) => {
             volunteerReg.attendanceRecords = []
         }
 
-        // Get today's date (start of day)
+        // Get today's date string (YYYY-MM-DD format) - this is the unique identifier per day
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         
-        // Find existing attendance record for today
+        // Find existing attendance record for today using date string comparison
         let attendanceRecord = volunteerReg.attendanceRecords.find(
             record => {
-                const recordDate = new Date(record.date)
-                recordDate.setHours(0, 0, 0, 0)
-                return recordDate.getTime() === today.getTime()
+                // Handle both string and Date formats
+                const recordDateStr = typeof record.date === 'string' 
+                    ? record.date 
+                    : `${new Date(record.date).getFullYear()}-${String(new Date(record.date).getMonth() + 1).padStart(2, '0')}-${String(new Date(record.date).getDate()).padStart(2, '0')}`;
+                return recordDateStr === todayStr;
             }
         );
-
-        // Sync with standalone attendance collection
-        const startOfDay = new Date(now)
-        startOfDay.setHours(0,0,0,0)
-        const endOfDay = new Date(now)
-        endOfDay.setHours(23,59,59,999)
 
         const requiresFeedback = event.feedbackRules?.requireFeedback !== false
         const deadlineHours = Number(event.feedbackRules?.deadlineHours) || 24
 
+        // Find existing attendance document using date string (unique per day)
         let attendanceDoc = await volunteerAttendanceModel.findOne({
-            event: event._id,
-            volunteer: userId,
-            date: { $gte: startOfDay, $lte: endOfDay }
+            eventId: event._id,
+            userId: userId,
+            date: todayStr // Use date string for exact match
         })
 
         if (action === 'timein') {
@@ -951,49 +949,69 @@ export const recordAttendance = async (req, res) => {
             let previousDayHours = 0;
             
             if (isMultiDay) {
-                // Find all previous attendance records for this event
-                const previousAttendances = await volunteerAttendanceModel.find({
-                    event: event._id,
-                    volunteer: userId,
-                    date: { $lt: today }
-                }).sort({ date: -1 });
+                // Find all previous attendance records for this event using date string comparison
+                // Get all attendance records for this event
+                const allAttendances = await volunteerAttendanceModel.find({
+                    eventId: event._id,
+                    userId: userId
+                }).sort({ date: 1 }); // Sort by date ascending
                 
-                // Calculate total hours from previous days
-                previousDayHours = previousAttendances.reduce((total, att) => {
-                    if (att.timeIn && att.timeOut && att.isValid && !att.voidedHours) {
-                        const hours = (new Date(att.timeOut) - new Date(att.timeIn)) / (1000 * 60 * 60);
+                // Calculate total hours from previous days (days before today)
+                previousDayHours = allAttendances.reduce((total, att) => {
+                    // Compare date strings
+                    const attDateStr = att.date; // Already in YYYY-MM-DD format
+                    if (attDateStr < todayStr && att.checkInTime && att.checkOutTime && att.isValid && !att.voidedHours) {
+                        const hours = (new Date(att.checkOutTime) - new Date(att.checkInTime)) / (1000 * 60 * 60);
                         return total + hours;
                     }
                     return total;
                 }, 0);
             }
 
+            // Check for duplicate - prevent creating multiple records for the same day
+            if (attendanceDoc && (attendanceDoc.checkInTime || attendanceDoc.timeIn)) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "You have already recorded time in for today" 
+                });
+            }
+
+            // Create or update attendanceRecord in event document
             if (!attendanceRecord) {
                 attendanceRecord = {
-                    date: today,
+                    date: today, // Keep as Date for backward compatibility
                     timeIn: now,
-                    qrCode: actualQRCode, // Use the actual QR code string
+                    qrCode: actualQRCode,
                     isValid: true,
-                    totalHours: previousDayHours // Store previous hours for reference
+                    totalHours: previousDayHours
                 };
                 volunteerReg.attendanceRecords.push(attendanceRecord);
             } else {
-                attendanceRecord.timeIn = now;
-                attendanceRecord.qrCode = actualQRCode; // Use the actual QR code string
-                attendanceRecord.isValid = true;
-                attendanceRecord.totalHours = previousDayHours;
+                // If record exists but no time in, update it
+                if (!attendanceRecord.timeIn) {
+                    attendanceRecord.timeIn = now;
+                    attendanceRecord.qrCode = actualQRCode;
+                    attendanceRecord.isValid = true;
+                    attendanceRecord.totalHours = previousDayHours;
+                } else {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: "You have already recorded time in for today" 
+                    });
+                }
             }
 
+            // Create or update attendanceDoc (source of truth)
             if (!attendanceDoc) {
                 attendanceDoc = await volunteerAttendanceModel.create({
                     event: event._id,
                     volunteer: userId,
                     eventId: event._id,
                     userId: userId,
-                    date: todayStr,
+                    date: todayStr, // Use date string format
                     timeIn: now,
                     checkInTime: now,
-                    qrCode: actualQRCode, // Use the actual QR code string
+                    qrCode: actualQRCode,
                     status: requiresFeedback ? 'pending' : 'not_required',
                     isValid: true,
                     voidedHours: false,
@@ -1002,22 +1020,19 @@ export const recordAttendance = async (req, res) => {
                     totalHours: previousDayHours
                 })
             } else {
-                if (attendanceDoc.checkInTime || attendanceDoc.timeIn) {
-                    return res.status(400).json({ 
-                        success: false, 
-                        message: "You have already recorded time in for today" 
-                    });
+                // Update existing attendanceDoc (shouldn't happen due to duplicate check above, but safety measure)
+                if (!attendanceDoc.checkInTime && !attendanceDoc.timeIn) {
+                    attendanceDoc.timeIn = now
+                    attendanceDoc.checkInTime = now
+                    attendanceDoc.qrCode = actualQRCode
+                    attendanceDoc.isValid = true
+                    attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
+                    attendanceDoc.voidedHours = false
+                    attendanceDoc.previousDayHours = isMultiDay ? previousDayHours : 0
+                    attendanceDoc.hoursWorked = 0
+                    attendanceDoc.totalHours = previousDayHours
+                    await attendanceDoc.save()
                 }
-                attendanceDoc.timeIn = now
-                attendanceDoc.checkInTime = now
-                attendanceDoc.qrCode = actualQRCode // Use the actual QR code string
-                attendanceDoc.isValid = true
-                attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
-                attendanceDoc.voidedHours = false
-                attendanceDoc.previousDayHours = isMultiDay ? previousDayHours : 0
-                attendanceDoc.hoursWorked = 0
-                attendanceDoc.totalHours = previousDayHours
-                await attendanceDoc.save()
             }
 
         } else if (action === 'timeout') {
@@ -1060,15 +1075,32 @@ export const recordAttendance = async (req, res) => {
             const hoursWorkedToday = (now.getTime() - new Date(timeIn).getTime()) / (1000 * 60 * 60);
             const hoursWorkedTodayRounded = Math.round(hoursWorkedToday * 100) / 100;
             
-            // For multi-day events, add previous day hours
+            // For multi-day events, calculate total hours including previous days
             let totalHours = hoursWorkedTodayRounded;
-            if (isMultiDay && attendanceDoc && attendanceDoc.previousDayHours) {
-                totalHours = attendanceDoc.previousDayHours + hoursWorkedTodayRounded;
+            let previousDayHours = 0;
+            
+            if (isMultiDay) {
+                // Recalculate previous day hours using date string comparison
+                const allAttendances = await volunteerAttendanceModel.find({
+                    eventId: event._id,
+                    userId: userId
+                }).sort({ date: 1 });
+                
+                previousDayHours = allAttendances.reduce((total, att) => {
+                    const attDateStr = att.date; // Already in YYYY-MM-DD format
+                    if (attDateStr < todayStr && att.checkInTime && att.checkOutTime && att.isValid && !att.voidedHours) {
+                        const hours = (new Date(att.checkOutTime) - new Date(att.checkInTime)) / (1000 * 60 * 60);
+                        return total + hours;
+                    }
+                    return total;
+                }, 0);
+                
+                totalHours = previousDayHours + hoursWorkedTodayRounded;
             }
             
-            // Update or create attendanceRecord
+            // Update or create attendanceRecord in event document
             if (!attendanceRecord) {
-                // Create attendanceRecord if it doesn't exist
+                // Create attendanceRecord if it doesn't exist (shouldn't happen if time in was recorded)
                 attendanceRecord = {
                     date: today,
                     timeIn: timeIn,
@@ -1088,9 +1120,9 @@ export const recordAttendance = async (req, res) => {
                 }
             }
 
-            // Ensure attendanceDoc exists - if not, create it from timeIn data
+            // Ensure attendanceDoc exists - must exist if time in was recorded
             if (!attendanceDoc) {
-                // Create attendanceDoc with time in data
+                // Create attendanceDoc with time in data (fallback case)
                 attendanceDoc = await volunteerAttendanceModel.create({
                     event: event._id,
                     volunteer: userId,
@@ -1103,11 +1135,12 @@ export const recordAttendance = async (req, res) => {
                     status: requiresFeedback ? 'pending' : 'not_required',
                     isValid: true,
                     voidedHours: false,
-                    hoursWorked: 0,
-                    totalHours: 0
+                    previousDayHours: isMultiDay ? previousDayHours : 0,
+                    hoursWorked: hoursWorkedTodayRounded,
+                    totalHours: totalHours
                 })
             } else {
-                // Verify time in exists in attendanceDoc and sync if needed
+                // Update existing attendanceDoc
                 if (!attendanceDoc.checkInTime && !attendanceDoc.timeIn) {
                     // Sync time in if missing
                     attendanceDoc.timeIn = timeIn
@@ -1119,16 +1152,67 @@ export const recordAttendance = async (req, res) => {
             attendanceDoc.checkOutTime = now
             attendanceDoc.hoursWorked = hoursWorkedTodayRounded // Hours for this day only
             attendanceDoc.totalHours = totalHours // Total hours including previous days
+            attendanceDoc.previousDayHours = isMultiDay ? previousDayHours : 0
             
-            // Only trigger evaluation on the last day
+            // Completion evaluation: Check if this is the last day and verify all days are complete
             if (isLastDay) {
-                if (requiresFeedback) {
-                    const base = new Date(Math.min(new Date(event.endDate).getTime(), now.getTime()))
-                    attendanceDoc.deadlineAt = new Date(base.getTime() + deadlineHours * 3600000)
-                    attendanceDoc.status = 'pending'
+                let completionEvaluation = {
+                    isComplete: false,
+                    totalDays: eventDuration,
+                    completedDays: 0,
+                    missingDays: [],
+                    allDaysComplete: false
+                };
+                
+                if (isMultiDay) {
+                    // Get all attendance records for this event
+                    const allAttendanceDocs = await volunteerAttendanceModel.find({
+                        eventId: event._id,
+                        userId: userId
+                    }).sort({ date: 1 });
+                    
+                    // Get all event days (dates between start and end)
+                    const eventStartDate = new Date(event.startDate);
+                    const eventEndDate = new Date(event.endDate);
+                    const eventDays = [];
+                    for (let d = new Date(eventStartDate); d <= eventEndDate; d.setDate(d.getDate() + 1)) {
+                        const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        eventDays.push(dayStr);
+                    }
+                    
+                    // Count completed days (have both checkInTime and checkOutTime)
+                    const completedDates = allAttendanceDocs
+                        .filter(att => att.checkInTime && att.checkOutTime && att.isValid && !att.voidedHours)
+                        .map(att => att.date);
+                    
+                    completionEvaluation.completedDays = completedDates.length;
+                    completionEvaluation.missingDays = eventDays.filter(day => !completedDates.includes(day));
+                    completionEvaluation.allDaysComplete = completionEvaluation.missingDays.length === 0 && 
+                                                           completionEvaluation.completedDays === eventDays.length;
                 } else {
-                    attendanceDoc.status = 'not_required'
+                    // Single day event
+                    completionEvaluation.completedDays = (attendanceDoc.checkInTime && attendanceDoc.checkOutTime) ? 1 : 0;
+                    completionEvaluation.allDaysComplete = attendanceDoc.checkInTime && attendanceDoc.checkOutTime;
                 }
+                
+                completionEvaluation.isComplete = completionEvaluation.allDaysComplete;
+                
+                // Set feedback status based on completion
+                if (completionEvaluation.allDaysComplete) {
+                    if (requiresFeedback) {
+                        const base = new Date(Math.min(new Date(event.endDate).getTime(), now.getTime()))
+                        attendanceDoc.deadlineAt = new Date(base.getTime() + deadlineHours * 3600000)
+                        attendanceDoc.status = 'pending'
+                    } else {
+                        attendanceDoc.status = 'not_required'
+                    }
+                } else {
+                    // Not all days complete - still mark as pending if feedback required
+                    attendanceDoc.status = requiresFeedback ? 'pending' : 'not_required'
+                }
+                
+                // Store completion evaluation in attendanceDoc notes or a separate field if needed
+                attendanceDoc.notes = JSON.stringify(completionEvaluation);
             } else {
                 // For non-last days, mark as not requiring feedback (hours are paused)
                 attendanceDoc.status = 'not_required'
@@ -1140,10 +1224,38 @@ export const recordAttendance = async (req, res) => {
 
         await event.save();
 
+        // Prepare response message with completion evaluation for last day timeout
+        let responseMessage = `${action === 'timein' ? 'Time in' : 'Time out'} recorded successfully`;
+        let completionEvaluation = null;
+        
+        // Check if this is the last day for completion evaluation message
+        if (action === 'timeout') {
+            const eventDuration = Math.ceil((new Date(event.endDate) - new Date(event.startDate)) / (1000 * 60 * 60 * 24));
+            const isMultiDay = eventDuration > 1;
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const lastDay = new Date(event.endDate.getFullYear(), event.endDate.getMonth(), event.endDate.getDate());
+            const isLastDay = !isMultiDay || (today.getTime() === lastDay.getTime());
+            
+            if (isLastDay && attendanceDoc) {
+                // Parse completion evaluation from notes
+                try {
+                    completionEvaluation = JSON.parse(attendanceDoc.notes || '{}');
+                    if (completionEvaluation.allDaysComplete) {
+                        responseMessage += '. All attendance days completed successfully.';
+                    } else if (completionEvaluation.missingDays && completionEvaluation.missingDays.length > 0) {
+                        responseMessage += `. Warning: ${completionEvaluation.missingDays.length} day(s) still missing attendance records.`;
+                    }
+                } catch (e) {
+                    // Notes not in expected format, ignore
+                }
+            }
+        }
+
         return res.json({ 
             success: true, 
-            message: `${action === 'timein' ? 'Time in' : 'Time out'} recorded successfully`,
-            attendanceRecord
+            message: responseMessage,
+            attendanceRecord,
+            completionEvaluation: completionEvaluation
         });
     } catch (error) {
         console.error('Record attendance error:', error);
