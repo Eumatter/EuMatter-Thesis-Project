@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -11,12 +11,103 @@ const PaymentProcessing = () => {
   const { backendUrl, userData, isLoading } = useContext(AppContent);
   const [processing, setProcessing] = useState(true);
   const [status, setStatus] = useState('processing');
+  const [retryCount, setRetryCount] = useState(0);
+  const pollingIntervalRef = useRef(null);
+  const timeoutRef = useRef(null);
 
   const donationId = searchParams.get('donationId');
-  let sourceId = searchParams.get('sourceId');
+  const sourceIdParam = searchParams.get('sourceId');
+
+  // Polling configuration
+  const MAX_RETRIES = 20; // Maximum number of retry attempts
+  const POLL_INTERVAL = 3000; // 3 seconds between retries
+  const MAX_TIMEOUT = 60000; // 60 seconds total timeout
 
   useEffect(() => {
-    const processPayment = async () => {
+    let resolvedSourceId = sourceIdParam;
+    let isMounted = true;
+
+    const verifyPayment = async (sourceId, donationId, attemptNumber = 0) => {
+      try {
+        console.log(`🔍 Verifying payment (attempt ${attemptNumber + 1}):`, { sourceId, donationId });
+
+        const response = await axios.post(
+          `${backendUrl}api/donations/confirm-source`,
+          { sourceId, donationId },
+          { withCredentials: true }
+        );
+
+        console.log('✅ Verification response:', response.data);
+
+        if (response.data.success) {
+          const donation = response.data.donation;
+
+          if (donation.status === 'succeeded') {
+            if (isMounted) {
+              setStatus('success');
+              setProcessing(false);
+              toast.success('Payment successful! Thank you for your donation.');
+              // Clear polling
+              if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+              }
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+              }
+            }
+            return true; // Payment succeeded
+          } else if (donation.status === 'failed') {
+            if (isMounted) {
+              setStatus('failed');
+              setProcessing(false);
+              toast.error('Payment failed. Please try again.');
+              // Clear polling
+              if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+              }
+              if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+              }
+            }
+            return true; // Payment failed (definitive result)
+          } else {
+            // Still pending - will retry
+            console.log(`⏳ Payment still pending (status: ${donation.status}), will retry...`);
+            return false; // Still processing
+          }
+        } else {
+          console.warn('⚠️ Verification returned success:false');
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Payment verification error:', error);
+        // Don't stop polling on network errors, but stop on other errors
+        if (error.response?.status >= 400 && error.response?.status < 500) {
+          // Client error - stop polling
+          if (isMounted) {
+            setStatus('error');
+            setProcessing(false);
+            toast.error('Unable to verify payment status.');
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+          }
+          return true; // Stop polling
+        }
+        return false; // Continue polling on network errors
+      }
+    };
+
+    const startVerification = async () => {
       try {
         let idToUse = donationId;
 
@@ -28,65 +119,119 @@ const PaymentProcessing = () => {
         }
 
         // 🔍 If sourceId is missing, fetch from backend
-        if (!sourceId) {
-          const donationRes = await axios.get(
-            `${backendUrl}api/donations/${idToUse}`,
-            { withCredentials: true }
-          );
-          if (donationRes.data?.success) {
-            sourceId = donationRes.data.donation.paymongoReferenceId;
-            console.log('💡 Retrieved sourceId from backend:', sourceId);
+        if (!resolvedSourceId) {
+          try {
+            const donationRes = await axios.get(
+              `${backendUrl}api/donations/${idToUse}`,
+              { withCredentials: true }
+            );
+            if (donationRes.data?.success) {
+              resolvedSourceId = donationRes.data.donation.paymongoReferenceId;
+              console.log('💡 Retrieved sourceId from backend:', resolvedSourceId);
+            }
+          } catch (error) {
+            console.error('Error fetching donation:', error);
           }
         }
 
-        if (!sourceId) {
+        if (!resolvedSourceId) {
           toast.error('Missing source ID — cannot verify payment.');
           setStatus('error');
           setProcessing(false);
           return;
         }
 
-        console.log('🔍 Confirming PayMongo source:', sourceId);
-
-        // ✅ Confirm payment on backend
-        const response = await axios.post(
-          `${backendUrl}api/donations/confirm-source`,
-          { sourceId, donationId: idToUse },
-          { withCredentials: true }
-        );
-
-        console.log('✅ Confirm source response:', response.data);
-
-        if (response.data.success) {
-          const donation = response.data.donation;
-
-          if (donation.status === 'succeeded') {
-            setStatus('success');
-            toast.success('Payment successful! Thank you for your donation.');
-          } else if (donation.status === 'failed') {
-            setStatus('failed');
-            toast.error('Payment failed. Please try again.');
-          } else {
-            setStatus('processing');
-            toast.info('Payment is still processing...');
+        // Set timeout to stop polling after MAX_TIMEOUT
+        timeoutRef.current = setTimeout(() => {
+          if (isMounted) {
+            console.warn('⏰ Verification timeout reached');
+            setStatus('error');
+            setProcessing(false);
+            toast.warn('Payment verification is taking longer than expected. Please check your donation history.');
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
           }
-        } else {
-          setStatus('error');
-          toast.error('Unable to verify payment status.');
+        }, MAX_TIMEOUT);
+
+        // First verification attempt
+        const firstResult = await verifyPayment(resolvedSourceId, idToUse, 0);
+        
+        if (firstResult) {
+          // Got definitive result, stop
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
+          return;
         }
+
+        // Start polling if still pending
+        let currentRetry = 0;
+        pollingIntervalRef.current = setInterval(async () => {
+          if (!isMounted) {
+            clearInterval(pollingIntervalRef.current);
+            return;
+          }
+
+          currentRetry++;
+          setRetryCount(currentRetry);
+
+          if (currentRetry >= MAX_RETRIES) {
+            console.warn('⏰ Maximum retries reached');
+            if (isMounted) {
+              setStatus('error');
+              setProcessing(false);
+              toast.warn('Payment verification is taking longer than expected. Please check your donation history.');
+            }
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+            return;
+          }
+
+          const result = await verifyPayment(resolvedSourceId, idToUse, currentRetry);
+          if (result) {
+            // Got definitive result, stop polling
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+          }
+        }, POLL_INTERVAL);
+
       } catch (error) {
-        console.error('❌ Payment confirmation error:', error);
-        toast.error('Error confirming payment.');
-        setStatus('error');
-      } finally {
-        setProcessing(false);
+        console.error('❌ Initial verification error:', error);
+        if (isMounted) {
+          setStatus('error');
+          setProcessing(false);
+          toast.error('Error starting payment verification.');
+        }
       }
     };
 
     // Small delay for context/cookies
-    const timer = setTimeout(processPayment, 1000);
-    return () => clearTimeout(timer);
-  }, [donationId, sourceId, backendUrl, navigate]);
+    const timer = setTimeout(startVerification, 1000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, [donationId, sourceIdParam, backendUrl]);
 
   const handleContinue = () => {
     if (userData?.role === 'User') navigate('/user/dashboard');
@@ -114,6 +259,11 @@ const PaymentProcessing = () => {
             <p className="text-gray-600 mt-4">
               Please wait while we confirm your payment...
             </p>
+            {retryCount > 0 && (
+              <p className="text-sm text-gray-500 mt-2">
+                Verifying... (attempt {retryCount + 1})
+              </p>
+            )}
           </>
         )}
 

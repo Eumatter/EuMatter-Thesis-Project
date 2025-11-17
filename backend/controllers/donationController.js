@@ -992,6 +992,8 @@ export const confirmSourcePayment = async (req, res) => {
         await donation.save();
         // Send notifications for successful donation
         await sendDonationNotifications(donation);
+        console.log("✅ Donation updated (intent - succeeded/paid):", donation.status);
+        return res.json({ success: true, donation });
       } else if (["failed", "canceled"].includes(status)) {
         donation.status = "failed";
         await donation.save();
@@ -1063,12 +1065,18 @@ export const confirmSourcePayment = async (req, res) => {
         } catch (err) {
           console.error("Error notifying CRD staff about failed transfer:", err);
         }
+        console.log("✅ Donation updated (intent - failed):", donation.status);
+        return res.json({ success: true, donation });
       } else {
-        donation.status = "pending";
-        await donation.save();
+        // Status is still pending (awaiting payment)
+        // Don't update donation status if it's already succeeded (from webhook or previous check)
+        if (donation.status !== "succeeded") {
+          donation.status = "pending";
+          await donation.save();
+        }
       }
 
-      console.log("✅ Donation updated (intent):", donation.status);
+      console.log("✅ Donation updated (intent - pending):", donation.status);
       return res.json({ success: true, donation });
     }
 
@@ -1106,6 +1114,8 @@ export const confirmSourcePayment = async (req, res) => {
         await donation.save();
         // Send notifications for successful donation
         await sendDonationNotifications(donation);
+        console.log("✅ Donation updated (source - paid):", donation.status);
+        return res.json({ success: true, donation });
       } else if (["failed", "expired"].includes(status)) {
         donation.status = "failed";
         await donation.save();
@@ -1177,12 +1187,18 @@ export const confirmSourcePayment = async (req, res) => {
         } catch (err) {
           console.error("Error notifying CRD staff about failed transfer:", err);
         }
+        console.log("✅ Donation updated (source - failed):", donation.status);
+        return res.json({ success: true, donation });
       } else {
-        donation.status = "pending";
-        await donation.save();
+        // Status is still pending (not yet chargeable, paid, failed, or expired)
+        // Don't update donation status if it's already succeeded (from webhook or previous check)
+        if (donation.status !== "succeeded") {
+          donation.status = "pending";
+          await donation.save();
+        }
       }
 
-      console.log("✅ Donation updated (source):", donation.status);
+      console.log("✅ Donation updated (source - pending):", donation.status);
       return res.json({ success: true, donation });
     }
 
