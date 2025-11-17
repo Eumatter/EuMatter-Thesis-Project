@@ -1,5 +1,6 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
+import departmentWalletModel from "../models/departmentWalletModel.js";
 
 /**
  * Get all users with filtering and pagination (Admin only)
@@ -52,7 +53,18 @@ export const getUsers = async (req, res) => {
  */
 export const createUser = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, role, department, organization } = req.body;
+        const { 
+            firstName, 
+            lastName, 
+            email, 
+            password, 
+            role, 
+            department, 
+            organization,
+            paymongoPublicKey,
+            paymongoSecretKey,
+            paymongoWebhookSecret
+        } = req.body;
 
         // Check if user already exists
         const existingUser = await userModel.findOne({ email });
@@ -76,6 +88,29 @@ export const createUser = async (req, res) => {
 
         await newUser.save();
 
+        // If role is Department/Organization and wallet credentials are provided, create wallet
+        let walletCreated = false;
+        let walletError = null;
+        
+        if (role === "Department/Organization" && paymongoPublicKey && paymongoSecretKey) {
+            try {
+                await departmentWalletModel.create({
+                    userId: newUser._id,
+                    publicKey: paymongoPublicKey, // Will be encrypted in pre-save hook
+                    secretKey: paymongoSecretKey, // Will be encrypted in pre-save hook
+                    webhookSecret: paymongoWebhookSecret || null,
+                    isActive: true,
+                    verificationStatus: "pending"
+                });
+                walletCreated = true;
+                console.log(`✅ Wallet created for Department/Organization user: ${newUser._id}`);
+            } catch (walletErr) {
+                console.error("❌ Error creating wallet:", walletErr.message);
+                walletError = walletErr.message;
+                // Don't fail user creation if wallet creation fails - wallet can be added later
+            }
+        }
+
         // Return user data without sensitive information
         const userData = newUser.toObject();
         delete userData.password;
@@ -85,7 +120,11 @@ export const createUser = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'User created successfully',
-            user: userData
+            user: userData,
+            wallet: walletCreated ? { created: true } : { 
+                created: false, 
+                error: walletError || (role === "Department/Organization" ? "Wallet credentials not provided" : "N/A")
+            }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

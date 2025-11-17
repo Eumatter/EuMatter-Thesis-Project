@@ -20,6 +20,7 @@ import facebookRouter from "./routes/facebookRoutes.js";
 import systemSettingsRouter from "./routes/systemSettingsRoutes.js";
 import feedbackRouter from "./routes/feedbackRoutes.js";
 import pushNotificationRouter from "./routes/pushNotificationRoutes.js";
+import walletRouter from "./routes/walletRoutes.js";
 import { scheduleReminders } from './utils/reminderScheduler.js'
 import { startMaintenanceScheduler } from './utils/maintenanceScheduler.js'
 import { startFeedbackScheduler } from './utils/feedbackScheduler.js'
@@ -134,6 +135,7 @@ app.use("/api/facebook", facebookRouter); // Mount Facebook routes
 app.use("/api/system-settings", systemSettingsRouter); // System settings routes
 app.use("/api/feedback", feedbackRouter);
 app.use("/api/push", pushNotificationRouter); // Push notification routes
+app.use("/api/wallets", walletRouter); // Wallet management routes
 
 // Enhanced Error Handler with CORS headers
 app.use((err, req, res, next) => {

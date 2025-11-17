@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import donationModel from "../models/donationModel.js";
 import paymongoClient, { getPaymongoPublicKey } from "../config/paymongo.js";
+import { getPaymongoClientForDonation, getWebhookSecret, getCRDPaymongoClient, getCRDPaymongoPublicKey } from "../config/paymongoFactory.js";
 import { notifyUsers } from "../utils/notify.js";
 import eventModel from "../models/eventModel.js";
 import transporter from "../config/nodemailer.js";
@@ -655,15 +656,6 @@ export const createDonation = async (req, res) => {
       });
     }
 
-    // For non-cash payments, validate PayMongo environment variables
-    if (!process.env.PAYMONGO_SECRET_KEY) {
-      console.error("❌ PAYMONGO_SECRET_KEY is not set");
-      return res.status(500).json({ 
-        success: false, 
-        message: "Payment service configuration error. Please contact support." 
-      });
-    }
-
     if (!process.env.BACKEND_URL) {
       console.error("❌ BACKEND_URL is not set");
       console.error("💡 For Render deployment, set BACKEND_URL to your Render service URL (e.g., https://your-service.onrender.com)");
@@ -683,6 +675,45 @@ export const createDonation = async (req, res) => {
 
     const amountInCents = toCentavos(amount);
 
+    // Determine which wallet to use for this donation
+    let paymongoClientInstance;
+    let paymongoPublicKey;
+    let walletUserId = null;
+
+    try {
+      const walletInfo = await getPaymongoClientForDonation({
+        recipientType: finalRecipientType,
+        eventId,
+        departmentId
+      });
+      paymongoClientInstance = walletInfo.client;
+      paymongoPublicKey = walletInfo.publicKey;
+      walletUserId = walletInfo.walletUserId;
+    } catch (walletError) {
+      console.error("❌ Error getting wallet for donation:", walletError.message);
+      
+      // If department wallet is inactive or missing, fail with clear error (no fallback)
+      if (finalRecipientType === "department" || finalRecipientType === "event") {
+        return res.status(400).json({
+          success: false,
+          message: walletError.message || "Department wallet is not configured or inactive. Please contact the department administrator."
+        });
+      }
+      
+      // For CRD donations, check if CRD wallet is configured
+      if (!process.env.PAYMONGO_SECRET_KEY) {
+        return res.status(500).json({
+          success: false,
+          message: "Payment service configuration error. Please contact support."
+        });
+      }
+      
+      // Fallback to CRD wallet (should not happen, but just in case)
+      paymongoClientInstance = getCRDPaymongoClient();
+      paymongoPublicKey = getCRDPaymongoPublicKey();
+      walletUserId = null;
+    }
+
     // 1️⃣ Create the donation entry
     const donation = await donationModel.create({
       donorName,
@@ -695,13 +726,14 @@ export const createDonation = async (req, res) => {
       event: eventId,
       recipientType: finalRecipientType,
       department: departmentId || null,
-      clientKey: process.env.PAYMONGO_PUBLIC_KEY || ""
+      walletUserId: walletUserId, // Store which wallet processed this donation
+      clientKey: paymongoPublicKey
     });
-    console.log("🟢 Created donation entry:", donation._id);
+    console.log("🟢 Created donation entry:", donation._id, "Wallet:", walletUserId || "CRD");
 
     // 2️⃣ Handle GCash or other source-based payments
     if (paymentMethod === "gcash") {
-      const { data } = await paymongoClient.post("/sources", {
+      const { data } = await paymongoClientInstance.post("/sources", {
         data: {
           attributes: {
             amount: amountInCents,
@@ -733,7 +765,7 @@ export const createDonation = async (req, res) => {
       console.log("💳 Starting PayMaya payment flow...");
     
       // 1️⃣ Create Payment Intent
-      const { data: intentData } = await paymongoClient.post("/payment_intents", {
+      const { data: intentData } = await paymongoClientInstance.post("/payment_intents", {
         data: {
           attributes: {
             amount: amountInCents,
@@ -754,7 +786,7 @@ export const createDonation = async (req, res) => {
       });
     
       // 2️⃣ Create Payment Method
-      const { data: pmData } = await paymongoClient.post("/payment_methods", {
+      const { data: pmData } = await paymongoClientInstance.post("/payment_methods", {
         data: { attributes: { type: "paymaya" } }
       });
       const paymentMethodObj = pmData.data;
@@ -765,7 +797,7 @@ export const createDonation = async (req, res) => {
       });
     
       // 3️⃣ Attach Payment Method to Payment Intent
-      const { data: attachData } = await paymongoClient.post(`/payment_intents/${intent.id}/attach`, {
+      const { data: attachData } = await paymongoClientInstance.post(`/payment_intents/${intent.id}/attach`, {
         data: {
           attributes: {
             payment_method: paymentMethodObj.id,
@@ -800,7 +832,7 @@ export const createDonation = async (req, res) => {
 
     // 4️⃣ Handle Card payments via Payment Intents
     if (paymentMethod === "card") {
-      const { data: intentData } = await paymongoClient.post("/payment_intents", {
+      const { data: intentData } = await paymongoClientInstance.post("/payment_intents", {
         data: {
           attributes: {
             amount: amountInCents,
@@ -819,7 +851,7 @@ export const createDonation = async (req, res) => {
         success: true,
         type: "intent",
         donationId: donation._id,
-        clientKey: getPaymongoPublicKey(),
+        clientKey: paymongoPublicKey,
         paymentIntentId: intent.id,
         status: intent.attributes.status
       });
@@ -928,8 +960,17 @@ export const attachPaymentMethod = async (req, res) => {
       return res.status(400).json({ success: false, message: "No payment intent found for this donation" });
     }
 
+    // Get the correct PayMongo client for this donation's wallet
+    let paymongoClientInstance;
+    if (donation.walletUserId) {
+      const { getPaymongoClient } = await import("../config/paymongoFactory.js");
+      paymongoClientInstance = await getPaymongoClient(donation.walletUserId);
+    } else {
+      paymongoClientInstance = getCRDPaymongoClient();
+    }
+
     // Attach the payment method
-    const { data } = await paymongoClient.post(`/payment_intents/${intentId}/attach`, {
+    const { data } = await paymongoClientInstance.post(`/payment_intents/${intentId}/attach`, {
       data: {
         attributes: {
           payment_method: paymentMethodId,
@@ -981,7 +1022,16 @@ export const confirmSourcePayment = async (req, res) => {
       const intentId = sourceId || donation.paymongoReferenceId;
       console.log("💳 Checking PayMaya Payment Intent:", intentId);
 
-      const { data } = await paymongoClient.get(`/payment_intents/${intentId}`);
+      // Get the correct PayMongo client for this donation's wallet
+      let paymongoClientInstance;
+      if (donation.walletUserId) {
+        const { getPaymongoClient } = await import("../config/paymongoFactory.js");
+        paymongoClientInstance = await getPaymongoClient(donation.walletUserId);
+      } else {
+        paymongoClientInstance = getCRDPaymongoClient();
+      }
+
+      const { data } = await paymongoClientInstance.get(`/payment_intents/${intentId}`);
       const intent = data.data;
       const status = intent.attributes.status;
 
@@ -1084,14 +1134,23 @@ export const confirmSourcePayment = async (req, res) => {
       const srcId = sourceId || donation.paymongoReferenceId;
       console.log("🔍 Checking Source status:", srcId);
 
-      const { data } = await paymongoClient.get(`/sources/${srcId}`);
+      // Get the correct PayMongo client for this donation's wallet
+      let paymongoClientInstance;
+      if (donation.walletUserId) {
+        const { getPaymongoClient } = await import("../config/paymongoFactory.js");
+        paymongoClientInstance = await getPaymongoClient(donation.walletUserId);
+      } else {
+        paymongoClientInstance = getCRDPaymongoClient();
+      }
+
+      const { data } = await paymongoClientInstance.get(`/sources/${srcId}`);
       const source = data.data;
       const status = source.attributes.status;
 
       console.log("💡 Source status:", status);
 
       if (status === "chargeable") {
-        const paymentResponse = await paymongoClient.post("/payments", {
+        const paymentResponse = await paymongoClientInstance.post("/payments", {
           data: {
             attributes: {
               amount: source.attributes.amount,
@@ -1251,6 +1310,20 @@ export const handleWebhook = async (req, res) => {
         console.warn(`⚠️ No donation found for webhook event: ${paymentId}`);
         return res.status(200).json({ received: true });
       }
+
+      // Verify webhook signature using the correct wallet's webhook secret
+      // Note: PayMongo webhook signature verification should be implemented here
+      // For now, we'll process the webhook but log which wallet it's for
+      const walletUserId = donation.walletUserId;
+      console.log(`🔐 Processing webhook for wallet: ${walletUserId || "CRD"}`);
+      
+      // TODO: Implement webhook signature verification using getWebhookSecret(walletUserId)
+      // const webhookSecret = await getWebhookSecret(walletUserId);
+      // if (webhookSecret) {
+      //   // Verify signature
+      //   const signature = req.headers['paymongo-signature'];
+      //   // ... verification logic
+      // }
   
       switch (type) {
         case "payment.paid":

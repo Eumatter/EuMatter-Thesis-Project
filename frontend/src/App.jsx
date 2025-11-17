@@ -26,6 +26,8 @@ import SystemAdminDashboard from './pages/user/System_Admin/SystemAdminDashboard
 import UserManagement from './pages/user/System_Admin/UserManagement.jsx'
 import SystemAdminSettings from './pages/user/System_Admin/SystemSettings.jsx'
 import SystemReports from './pages/user/System_Admin/SystemReports.jsx'
+import WalletManagement from './pages/user/System_Admin/WalletManagement.jsx'
+import WalletStatus from './pages/user/Department/WalletStatus.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { ToastContainer } from 'react-toastify'
 import DepartmentDashboard from './pages/user/Department/DepartmentDashboard'
@@ -194,10 +196,12 @@ const AppContent = () => {
                 {/* System Administrator Routes */}
                 <Route path="/system-admin/dashboard" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemAdminDashboard /></ProtectedRoute>} />
                 <Route path="/system-admin/users" element={<ProtectedRoute allowedRoles={['System Administrator']}><UserManagement /></ProtectedRoute>} />
+                <Route path="/system-admin/wallets" element={<ProtectedRoute allowedRoles={['System Administrator']}><WalletManagement /></ProtectedRoute>} />
                     <Route path="/system-admin/settings" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemAdminSettings /></ProtectedRoute>} />
                 <Route path="/system-admin/reports" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemReports /></ProtectedRoute>} />
 
                 {/* Department Routes */}
+                <Route path="/department/wallet-status" element={<ProtectedRoute allowedRoles={['Department/Organization']}><WalletStatus /></ProtectedRoute>} />
                 <Route path="/department/dashboard" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentDashboard /></ProtectedRoute>} />
                 <Route path="/department/events" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentEventManagement /></ProtectedRoute>} />
                 <Route path="/department/volunteer-management/:eventId" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><VolunteerManagement /></ProtectedRoute>} />

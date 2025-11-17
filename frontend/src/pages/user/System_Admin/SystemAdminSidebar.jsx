@@ -3,11 +3,12 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { AppContent } from '../../../context/AppContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { FaTachometerAlt, FaUsers, FaCogs, FaChartBar, FaUserCog, FaTimes, FaBars } from 'react-icons/fa';
+import { FaTachometerAlt, FaUsers, FaCogs, FaChartBar, FaUserCog, FaTimes, FaBars, FaWallet } from 'react-icons/fa';
 
 const sidebarItems = [
     { name: 'Dashboard', path: '/system-admin/dashboard', icon: <FaTachometerAlt /> },
     { name: 'User Management', path: '/system-admin/users', icon: <FaUsers /> },
+    { name: 'Wallet Management', path: '/system-admin/wallets', icon: <FaWallet /> },
     { name: 'System Settings', path: '/system-admin/settings', icon: <FaCogs /> },
     { name: 'System Reports', path: '/system-admin/reports', icon: <FaChartBar /> },
 ];

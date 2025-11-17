@@ -15,7 +15,10 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         password: '',
         role: 'student',
         department: '',
-        organization: ''
+        organization: '',
+        paymongoPublicKey: '',
+        paymongoSecretKey: '',
+        paymongoWebhookSecret: ''
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -48,7 +51,10 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                     password: '',
                     role: 'student',
                     department: '',
-                    organization: ''
+                    organization: '',
+                    paymongoPublicKey: '',
+                    paymongoSecretKey: '',
+                    paymongoWebhookSecret: ''
                 });
             } else {
                 toast.error(response.data.message || 'Failed to create user');
@@ -287,6 +293,64 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                                 className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
                                                 placeholder="Organization name"
                                             />
+                                        </div>
+                                    )}
+
+                                    {/* Wallet Setup for Department/Organization */}
+                                    {(formData.role === 'Department/Organization' || formData.role === 'department' || formData.role === 'organization') && (
+                                        <div className="space-y-4 pt-4 border-t border-gray-200">
+                                            <div className="flex items-center space-x-2">
+                                                <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                                                <h3 className="text-sm font-semibold text-gray-700">PayMongo Wallet Setup (Optional)</h3>
+                                            </div>
+                                            <p className="text-xs text-gray-500">
+                                                Configure PayMongo wallet credentials. If not provided, wallet can be set up later.
+                                            </p>
+                                            
+                                            <div className="space-y-1">
+                                                <label htmlFor="paymongoPublicKey" className="block text-sm font-medium text-gray-700">
+                                                    Public Key
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    name="paymongoPublicKey"
+                                                    id="paymongoPublicKey"
+                                                    value={formData.paymongoPublicKey}
+                                                    onChange={handleChange}
+                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm font-mono text-xs"
+                                                    placeholder="pk_test_..."
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label htmlFor="paymongoSecretKey" className="block text-sm font-medium text-gray-700">
+                                                    Secret Key
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    name="paymongoSecretKey"
+                                                    id="paymongoSecretKey"
+                                                    value={formData.paymongoSecretKey}
+                                                    onChange={handleChange}
+                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm font-mono text-xs"
+                                                    placeholder="sk_test_..."
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label htmlFor="paymongoWebhookSecret" className="block text-sm font-medium text-gray-700">
+                                                    Webhook Secret (Optional)
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    name="paymongoWebhookSecret"
+                                                    id="paymongoWebhookSecret"
+                                                    value={formData.paymongoWebhookSecret}
+                                                    onChange={handleChange}
+                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm font-mono text-xs"
+                                                    placeholder="whsec_..."
+                                                />
+                                            </div>
                                         </div>
                                     )}
 

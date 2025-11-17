@@ -37,7 +37,9 @@ const donationSchema = new mongoose.Schema({
         default: "crd"
     },
     department: { type: mongoose.Schema.Types.ObjectId, ref: "user", default: null }, // Department/Organization user ID
-    isAnonymous: { type: Boolean, default: false }
+    isAnonymous: { type: Boolean, default: false },
+    // Wallet that processed this donation (null = CRD wallet, ObjectId = Department wallet)
+    walletUserId: { type: mongoose.Schema.Types.ObjectId, ref: "user", default: null }
 }, { timestamps: true });
 
 const donationModel = mongoose.models.donation || mongoose.model("donation", donationSchema);
