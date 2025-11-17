@@ -12,13 +12,19 @@ const userAuth = async (req, res, next) => {
     try {
         const tokenDecode = jwt.verify(token,process.env.JWT_SECRET)
         if (tokenDecode.id){
-            // Ensure req.body exists before setting userId
+            // Ensure req.body exists
             if (!req.body) {
                 req.body = {};
             }
-            req.body.userId = tokenDecode.id
+            
+            // IMPORTANT: Only set req.body.userId if it doesn't already exist
+            // This prevents overwriting the target user's ID (e.g., when creating wallets for other users)
+            // The logged-in user's ID is available via req.user, not req.body.userId
+            if (!req.body.userId) {
+                req.body.userId = tokenDecode.id;
+            }
 
-            // Attach minimal user object for downstream use
+            // Attach minimal user object for downstream use (logged-in user)
             const user = await userModel.findById(tokenDecode.id).select('-password')
             if (user) {
                 req.user = user

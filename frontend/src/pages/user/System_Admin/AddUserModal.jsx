@@ -79,20 +79,15 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
             color: 'bg-purple-100 text-purple-800',
             label: 'Faculty'
         },
-        department: { 
-            icon: ShieldCheckIcon, 
+        'Department/Organization': { 
+            icon: BuildingOffice2Icon, 
             color: 'bg-green-100 text-green-800',
-            label: 'Department Head'
+            label: 'Department/Organization'
         },
-        crd: { 
+        'CRD Staff': { 
             icon: UserGroupIcon, 
             color: 'bg-yellow-100 text-yellow-800',
             label: 'CRD Staff'
-        },
-        organization: { 
-            icon: BuildingOffice2Icon, 
-            color: 'bg-indigo-100 text-indigo-800',
-            label: 'Organization'
         },
         alumni: { 
             icon: UserGroupIcon, 
@@ -255,7 +250,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                         <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
                                     </div>
 
-                                    {(formData.role === 'department' || formData.role === 'faculty' || formData.role === 'student') && (
+                                    {(formData.role === 'faculty' || formData.role === 'student') && (
                                         <div className="space-y-1">
                                             <label htmlFor="department" className="block text-sm font-medium text-gray-700">
                                                 Department <span className="text-red-500">*</span>
@@ -278,26 +273,8 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                         </div>
                                     )}
 
-                                    {formData.role === 'organization' && (
-                                        <div className="space-y-1">
-                                            <label htmlFor="organization" className="block text-sm font-medium text-gray-700">
-                                                Organization Name <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="organization"
-                                                id="organization"
-                                                required
-                                                value={formData.organization}
-                                                onChange={handleChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
-                                                placeholder="Organization name"
-                                            />
-                                        </div>
-                                    )}
-
                                     {/* Wallet Setup for Department/Organization */}
-                                    {(formData.role === 'Department/Organization' || formData.role === 'department' || formData.role === 'organization') && (
+                                    {formData.role === 'Department/Organization' && (
                                         <div className="space-y-4 pt-4 border-t border-gray-200">
                                             <div className="flex items-center space-x-2">
                                                 <LockClosedIcon className="h-5 w-5 text-gray-400" />

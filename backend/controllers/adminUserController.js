@@ -82,8 +82,8 @@ export const createUser = async (req, res) => {
             password: hashedPassword,
             role,
             isAccountVerified: true, // Auto-verify admin-created accounts
-            ...(role === 'department' || role === 'faculty' || role === 'student' ? { department } : {}),
-            ...(role === 'organization' ? { organization } : {})
+            ...(role === 'faculty' || role === 'student' ? { department } : {}),
+            ...(role === 'Department/Organization' ? { department: department || organization } : {})
         });
 
         await newUser.save();
@@ -142,7 +142,8 @@ export const updateUserRole = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User ID and role are required' });
         }
 
-        const validRoles = ['student', 'faculty', 'department', 'crd', 'organization', 'alumni', 'admin'];
+        // Valid roles from userModel enum
+        const validRoles = ['User', 'System Administrator', 'CRD Staff', 'Department/Organization', 'Auditor', 'student', 'faculty', 'alumni'];
         if (!validRoles.includes(role)) {
             return res.status(400).json({ success: false, message: 'Invalid role' });
         }

@@ -8,6 +8,16 @@ import { verifyPayMongoCredentials, maskKey } from "../utils/walletEncryption.js
 export const createWallet = async (req, res) => {
     try {
         const { userId, publicKey, secretKey, webhookSecret } = req.body;
+        const currentUser = req.user; // Logged-in user (should be System Administrator)
+
+        console.log('Creating wallet - Request details:', { 
+            userId: userId,
+            userIdType: typeof userId,
+            hasPublicKey: !!publicKey, 
+            hasSecretKey: !!secretKey,
+            currentUserId: currentUser?._id?.toString(),
+            currentUserRole: currentUser?.role
+        });
 
         if (!userId || !publicKey || !secretKey) {
             return res.status(400).json({
@@ -16,24 +26,52 @@ export const createWallet = async (req, res) => {
             });
         }
 
-        // Verify user exists and is Department/Organization
-        const user = await userModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found"
-            });
-        }
-
-        if (user.role !== "Department/Organization") {
+        // Ensure userId is a string (handle both string and ObjectId)
+        const userIdString = String(userId).trim();
+        
+        if (!userIdString || userIdString === 'undefined' || userIdString === 'null') {
             return res.status(400).json({
                 success: false,
-                message: "Wallet can only be created for Department/Organization users"
+                message: "Invalid userId format"
             });
         }
 
-        // Check if wallet already exists
-        const existingWallet = await departmentWalletModel.findOne({ userId });
+        // Verify user exists and is Department/Organization
+        // IMPORTANT: Look up the TARGET user (the one the wallet is being created for), not the logged-in admin
+        const targetUser = await userModel.findById(userIdString);
+        console.log('Target user lookup result:', { 
+            found: !!targetUser, 
+            requestedUserId: userIdString,
+            targetUserId: targetUser?._id?.toString(),
+            targetUserRole: targetUser?.role,
+            targetUserEmail: targetUser?.email,
+            targetUserName: targetUser?.name
+        });
+        
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: `User not found with ID: ${userIdString}`
+            });
+        }
+
+        // Validate that the TARGET user (not the logged-in admin) is Department/Organization
+        if (targetUser.role !== "Department/Organization") {
+            console.error('Role validation failed:', { 
+                expected: "Department/Organization", 
+                actual: targetUser.role,
+                targetUserId: targetUser._id.toString(),
+                targetUserEmail: targetUser.email,
+                currentUserRole: currentUser?.role // This should be System Administrator
+            });
+            return res.status(400).json({
+                success: false,
+                message: `Wallet can only be created for Department/Organization users. The user with ID ${userIdString} has role: ${targetUser.role}`
+            });
+        }
+
+        // Check if wallet already exists (use the normalized userIdString)
+        const existingWallet = await departmentWalletModel.findOne({ userId: userIdString });
         if (existingWallet) {
             return res.status(400).json({
                 success: false,
@@ -42,8 +80,9 @@ export const createWallet = async (req, res) => {
         }
 
         // Create wallet (encryption happens in pre-save hook)
+        // Use userIdString to ensure we're using the target user's ID, not the admin's
         const wallet = await departmentWalletModel.create({
-            userId,
+            userId: userIdString, // Target user's ID (Department/Organization user)
             publicKey, // Will be encrypted in pre-save hook
             secretKey, // Will be encrypted in pre-save hook
             webhookSecret: webhookSecret || null,
@@ -94,6 +133,15 @@ export const updateWallet = async (req, res) => {
         const { userId } = req.params;
         const { publicKey, secretKey, webhookSecret, isActive } = req.body;
 
+        console.log('Updating wallet - Request details:', {
+            userId: userId,
+            userIdType: typeof userId,
+            hasPublicKey: publicKey !== undefined,
+            hasSecretKey: secretKey !== undefined,
+            hasWebhookSecret: webhookSecret !== undefined,
+            isActive: isActive
+        });
+
         if (!userId) {
             return res.status(400).json({
                 success: false,
@@ -101,24 +149,27 @@ export const updateWallet = async (req, res) => {
             });
         }
 
+        // Normalize userId to string
+        const userIdString = String(userId).trim();
+
         // Verify user exists and is Department/Organization
-        const user = await userModel.findById(userId);
+        const user = await userModel.findById(userIdString);
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found"
+                message: `User not found with ID: ${userIdString}`
             });
         }
 
         if (user.role !== "Department/Organization") {
             return res.status(400).json({
                 success: false,
-                message: "Wallet can only be updated for Department/Organization users"
+                message: `Wallet can only be updated for Department/Organization users. Current role: ${user.role}`
             });
         }
 
-        // Find existing wallet
-        const wallet = await departmentWalletModel.findOne({ userId });
+        // Find existing wallet (use normalized userIdString)
+        const wallet = await departmentWalletModel.findOne({ userId: userIdString });
         if (!wallet) {
             return res.status(404).json({
                 success: false,
@@ -144,7 +195,18 @@ export const updateWallet = async (req, res) => {
         await wallet.save();
 
         // Return wallet info (masked keys)
-        const maskedKeys = wallet.getMaskedKeys();
+        let maskedKeys;
+        try {
+            maskedKeys = wallet.getMaskedKeys();
+        } catch (maskError) {
+            console.error('Error masking keys after update:', maskError.message);
+            // Return masked values if getMaskedKeys fails
+            maskedKeys = {
+                publicKey: '****',
+                secretKey: '****',
+                webhookSecret: wallet.webhookSecret ? '****' : null
+            };
+        }
 
         res.json({
             success: true,
@@ -163,7 +225,9 @@ export const updateWallet = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error("Error updating wallet:", error.message);
+        console.error("Error updating wallet:", error);
+        console.error("Error stack:", error.stack);
+        // Never expose encryption errors in detail
         if (error.message.includes("encrypt")) {
             return res.status(500).json({
                 success: false,
@@ -475,38 +539,112 @@ export const reactivateWallet = async (req, res) => {
 
 /**
  * Get all wallets (System Admin only)
+ * Returns all Department/Organization users with their wallet information (if exists)
  */
 export const getAllWallets = async (req, res) => {
     try {
-        const wallets = await departmentWalletModel.find({})
+        // Get all Department/Organization users
+        const departmentUsers = await userModel.find({ role: "Department/Organization" })
+            .select('name email role _id')
+            .sort({ name: 1 });
+
+        // Get all existing wallets
+        const existingWallets = await departmentWalletModel.find({})
             .populate('userId', 'name email role')
             .sort({ createdAt: -1 });
 
-        // Return wallets with masked keys
-        const walletsWithMaskedKeys = wallets.map(wallet => {
-            const maskedKeys = wallet.getMaskedKeys();
-            return {
-                _id: wallet._id,
-                userId: wallet.userId,
-                publicKey: maskedKeys.publicKey,
-                secretKey: maskedKeys.secretKey,
-                webhookSecret: maskedKeys.webhookSecret,
-                isActive: wallet.isActive,
-                lastVerifiedAt: wallet.lastVerifiedAt,
-                verificationStatus: wallet.verificationStatus,
-                lastVerificationError: wallet.lastVerificationError,
-                createdAt: wallet.createdAt,
-                updatedAt: wallet.updatedAt
-            };
+        // Create a map of userId to wallet for quick lookup
+        const walletMap = new Map();
+        existingWallets.forEach(wallet => {
+            if (wallet.userId && wallet.userId._id) {
+                walletMap.set(wallet.userId._id.toString(), wallet);
+            }
+        });
+
+        // Combine users with their wallet information
+        const walletsWithUsers = departmentUsers.map(user => {
+            const wallet = walletMap.get(user._id.toString());
+            
+            if (wallet) {
+                try {
+                    // User has a wallet - return wallet with masked keys
+                    const maskedKeys = wallet.getMaskedKeys();
+                    return {
+                        _id: wallet._id,
+                        userId: {
+                            _id: user._id,
+                            name: user.name,
+                            email: user.email,
+                            role: user.role
+                        },
+                        publicKey: maskedKeys.publicKey,
+                        secretKey: maskedKeys.secretKey,
+                        webhookSecret: maskedKeys.webhookSecret,
+                        isActive: wallet.isActive,
+                        lastVerifiedAt: wallet.lastVerifiedAt,
+                        verificationStatus: wallet.verificationStatus,
+                        lastVerificationError: wallet.lastVerificationError,
+                        createdAt: wallet.createdAt,
+                        updatedAt: wallet.updatedAt,
+                        hasWallet: true
+                    };
+                } catch (maskError) {
+                    console.error(`Error masking keys for wallet ${wallet._id}:`, maskError.message);
+                    // Return wallet without masked keys if masking fails
+                    return {
+                        _id: wallet._id,
+                        userId: {
+                            _id: user._id,
+                            name: user.name,
+                            email: user.email,
+                            role: user.role
+                        },
+                        publicKey: '****',
+                        secretKey: '****',
+                        webhookSecret: wallet.webhookSecret ? '****' : null,
+                        isActive: wallet.isActive,
+                        lastVerifiedAt: wallet.lastVerifiedAt,
+                        verificationStatus: wallet.verificationStatus,
+                        lastVerificationError: wallet.lastVerificationError,
+                        createdAt: wallet.createdAt,
+                        updatedAt: wallet.updatedAt,
+                        hasWallet: true
+                    };
+                }
+            } else {
+                // User doesn't have a wallet yet
+                return {
+                    _id: null,
+                    userId: {
+                        _id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        role: user.role
+                    },
+                    publicKey: null,
+                    secretKey: null,
+                    webhookSecret: null,
+                    isActive: false,
+                    lastVerifiedAt: null,
+                    verificationStatus: 'never',
+                    lastVerificationError: null,
+                    createdAt: null,
+                    updatedAt: null,
+                    hasWallet: false
+                };
+            }
         });
 
         res.json({
             success: true,
-            wallets: walletsWithMaskedKeys,
-            total: wallets.length
+            wallets: walletsWithUsers,
+            total: walletsWithUsers.length,
+            withWallets: existingWallets.length,
+            withoutWallets: departmentUsers.length - existingWallets.length
         });
     } catch (error) {
-        console.error("Error getting all wallets:", error.message);
+        console.error("Error getting all wallets:", error);
+        console.error("Error stack:", error.stack);
         return res.status(500).json({
             success: false,
             message: error.message || "Failed to get wallets"

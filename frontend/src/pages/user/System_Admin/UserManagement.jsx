@@ -39,22 +39,22 @@ const UserManagement = () => {
         { value: 'all', label: 'All Roles' },
         { value: 'student', label: 'Students' },
         { value: 'faculty', label: 'Faculty' },
-        { value: 'department', label: 'Department Heads' },
-        { value: 'crd', label: 'CRD Staff' },
-        { value: 'organization', label: 'Organizations' },
+        { value: 'Department/Organization', label: 'Department/Organization' },
+        { value: 'CRD Staff', label: 'CRD Staff' },
         { value: 'alumni', label: 'Alumni' },
-        { value: 'admin', label: 'Administrators' }
+        { value: 'System Administrator', label: 'System Administrators' }
     ];
     
     const getRoleLabel = (role) => {
         const roleMap = {
             'student': 'Student',
             'faculty': 'Faculty',
-            'department': 'Department Head',
-            'crd': 'CRD Staff',
-            'organization': 'Organization',
+            'Department/Organization': 'Department/Organization',
+            'CRD Staff': 'CRD Staff',
             'alumni': 'Alumni',
-            'admin': 'Administrator'
+            'System Administrator': 'System Administrator',
+            'User': 'User',
+            'Auditor': 'Auditor'
         };
         return roleMap[role] || role;
     };
@@ -65,16 +65,14 @@ const UserManagement = () => {
                 return <AcademicCapIcon className="h-5 w-5 text-blue-500" />;
             case 'faculty':
                 return <UserIcon className="h-5 w-5 text-purple-500" />;
-            case 'department':
+            case 'Department/Organization':
                 return <BuildingOfficeIcon className="h-5 w-5 text-green-500" />;
-            case 'crd':
+            case 'CRD Staff':
                 return <ShieldCheckIcon className="h-5 w-5 text-yellow-500" />;
-            case 'organization':
-                return <BuildingOfficeIcon className="h-5 w-5 text-indigo-500" />;
+            case 'System Administrator':
+                return <ShieldCheckIcon className="h-5 w-5 text-red-500" />;
             case 'alumni':
                 return <UserGroupIcon className="h-5 w-5 text-gray-500" />;
-            case 'admin':
-                return <ShieldCheckIcon className="h-5 w-5 text-red-500" />;
             default:
                 return <UserIcon className="h-5 w-5 text-gray-400" />;
         }
@@ -118,20 +116,22 @@ const UserManagement = () => {
     
     const getRoleBadgeClass = (role) => {
         switch(role) {
-            case 'admin':
+            case 'System Administrator':
                 return 'bg-red-100 text-red-800';
-            case 'crd':
+            case 'CRD Staff':
                 return 'bg-yellow-100 text-yellow-800';
-            case 'department':
+            case 'Department/Organization':
                 return 'bg-green-100 text-green-800';
             case 'faculty':
                 return 'bg-purple-100 text-purple-800';
             case 'student':
                 return 'bg-blue-100 text-blue-800';
-            case 'organization':
-                return 'bg-indigo-100 text-indigo-800';
             case 'alumni':
                 return 'bg-gray-100 text-gray-800';
+            case 'User':
+                return 'bg-gray-100 text-gray-800';
+            case 'Auditor':
+                return 'bg-indigo-100 text-indigo-800';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -335,13 +335,14 @@ const UserManagement = () => {
                                                             onChange={(e) => handleRoleUpdate(user._id, e.target.value)}
                                                             className="block w-full sm:w-auto pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 rounded-md bg-white"
                                                         >
+                                                            <option value="User">User</option>
                                                             <option value="student">Student</option>
                                                             <option value="faculty">Faculty</option>
-                                                            <option value="department">Department Head</option>
-                                                            <option value="crd">CRD Staff</option>
-                                                            <option value="organization">Organization</option>
+                                                            <option value="Department/Organization">Department/Organization</option>
+                                                            <option value="CRD Staff">CRD Staff</option>
                                                             <option value="alumni">Alumni</option>
-                                                            <option value="admin">Administrator</option>
+                                                            <option value="System Administrator">System Administrator</option>
+                                                            <option value="Auditor">Auditor</option>
                                                         </select>
                                                         {!user.isAccountVerified && (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 w-fit sm:w-auto">

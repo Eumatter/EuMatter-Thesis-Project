@@ -2,36 +2,26 @@
 const requireRole = (allowedRoles) => {
     return async (req, res, next) => {
         try {
-            const userId = req.body.userId; // Set by userAuth middleware
+            // IMPORTANT: Use req.user (set by userAuth middleware) to check the LOGGED-IN user's role
+            // Do NOT use req.body.userId, as that may be the target user's ID (e.g., when creating wallets for other users)
+            const loggedInUser = req.user;
             
-            if (!userId) {
+            if (!loggedInUser) {
                 return res.status(401).json({ 
                     success: false, 
-                    message: "Authentication required" 
+                    message: "Authentication required. Please log in." 
                 });
             }
 
-            // Import userModel dynamically to avoid circular dependencies
-            const userModel = (await import('../models/userModel.js')).default;
-            const user = await userModel.findById(userId);
-            
-            if (!user) {
-                return res.status(404).json({ 
-                    success: false, 
-                    message: "User not found" 
-                });
-            }
-
-            // Check if user's role is in allowed roles
-            if (!allowedRoles.includes(user.role)) {
+            // Check if logged-in user's role is in allowed roles
+            if (!allowedRoles.includes(loggedInUser.role)) {
                 return res.status(403).json({ 
                     success: false, 
-                    message: `Access denied. Required roles: ${allowedRoles.join(', ')}` 
+                    message: `Access denied. Required roles: ${allowedRoles.join(', ')}. Your role: ${loggedInUser.role}` 
                 });
             }
 
-            // Add user info to request for use in controllers
-            req.user = user;
+            // req.user is already set by userAuth middleware, no need to set it again
             next();
         } catch (error) {
             return res.status(500).json({ 
