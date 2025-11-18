@@ -324,7 +324,9 @@ const RegisterPage = () => {
                 course: formData.userType === 'MSEUF' && formData.mseufCategory === 'Student' ? formData.course : ''
             };
 
-            const { data } = await axios.post(backendUrl + 'api/auth/register', registrationData);
+            const { data } = await axios.post(backendUrl + 'api/auth/register', registrationData, {
+                timeout: 30000 // 30 seconds timeout
+            });
             
             if (data.success) {
                 // Clear sessionStorage on successful registration
@@ -342,7 +344,26 @@ const RegisterPage = () => {
             }
         } catch (error) {
             console.error('Registration error:', error);
-            toast.error(error?.response?.data?.message || error.message || 'Registration failed');
+            
+            // Handle timeout errors specifically
+            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Timed')) {
+                // Registration may have succeeded but request timed out
+                // Check if user was created by attempting to navigate to email verification
+                toast.warning('Registration may have succeeded. Please check your email for the verification code, or try logging in.');
+                // Still navigate to email verification page in case registration succeeded
+                navigate('/email-verify', { 
+                    state: { email: formData.email } 
+                });
+            } else if (error.response?.data?.message) {
+                // Server returned an error message
+                toast.error(error.response.data.message);
+            } else if (error.message) {
+                // Other error with message
+                toast.error(error.message);
+            } else {
+                // Generic error
+                toast.error('Registration failed. Please try again.');
+            }
         } finally {
             setIsLoading(false);
         }

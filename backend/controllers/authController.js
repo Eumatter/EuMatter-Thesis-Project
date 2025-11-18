@@ -163,51 +163,13 @@ export const register = async (req, res) => {
         const user = new userModel(userData);
         await user.save();
 
-        // Generate and send OTP for email verification (only for Users)
+        // Generate OTP for email verification (only for Users)
+        let otp = null;
         if (needsVerification) {
-            const otp = String(Math.floor(100000 + Math.random() * 900000));
+            otp = String(Math.floor(100000 + Math.random() * 900000));
             user.verifyOtp = otp;
             user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-        await user.save();
-
-            // Send verification OTP email
-            const mailOptions = {
-                from: process.env.SENDER_EMAIL,
-                to: email,
-                subject: "EuMatter - Verify Your Email Address",
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
-                        <p>Hello ${name},</p>
-                        <p>Thank you for registering with EuMatter. To complete your registration and verify your email address, please use the following verification code:</p>
-                        <div style="background-color: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
-                            <h1 style="color: #800000; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
-                        </div>
-                        <p><strong>This code will expire in 10 minutes.</strong></p>
-                        <p>If you did not create an account with EuMatter, please ignore this email.</p>
-                        <br/>
-                        <p>Best regards,<br/>The EuMatter Team</p>
-                    </div>
-                `
-            };
-            await transporter.sendMail(mailOptions);
-        } else {
-            // Send welcome email for non-User roles (no verification needed)
-            const mailOptions = {
-                from: process.env.SENDER_EMAIL,
-                to: email,
-                subject: "Welcome to EuMatter",
-                html: `
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                        <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
-                        <p>Hello ${name},</p>
-                        <p>Your account has been created successfully. You can now log in and start using the system.</p>
-                        <br/>
-                        <p>Best regards,<br/>The EuMatter Team</p>
-                    </div>
-                `
-            };
-            await transporter.sendMail(mailOptions);
+            await user.save();
         }
 
         // Create token but user won't be able to access dashboard until verified
@@ -219,7 +181,8 @@ export const register = async (req, res) => {
 
         res.cookie("token", token, cookieOptions);
 
-        return res.json({
+        // Send response immediately to prevent timeout
+        res.json({
             success: true,
             message: needsVerification 
                 ? "Registration successful. Please verify your email to continue."
@@ -233,6 +196,58 @@ export const register = async (req, res) => {
                 userType: user.userType
             },
             requiresVerification: needsVerification && !user.isAccountVerified
+        });
+
+        // Send email asynchronously after responding to prevent blocking
+        setImmediate(async () => {
+            try {
+                if (needsVerification && otp) {
+                    // Send verification OTP email
+                    const mailOptions = {
+                        from: process.env.SENDER_EMAIL,
+                        to: email,
+                        subject: "EuMatter - Verify Your Email Address",
+                        html: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
+                                <p>Hello ${name},</p>
+                                <p>Thank you for registering with EuMatter. To complete your registration and verify your email address, please use the following verification code:</p>
+                                <div style="background-color: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
+                                    <h1 style="color: #800000; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
+                                </div>
+                                <p><strong>This code will expire in 10 minutes.</strong></p>
+                                <p>If you did not create an account with EuMatter, please ignore this email.</p>
+                                <br/>
+                                <p>Best regards,<br/>The EuMatter Team</p>
+                            </div>
+                        `
+                    };
+                    await transporter.sendMail(mailOptions);
+                    console.log(`Verification OTP email sent successfully to ${email}`);
+                } else {
+                    // Send welcome email for non-User roles (no verification needed)
+                    const mailOptions = {
+                        from: process.env.SENDER_EMAIL,
+                        to: email,
+                        subject: "Welcome to EuMatter",
+                        html: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
+                                <p>Hello ${name},</p>
+                                <p>Your account has been created successfully. You can now log in and start using the system.</p>
+                                <br/>
+                                <p>Best regards,<br/>The EuMatter Team</p>
+                            </div>
+                        `
+                    };
+                    await transporter.sendMail(mailOptions);
+                    console.log(`Welcome email sent successfully to ${email}`);
+                }
+            } catch (emailError) {
+                // Log email error but don't fail registration
+                console.error(`Failed to send email to ${email}:`, emailError);
+                // Email sending failure doesn't affect registration success
+            }
         });
 
     } catch (error) {
