@@ -224,11 +224,161 @@ export const register = async (req, res) => {
 
         res.cookie("token", token, cookieOptions);
 
-        // Send response immediately to prevent timeout
+        // Send email FIRST before responding to ensure it's actually sent
+        // Use Promise.race with timeout to prevent waiting too long (max 60 seconds)
+        let emailSentSuccessfully = false;
+        let emailSendError = null;
+        
+        if (needsVerification && otp) {
+            // Send verification OTP email for both MSEUF and Guest users
+            const userTypeText = userType === 'MSEUF' 
+                ? (mseufCategory ? `${mseufCategory} of MSEUF` : 'MSEUF Member')
+                : (outsiderCategory ? outsiderCategory : 'Guest User');
+            
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+                to: email,
+                subject: "EuMatter - Verify Your Email Address",
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                        <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; margin-bottom: 30px;">
+                                <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Welcome to EuMatter! 🎉</h2>
+                            </div>
+                            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${name},</p>
+                            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Thank you for registering with EuMatter as a <strong>${userTypeText}</strong>. 
+                                To complete your registration and verify your email address, please use the following verification code:
+                            </p>
+                            <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
+                            </div>
+                            <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                                <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
+                            </p>
+                            <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+                                If you did not create an account with EuMatter, please ignore this email.
+                            </p>
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                    Best regards,<br/>
+                                    <strong style="color: #800000;">The EuMatter Team</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                                This is an automated message. Please do not reply to this email.
+                            </p>
+                        </div>
+                    </div>
+                `
+            };
+            
+            // Send email with timeout wrapper - wait up to 60 seconds for email to send
+            // This ensures email is actually sent before responding
+            console.log(`📤 Sending verification OTP email to ${email}...`);
+            try {
+                const emailPromise = sendEmailWithRetry(mailOptions, 5, 3000); // 5 retries (6 total attempts)
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Email sending is taking longer than expected. Email will continue sending in background.'));
+                    }, 40000); // 40 second max wait (enough for most email sends, prevents frontend timeout)
+                });
+                
+                const emailResult = await Promise.race([emailPromise, timeoutPromise]);
+                emailSentSuccessfully = true;
+                const emailType = email.includes('@student.mseuf.edu.ph') 
+                    ? 'MSEUF Student' 
+                    : email.includes('@mseuf.edu.ph') 
+                        ? 'MSEUF Faculty/Staff' 
+                        : 'Guest';
+                console.log(`✅ Verification OTP email sent successfully to ${email}`);
+                console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
+                console.log(`   User Type: ${userType}, Email Type: ${emailType}`);
+                console.log(`   OTP Code: ${otp} (saved in database)`);
+                console.log(`   ✅ Email delivery confirmed - user should receive email shortly`);
+                
+                // Continue sending in background if Promise.race timeout happened
+                if (!emailResult.messageId) {
+                    emailPromise.catch(err => {
+                        console.error(`⚠️ Background email sending failed: ${err.message}`);
+                    });
+                }
+            } catch (sendError) {
+                emailSendError = sendError;
+                const emailType = email.includes('@student.mseuf.edu.ph') 
+                    ? 'MSEUF Student' 
+                    : email.includes('@mseuf.edu.ph') 
+                        ? 'MSEUF Faculty/Staff' 
+                        : 'Guest';
+                console.error(`❌ Failed to send verification OTP email to ${email}`);
+                console.error(`   Error: ${sendError.message}`);
+                console.error(`   Error code: ${sendError.code || 'N/A'}`);
+                console.error(`   User Type: ${userType}, Email Type: ${emailType}`);
+                console.error(`   OTP Code: ${otp} (saved in database)`);
+                console.error(`   ⚠️  Registration succeeded but email sending failed - OTP is saved, user can still verify`);
+                
+                // Continue retrying in background
+                sendEmailWithRetry(mailOptions, 5, 3000)
+                    .then(result => {
+                        console.log(`✅ Email sent successfully in background to ${email} (MessageId: ${result.messageId || 'N/A'})`);
+                    })
+                    .catch(err => {
+                        console.error(`❌ Background email retry also failed: ${err.message}`);
+                    });
+            }
+        } else if (!needsVerification) {
+            // Send welcome email for non-User roles (no verification needed)
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+                to: email,
+                subject: "Welcome to EuMatter",
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
+                        <p>Hello ${name},</p>
+                        <p>Your account has been created successfully. You can now log in and start using the system.</p>
+                        <br/>
+                        <p>Best regards,<br/>The EuMatter Team</p>
+                    </div>
+                `
+            };
+            
+            try {
+                const emailPromise = sendEmailWithRetry(mailOptions, 5, 3000);
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Email sending is taking longer than expected. Email will continue sending in background.'));
+                    }, 40000); // 40 second max wait (enough for most email sends, prevents frontend timeout)
+                });
+                
+                const emailResult = await Promise.race([emailPromise, timeoutPromise]);
+                emailSentSuccessfully = true;
+                console.log(`✅ Welcome email sent successfully to ${email}`);
+                console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
+                console.log(`   User Type: ${userType}`);
+            } catch (sendError) {
+                emailSendError = sendError;
+                console.error(`❌ Failed to send welcome email to ${email}: ${sendError.message}`);
+                // Continue retrying in background
+                sendEmailWithRetry(mailOptions, 5, 3000)
+                    .then(result => {
+                        console.log(`✅ Welcome email sent successfully in background to ${email} (MessageId: ${result.messageId || 'N/A'})`);
+                    })
+                    .catch(err => {
+                        console.error(`❌ Background welcome email retry also failed: ${err.message}`);
+                    });
+            }
+        }
+
+        // Send response after email attempt (success or timeout/failure)
         res.json({
             success: true,
             message: needsVerification 
-                ? "Registration successful. Please verify your email to continue."
+                ? (emailSentSuccessfully 
+                    ? "Registration successful. Verification code has been sent to your email. Please check your inbox."
+                    : "Registration successful. Verification code is being sent to your email. Please check your inbox shortly. If you don't receive it, you can request a new code.")
                 : "Registration successful. You can now log in.",
             user: { 
                 id: user._id, 
@@ -238,128 +388,8 @@ export const register = async (req, res) => {
                 isAccountVerified: user.isAccountVerified,
                 userType: user.userType
             },
-            requiresVerification: needsVerification && !user.isAccountVerified
-        });
-
-        // Send email asynchronously after responding to prevent blocking
-        setImmediate(async () => {
-            try {
-                if (needsVerification && otp) {
-                    // Send verification OTP email for both MSEUF and Guest users
-                    const userTypeText = userType === 'MSEUF' 
-                        ? (mseufCategory ? `${mseufCategory} of MSEUF` : 'MSEUF Member')
-                        : (outsiderCategory ? outsiderCategory : 'Guest User');
-                    
-                    const mailOptions = {
-                        from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
-                        to: email,
-                        subject: "EuMatter - Verify Your Email Address",
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
-                                <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                    <div style="text-align: center; margin-bottom: 30px;">
-                                        <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Welcome to EuMatter! 🎉</h2>
-                                </div>
-                                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${name},</p>
-                                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                                        Thank you for registering with EuMatter as a <strong>${userTypeText}</strong>. 
-                                        To complete your registration and verify your email address, please use the following verification code:
-                                    </p>
-                                    <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
-                                        <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
-                                    </div>
-                                    <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
-                                        <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
-                                    </p>
-                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
-                                        If you did not create an account with EuMatter, please ignore this email.
-                                    </p>
-                                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-                                        <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                                            Best regards,<br/>
-                                            <strong style="color: #800000;">The EuMatter Team</strong>
-                                        </p>
-                                    </div>
-                                </div>
-                                <div style="text-align: center; margin-top: 20px;">
-                                    <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-                                        This is an automated message. Please do not reply to this email.
-                                    </p>
-                                </div>
-                            </div>
-                        `
-                    };
-                    
-                    // Send email asynchronously (fire and forget) - don't block registration response
-                    // OTP is already saved to user record, so verification will work even if email fails
-                    console.log(`📤 Starting email send for registration OTP to ${email}...`);
-                    sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
-                        .then((emailResult) => {
-                            const emailType = email.includes('@student.mseuf.edu.ph') 
-                                ? 'MSEUF Student' 
-                                : email.includes('@mseuf.edu.ph') 
-                                    ? 'MSEUF Faculty/Staff' 
-                                    : 'Guest';
-                    console.log(`✅ Verification OTP email sent successfully to ${email}`);
-                            console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
-                            console.log(`   User Type: ${userType}, Email Type: ${emailType}`);
-                            console.log(`   OTP Code: ${otp} (saved in database)`);
-                            console.log(`   ✅ Email delivery confirmed - user can check inbox`);
-                        })
-                        .catch((sendError) => {
-                            // Log error but don't throw - registration already succeeded and OTP is saved
-                            const emailType = email.includes('@student.mseuf.edu.ph') 
-                                ? 'MSEUF Student' 
-                                : email.includes('@mseuf.edu.ph') 
-                                    ? 'MSEUF Faculty/Staff' 
-                                    : 'Guest';
-                            console.error(`❌ Failed to send verification OTP email to ${email} after all retry attempts`);
-                            console.error(`   Error: ${sendError.message}`);
-                            console.error(`   Error code: ${sendError.code || 'N/A'}`);
-                            console.error(`   User Type: ${userType}, Email Type: ${emailType}`);
-                            console.error(`   OTP Code: ${otp} (saved in database)`);
-                            // Note: OTP is still saved, user can still verify
-                            console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
-                            console.warn(`   ⚠️  User can verify using OTP code: ${otp}`);
-                            console.warn(`   ⚠️  Email may still be delivered - check email provider status.`);
-                        });
-                } else {
-                    // Send welcome email for non-User roles (no verification needed)
-                    const mailOptions = {
-                        from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
-                        to: email,
-                        subject: "Welcome to EuMatter",
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                                <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
-                                <p>Hello ${name},</p>
-                                <p>Your account has been created successfully. You can now log in and start using the system.</p>
-                                <br/>
-                                <p>Best regards,<br/>The EuMatter Team</p>
-                            </div>
-                        `
-                    };
-                    // Send welcome email asynchronously (fire and forget) - don't block registration response
-                    console.log(`📤 Starting welcome email send to ${email}...`);
-                    sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
-                        .then((emailResult) => {
-                            console.log(`✅ Welcome email sent successfully to ${email}`);
-                            console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
-                            console.log(`   User Type: ${userType}`);
-                        })
-                        .catch((sendError) => {
-                            // Log error but don't throw - registration already succeeded
-                            console.error(`❌ Failed to send welcome email to ${email} after all retry attempts`);
-                            console.error(`   Error: ${sendError.message}`);
-                            console.error(`   Error code: ${sendError.code || 'N/A'}`);
-                            console.error(`   User Type: ${userType}`);
-                        });
-                }
-            } catch (emailError) {
-                // Catch any errors in the email sending process
-                console.error(`❌ Error in email sending process for ${email}:`, emailError);
-                // Don't throw - registration already succeeded
-            }
+            requiresVerification: needsVerification && !user.isAccountVerified,
+            emailSent: emailSentSuccessfully
         });
 
     } catch (error) {
@@ -676,19 +706,45 @@ export const sendVerifyOtp = async (req, res) => {
             `
         };
         
-        // Send email asynchronously and respond immediately to prevent timeout
-        // Email sending will happen in the background
-            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-            const userAgent = req.headers['user-agent'] || 'Unknown';
-            
-        // Respond immediately to prevent frontend timeout
-        // OTP is already saved, so verification will work even if email sending fails
-        res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox. If you don't receive it, the OTP has been generated and you can try verifying with it." });
+        // Send email FIRST before responding to ensure it's actually sent
+        // Use Promise.race with timeout to prevent waiting too long (max 40 seconds)
+        let emailSentSuccessfully = false;
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
         
-        // Send email in background (fire and forget)
-        // OTP is already saved, so verification will work even if email sending fails
-        console.log(`📤 Starting email send for resend OTP to ${user.email}...`);
-        sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
+        console.log(`📤 Sending verification OTP email to ${user.email}...`);
+        try {
+            const emailPromise = sendEmailWithRetry(mailOptions, 5, 3000); // 5 retries (6 total attempts)
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error('Email sending is taking longer than expected. Email will continue sending in background.'));
+                }, 40000); // 40 second max wait
+            });
+            
+            const emailResult = await Promise.race([emailPromise, timeoutPromise]);
+            emailSentSuccessfully = true;
+            console.log(`✅ Verification OTP email sent successfully to ${user.email}`);
+            console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
+            console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+            console.log(`   OTP Code: ${otp} (saved in database)`);
+            console.log(`   ✅ Email delivery confirmed - user should receive email shortly`);
+            
+            // Continue sending in background if Promise.race timeout happened
+            if (!emailResult.messageId) {
+                emailPromise.catch(err => {
+                    console.error(`⚠️ Background email sending failed: ${err.message}`);
+                });
+            }
+        } catch (sendError) {
+            console.error(`❌ Failed to send verification OTP email to ${user.email}`);
+            console.error(`   Error: ${sendError.message}`);
+            console.error(`   Error code: ${sendError.code || 'N/A'}`);
+            console.error(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+            console.error(`   OTP Code: ${otp} (saved in database)`);
+            console.error(`   ⚠️  OTP is saved, user can still verify - email will retry in background`);
+            
+            // Continue retrying in background
+            sendEmailWithRetry(mailOptions, 5, 3000)
             .then((emailResult) => {
                 console.log(`✅ Verification OTP email sent successfully to ${user.email}`);
                 console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
@@ -723,26 +779,55 @@ export const sendVerifyOtp = async (req, res) => {
                 console.warn(`   ⚠️  User can verify using OTP code: ${otp}`);
                 console.warn(`   ⚠️  Email may still be delivered - check email provider status.`);
                 
-                // Log email failure but note that HTTP response was 200 (email sent in background)
-                // The endpoint responded successfully, but email delivery failed asynchronously
+                // Log email failure
+                createAuditLog({
+                    userId: user._id,
+                    userEmail: user.email,
+                    userRole: user.role,
+                    actionType: 'EMAIL_SEND_FAILURE',
+                    resourceType: 'user',
+                    resourceId: user._id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    requestMethod: req.method,
+                    requestEndpoint: req.path,
+                    responseStatus: emailSentSuccessfully ? 200 : 500,
+                    success: false,
+                    errorMessage: `Email send failed (${emailType}): ${sendError.message || 'Unknown error'}. OTP was generated and saved.`
+                }).catch(err => console.error('Failed to log audit:', err));
+            });
+        }
+        
+        // Send response after email attempt (success or failure)
+        if (emailSentSuccessfully) {
+            // Log OTP resend success
             createAuditLog({
                 userId: user._id,
                 userEmail: user.email,
                 userRole: user.role,
-                actionType: 'EMAIL_SEND_FAILURE',
+                actionType: 'OTP_RESENT',
                 resourceType: 'user',
                 resourceId: user._id,
                 ipAddress: clientIp,
                 userAgent: userAgent,
                 requestMethod: req.method,
                 requestEndpoint: req.path,
-                    responseStatus: 200, // HTTP response was 200, email failed in background
-                    success: false, // Email delivery failed, but OTP was saved
-                    errorMessage: `Background email send failed (${emailType}): ${emailError.message || 'Unknown error'}. OTP was generated and saved.`
+                responseStatus: 200,
+                success: true
             }).catch(err => console.error('Failed to log audit:', err));
-            });
             
-        return; // Exit early since we already sent response
+            return res.json({ 
+                success: true, 
+                message: "Verification code has been sent to your email. Please check your inbox.",
+                emailSent: true
+            });
+        } else {
+            return res.json({ 
+                success: true, 
+                message: "Verification code is being sent to your email. Please check your inbox shortly. If you don't receive it, the code has been generated and you can try verifying with it.",
+                emailSent: false
+            });
+        }
 
     } catch (error) {
         return res.json({ success: false, message: error.message });

@@ -247,7 +247,7 @@ const VerifyEmailPage = () => {
             const { data } = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
                 email
             }, {
-                timeout: 30000 // 30 seconds timeout (backend responds immediately, email sent in background)
+                timeout: 50000 // 50 seconds timeout (email is sent synchronously now)
             })
             
             if (data.success) {
