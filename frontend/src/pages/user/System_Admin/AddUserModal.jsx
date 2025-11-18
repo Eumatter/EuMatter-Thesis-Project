@@ -35,7 +35,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         setIsLoading(true);
         
         try {
-            const response = await axios.post(`${backendUrl}api/admin/create-user`, formData, {
+            const response = await axios.post(`${backendUrl}api/admin/users`, formData, {
                 withCredentials: true
             });
             

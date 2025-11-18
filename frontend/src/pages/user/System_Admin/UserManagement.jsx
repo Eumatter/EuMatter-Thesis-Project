@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, Fragment } from 'react'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
@@ -7,7 +7,8 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx';
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { PlusIcon, UserGroupIcon, UserIcon, AcademicCapIcon, BuildingOfficeIcon, ShieldCheckIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UserGroupIcon, UserIcon, AcademicCapIcon, BuildingOfficeIcon, ShieldCheckIcon, ClockIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Dialog, Transition } from '@headlessui/react';
 import AddUserModal from './AddUserModal';
 
 // Add this helper function after the imports and before the component
@@ -26,14 +27,287 @@ const formatDate = (dateString) => {
     }
 };
 
+// Pagination Controls Component
+const PaginationControls = ({ currentPage, totalPages, onPageChange, totalUsers, limit }) => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        
+        if (totalPages <= maxVisible) {
+            // Show all pages if total pages is less than max visible
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Show pages with ellipsis
+            if (currentPage <= 3) {
+                // Show first pages
+                for (let i = 1; i <= 4; i++) {
+                    pages.push(i);
+                }
+                pages.push('ellipsis');
+                pages.push(totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                // Show last pages
+                pages.push(1);
+                pages.push('ellipsis');
+                for (let i = totalPages - 3; i <= totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // Show middle pages
+                pages.push(1);
+                pages.push('ellipsis');
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+                    pages.push(i);
+                }
+                pages.push('ellipsis');
+                pages.push(totalPages);
+            }
+        }
+        
+        return pages;
+    };
+
+    return (
+        <>
+            {/* Mobile Pagination */}
+            <div className="flex justify-between sm:hidden w-full">
+                <button
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md ${
+                        currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    Previous
+                </button>
+                <button
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`relative inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md ${
+                        currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    Next
+                </button>
+            </div>
+            {/* Desktop Pagination */}
+            <nav className="hidden sm:flex relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                    onClick={() => onPageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`relative inline-flex items-center h-8 w-8 rounded-l-md border border-gray-300 bg-white text-xs font-medium ${
+                        currentPage === 1
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-[#800000]'
+                    }`}
+                >
+                    <span className="sr-only">Previous</span>
+                    <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+                {getPageNumbers().map((page, index) => {
+                    if (page === 'ellipsis') {
+                        return (
+                            <span
+                                key={`ellipsis-${index}`}
+                                className="relative inline-flex items-center h-8 px-3 border border-gray-300 bg-white text-xs font-medium text-gray-700"
+                            >
+                                ...
+                            </span>
+                        );
+                    }
+                    return (
+                        <button
+                            key={page}
+                            onClick={() => onPageChange(page)}
+                            className={`relative inline-flex items-center justify-center h-8 w-8 border text-xs font-medium ${
+                                currentPage === page
+                                    ? 'z-10 bg-[#800000] border-[#800000] text-white'
+                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                        >
+                            {page}
+                        </button>
+                    );
+                })}
+                <button
+                    onClick={() => onPageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`relative inline-flex items-center h-8 w-8 rounded-r-md border border-gray-300 bg-white text-xs font-medium ${
+                        currentPage === totalPages
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-[#800000]'
+                    }`}
+                >
+                    <span className="sr-only">Next</span>
+                    <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
+                </button>
+            </nav>
+        </>
+    );
+};
+
+// Edit User Modal Component
+const EditUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
+    const { backendUrl } = useContext(AppContent);
+    const [selectedRole, setSelectedRole] = useState(user?.role || 'User');
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (user) {
+            setSelectedRole(user.role || 'User');
+        }
+    }, [user]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!user || !user._id) return;
+
+        setIsLoading(true);
+        try {
+            axios.defaults.withCredentials = true;
+            const { data } = await axios.put(backendUrl + 'api/user/role', {
+                userId: user._id,
+                role: selectedRole
+            });
+
+            if (data.success) {
+                toast.success('User role updated successfully');
+                onUserUpdated();
+                onClose();
+            } else {
+                toast.error(data.message || 'Failed to update user role');
+            }
+        } catch (error) {
+            console.error('Error updating user role:', error);
+            toast.error(error.response?.data?.message || 'Failed to update user role');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (!user) return null;
+
+    return (
+        <Transition appear show={isOpen} as={Fragment}>
+            <Dialog as="div" className="relative z-50" onClose={onClose}>
+                <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-300"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-200"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black bg-opacity-25" />
+                </Transition.Child>
+
+                <div className="fixed inset-0 overflow-y-auto">
+                    <div className="flex min-h-full items-center justify-center p-4 text-center">
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-300"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="ease-in duration-200"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                        >
+                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                                <div className="flex items-center justify-between mb-4">
+                                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                                        Edit User Role
+                                    </Dialog.Title>
+                                    <button
+                                        onClick={onClose}
+                                        className="text-gray-400 hover:text-gray-500"
+                                    >
+                                        <XMarkIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-4">
+                                    <div className="mb-2">
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Name:</span> {user.name || 'Unnamed User'}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Email:</span> {user.email}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleSubmit}>
+                                    <div className="mb-4">
+                                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Role <span className="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            id="role"
+                                            value={selectedRole}
+                                            onChange={(e) => setSelectedRole(e.target.value)}
+                                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                                            required
+                                        >
+                                            <option value="User">User</option>
+                                            <option value="student">Student</option>
+                                            <option value="faculty">Faculty</option>
+                                            <option value="Department/Organization">Department/Organization</option>
+                                            <option value="CRD Staff">CRD Staff</option>
+                                            <option value="alumni">Alumni</option>
+                                            <option value="System Administrator">System Administrator</option>
+                                            <option value="Auditor">Auditor</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={onClose}
+                                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                            disabled={isLoading}
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-md hover:bg-[#900000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            disabled={isLoading}
+                                        >
+                                            {isLoading ? 'Updating...' : 'Update Role'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition>
+    );
+};
+
 const UserManagement = () => {
     const { backendUrl } = useContext(AppContent)
     const [users, setUsers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [filterRole, setFilterRole] = useState('all')
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [totalPages, setTotalPages] = useState(1)
+    const [totalUsers, setTotalUsers] = useState(0)
     
     const roleOptions = [
         { value: 'all', label: 'All Roles' },
@@ -58,38 +332,97 @@ const UserManagement = () => {
         };
         return roleMap[role] || role;
     };
+
+    // Get user type display - shows category when role is "User"
+    const getUserTypeDisplay = (user) => {
+        if (user.role !== 'User') {
+            return getRoleLabel(user.role);
+        }
+        
+        // If role is "User", check userType
+        if (user.userType === 'MSEUF' && user.mseufCategory) {
+            return user.mseufCategory; // Student, Faculty, Staff
+        }
+        
+        if (user.userType === 'Outsider' && user.outsiderCategory) {
+            return user.outsiderCategory; // Alumni, External Partner, General Public
+        }
+        
+        // If userType is empty or not set, return "User"
+        return 'User';
+    };
     
-    const getRoleIcon = (role) => {
-        switch(role) {
+    const getRoleIcon = (user) => {
+        // First check if role is "User" and has userType
+        if (user.role === 'User') {
+            if (user.userType === 'MSEUF' && user.mseufCategory) {
+                switch(user.mseufCategory) {
+                    case 'Student':
+                        return <AcademicCapIcon className="h-3.5 w-3.5 text-blue-500" />;
+                    case 'Faculty':
+                        return <UserIcon className="h-3.5 w-3.5 text-purple-500" />;
+                    case 'Staff':
+                        return <ShieldCheckIcon className="h-3.5 w-3.5 text-yellow-500" />;
+                    default:
+                        return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
+                }
+            }
+            if (user.userType === 'Outsider' && user.outsiderCategory) {
+                switch(user.outsiderCategory) {
+                    case 'Alumni':
+                        return <UserGroupIcon className="h-3.5 w-3.5 text-gray-500" />;
+                    case 'External Partner':
+                        return <BuildingOfficeIcon className="h-3.5 w-3.5 text-orange-500" />;
+                    case 'General Public':
+                        return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
+                    default:
+                        return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
+                }
+            }
+            return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
+        }
+        
+        // For non-User roles
+        switch(user.role) {
             case 'student':
-                return <AcademicCapIcon className="h-5 w-5 text-blue-500" />;
+                return <AcademicCapIcon className="h-3.5 w-3.5 text-blue-500" />;
             case 'faculty':
-                return <UserIcon className="h-5 w-5 text-purple-500" />;
+                return <UserIcon className="h-3.5 w-3.5 text-purple-500" />;
             case 'Department/Organization':
-                return <BuildingOfficeIcon className="h-5 w-5 text-green-500" />;
+                return <BuildingOfficeIcon className="h-3.5 w-3.5 text-green-500" />;
             case 'CRD Staff':
-                return <ShieldCheckIcon className="h-5 w-5 text-yellow-500" />;
+                return <ShieldCheckIcon className="h-3.5 w-3.5 text-yellow-500" />;
             case 'System Administrator':
-                return <ShieldCheckIcon className="h-5 w-5 text-red-500" />;
+                return <ShieldCheckIcon className="h-3.5 w-3.5 text-red-500" />;
             case 'alumni':
-                return <UserGroupIcon className="h-5 w-5 text-gray-500" />;
+                return <UserGroupIcon className="h-3.5 w-3.5 text-gray-500" />;
             default:
-                return <UserIcon className="h-5 w-5 text-gray-400" />;
+                return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
         }
     };
 
     useEffect(() => {
         fetchUsers()
-    }, [])
+    }, [currentPage, filterRole, searchTerm])
 
     const fetchUsers = async () => {
         try {
             setIsLoading(true);
             axios.defaults.withCredentials = true;
-            const { data } = await axios.get(`${backendUrl}api/admin/users`);
+            // Fetch users with pagination - limit 15 per page
+            const { data } = await axios.get(`${backendUrl}api/admin/users`, {
+                params: {
+                    page: currentPage,
+                    limit: 15,
+                    role: filterRole !== 'all' ? filterRole : undefined,
+                    search: searchTerm || undefined
+                }
+            });
 
             if (data.success) {
-                setUsers(data.users);
+                setUsers(data.users || []);
+                setTotalPages(data.totalPages || 1);
+                setTotalUsers(data.total || 0);
             } else {
                 toast.error(data.message || 'Failed to fetch users');
             }
@@ -102,20 +435,58 @@ const UserManagement = () => {
     };
     
     const handleUserCreated = () => {
+        setCurrentPage(1);
         fetchUsers();
     };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    const handleSearchChange = (value) => {
+        setSearchTerm(value);
+        setCurrentPage(1); // Reset to page 1 when search changes
+    };
+
+    const handleRoleFilterChange = (value) => {
+        setFilterRole(value);
+        setCurrentPage(1); // Reset to page 1 when filter changes
+    };
     
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            user.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const getRoleBadgeClass = (user) => {
+        // First check if role is "User" and has userType
+        if (user.role === 'User') {
+            if (user.userType === 'MSEUF' && user.mseufCategory) {
+                switch(user.mseufCategory) {
+                    case 'Student':
+                        return 'bg-blue-100 text-blue-800';
+                    case 'Faculty':
+                        return 'bg-purple-100 text-purple-800';
+                    case 'Staff':
+                        return 'bg-yellow-100 text-yellow-800';
+                    default:
+                        return 'bg-gray-100 text-gray-800';
+                }
+            }
+            if (user.userType === 'Outsider' && user.outsiderCategory) {
+                switch(user.outsiderCategory) {
+                    case 'Alumni':
+                        return 'bg-gray-100 text-gray-800';
+                    case 'External Partner':
+                        return 'bg-orange-100 text-orange-800';
+                    case 'General Public':
+                        return 'bg-gray-100 text-gray-800';
+                    default:
+                        return 'bg-gray-100 text-gray-800';
+                }
+            }
+            return 'bg-gray-100 text-gray-800'; // Default for User without userType
+        }
         
-        const matchesRole = filterRole === 'all' || user.role === filterRole;
-        
-        return matchesSearch && matchesRole;
-    });
-    
-    const getRoleBadgeClass = (role) => {
-        switch(role) {
+        // For non-User roles
+        switch(user.role) {
             case 'System Administrator':
                 return 'bg-red-100 text-red-800';
             case 'CRD Staff':
@@ -137,33 +508,35 @@ const UserManagement = () => {
         }
     };
 
-    const handleRoleUpdate = async (userId, newRole) => {
-        // Validate inputs
-        if (!userId) {
-            toast.error('User ID is missing')
-            return
-        }
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setIsEditModalOpen(true);
+    };
 
-        if (!newRole) {
-            toast.error('Role is missing')
-            return
+    const handleUserUpdated = () => {
+        fetchUsers();
+    };
+
+    const handleDeleteUser = async (userId, userName) => {
+        if (!window.confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+            return;
         }
 
         try {
-            axios.defaults.withCredentials = true
-            const { data } = await axios.put(backendUrl + 'api/user/role', {
-                userId,
-                role: newRole
-            })
+            axios.defaults.withCredentials = true;
+            const { data } = await axios.delete(`${backendUrl}api/admin/users/${userId}`, {
+                withCredentials: true
+            });
 
             if (data.success) {
-                toast.success('User role updated successfully')
-                fetchUsers()
+                toast.success('User deleted successfully');
+                fetchUsers();
             } else {
-                toast.error(data.message)
+                toast.error(data.message || 'Failed to delete user');
             }
         } catch (error) {
-            toast.error('Failed to update user role')
+            console.error('Error deleting user:', error);
+            toast.error(error.response?.data?.message || 'Failed to delete user');
         }
     }
 
@@ -185,13 +558,13 @@ const UserManagement = () => {
                     <h1 className="ml-3 text-xl font-bold text-[#800000]">System Admin</h1>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
                     {/* Header */}
-                    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 sm:mb-6 border border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                             <div className="text-center sm:text-left">
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">User Management</h1>
-                                <p className="text-sm sm:text-base text-gray-600 mt-1">Manage and monitor all user accounts in the system</p>
+                                <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Manage and monitor all user accounts in the system</p>
                             </div>
                             <div className="flex justify-center sm:justify-end">
                                 <button
@@ -204,46 +577,43 @@ const UserManagement = () => {
                             </div>
                         </div>
                         
-                        {/* Filters */}
-                        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="sm:col-span-2">
-                                <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">Search users</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                        </svg>
+                        {/* Filters and Search */}
+                        <div className="mt-4">
+                            <div className="flex flex-col sm:flex-row gap-3 items-end">
+                                <div className="flex-1">
+                                    <label htmlFor="search" className="block text-xs font-medium text-gray-700 mb-1">Search users</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg className="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            name="search"
+                                            id="search"
+                                            className="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm"
+                                            placeholder="Search by name or email..."
+                                            value={searchTerm}
+                                            onChange={(e) => handleSearchChange(e.target.value)}
+                                        />
                                     </div>
-                                    <input
-                                        type="text"
-                                        name="search"
-                                        id="search"
-                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm"
-                                        placeholder="Search by name or email..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
                                 </div>
-                            </div>
-                            <div>
-                                <label htmlFor="role-filter" className="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
-                                <select
-                                    id="role-filter"
-                                    className="block w-full pl-3 pr-10 py-2.5 text-base border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-md"
-                                    value={filterRole}
-                                    onChange={(e) => setFilterRole(e.target.value)}
-                                >
-                                    {roleOptions.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="flex items-end">
-                                <span className="text-sm text-gray-500">
-                                    {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'} found
-                                </span>
+                                <div className="sm:w-48">
+                                    <label htmlFor="role-filter" className="block text-xs font-medium text-gray-700 mb-1">Filter by Role</label>
+                                    <select
+                                        id="role-filter"
+                                        className="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 rounded-md"
+                                        value={filterRole}
+                                        onChange={(e) => handleRoleFilterChange(e.target.value)}
+                                    >
+                                        {roleOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -254,7 +624,7 @@ const UserManagement = () => {
                             <div className="py-12">
                                 <LoadingSpinner size="medium" text="Loading users..." />
                             </div>
-                        ) : filteredUsers.length === 0 ? (
+                        ) : users.length === 0 ? (
                             <div className="text-center py-12 px-4">
                                 <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
                                 <h3 className="mt-2 text-sm sm:text-base font-medium text-gray-900">No users found</h3>
@@ -275,88 +645,132 @@ const UserManagement = () => {
                                 </div>
                             </div>
                         ) : (
-                            <ul className="divide-y divide-gray-200">
-                                {filteredUsers.map((user) => (
-                                    <li key={user._id} className="hover:bg-gray-50 transition-colors">
-                                        <div className="px-4 py-4 sm:px-6">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                                                    <div className="flex-shrink-0">
-                                                        {user.profileImage ? (
-                                                            <img 
-                                                                className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover" 
-                                                                src={user.profileImage} 
-                                                                alt={user.name} 
-                                                            />
-                                                        ) : (
-                                                            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gray-200 flex items-center justify-center">
-                                                                <UserIcon className="h-6 w-6 text-gray-400" />
+                            <>
+                                <div className="w-full">
+                                    <table className="w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th scope="col" className="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Name
+                                                </th>
+                                                <th scope="col" className="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Email
+                                                </th>
+                                                <th scope="col" className="px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Role
+                                                </th>
+                                                <th scope="col" className="hidden md:table-cell px-3 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Date Joined
+                                                </th>
+                                                <th scope="col" className="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {users.map((user) => (
+                                                <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="px-3 py-1.5">
+                                                        <div className="flex items-center">
+                                                            <div className="flex-shrink-0 h-6 w-6">
+                                                                {user.profileImage ? (
+                                                                    <img 
+                                                                        className="h-6 w-6 rounded-full object-cover" 
+                                                                        src={user.profileImage} 
+                                                                        alt={user.name} 
+                                                                    />
+                                                                ) : (
+                                                                    <div className="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                        <UserIcon className="h-3.5 w-3.5 text-gray-400" />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="text-sm sm:text-base font-medium text-gray-900 truncate">
-                                                                {user.name || 'Unnamed User'}
-                                                            </p>
-                                                            {user.isAccountVerified && (
-                                                                <span className="flex-shrink-0">
-                                                                    <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                                    </svg>
-                                                                </span>
+                                                            <div className="ml-2 min-w-0">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="text-sm font-medium text-gray-900 truncate">
+                                                                        {user.name || 'Unnamed User'}
+                                                                    </div>
+                                                                    {user.isAccountVerified && (
+                                                                        <svg className="h-3 w-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                                        </svg>
+                                                                    )}
+                                                                    {!user.isAccountVerified && (
+                                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                            <ClockIcon className="h-3 w-3" />
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-3 py-1.5">
+                                                        <div className="text-sm text-gray-500 truncate max-w-[200px]">{user.email}</div>
+                                                    </td>
+                                                    <td className="px-3 py-1.5 whitespace-nowrap">
+                                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user)}`}>
+                                                            {getRoleIcon(user)}
+                                                            <span className="ml-1">{getUserTypeDisplay(user)}</span>
+                                                        </span>
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-3 py-1.5 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500">
+                                                            {formatDate(user.createdAt) === 'No date available' ? (
+                                                                <span className="text-gray-400 italic">No date available</span>
+                                                            ) : (
+                                                                formatDate(user.createdAt)
                                                             )}
                                                         </div>
-                                                        <p className="text-xs sm:text-sm text-gray-500 truncate mt-1">{user.email}</p>
-                                                        <div className="mt-2 sm:hidden">
-                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
-                                                                {getRoleIcon(user.role)}
-                                                                <span className="ml-1">{getRoleLabel(user.role)}</span>
-                                                            </span>
-                                                            <span className="ml-2 text-xs text-gray-500">
-                                                                Joined {formatDate(user.createdAt)}
-                                                            </span>
+                                                    </td>
+                                                    <td className="px-3 py-1.5 whitespace-nowrap text-right text-sm font-medium">
+                                                        <div className="flex items-center justify-end gap-1.5">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleEditUser(user);
+                                                                }}
+                                                                className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                                title="Edit user"
+                                                            >
+                                                                <PencilIcon className="h-4 w-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteUser(user._id, user.name);
+                                                                }}
+                                                                className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                                title="Delete user"
+                                                            >
+                                                                <TrashIcon className="h-4 w-4" />
+                                                            </button>
                                                         </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 gap-3 sm:gap-0">
-                                                    <div className="hidden sm:flex sm:flex-col sm:items-end">
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user.role)}`}>
-                                                            {getRoleIcon(user.role)}
-                                                            <span className="ml-1">{getRoleLabel(user.role)}</span>
-                                                        </span>
-                                                        <span className="mt-1 text-xs text-gray-500">
-                                                            Joined {formatDate(user.createdAt)}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex flex-col gap-2 sm:items-end">
-                                                        <select
-                                                            value={user.role}
-                                                            onChange={(e) => handleRoleUpdate(user._id, e.target.value)}
-                                                            className="block w-full sm:w-auto pl-3 pr-10 py-2 text-sm border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 rounded-md bg-white"
-                                                        >
-                                                            <option value="User">User</option>
-                                                            <option value="student">Student</option>
-                                                            <option value="faculty">Faculty</option>
-                                                            <option value="Department/Organization">Department/Organization</option>
-                                                            <option value="CRD Staff">CRD Staff</option>
-                                                            <option value="alumni">Alumni</option>
-                                                            <option value="System Administrator">System Administrator</option>
-                                                            <option value="Auditor">Auditor</option>
-                                                        </select>
-                                                        {!user.isAccountVerified && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 w-fit sm:w-auto">
-                                                                <ClockIcon className="h-3 w-3 mr-1" />
-                                                                Pending Verification
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {/* Pagination Controls - Bottom Right */}
+                                {totalPages > 1 && (
+                                    <div className="mt-4 px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                            <div className="text-sm text-gray-500">
+                                                Showing <span className="font-medium">{((currentPage - 1) * 15) + 1}</span> to{' '}
+                                                <span className="font-medium">{Math.min(currentPage * 15, totalUsers)}</span> of{' '}
+                                                <span className="font-medium">{totalUsers}</span> users
                                             </div>
+                                            <PaginationControls
+                                                currentPage={currentPage}
+                                                totalPages={totalPages}
+                                                onPageChange={handlePageChange}
+                                                totalUsers={totalUsers}
+                                                limit={15}
+                                            />
                                         </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -367,6 +781,17 @@ const UserManagement = () => {
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
                 onUserAdded={handleUserCreated}
+            />
+
+            {/* Edit User Modal */}
+            <EditUserModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setSelectedUser(null);
+                }}
+                user={selectedUser}
+                onUserUpdated={handleUserUpdated}
             />
         </div>
     )

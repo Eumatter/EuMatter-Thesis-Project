@@ -15,7 +15,23 @@ export const getUsers = async (req, res) => {
         
         // Filter by role if provided
         if (role && role !== 'all') {
-            query.role = role;
+            // Handle special cases where we filter by user category instead of role
+            if (role === 'student') {
+                // Find users with role "User" and mseufCategory "Student"
+                query.role = 'User';
+                query.mseufCategory = 'Student';
+            } else if (role === 'faculty') {
+                // Find users with role "User" and mseufCategory "Faculty"
+                query.role = 'User';
+                query.mseufCategory = 'Faculty';
+            } else if (role === 'alumni') {
+                // Find users with role "User" and outsiderCategory "Alumni"
+                query.role = 'User';
+                query.outsiderCategory = 'Alumni';
+            } else {
+                // For other roles, filter by role directly
+                query.role = role;
+            }
         }
 
         // Search by name or email if search term is provided
