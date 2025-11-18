@@ -413,17 +413,86 @@ const CRDDashboard = () => {
         return null
     }
 
-    // Custom tooltip for pie chart
-    const CustomPieTooltip = ({ active, payload }) => {
+    // Custom tooltip for pie chart with smart positioning to avoid center
+    const CustomPieTooltip = ({ active, payload, coordinate, viewBox }) => {
         if (active && payload && payload.length) {
-                return (
-                <div className="bg-white p-3 rounded-lg shadow-xl border border-gray-200">
-                    <p className="text-sm font-semibold text-gray-900 mb-1">{payload[0].name}</p>
-                    <p className="text-base font-bold" style={{ color: payload[0].payload.fill }}>
-                        {payload[0].value} users
+            const data = payload[0].payload
+            const mouseX = coordinate?.x || 0
+            const mouseY = coordinate?.y || 0
+            
+            // Get chart dimensions from viewBox (Recharts provides this)
+            const chartWidth = viewBox?.width || 400
+            const chartHeight = viewBox?.height || 400
+            const chartCenterX = chartWidth / 2
+            const chartCenterY = chartHeight / 2
+            
+            // Calculate relative position from center
+            const dx = mouseX - chartCenterX
+            const dy = mouseY - chartCenterY
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI)
+            const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
+            
+            // Position tooltip to avoid center area (radius ~60px from center)
+            let tooltipX = mouseX
+            let tooltipY = mouseY
+            const offsetDistance = 80 // Distance to offset tooltip from center
+            
+            if (distanceFromCenter < 60) {
+                // Near center - position tooltip outside the chart center area
+                if (angle >= -45 && angle < 45) {
+                    // Right side
+                    tooltipX = chartCenterX + offsetDistance
+                    tooltipY = mouseY
+                } else if (angle >= 45 && angle < 135) {
+                    // Bottom
+                    tooltipX = mouseX
+                    tooltipY = chartCenterY + offsetDistance
+                } else if (angle >= 135 || angle < -135) {
+                    // Left side
+                    tooltipX = chartCenterX - offsetDistance - 140
+                    tooltipY = mouseY
+                } else {
+                    // Top
+                    tooltipX = mouseX
+                    tooltipY = chartCenterY - offsetDistance - 80
+                }
+            } else {
+                // Far from center - position tooltip near mouse, offset to the outer side
+                if (dx > 0) {
+                    // Right side of chart
+                    tooltipX = mouseX + 25
+                } else {
+                    // Left side of chart
+                    tooltipX = mouseX - 145
+                }
+                tooltipY = mouseY - 40
+            }
+            
+            return (
+                <div 
+                    className="bg-white p-3 rounded-lg shadow-2xl border-2 z-50 pointer-events-none"
+                    style={{ 
+                        position: 'absolute',
+                        left: `${tooltipX}px`,
+                        top: `${tooltipY}px`,
+                        transform: 'translate(-50%, -50%)',
+                        borderColor: data.fill,
+                        minWidth: '140px',
+                        maxWidth: '180px'
+                    }}
+                >
+                    <div className="flex items-center gap-2 mb-2">
+                        <div 
+                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: data.fill }}
+                        ></div>
+                        <p className="text-sm font-semibold text-gray-900">{data.name}</p>
+                    </div>
+                    <p className="text-lg font-bold mb-1" style={{ color: data.fill }}>
+                        {data.value} {data.value === 1 ? 'user' : 'users'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                        {((payload[0].value / usersChartData.total) * 100).toFixed(1)}% of total
+                    <p className="text-xs text-gray-500">
+                        {data.percentage}% of total
                     </p>
                 </div>
             )
@@ -615,35 +684,54 @@ const CRDDashboard = () => {
                             </div>
                             
                             {/* Date/Year Selector */}
-                            <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 rounded-lg p-2 border bg-gray-50" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="mb-3 sm:mb-4 rounded-lg p-3 sm:p-4 border bg-white shadow-sm" style={{ borderColor: THEME_COLORS.maroonBg }}>
                                 {donationFilter === 'weekly' && (
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                                    <div className="flex flex-col gap-3 sm:gap-4 w-full">
+                                        {/* Header with Icon */}
                                         <div className="flex items-center space-x-2">
-                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
-                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Select Date:</span>
+                                            <FaCalendarAlt className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-sm sm:text-base font-semibold" style={{ color: THEME_COLORS.maroon }}>Select Date</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="month"
-                                                value={`${selectedWeekDate.getFullYear()}-${String(selectedWeekDate.getMonth() + 1).padStart(2, '0')}`}
-                                                onChange={(e) => {
-                                                    const [year, month] = e.target.value.split('-')
-                                                    setSelectedWeekDate(new Date(parseInt(year), parseInt(month) - 1, 1))
-                                                }}
-                                                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
-                                                style={{ borderColor: THEME_COLORS.maroonBg }}
-                                            />
-                                            <input
-                                                type="date"
-                                                value={selectedWeekDate.toISOString().split('T')[0]}
-                                                onChange={(e) => setSelectedWeekDate(new Date(e.target.value))}
-                                                className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020]"
-                                                style={{ borderColor: THEME_COLORS.maroonBg }}
-                                            />
+                                        
+                                        {/* Date Inputs - Responsive Grid */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                                            {/* Month Input */}
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs sm:text-sm font-medium text-gray-700">Month & Year</label>
+                                                <input
+                                                    type="month"
+                                                    value={`${selectedWeekDate.getFullYear()}-${String(selectedWeekDate.getMonth() + 1).padStart(2, '0')}`}
+                                                    onChange={(e) => {
+                                                        const [year, month] = e.target.value.split('-')
+                                                        setSelectedWeekDate(new Date(parseInt(year), parseInt(month) - 1, 1))
+                                                    }}
+                                                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                    style={{ borderColor: THEME_COLORS.maroonBg }}
+                                                />
+                                            </div>
+                                            
+                                            {/* Date Input */}
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-xs sm:text-sm font-medium text-gray-700">Specific Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={selectedWeekDate.toISOString().split('T')[0]}
+                                                    onChange={(e) => setSelectedWeekDate(new Date(e.target.value))}
+                                                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                    style={{ borderColor: THEME_COLORS.maroonBg }}
+                                                />
+                                            </div>
                                         </div>
-                                        <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
-                                            Week: {getStartOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {getEndOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </span>
+                                        
+                                        {/* Week Display - Highlighted */}
+                                        <div className="mt-1 p-3 sm:p-4 rounded-lg border-2 bg-gradient-to-r from-[#800020]/5 to-[#9c0000]/5" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-xs sm:text-sm font-semibold text-gray-700">Week Range:</span>
+                                                <span className="text-sm sm:text-base font-bold" style={{ color: THEME_COLORS.maroon }}>
+                                                    {getStartOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {getEndOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                                 
@@ -693,11 +781,13 @@ const CRDDashboard = () => {
                                     <LoadingSpinner size="medium" />
                                 </div>
                             ) : (
-                                <div className="flex-1 w-full min-h-[200px] sm:min-h-[250px]">
+                                <div className="flex-1 w-full min-h-[200px] sm:min-h-[250px] [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart
                                             data={donationsChartData}
                                             margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                            onClick={(e) => e.preventDefault()}
+                                            style={{ outline: 'none' }}
                                         >
                                             <defs>
                                                 <linearGradient id="colorDonation" x1="0" y1="0" x2="0" y2="1">
@@ -731,6 +821,11 @@ const CRDDashboard = () => {
                                                 dot={{ fill: CHART_COLORS.primary, r: 5, strokeWidth: 2, stroke: '#fff' }}
                                                 activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }}
                                                 animationDuration={1500}
+                                                onClick={(e) => {
+                                                    e.preventDefault()
+                                                    e.stopPropagation()
+                                                }}
+                                                style={{ cursor: 'default', outline: 'none' }}
                                             />
                                         </AreaChart>
                                     </ResponsiveContainer>
@@ -787,55 +882,89 @@ const CRDDashboard = () => {
                             ) : (
                                 <>
                                     {/* Chart Container - Responsive - Refined Design */}
-                                    <div className="flex justify-center mb-3 sm:mb-4 rounded-lg p-3 sm:p-4 border relative bg-gray-50" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '180px', height: '180px' }}>
+                                    <div className="flex justify-center mb-3 sm:mb-4 rounded-lg p-3 sm:p-4 border relative bg-gradient-to-br from-gray-50 to-white [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '200px', height: '200px', userSelect: 'none', WebkitUserSelect: 'none' }}>
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
+                                            <PieChart
+                                                onClick={(e) => e.preventDefault()}
+                                                style={{ outline: 'none' }}
+                                            >
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.15"/>
+                                                        <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.2"/>
+                                                    </filter>
+                                                    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                                                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                                        <feMerge>
+                                                            <feMergeNode in="coloredBlur"/>
+                                                            <feMergeNode in="SourceGraphic"/>
+                                                        </feMerge>
                                                     </filter>
                                                     <linearGradient id="volunteerGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#800020" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#9c0000" stopOpacity="0.9"/>
+                                                        <stop offset="50%" stopColor="#9c0000" stopOpacity="1"/>
+                                                        <stop offset="100%" stopColor="#800020" stopOpacity="0.95"/>
                                                     </linearGradient>
                                                     <linearGradient id="donatorGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#D4AF37" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#B8941F" stopOpacity="0.9"/>
+                                                        <stop offset="50%" stopColor="#F5C842" stopOpacity="1"/>
+                                                        <stop offset="100%" stopColor="#B8941F" stopOpacity="0.95"/>
                                                     </linearGradient>
                                                 </defs>
                                                 <Pie
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="55%"
-                                                    outerRadius="75%"
-                                                    paddingAngle={2}
+                                                    innerRadius="50%"
+                                                    outerRadius="80%"
+                                                    paddingAngle={3}
                                                     dataKey="value"
                                                     animationBegin={0}
                                                     animationDuration={1200}
                                                     animationEasing="ease-out"
+                                                    stroke={THEME_COLORS.white}
+                                                    strokeWidth={3}
                                                 >
                                                     {pieChartData.map((entry, index) => (
                                                         <Cell 
                                                             key={`cell-${index}`} 
                                                             fill={entry.name === 'Volunteers' ? 'url(#volunteerGradient)' : 'url(#donatorGradient)'}
-                                                            stroke={THEME_COLORS.white}
-                                                            strokeWidth={2}
-                                                            style={{ filter: 'url(#shadow)' }}
+                                                            style={{ 
+                                                                filter: 'url(#shadow)',
+                                                                cursor: 'default',
+                                                                transition: 'all 0.2s ease',
+                                                                outline: 'none'
+                                                            }}
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                e.stopPropagation()
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                if (e && e.target) {
+                                                                    e.target.style.filter = 'url(#glow) brightness(1.1)'
+                                                                }
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (e && e.target) {
+                                                                    e.target.style.filter = 'url(#shadow)'
+                                                                }
+                                                            }}
                                                         />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
                                                     content={<CustomPieTooltip />}
-                                                    cursor={{ fill: 'transparent' }}
+                                                    cursor={{ fill: 'transparent', stroke: 'transparent' }}
+                                                    wrapperStyle={{ zIndex: 1000 }}
+                                                    allowEscapeViewBox={{ x: true, y: true }}
+                                                    position={{ x: 0, y: 0 }}
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Center label - Refined Size */}
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="text-center px-2">
-                                                <div className="text-lg sm:text-xl md:text-2xl font-bold" style={{ color: THEME_COLORS.maroon, lineHeight: '1.2' }}>{usersChartData.total}</div>
-                                                <div className="text-[10px] sm:text-xs font-medium mt-0.5 text-gray-600">Total Users</div>
+                                        {/* Center label - Enhanced Design */}
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                                            <div className="text-center px-2 py-1 bg-white/80 backdrop-blur-sm rounded-full border-2 shadow-lg" style={{ borderColor: THEME_COLORS.maroonBg, padding: '8px 16px' }}>
+                                                <div className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: THEME_COLORS.maroon, lineHeight: '1.1' }}>{usersChartData.total}</div>
+                                                <div className="text-[10px] sm:text-xs font-semibold mt-0.5 text-gray-700">Total Users</div>
                                             </div>
                                         </div>
                                     </div>
@@ -888,7 +1017,7 @@ const CRDDashboard = () => {
                 </div>
 
                 {/* Bottom Section - Calendar, Events, and Quick Actions (3 Column Layout) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
                     {/* Left Column - Calendar + Quick Actions - Wider */}
                     <div className="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-3 sm:gap-4">
                         {/* Calendar Card */}
@@ -903,44 +1032,54 @@ const CRDDashboard = () => {
                             <div className="flex items-center justify-between mb-4 sm:mb-5 rounded-lg p-2" style={{ backgroundColor: THEME_COLORS.whiteLight }}>
                                 <button
                                     onClick={() => navigateMonth(-1)}
-                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border transition-all duration-200 shadow-sm hover:scale-110"
+                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
                                     style={{ 
                                         backgroundColor: THEME_COLORS.white,
                                         borderColor: THEME_COLORS.maroonBg,
-                                        color: THEME_COLORS.maroon
+                                        backgroundImage: 'none'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.white;
-                                        e.target.style.borderColor = THEME_COLORS.maroonBg;
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaChevronLeft className="w-3 h-3" style={{ color: 'inherit' }} />
+                                    <FaChevronLeft className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
                                 </button>
                                 <h4 className="text-xs sm:text-sm font-bold px-2 sm:px-3" style={{ color: THEME_COLORS.maroon }}>
                                     {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                                 </h4>
                                 <button
                                     onClick={() => navigateMonth(1)}
-                                    className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border transition-all duration-200 shadow-sm hover:scale-110"
+                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
                                     style={{ 
-                                        backgroundColor: THEME_COLORS.maroon,
-                                        borderColor: THEME_COLORS.maroon,
-                                        color: THEME_COLORS.white
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroonBg,
+                                        backgroundImage: 'none'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
-                                        e.target.style.borderColor = THEME_COLORS.maroonDark;
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaChevronRight className="w-3 h-3" style={{ color: THEME_COLORS.white }} />
+                                    <FaChevronRight className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
                                 </button>
                             </div>
 
@@ -1084,11 +1223,12 @@ const CRDDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Events Feed - Height matches Calendar + Quick Actions - Narrower */}
-                    <div className="lg:col-span-8 order-1 lg:order-2">
-                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 border hover:shadow-xl transition-all duration-300" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
-                                <div className="flex items-center space-x-2 sm:space-x-3">
+                    {/* Right Column - Events Feed - Height matches Calendar + Quick Actions - List Design */}
+                    <div className="lg:col-span-8 order-1 lg:order-2 flex">
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 flex flex-col w-full h-full" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            {/* Header - Fixed */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
                                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
                                         <FaListAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
@@ -1118,127 +1258,123 @@ const CRDDashboard = () => {
                                 </button>
                             </div>
                         
+                            {/* Events List - Scrollable */}
                             {isLoading ? (
-                                <div className="py-8 sm:py-12 flex items-center justify-center min-h-[200px]">
+                                <div className="flex-1 flex items-center justify-center py-8 sm:py-12 min-h-[300px]">
                                     <LoadingSpinner size="medium" text="Loading events..." />
                                 </div>
                             ) : allEvents.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                                    {allEvents.map((event, index) => {
-                                        const startDate = new Date(event.startDate)
-                                        const endDate = event.endDate ? new Date(event.endDate) : null
-                                        const isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString()
-                                        const volunteersCount = event.volunteerRegistrations?.filter(v => ['approved', 'accepted'].includes(v.status)).length || 0
-                                        const donationsCount = event.donations?.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length || 0
-                                        
-                                        return (
-                                            <div 
-                                                key={event._id} 
-                                                className="group bg-gradient-to-br from-white to-gray-50 border-2 rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col"
-                                                style={{ 
-                                                    borderColor: THEME_COLORS.maroonBg,
-                                                    boxShadow: '0 2px 8px rgba(128, 0, 32, 0.08)'
-                                                }}
-                                            >
-                                                {/* Header Section */}
-                                                <div className="mb-4">
-                                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                                        <h4 className="font-bold text-base sm:text-lg lg:text-xl line-clamp-2 flex-1 transition-colors group-hover:text-[#9c0000]" style={{ color: THEME_COLORS.maroon }}>
-                                                            {event.title}
-                                                        </h4>
-                                                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold shadow-sm border-2 flex-shrink-0 whitespace-nowrap ${
-                                                            event.status === 'Approved' ? 'text-green-800 border-green-300 bg-green-50' :
-                                                            event.status === 'Pending' ? 'text-yellow-800 border-yellow-300 bg-yellow-50' :
-                                                            event.status === 'Upcoming' ? 'text-blue-800 border-blue-300 bg-blue-50' :
-                                                            'text-red-800 border-red-300 bg-red-50'
-                                                        }`}>
-                                                            {event.status || 'Pending'}
-                                                        </span>
-                                                    </div>
-                                                    
-                                                    <p className="text-sm sm:text-base mb-4 line-clamp-2 leading-relaxed" style={{ color: THEME_COLORS.gray, minHeight: '3rem' }}>
-                                                        {String(event.description || 'No description available').replace(/<[^>]*>/g, '').substring(0, 120)}
-                                                        {String(event.description || '').replace(/<[^>]*>/g, '').length > 120 ? '...' : ''}
-                                                    </p>
-                                                </div>
-                                                
-                                                {/* Event Details */}
-                                                <div className="space-y-3 mb-4 flex-1">
-                                                    <div className="flex items-center gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.maroonBg }}>
-                                                            <FaCalendarAlt className="w-5 h-5" style={{ color: THEME_COLORS.maroon }} />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="text-xs font-semibold mb-0.5" style={{ color: THEME_COLORS.gray }}>Event Date</div>
-                                                            <div className="text-sm font-bold truncate" style={{ color: THEME_COLORS.maroon }}>
-                                                                {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                                {isMultiDay && ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {event.location && (
-                                                        <div className="flex items-center gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.maroonBg }}>
-                                                                <svg className="w-5 h-5" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                </svg>
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="text-xs font-semibold mb-0.5" style={{ color: THEME_COLORS.gray }}>Location</div>
-                                                                <div className="text-sm font-bold truncate" style={{ color: THEME_COLORS.maroon }}>{event.location}</div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {/* Stats Row */}
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div className="p-2.5 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-                                                            <div className="text-[10px] font-semibold mb-1 text-blue-700">Volunteers</div>
-                                                            <div className="text-lg font-bold text-blue-800">{volunteersCount}</div>
-                                                        </div>
-                                                        <div className="p-2.5 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200">
-                                                            <div className="text-[10px] font-semibold mb-1 text-amber-700">Donations</div>
-                                                            <div className="text-lg font-bold text-amber-800">{donationsCount}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* Action Button */}
-                                                <button
+                                <div className="flex-1 overflow-y-auto min-h-0">
+                                    <div className="divide-y" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                        {allEvents.map((event, index) => {
+                                            const startDate = new Date(event.startDate)
+                                            const endDate = event.endDate ? new Date(event.endDate) : null
+                                            const isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString()
+                                            const volunteersCount = event.volunteerRegistrations?.filter(v => ['approved', 'accepted'].includes(v.status)).length || 0
+                                            const donationsCount = event.donations?.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length || 0
+                                            
+                                            return (
+                                                <div 
+                                                    key={event._id} 
+                                                    className="group p-4 sm:p-5 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
                                                     onClick={() => navigate('/crd-staff/events')}
-                                                    className="w-full px-4 py-3 text-sm font-bold border-2 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
                                                     style={{ 
-                                                        borderColor: THEME_COLORS.maroon, 
-                                                        color: THEME_COLORS.maroon,
-                                                        backgroundColor: 'transparent'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                                        e.target.style.color = THEME_COLORS.white;
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.target.style.backgroundColor = 'transparent';
-                                                        e.target.style.color = THEME_COLORS.maroon;
+                                                        borderColor: THEME_COLORS.maroonBg
                                                     }}
                                                 >
-                                                    <span>Review Event</span>
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        )
-                                    })}
+                                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                                        {/* Left Side - Event Info */}
+                                                        <div className="flex-1 min-w-0">
+                                                            {/* Title and Status */}
+                                                            <div className="flex items-start justify-between gap-3 mb-2">
+                                                                <h4 className="font-bold text-base sm:text-lg flex-1 transition-colors group-hover:text-[#9c0000]" style={{ color: THEME_COLORS.maroon }}>
+                                                                    {event.title}
+                                                                </h4>
+                                                                <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-sm border-2 flex-shrink-0 whitespace-nowrap ${
+                                                                    event.status === 'Approved' ? 'text-green-800 border-green-300 bg-green-50' :
+                                                                    event.status === 'Pending' ? 'text-yellow-800 border-yellow-300 bg-yellow-50' :
+                                                                    event.status === 'Upcoming' ? 'text-blue-800 border-blue-300 bg-blue-50' :
+                                                                    'text-red-800 border-red-300 bg-red-50'
+                                                                }`}>
+                                                                    {event.status || 'Pending'}
+                                                                </span>
+                                                            </div>
+                                                            
+                                                            {/* Description */}
+                                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
+                                                                {String(event.description || 'No description available').replace(/<[^>]*>/g, '').substring(0, 150)}
+                                                                {String(event.description || '').replace(/<[^>]*>/g, '').length > 150 ? '...' : ''}
+                                                            </p>
+                                                            
+                                                            {/* Event Details Row */}
+                                                            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                                                                {/* Date */}
+                                                                <div className="flex items-center gap-2">
+                                                                    <FaCalendarAlt className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                                                    <div>
+                                                                        <div className="text-xs font-semibold text-gray-600">Date</div>
+                                                                        <div className="text-sm font-bold" style={{ color: THEME_COLORS.maroon }}>
+                                                                            {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                            {isMultiDay && ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                
+                                                                {/* Location */}
+                                                                {event.location && (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <svg className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        </svg>
+                                                                        <div>
+                                                                            <div className="text-xs font-semibold text-gray-600">Location</div>
+                                                                            <div className="text-sm font-bold truncate max-w-[200px]" style={{ color: THEME_COLORS.maroon }}>{event.location}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                
+                                                                {/* Stats */}
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <FaUsers className="w-4 h-4 text-blue-600" />
+                                                                        <div>
+                                                                            <div className="text-xs text-gray-600">Volunteers</div>
+                                                                            <div className="text-sm font-bold text-blue-700">{volunteersCount}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <FaHandHoldingHeart className="w-4 h-4 text-amber-600" />
+                                                                        <div>
+                                                                            <div className="text-xs text-gray-600">Donations</div>
+                                                                            <div className="text-sm font-bold text-amber-700">{donationsCount}</div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* Right Side - Action Arrow */}
+                                                        <div className="flex items-center justify-end sm:justify-start sm:pt-1">
+                                                            <svg className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="text-center py-12 sm:py-16">
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
-                                        <FaListAlt className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
+                                <div className="flex-1 flex items-center justify-center py-12 sm:py-16 min-h-[300px]">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
+                                            <FaListAlt className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
+                                        </div>
+                                        <p className="font-medium text-base sm:text-lg mb-1" style={{ color: THEME_COLORS.gray }}>No events found</p>
+                                        <p className="text-sm" style={{ color: THEME_COLORS.grayLight }}>Events will appear here once created</p>
                                     </div>
-                                    <p className="font-medium text-base sm:text-lg mb-1" style={{ color: THEME_COLORS.gray }}>No events found</p>
-                                    <p className="text-sm" style={{ color: THEME_COLORS.grayLight }}>Events will appear here once created</p>
                                 </div>
                             )}
                         </div>
