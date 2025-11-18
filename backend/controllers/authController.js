@@ -326,6 +326,11 @@ export const register = async (req, res) => {
                             });
                         });
                 }
+            } catch (emailError) {
+                // Catch any errors in the email sending process
+                console.error(`❌ Error in email sending process for ${email}:`, emailError);
+                // Don't throw - registration already succeeded
+            }
         });
 
     } catch (error) {
