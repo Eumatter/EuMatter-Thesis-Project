@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContent } from '../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import EnvergaLogo from '../assets/enverga-logo.png';
 import { formatNotificationPayload, getNotificationIcon, getNotificationColorClass } from '../utils/notificationFormatter.js';
 import { 
     FaHome, 
@@ -409,15 +408,8 @@ const Header = () => {
         <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible`}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
-                    {/* Left side - Logo and App Name */}
-                    <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 flex-shrink-0">
-                            <img 
-                                src={EnvergaLogo} 
-                                alt="Enverga University Logo" 
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
+                    {/* Left side - App Name */}
+                    <div className="flex items-center min-w-0 flex-1">
                         <div className="min-w-0 flex-1 overflow-hidden">
                             <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-extrabold text-[#800000] truncate tracking-tight leading-tight">EUMATTER</h1>
                             <p className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm xl:text-base 2xl:text-lg font-medium text-[#800000] uppercase tracking-wide truncate leading-tight mt-0.5">Community Relations Department</p>
@@ -985,13 +977,6 @@ const Header = () => {
                             {/* Header with close button - Enhanced design */}
                             <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-md">
-                                        <img 
-                                            src={EnvergaLogo} 
-                                            alt="Enverga University Logo" 
-                                            className="w-7 h-7 object-contain"
-                                        />
-                                    </div>
                                     <div>
                                         <div className="text-base font-extrabold tracking-tight">EUMATTER</div>
                                         <div className="text-xs opacity-90 font-medium">Navigation Menu</div>

@@ -754,8 +754,8 @@ export const crdCreateEvent = async (req, res) => {
         if (isNaN(start.getTime()) || isNaN(end.getTime())) return res.status(400).json({ message: "Invalid start or end date" });
         if (end <= start) return res.status(400).json({ message: "End date/time must be after start date/time" });
 
-        const allowedInitial = ["Approved", "Upcoming"];
-        const initialStatus = allowedInitial.includes(status) ? status : "Approved";
+        const allowedInitial = ["Approved", "Upcoming", "Pending"];
+        const initialStatus = allowedInitial.includes(status) ? status : "Pending";
 
         const newEvent = new eventModel({
             title,

@@ -44,7 +44,7 @@ const EventManagement = () => {
         endDate: '',
         isOpenForDonation: false,
         isOpenForVolunteer: false,
-        status: 'Approved'
+        status: 'Pending'
     })
     const [createImageFile, setCreateImageFile] = useState(null)
     const [createDocFile, setCreateDocFile] = useState(null)
@@ -159,6 +159,7 @@ const EventManagement = () => {
             if (data.message) {
                 toast.success(data.message)
                 setShowModal(false)
+                setShowReviewModal(false)
                 setSelectedEvent(null)
                 setReviewComment('')
                 fetchEvents() // Refresh events
@@ -345,7 +346,7 @@ const EventManagement = () => {
             if (data?.event?._id) {
                 toast.success('Event created')
                 setShowCreateModal(false)
-                setCreateForm({ title: '', description: '', location: '', startDate: '', endDate: '', isOpenForDonation: false, isOpenForVolunteer: false, status: 'Approved' })
+                setCreateForm({ title: '', description: '', location: '', startDate: '', endDate: '', isOpenForDonation: false, isOpenForVolunteer: false, status: 'Pending' })
                 setCreateImageFile(null)
                 setCreateDocFile(null)
                 fetchEvents()
@@ -656,10 +657,18 @@ const EventManagement = () => {
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',
-                                outline: 'none'
+                                outline: 'none',
+                                transition: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                                // No hover effect - keep same styling
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
                             }}
                         >
-                            <FaClock className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <FaClock className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
                             <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                 Pending Review
                             </span>
@@ -673,10 +682,18 @@ const EventManagement = () => {
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',
-                                outline: 'none'
+                                outline: 'none',
+                                transition: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                                // No hover effect - keep same styling
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
                             }}
                         >
-                            <FaCheckCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <FaCheckCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
                             <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                 Approved
                             </span>
@@ -690,10 +707,18 @@ const EventManagement = () => {
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',
-                                outline: 'none'
+                                outline: 'none',
+                                transition: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                                // No hover effect - keep same styling
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
                             }}
                         >
-                            <FaTimesCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <FaTimesCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
                             <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                 Declined
                             </span>
@@ -711,7 +736,7 @@ const EventManagement = () => {
                         <LoadingSpinner size="medium" text="Loading events..." />
                     </div>
                 ) : paginatedEvents.length > 0 ? (
-                    /* Table View */
+                        /* Table View */
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -782,7 +807,9 @@ const EventManagement = () => {
                                                                 className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                 style={{ 
                                                                     backgroundColor: '#ffffff',
-                                                                    color: '#800020'
+                                                                    color: '#800020',
+                                                                    border: 'none',
+                                                                    outline: 'none'
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -806,11 +833,13 @@ const EventManagement = () => {
                                                         )}
                                                         {event.status === 'Pending' && (
                                                             <button
-                                                                onClick={() => openReviewDetailsModal(event)}
+                                                                    onClick={() => openReviewDetailsModal(event)}
                                                                 className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                 style={{ 
                                                                     backgroundColor: '#ffffff',
-                                                                    color: '#800020'
+                                                                    color: '#800020',
+                                                                    border: 'none',
+                                                                    outline: 'none'
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -837,7 +866,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -861,7 +892,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -876,7 +909,7 @@ const EventManagement = () => {
                                                                         const icon = e.currentTarget.querySelector('svg, .react-icons');
                                                                         if (icon) icon.style.color = '#800020';
                                                                     }}
-                                                                    title="Update Status"
+                                                                    title="Edit"
                                                                 >
                                                                     <FaEdit className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
@@ -885,7 +918,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -913,7 +948,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -937,7 +974,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -961,7 +1000,9 @@ const EventManagement = () => {
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
-                                                                        color: '#800020'
+                                                                        color: '#800020',
+                                                                        border: 'none',
+                                                                        outline: 'none'
                                                                     }}
                                                                     onMouseEnter={(e) => {
                                                                         e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
@@ -1888,9 +1929,9 @@ const EventManagement = () => {
             )}
             {/* Review Details Modal - Enhanced for better workflow */}
             {showReviewModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-md flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto border border-gray-200">
-                        <div className="p-8">
+                <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-md flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }} onClick={closeReviewDetailsModal}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200" onClick={(e) => e.stopPropagation()}>
+                        <div className="p-6 sm:p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h3 className="text-2xl font-bold text-gray-900">Review Event</h3>
@@ -1898,7 +1939,7 @@ const EventManagement = () => {
                                 </div>
                                 <button
                                     onClick={closeReviewDetailsModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg"
+                                    className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all duration-200 p-2 rounded-lg"
                                     title="Close"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1920,11 +1961,11 @@ const EventManagement = () => {
                                     }
                                 }
                                 return imageUrl ? (
-                                    <div className="mb-6 rounded-xl overflow-hidden border border-gray-200">
+                                    <div className="mb-6 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
                                         <img 
                                             src={imageUrl} 
                                             alt={selectedEvent.title}
-                                            className="w-full h-64 object-cover"
+                                            className="w-full h-72 object-cover"
                                             onError={(e) => {
                                                 e.target.onerror = null;
                                                 e.target.style.display = 'none';
@@ -2074,10 +2115,13 @@ const EventManagement = () => {
                             )}
 
                             {/* Action Buttons */}
-                            <div className="flex space-x-4 pt-4 border-t border-gray-200">
+                            <div className="flex space-x-4 pt-6 border-t border-gray-200 mt-6">
                                 <Button
-                                    onClick={() => handleReviewEvent(selectedEvent._id, 'Approved')}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200"
+                                    onClick={async () => {
+                                        await handleReviewEvent(selectedEvent._id, 'Approved')
+                                        closeReviewDetailsModal()
+                                    }}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -2085,11 +2129,11 @@ const EventManagement = () => {
                                     <span>Approve</span>
                                 </Button>
                                 <Button
-                                    onClick={() => {
+                                    onClick={async () => {
+                                        await handleReviewEvent(selectedEvent._id, 'Declined')
                                         closeReviewDetailsModal()
-                                        openReviewModal(selectedEvent)
                                     }}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200"
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
