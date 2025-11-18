@@ -20,7 +20,8 @@ import {
     FaUserCheck,
     FaChartLine,
     FaListAlt,
-    FaNewspaper
+    FaNewspaper,
+    FaTrophy
 } from 'react-icons/fa'
 import {
     PieChart,
@@ -152,8 +153,8 @@ const CRDDashboard = () => {
             case 'view-donations':
                 navigate('/crd-staff/donations')
                 break
-            case 'manage-volunteers':
-                navigate('/crd-staff/volunteers')
+            case 'leaderboards':
+                navigate('/crd-staff/leaderboards')
                 break
             default:
                 break
@@ -413,7 +414,7 @@ const CRDDashboard = () => {
         return null
     }
 
-    // Custom tooltip for pie chart with smart positioning to avoid center
+    // Custom tooltip for pie chart with smart positioning to avoid center - Enhanced for readability
     const CustomPieTooltip = ({ active, payload, coordinate, viewBox }) => {
         if (active && payload && payload.length) {
             const data = payload[0].payload
@@ -432,67 +433,83 @@ const CRDDashboard = () => {
             const angle = Math.atan2(dy, dx) * (180 / Math.PI)
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy)
             
-            // Position tooltip to avoid center area (radius ~60px from center)
+            // Position tooltip to avoid center area (radius ~70px from center to protect center label)
             let tooltipX = mouseX
             let tooltipY = mouseY
-            const offsetDistance = 80 // Distance to offset tooltip from center
+            const centerProtectionRadius = 70 // Radius to protect center area
+            const tooltipOffset = 100 // Distance to position tooltip from chart edge
+            const tooltipWidth = 160 // Approximate tooltip width for positioning
             
-            if (distanceFromCenter < 60) {
-                // Near center - position tooltip outside the chart center area
+            if (distanceFromCenter < centerProtectionRadius) {
+                // Near center - position tooltip completely outside the chart center area
                 if (angle >= -45 && angle < 45) {
-                    // Right side
-                    tooltipX = chartCenterX + offsetDistance
-                    tooltipY = mouseY
+                    // Right side - position to the right of chart
+                    tooltipX = chartCenterX + tooltipOffset
+                    tooltipY = chartCenterY
                 } else if (angle >= 45 && angle < 135) {
+                    // Bottom - position below chart center
+                    tooltipX = chartCenterX
+                    tooltipY = chartCenterY + tooltipOffset
+                } else if (angle >= 135 || angle < -135) {
+                    // Left side - position to the left of chart
+                    tooltipX = chartCenterX - tooltipOffset
+                    tooltipY = chartCenterY
+                } else {
+                    // Top - position above chart center
+                    tooltipX = chartCenterX
+                    tooltipY = chartCenterY - tooltipOffset - 30
+                }
+            } else {
+                // Far from center - position tooltip near mouse but offset to outer edge
+                const segmentAngle = Math.atan2(dy, dx) * (180 / Math.PI)
+                const radialOffset = 30 // Offset along the radial direction
+                
+                if (segmentAngle >= -45 && segmentAngle < 45) {
+                    // Right side
+                    tooltipX = mouseX + radialOffset
+                    tooltipY = mouseY
+                } else if (segmentAngle >= 45 && segmentAngle < 135) {
                     // Bottom
                     tooltipX = mouseX
-                    tooltipY = chartCenterY + offsetDistance
-                } else if (angle >= 135 || angle < -135) {
+                    tooltipY = mouseY + radialOffset
+                } else if (segmentAngle >= 135 || segmentAngle < -135) {
                     // Left side
-                    tooltipX = chartCenterX - offsetDistance - 140
+                    tooltipX = mouseX - radialOffset - (tooltipWidth / 2)
                     tooltipY = mouseY
                 } else {
                     // Top
                     tooltipX = mouseX
-                    tooltipY = chartCenterY - offsetDistance - 80
+                    tooltipY = mouseY - radialOffset - 60
                 }
-            } else {
-                // Far from center - position tooltip near mouse, offset to the outer side
-                if (dx > 0) {
-                    // Right side of chart
-                    tooltipX = mouseX + 25
-                } else {
-                    // Left side of chart
-                    tooltipX = mouseX - 145
-                }
-                tooltipY = mouseY - 40
             }
             
             return (
                 <div 
-                    className="bg-white p-3 rounded-lg shadow-2xl border-2 z-50 pointer-events-none"
+                    className="bg-white p-3.5 rounded-xl shadow-2xl border-2 z-50 pointer-events-none backdrop-blur-sm"
                     style={{ 
                         position: 'absolute',
                         left: `${tooltipX}px`,
                         top: `${tooltipY}px`,
                         transform: 'translate(-50%, -50%)',
                         borderColor: data.fill,
-                        minWidth: '140px',
-                        maxWidth: '180px'
+                        minWidth: '160px',
+                        maxWidth: '200px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
                     }}
                 >
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2.5 mb-2.5">
                         <div 
-                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            className="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm"
                             style={{ backgroundColor: data.fill }}
                         ></div>
-                        <p className="text-sm font-semibold text-gray-900">{data.name}</p>
+                        <p className="text-sm font-bold text-gray-900">{data.name}</p>
                     </div>
-                    <p className="text-lg font-bold mb-1" style={{ color: data.fill }}>
+                    <p className="text-xl font-bold mb-1.5" style={{ color: data.fill }}>
                         {data.value} {data.value === 1 ? 'user' : 'users'}
                     </p>
-                    <p className="text-xs text-gray-500">
-                        {data.percentage}% of total
+                    <p className="text-xs font-medium text-gray-600">
+                        {data.percentage}% of total users
                     </p>
                 </div>
             )
@@ -863,7 +880,7 @@ const CRDDashboard = () => {
                             ) : (
                                 <div className="flex-1 flex flex-col gap-4 sm:gap-5">
                                     {/* Chart Container - Responsive Doughnut Chart with Center Label */}
-                                    <div className="flex justify-center items-center rounded-lg border bg-white p-3 sm:p-4 md:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '200px', height: '200px', maxHeight: '300px', userSelect: 'none', WebkitUserSelect: 'none' }}>
+                                    <div className="flex justify-center items-center rounded-lg border bg-white p-2 sm:p-3 md:p-4 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '240px', height: '240px', maxHeight: '320px', userSelect: 'none', WebkitUserSelect: 'none' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart
                                                 onClick={(e) => e.preventDefault()}
@@ -871,10 +888,10 @@ const CRDDashboard = () => {
                                             >
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.2"/>
+                                                        <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.25"/>
                                                     </filter>
                                                     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                                                         <feMerge>
                                                             <feMergeNode in="coloredBlur"/>
                                                             <feMergeNode in="SourceGraphic"/>
@@ -895,15 +912,15 @@ const CRDDashboard = () => {
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="50%"
-                                                    outerRadius="75%"
-                                                    paddingAngle={3}
+                                                    innerRadius="40%"
+                                                    outerRadius="85%"
+                                                    paddingAngle={4}
                                                     dataKey="value"
                                                     animationBegin={0}
-                                                    animationDuration={1500}
+                                                    animationDuration={1800}
                                                     animationEasing="ease-in-out"
                                                     stroke={THEME_COLORS.white}
-                                                    strokeWidth={2.5}
+                                                    strokeWidth={3}
                                                     startAngle={90}
                                                     endAngle={450}
                                                 >
@@ -913,8 +930,8 @@ const CRDDashboard = () => {
                                                             fill={entry.name === 'Volunteers' ? 'url(#volunteerGradient)' : 'url(#donatorGradient)'}
                                                             style={{ 
                                                                 filter: 'url(#shadow)',
-                                                                cursor: 'default',
-                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
                                                                 outline: 'none'
                                                             }}
                                                             onClick={(e) => {
@@ -923,16 +940,18 @@ const CRDDashboard = () => {
                                                             }}
                                                             onMouseEnter={(e) => {
                                                                 if (e && e.target) {
-                                                                    e.target.style.filter = 'url(#glow) brightness(1.2)'
-                                                                    e.target.style.transform = 'scale(1.08)'
-                                                                    e.target.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                                    e.target.style.filter = 'url(#glow) brightness(1.25) drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
+                                                                    e.target.style.transform = 'scale(1.1) translateZ(0)'
+                                                                    e.target.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                                    e.target.style.zIndex = '10'
                                                                 }
                                                             }}
                                                             onMouseLeave={(e) => {
                                                                 if (e && e.target) {
                                                                     e.target.style.filter = 'url(#shadow)'
-                                                                    e.target.style.transform = 'scale(1)'
-                                                                    e.target.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                                    e.target.style.transform = 'scale(1) translateZ(0)'
+                                                                    e.target.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                                    e.target.style.zIndex = '1'
                                                                 }
                                                             }}
                                                         />
@@ -947,14 +966,14 @@ const CRDDashboard = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Center Label - Active and Total Users */}
+                                        {/* Center Label - Active and Total Users - Smaller Text */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                                            <div className="text-center px-3 py-2">
-                                                <div className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1" style={{ color: THEME_COLORS.gold, lineHeight: '1.2' }}>
+                                            <div className="text-center px-2 py-1">
+                                                <div className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: THEME_COLORS.gold, lineHeight: '1.1' }}>
                                                     {usersChartData.volunteers + usersChartData.donators}
                                                 </div>
-                                                <div className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.maroon }}>Active</div>
-                                                <div className="text-[10px] sm:text-xs font-medium mt-1.5" style={{ color: THEME_COLORS.gray }}>Total Users</div>
+                                                <div className="text-[10px] sm:text-xs font-semibold" style={{ color: THEME_COLORS.maroon }}>Active</div>
+                                                <div className="text-[9px] sm:text-[10px] font-medium mt-1" style={{ color: THEME_COLORS.gray }}>Total Users</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1153,82 +1172,142 @@ const CRDDashboard = () => {
                             <div className="space-y-2">
                                 <button
                                     onClick={() => handleQuickAction('review-events')}
-                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative overflow-hidden"
                                     style={{ 
-                                        backgroundColor: THEME_COLORS.maroon,
-                                        boxShadow: '0 2px 4px rgba(128, 0, 32, 0.2)'
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroon,
+                                        color: THEME_COLORS.maroon,
+                                        boxShadow: '0 1px 3px rgba(128, 0, 32, 0.1)'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
-                                        e.target.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.white;
+                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
+                                        if (span) span.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.boxShadow = '0 2px 4px rgba(128, 0, 32, 0.2)';
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.maroon;
+                                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(128, 0, 32, 0.1)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
+                                        if (span) span.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    <span>Review Events</span>
+                                    <FaCheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
+                                    <span className="transition-colors duration-200" style={{ color: THEME_COLORS.maroon }}>Review Events</span>
                                 </button>
                                 
                                 <button
                                     onClick={() => handleQuickAction('view-donations')}
-                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative overflow-hidden"
                                     style={{ 
-                                        backgroundColor: THEME_COLORS.maroon,
-                                        boxShadow: '0 2px 4px rgba(128, 0, 32, 0.2)'
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroon,
+                                        color: THEME_COLORS.maroon,
+                                        boxShadow: '0 1px 3px rgba(128, 0, 32, 0.1)'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
-                                        e.target.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.white;
+                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
+                                        if (span) span.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.boxShadow = '0 2px 4px rgba(128, 0, 32, 0.2)';
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.maroon;
+                                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(128, 0, 32, 0.1)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
+                                        if (span) span.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaHandHoldingHeart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    <span>View Donations</span>
+                                    <FaHandHoldingHeart className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
+                                    <span className="transition-colors duration-200" style={{ color: THEME_COLORS.maroon }}>View Donations</span>
                                 </button>
                                 
                                 <button
-                                    onClick={() => handleQuickAction('manage-volunteers')}
-                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    onClick={() => handleQuickAction('leaderboards')}
+                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative overflow-hidden"
                                     style={{ 
-                                        backgroundColor: THEME_COLORS.maroon,
-                                        boxShadow: '0 2px 4px rgba(128, 0, 32, 0.2)'
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroon,
+                                        color: THEME_COLORS.maroon,
+                                        boxShadow: '0 1px 3px rgba(128, 0, 32, 0.1)'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
-                                        e.target.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.white;
+                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
+                                        if (span) span.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.boxShadow = '0 2px 4px rgba(128, 0, 32, 0.2)';
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.maroon;
+                                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(128, 0, 32, 0.1)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
+                                        if (span) span.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaUsers className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    <span>Manage Volunteers</span>
+                                    <FaTrophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
+                                    <span className="transition-colors duration-200" style={{ color: THEME_COLORS.maroon }}>Leaderboards</span>
                                 </button>
                                 
                                 <button
                                     onClick={() => handleQuickAction('generate-reports')}
-                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative overflow-hidden"
                                     style={{ 
-                                        backgroundColor: THEME_COLORS.maroon,
-                                        boxShadow: '0 2px 4px rgba(128, 0, 32, 0.2)'
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroon,
+                                        color: THEME_COLORS.maroon,
+                                        boxShadow: '0 1px 3px rgba(128, 0, 32, 0.1)'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroonDark;
-                                        e.target.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.white;
+                                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(128, 0, 32, 0.3)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
+                                        if (span) span.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.boxShadow = '0 2px 4px rgba(128, 0, 32, 0.2)';
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        e.currentTarget.style.color = THEME_COLORS.maroon;
+                                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(128, 0, 32, 0.1)';
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        const span = e.currentTarget.querySelector('span');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
+                                        if (span) span.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    <FaChartLine className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    <span>Generate Reports</span>
+                                    <FaChartLine className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
+                                    <span className="transition-colors duration-200" style={{ color: THEME_COLORS.maroon }}>Generate Reports</span>
                                 </button>
                             </div>
                         </div>
@@ -1284,6 +1363,23 @@ const CRDDashboard = () => {
                                             const volunteersCount = event.volunteerRegistrations?.filter(v => ['approved', 'accepted'].includes(v.status)).length || 0
                                             const donationsCount = event.donations?.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length || 0
                                             
+                                            // Determine image URL - handle base64, data URLs, and regular URLs
+                                            let imageUrl = null;
+                                            if (event.image) {
+                                                // If it's already a data URL, use it as-is
+                                                if (event.image.startsWith('data:image')) {
+                                                    imageUrl = event.image;
+                                                }
+                                                // If it's a URL (http:// or https://), use it as-is
+                                                else if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
+                                                    imageUrl = event.image;
+                                                }
+                                                // Otherwise, assume it's base64 data and prepend data URL prefix
+                                                else {
+                                                    imageUrl = `data:image/jpeg;base64,${event.image}`;
+                                                }
+                                            }
+
                                             return (
                                                 <div 
                                                     key={event._id} 
@@ -1294,7 +1390,42 @@ const CRDDashboard = () => {
                                                     }}
                                                 >
                                                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                                        {/* Left Side - Event Info */}
+                                                        {/* Left Side - Event Image */}
+                                                        <div className="w-full sm:w-32 md:w-40 lg:w-48 flex-shrink-0">
+                                                            {imageUrl ? (
+                                                                <div className="w-full h-40 sm:h-32 md:h-36 lg:h-40 rounded-lg overflow-hidden border-2 bg-gray-100 group-hover:shadow-md transition-all duration-200 relative" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                                    <img
+                                                                        src={imageUrl}
+                                                                        alt={event.title}
+                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.style.display = 'none';
+                                                                            const fallback = e.target.parentElement.querySelector('.image-fallback');
+                                                                            if (fallback) {
+                                                                                fallback.style.display = 'flex';
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    <div className="image-fallback absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200" style={{ display: 'none' }}>
+                                                                        <svg className="w-10 h-10 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                        </svg>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-full h-40 sm:h-32 md:h-36 lg:h-40 rounded-lg border-2 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden group-hover:shadow-md transition-all duration-200" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                                                    <div className="text-center p-4">
+                                                                        <svg className="w-10 h-10 sm:w-8 sm:h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                        </svg>
+                                                                        <p className="mt-1.5 text-xs text-gray-500 hidden sm:block">No image</p>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Middle Section - Event Info */}
                                                         <div className="flex-1 min-w-0">
                                                             {/* Title and Status */}
                                                             <div className="flex items-start justify-between gap-3 mb-2">

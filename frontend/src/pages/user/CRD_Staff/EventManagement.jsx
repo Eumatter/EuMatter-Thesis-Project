@@ -12,6 +12,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
+import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
 
 const EventManagement = () => {
     const navigate = useNavigate()
@@ -26,7 +27,6 @@ const EventManagement = () => {
     const [sortOrder, setSortOrder] = useState('desc')
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(10)
-    const [viewMode, setViewMode] = useState('card') // 'card' or 'table'
     
     // Modal states
     const [selectedEvent, setSelectedEvent] = useState(null)
@@ -590,36 +590,6 @@ const EventManagement = () => {
 
                         {/* Controls */}
                         <div className="flex items-center space-x-4">
-                            {/* View Toggle */}
-                            <div className="flex items-center space-x-2 border border-gray-300 rounded-lg p-1 bg-gray-50">
-                                <button
-                                    onClick={() => setViewMode('card')}
-                                    className={`p-2 rounded-md transition-all ${
-                                        viewMode === 'card' 
-                                            ? 'bg-white text-red-900 shadow-sm' 
-                                            : 'text-gray-600 hover:text-gray-900'
-                                    }`}
-                                    title="Card View"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                                    </svg>
-                                </button>
-                                <button
-                                    onClick={() => setViewMode('table')}
-                                    className={`p-2 rounded-md transition-all ${
-                                        viewMode === 'table' 
-                                            ? 'bg-white text-red-900 shadow-sm' 
-                                            : 'text-gray-600 hover:text-gray-900'
-                                    }`}
-                                    title="Table View"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                </button>
-                            </div>
-
                             {/* Sort */}
                             <div className="flex items-center space-x-2">
                                 <label className="text-sm font-medium text-gray-700">Sort by:</label>
@@ -726,296 +696,7 @@ const EventManagement = () => {
                         <LoadingSpinner size="medium" text="Loading events..." />
                     </div>
                 ) : paginatedEvents.length > 0 ? (
-                    viewMode === 'card' ? (
-                        <div className="space-y-6">
-                            {paginatedEvents.map((event) => (
-                                <div key={event._id} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-red-300">
-                                    <div className="p-6">
-                                        <div className="flex items-start space-x-4">
-                                            <div className="flex-1">
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex-1">
-                                                    <div className="flex items-center space-x-3 mb-2">
-                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-                                                        <h3 className="text-xl font-bold text-gray-900">{event.title}</h3>
-                                                        <div className="flex items-center space-x-2 mt-1 sm:mt-0">
-                                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(event.status)}`}>
-                                                                {getStatusIcon(event.status)}
-                                                                <span className="ml-1">{event.status || 'Pending'}</span>
-                                                            </span>
-                                                            {event.isOpenForVolunteer && (
-                                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                                    </svg>
-                                                                    {event.volunteers?.length || 0} Volunteers
-                                                                </span>
-                                                            )}
-                                                            {event.isOpenForDonation && (
-                                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                    </svg>
-                                                                    ₱{event.donations?.reduce((total, d) => total + (d.amount || 0), 0).toLocaleString() || '0'}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    </div>
-                                                    {event.description && (
-                                                        <div 
-                                                            className="text-gray-600 mb-4 line-clamp-2 prose prose-sm max-w-none"
-                                                            dangerouslySetInnerHTML={{ 
-                                                                __html: event.description
-                                                                    .replace(/&lt;/g, '<')
-                                                                    .replace(/&gt;/g, '>')
-                                                                    .replace(/&amp;/g, '&')
-                                                            }}
-                                                        />
-                                                    )}
-                                                    
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
-                                                <div className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                            <span className="font-medium text-gray-700">Location:</span>
-                                                            <span className="ml-1">{event.location}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                            <span className="font-medium text-gray-700">Date:</span>
-                                                            <span className="ml-1">{formatDate(event.startDate)} - {formatDate(event.endDate)}</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                    </svg>
-                                                            <span className="font-medium text-gray-700">Department:</span>
-                                                            <span className="ml-1">{event.createdBy?.name || 'Unknown Department'}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                                <div className="flex flex-col items-end space-y-3">
-                                            {event.status === 'Approved' && (
-                                                <div className="flex space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => openEventDetailsModal(event)}
-                                                        className="border-red-600 text-red-600 hover:bg-red-50"
-                                                    >
-                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                        </svg>
-                                                        View Event
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleStatusUpdate(event, 'Upcoming')}
-                                                        disabled={isUpdatingStatus}
-                                                        className={`border-gray-600 text-gray-600 hover:bg-gray-50 ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                    >
-                                                        {isUpdatingStatus ? (
-                                                            <>
-                                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                                </svg>
-                                                                Updating...
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                </svg>
-                                                                Update
-                                                            </>
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            {event.status === 'Proposed' && (
-                                                <div className="flex flex-col space-y-2">
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleAcceptEvent(event._id)}
-                                                        className="bg-red-900 hover:bg-red-800 text-white transition-all duration-200 hover:shadow-md w-full"
-                                                    >
-                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
-                                                        </svg>
-                                                        Accept for Review
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            {event.status === 'Pending' && (
-                                                <div className="flex flex-col space-y-2">
-                                                    {/* Primary Action: Review Details - First Step */}
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => openReviewDetailsModal(event)}
-                                                        className="bg-red-900 hover:bg-red-800 text-white transition-all duration-200 hover:shadow-md w-full font-semibold"
-                                                    >
-                                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                        </svg>
-                                                        Review Details (First Step)
-                                                    </Button>
-                                                    <div className="text-xs text-gray-500 text-center mb-1">
-                                                        Review event details before making a decision
-                                                    </div>
-                                                    <div className="flex space-x-2">
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => handleReviewEvent(event._id, 'Approved')}
-                                                            className="bg-green-600 hover:bg-green-700 text-white transition-all duration-200 hover:shadow-md flex-1"
-                                                        >
-                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                            Approve
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => openReviewModal(event)}
-                                                            className="bg-red-600 hover:bg-red-700 text-white transition-all duration-200 hover:shadow-md flex-1"
-                                                        >
-                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                            </svg>
-                                                            Decline
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                                    {/* Update Status and Delete actions for CRD */}
-                                                    <div className="flex flex-col space-y-2">
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => openStatusUpdate(event)}
-                                                            className="bg-gray-700 hover:bg-gray-800 text-white"
-                                                        >
-                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                            </svg>
-                                                            Update Status
-                                                        </Button>
-                                                        {/* Temporary Delete Button */}
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => openDeleteModal(event)}
-                                                            className="bg-red-600 hover:bg-red-700 text-white border border-red-700"
-                                                        >
-                                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
-                                                            Delete (Temp)
-                                                        </Button>
-                                                    </div>
-                                                    
-                                                    <div className="text-xs text-gray-500">
-                                                        Created: {formatDateTime(event.createdAt)}
-                                                    </div>
-                                        </div>
-                                    </div>
-
-                                            {/* Event Features */}
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {event.isOpenForVolunteer && (
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                        </svg>
-                                                        Volunteer Opportunities
-                                                    </span>
-                                                )}
-                                                {event.isOpenForDonation && (
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                                                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                                        </svg>
-                                                        Donation Opportunities
-                                                    </span>
-                                                )}
-                                        </div>
-                                        
-                                            {/* Review Details */}
-                                        {event.reviewedAt && (
-                                                <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-                                                    <h4 className="font-medium text-gray-900 mb-2">Review Details</h4>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                                            <span className="text-gray-600">Reviewed on:</span>
-                                                            <span className="ml-2 font-medium text-gray-900">{formatDateTime(event.reviewedAt)}</span>
-                                                        </div>
-                                                {event.reviewedBy && (
-                                                            <div>
-                                                                <span className="text-gray-600">Reviewed by:</span>
-                                                                <span className="ml-2 font-medium text-gray-900">{event.reviewedBy?.name || 'Unknown Reviewer'}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                                </div>
-                                            )}
-
-                                    {/* Proposal Document */}
-                                    {event.proposalDocument && (
-                                        <div className="bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-xl p-5 border-2 border-gray-200 hover:shadow-lg transition-all duration-300 group">
-                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                                {/* Document Info */}
-                                                <div className="flex items-center space-x-4 flex-1 min-w-0">
-                                                    {/* PDF Icon Container */}
-                                                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl flex items-center justify-center shadow-md group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                        </svg>
-                                                        </div>
-                                                    {/* Document Details */}
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="text-base font-bold text-gray-900 mb-1 group-hover:text-[#800000] transition-colors duration-200">
-                                                            Proposal Document
-                                                        </h4>
-                                                        <div className="flex flex-wrap items-center gap-2 text-sm">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                                                                PDF
-                                                            </span>
-                                                            <span className="text-gray-600">Click to download the event proposal</span>
-                                                    </div>
-                                                    </div>
-                                                </div>
-                                                {/* Download Button */}
-                                                <button
-                                                onClick={() => {
-                                                    const link = document.createElement('a')
-                                                    link.href = `data:application/pdf;base64,${event.proposalDocument}`
-                                                    link.download = `${event.title}_proposal.pdf`
-                                                    link.click()
-                                                }}
-                                                    className="flex-shrink-0 inline-flex items-center justify-center px-5 py-2.5 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:from-[#9c0000] hover:to-[#800000] transform hover:scale-105 active:scale-95 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-2"
-                                            >
-                                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                                </svg>
-                                                    <span>Download</span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    ) : (
-                        /* Table View */
+                    /* Table View */
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -1081,80 +762,93 @@ const EventManagement = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                     <div className="flex items-center justify-end space-x-2">
                                                         {event.status === 'Proposed' && (
-                                                            <Button
-                                                                size="sm"
+                                                            <button
                                                                 onClick={() => handleAcceptEvent(event._id)}
-                                                                className="bg-red-900 hover:bg-red-800 text-white"
+                                                                className="p-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors duration-200"
+                                                                title="Accept for Review"
                                                             >
-                                                                Accept
-                                                            </Button>
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                                </svg>
+                                                            </button>
                                                         )}
                                                         {event.status === 'Pending' && (
                                                             <>
-                                                                <Button
-                                                                    size="sm"
+                                                                <button
                                                                     onClick={() => openReviewDetailsModal(event)}
-                                                                    className="bg-red-900 hover:bg-red-800 text-white"
+                                                                    className="p-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors duration-200"
+                                                                    title="Review Details"
                                                                 >
-                                                                    Review
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
+                                                                    <FaEye className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => handleReviewEvent(event._id, 'Approved')}
-                                                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                                                    className="p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
+                                                                    title="Approve"
                                                                 >
-                                                                    Approve
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                    </svg>
+                                                                </button>
+                                                                <button
                                                                     onClick={() => openReviewModal(event)}
-                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                                                                    title="Decline"
                                                                 >
-                                                                    Decline
-                                                                </Button>
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
                                                             </>
                                                         )}
                                                         {event.status === 'Approved' && (
                                                             <>
-                                                                <Button
-                                                                    size="sm"
+                                                                <button
                                                                     onClick={() => openEventDetailsModal(event)}
-                                                                    className="border-red-600 text-red-600 hover:bg-red-50"
+                                                                    className="p-2 rounded-lg border-2 border-red-600 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                                                    title="View"
                                                                 >
-                                                                    View
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
+                                                                    <FaEye className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => openStatusUpdate(event)}
-                                                                    className="bg-gray-700 hover:bg-gray-800 text-white"
+                                                                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-800 text-white transition-colors duration-200"
+                                                                    title="Update Status"
                                                                 >
-                                                                    Update Status
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
+                                                                    <FaEdit className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => openDeleteModal(event)}
-                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                                                                    title="Delete"
                                                                 >
-                                                                    Delete (Temp)
-                                                                </Button>
+                                                                    <FaTrash className="w-4 h-4" />
+                                                                </button>
                                                             </>
                                                         )}
                                                         {event.status !== 'Approved' && event.status !== 'Pending' && event.status !== 'Proposed' && (
                                                             <>
-                                                                <Button
-                                                                    size="sm"
+                                                                <button
+                                                                    onClick={() => openEventDetailsModal(event)}
+                                                                    className="p-2 rounded-lg border-2 border-red-600 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                                                    title="View"
+                                                                >
+                                                                    <FaEye className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => openStatusUpdate(event)}
-                                                                    className="border-gray-600 text-gray-600 hover:bg-gray-50"
+                                                                    className="p-2 rounded-lg border-2 border-gray-600 text-gray-600 hover:bg-gray-50 transition-colors duration-200"
+                                                                    title="Update Status"
                                                                 >
-                                                                    Update Status
-                                                                </Button>
-                                                                <Button
-                                                                    size="sm"
+                                                                    <FaEdit className="w-4 h-4" />
+                                                                </button>
+                                                                <button
                                                                     onClick={() => openDeleteModal(event)}
-                                                                    className="bg-red-600 hover:bg-red-700 text-white"
+                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                                                                    title="Delete"
                                                                 >
-                                                                    Delete (Temp)
-                                                                </Button>
+                                                                    <FaTrash className="w-4 h-4" />
+                                                                </button>
                                                             </>
                                                         )}
                                                     </div>
@@ -1165,7 +859,6 @@ const EventManagement = () => {
                                 </table>
                             </div>
                         </div>
-                    )
                 ) : (
                     <div className="text-center py-16">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
