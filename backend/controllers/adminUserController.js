@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import departmentWalletModel from "../models/departmentWalletModel.js";
+import { createAuditLog } from "./auditLogController.js";
 
 /**
  * Get all users with filtering and pagination (Admin only)
@@ -104,6 +105,30 @@ export const createUser = async (req, res) => {
 
         await newUser.save();
 
+        // Log user creation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'USER_CREATED',
+            resourceType: 'user',
+            resourceId: newUser._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 201,
+            success: true,
+            newValues: {
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         // If role is Department/Organization and wallet credentials are provided, create wallet
         let walletCreated = false;
         let walletError = null;
@@ -164,15 +189,38 @@ export const updateUserRole = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid role' });
         }
 
+        // Get user before update to capture previous role
+        const userBefore = await userModel.findById(userId).select('role email');
+        if (!userBefore) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         const user = await userModel.findByIdAndUpdate(
             userId,
             { role },
             { new: true, runValidators: true }
         ).select('-password -verifyOTP -resetOTP');
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        // Log role change - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'USER_ROLE_CHANGED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { role: userBefore.role },
+            newValues: { role: role }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({
             success: true,
@@ -196,11 +244,40 @@ export const deleteUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
         }
 
-        const user = await userModel.findByIdAndDelete(userId);
-
+        // Get user info before deletion for audit log
+        const user = await userModel.findById(userId).select('name email role');
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
+
+        const userEmail = user.email;
+        const userRole = user.role;
+
+        await userModel.findByIdAndDelete(userId);
+
+        // Log user deletion - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'USER_DELETED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: {
+                name: user.name,
+                email: userEmail,
+                role: userRole
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({ success: true, message: 'User deleted successfully' });
     } catch (error) {
@@ -220,15 +297,38 @@ export const toggleUserVerification = async (req, res) => {
             return res.status(400).json({ success: false, message: 'isVerified must be a boolean' });
         }
 
+        // Get user before update
+        const userBefore = await userModel.findById(userId).select('isAccountVerified email role');
+        if (!userBefore) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
         const user = await userModel.findByIdAndUpdate(
             userId,
             { isAccountVerified: isVerified },
             { new: true }
         ).select('-password -verifyOTP -resetOTP');
 
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+        // Log verification status change - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'USER_VERIFICATION_CHANGED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { isAccountVerified: userBefore.isAccountVerified },
+            newValues: { isAccountVerified: isVerified }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({
             success: true,

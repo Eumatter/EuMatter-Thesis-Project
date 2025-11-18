@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import transporter from "../config/nodemailer.js";
+import { createAuditLog } from "./auditLogController.js";
 
 /**
  * Get user profile data
@@ -17,6 +18,29 @@ export const getUserData = async (req, res) => {
 
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        // Log sensitive data access if accessing another user's data
+        const requestingUserId = req.user?._id?.toString();
+        const targetUserId = userId.toString();
+        if (requestingUserId && requestingUserId !== targetUserId) {
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: req.user?._id,
+                userEmail: req.user?.email,
+                userRole: req.user?.role,
+                actionType: 'SENSITIVE_DATA_ACCESSED',
+                resourceType: 'user',
+                resourceId: userId,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true
+            }).catch(err => console.error('Failed to log audit:', err));
         }
 
         res.json({ success: true, user });
@@ -37,6 +61,12 @@ export const updateUser = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
+        // Capture previous values for audit log
+        const previousValues = {
+            name: user.name,
+            email: user.email
+        };
+
         if (name) user.name = name;
         if (email) user.email = email;
 
@@ -46,6 +76,30 @@ export const updateUser = async (req, res) => {
         }
 
         await user.save();
+
+        // Log profile update - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id || userId,
+            userEmail: req.user?.email || user.email,
+            userRole: req.user?.role || user.role,
+            actionType: 'USER_PROFILE_UPDATED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: previousValues,
+            newValues: {
+                name: user.name,
+                email: user.email
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({ success: true, message: "User updated successfully" });
     } catch (error) {
@@ -72,6 +126,26 @@ export const updateProfileImage = async (req, res) => {
 
         user.profileImage = profileImage;
         await user.save();
+
+        // Log profile image update - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id || userId,
+            userEmail: req.user?.email || user.email,
+            userRole: req.user?.role || user.role,
+            actionType: 'USER_PROFILE_UPDATED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            newValues: { profileImage: 'updated' }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({ 
             success: true, 
@@ -153,8 +227,30 @@ export const updateUserRole = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
+        const previousRole = user.role;
         user.role = role;
         await user.save();
+
+        // Log role change - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'USER_ROLE_CHANGED',
+            resourceType: 'user',
+            resourceId: userId,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { role: previousRole },
+            newValues: { role: role }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({ success: true, message: `User role updated to ${role}` });
     } catch (error) {
@@ -249,6 +345,25 @@ export const changePasswordWithOtp = async (req, res) => {
         user.resetOtp = "";
         user.resetOtpExpireAt = 0;
         await user.save();
+
+        // Log password change - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'PASSWORD_CHANGE',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true
+        }).catch(err => console.error('Failed to log audit:', err));
 
         return res.json({ success: true, message: "Password changed successfully" });
 

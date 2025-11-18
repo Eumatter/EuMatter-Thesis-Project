@@ -1,13 +1,416 @@
-import React, { useContext, useState } from 'react'
-import Button from '../../../components/Button'
+import React, { useContext, useState, useEffect, useCallback } from 'react'
 import { AppContent } from '../../../context/AppContext.jsx'
 import { useNavigate } from 'react-router-dom'
-import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx';
+import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx'
+import AuditLogTable from '../../../components/AuditLogTable.jsx'
+import LoadingSpinner from '../../../components/LoadingSpinner'
+import axios from 'axios'
+import { toast } from 'react-toastify'
+import { 
+    MagnifyingGlassIcon, 
+    FunnelIcon, 
+    ArrowPathIcon,
+    DocumentArrowDownIcon
+} from '@heroicons/react/24/outline'
+
+// Category definitions
+const AUDIT_CATEGORIES = [
+    { id: 'Authentication & Authorization', label: 'Authentication & Authorization' },
+    { id: 'User Management', label: 'User Management' },
+    { id: 'System Administrator Actions', label: 'System Administrator Actions' },
+    { id: 'Wallet Management', label: 'Wallet Management' },
+    { id: 'Event Management', label: 'Event Management' },
+    { id: 'Donation Transactions', label: 'Donation Transactions' },
+    { id: 'Volunteer Management', label: 'Volunteer Management' },
+    { id: 'Data Access & Privacy', label: 'Data Access & Privacy' },
+    { id: 'System Operations', label: 'System Operations' },
+    { id: 'Content Management', label: 'Content Management' },
+    { id: 'Settings & Configuration', label: 'Settings & Configuration' },
+    { id: 'Reports & Analytics', label: 'Reports & Analytics' },
+    { id: 'Integration Events', label: 'Integration Events' },
+    { id: 'Compliance & Audit', label: 'Compliance & Audit' },
+    { id: 'Department/Organization Actions', label: 'Department/Organization Actions' }
+];
+
+const PRIORITY_OPTIONS = [
+    { value: '', label: 'All Priorities' },
+    { value: 'Critical', label: 'Critical' },
+    { value: 'High', label: 'High' },
+    { value: 'Medium', label: 'Medium' },
+    { value: 'Low', label: 'Low' }
+];
 
 const SystemReports = () => {
     const navigate = useNavigate()
-    const { userData } = useContext(AppContent)
+    const { userData, backendUrl } = useContext(AppContent)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    
+    // Audit log state
+    const [logs, setLogs] = useState([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 50,
+        total: 0,
+        totalPages: 1
+    })
+    
+    // Filter state
+    const [selectedCategory, setSelectedCategory] = useState('')
+    const [selectedPriority, setSelectedPriority] = useState('')
+    const [selectedSuccess, setSelectedSuccess] = useState('')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [startDate, setStartDate] = useState('')
+    const [endDate, setEndDate] = useState('')
+    const [showFilters, setShowFilters] = useState(false)
+    
+    // Sorting state
+    const [sortField, setSortField] = useState('timestamp')
+    const [sortDirection, setSortDirection] = useState('desc')
+    
+    // Auto-refresh state
+    const [autoRefresh, setAutoRefresh] = useState(true)
+    const [refreshInterval, setRefreshInterval] = useState(null)
+
+    // Fetch audit logs
+    const fetchAuditLogs = useCallback(async () => {
+        try {
+            setIsLoading(true)
+            axios.defaults.withCredentials = true
+            
+            const params = new URLSearchParams({
+                page: pagination.page.toString(),
+                limit: pagination.limit.toString()
+            })
+            
+            if (selectedCategory) params.append('category', selectedCategory)
+            if (selectedPriority) params.append('priority', selectedPriority)
+            if (selectedSuccess !== '') params.append('success', selectedSuccess)
+            if (searchTerm) params.append('search', searchTerm)
+            if (startDate) params.append('startDate', startDate)
+            if (endDate) params.append('endDate', endDate)
+            
+            const url = selectedCategory && selectedCategory !== 'all'
+                ? `${backendUrl}api/audit-logs/category/${encodeURIComponent(selectedCategory)}`
+                : `${backendUrl}api/audit-logs`
+            
+            const response = await axios.get(`${url}?${params.toString()}`)
+            
+            if (response.data.success) {
+                setLogs(response.data.logs || [])
+                setPagination(response.data.pagination || pagination)
+            } else {
+                toast.error('Failed to fetch audit logs')
+            }
+        } catch (error) {
+            console.error('Error fetching audit logs:', error)
+            if (error.response?.status === 403) {
+                toast.error('You do not have permission to view audit logs')
+            } else {
+                toast.error('Failed to fetch audit logs')
+            }
+        } finally {
+            setIsLoading(false)
+        }
+    }, [backendUrl, pagination.page, pagination.limit, selectedCategory, selectedPriority, selectedSuccess, searchTerm, startDate, endDate])
+
+    // Initial fetch when filters change
+    useEffect(() => {
+        fetchAuditLogs()
+    }, [fetchAuditLogs])
+
+    // Auto-refresh effect
+    useEffect(() => {
+        if (!autoRefresh) {
+            if (refreshInterval) {
+                clearInterval(refreshInterval)
+                setRefreshInterval(null)
+            }
+            return
+        }
+
+        const interval = setInterval(() => {
+            fetchAuditLogs()
+        }, 10000) // 10 seconds
+        
+        setRefreshInterval(interval)
+        
+        return () => {
+            clearInterval(interval)
+        }
+    }, [autoRefresh, fetchAuditLogs])
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        setPagination(prev => ({ ...prev, page: newPage }))
+    }
+
+    // Handle sort
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+        } else {
+            setSortField(field)
+            setSortDirection('desc')
+        }
+    }
+
+    // Handle category filter
+    const handleCategoryFilter = (category) => {
+        setSelectedCategory(category === 'all' ? '' : category)
+        setPagination(prev => ({ ...prev, page: 1 }))
+    }
+
+    // Handle filter reset
+    const handleResetFilters = () => {
+        setSelectedCategory('')
+        setSelectedPriority('')
+        setSelectedSuccess('')
+        setSearchTerm('')
+        setStartDate('')
+        setEndDate('')
+        setPagination(prev => ({ ...prev, page: 1 }))
+    }
+
+    // Handle export
+    const handleExport = async (format) => {
+        try {
+            if (logs.length === 0) {
+                toast.warning('No audit logs to export')
+                return
+            }
+
+            toast.info(`Exporting audit logs as ${format.toUpperCase()}...`)
+
+            if (format === 'csv') {
+                // CSV Export
+                const headers = [
+                    'Timestamp',
+                    'User Email',
+                    'User Name',
+                    'User Role',
+                    'Action Type',
+                    'Category',
+                    'Resource Type',
+                    'Resource ID',
+                    'IP Address',
+                    'Status',
+                    'Priority',
+                    'Request Method',
+                    'Request Endpoint',
+                    'Response Status',
+                    'Error Message'
+                ]
+
+                const csvRows = [
+                    headers.join(','),
+                    ...logs.map(log => {
+                        const formatDate = (dateString) => {
+                            if (!dateString) return ''
+                            try {
+                                return new Date(dateString).toISOString()
+                            } catch {
+                                return ''
+                            }
+                        }
+
+                        const escapeCSV = (value) => {
+                            if (value === null || value === undefined) return ''
+                            const stringValue = String(value)
+                            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                                return `"${stringValue.replace(/"/g, '""')}"`
+                            }
+                            return stringValue
+                        }
+
+                        return [
+                            formatDate(log.timestamp),
+                            escapeCSV(log.userEmail || ''),
+                            escapeCSV(log.userName || ''),
+                            escapeCSV(log.userRole || ''),
+                            escapeCSV(log.actionType || ''),
+                            escapeCSV(log.category || ''),
+                            escapeCSV(log.resourceType || ''),
+                            escapeCSV(log.resourceId || ''),
+                            escapeCSV(log.ipAddress || ''),
+                            log.success ? 'Success' : 'Failure',
+                            escapeCSV(log.priority || ''),
+                            escapeCSV(log.requestMethod || ''),
+                            escapeCSV(log.requestEndpoint || ''),
+                            log.responseStatus || '',
+                            escapeCSV(log.errorMessage || '')
+                        ].join(',')
+                    })
+                ]
+
+                const csvContent = csvRows.join('\n')
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                const dateStr = new Date().toISOString().split('T')[0]
+                const categoryStr = selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''
+                a.download = `audit-logs${categoryStr}-${dateStr}.csv`
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                window.URL.revokeObjectURL(url)
+                toast.success('Audit logs exported as CSV successfully!')
+            } else if (format === 'excel') {
+                // Excel Export (as CSV with .xlsx extension, or use a library)
+                // For now, we'll export as CSV but with .xlsx extension
+                // In production, you might want to use a library like xlsx
+                const headers = [
+                    'Timestamp',
+                    'User Email',
+                    'User Name',
+                    'User Role',
+                    'Action Type',
+                    'Category',
+                    'Resource Type',
+                    'Resource ID',
+                    'IP Address',
+                    'Status',
+                    'Priority',
+                    'Request Method',
+                    'Request Endpoint',
+                    'Response Status',
+                    'Error Message'
+                ]
+
+                const csvRows = [
+                    headers.join(','),
+                    ...logs.map(log => {
+                        const formatDate = (dateString) => {
+                            if (!dateString) return ''
+                            try {
+                                return new Date(dateString).toISOString()
+                            } catch {
+                                return ''
+                            }
+                        }
+
+                        const escapeCSV = (value) => {
+                            if (value === null || value === undefined) return ''
+                            const stringValue = String(value)
+                            if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+                                return `"${stringValue.replace(/"/g, '""')}"`
+                            }
+                            return stringValue
+                        }
+
+                        return [
+                            formatDate(log.timestamp),
+                            escapeCSV(log.userEmail || ''),
+                            escapeCSV(log.userName || ''),
+                            escapeCSV(log.userRole || ''),
+                            escapeCSV(log.actionType || ''),
+                            escapeCSV(log.category || ''),
+                            escapeCSV(log.resourceType || ''),
+                            escapeCSV(log.resourceId || ''),
+                            escapeCSV(log.ipAddress || ''),
+                            log.success ? 'Success' : 'Failure',
+                            escapeCSV(log.priority || ''),
+                            escapeCSV(log.requestMethod || ''),
+                            escapeCSV(log.requestEndpoint || ''),
+                            log.responseStatus || '',
+                            escapeCSV(log.errorMessage || '')
+                        ].join(',')
+                    })
+                ]
+
+                const csvContent = csvRows.join('\n')
+                // Convert to Excel-compatible format (tab-separated)
+                const excelContent = csvContent.replace(/,/g, '\t')
+                const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                const dateStr = new Date().toISOString().split('T')[0]
+                const categoryStr = selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''
+                a.download = `audit-logs${categoryStr}-${dateStr}.xls`
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                window.URL.revokeObjectURL(url)
+                toast.success('Audit logs exported as Excel successfully!')
+            } else if (format === 'pdf') {
+                // PDF Export - using window.print() for now
+                // In production, you might want to use a library like jsPDF or html2pdf
+                toast.info('PDF export: Opening print dialog. You can save as PDF from there.')
+                
+                // Create a printable version
+                const printWindow = window.open('', '_blank')
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Audit Logs Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            h1 { color: #800000; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
+                            th { background-color: #800000; color: white; }
+                            tr:nth-child(even) { background-color: #f2f2f2; }
+                            .header { margin-bottom: 20px; }
+                            .meta { font-size: 12px; color: #666; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>System Audit Logs Report</h1>
+                            <div class="meta">
+                                <p>Generated: ${new Date().toLocaleString()}</p>
+                                ${selectedCategory ? `<p>Category: ${selectedCategory}</p>` : ''}
+                                <p>Total Records: ${logs.length}</p>
+                            </div>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Category</th>
+                                    <th>Resource</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${logs.map(log => `
+                                    <tr>
+                                        <td>${new Date(log.timestamp).toLocaleString()}</td>
+                                        <td>${log.userEmail || log.userName || 'System'}</td>
+                                        <td>${log.actionType || ''}</td>
+                                        <td>${log.category || ''}</td>
+                                        <td>${log.resourceType || 'N/A'}</td>
+                                        <td>${log.success ? 'Success' : 'Failure'}</td>
+                                        <td>${log.priority || ''}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </body>
+                    </html>
+                `
+                printWindow.document.write(printContent)
+                printWindow.document.close()
+                printWindow.focus()
+                setTimeout(() => {
+                    printWindow.print()
+                    toast.success('PDF export dialog opened. Use your browser\'s print to PDF feature.')
+                }, 250)
+            }
+        } catch (error) {
+            console.error('Export error:', error)
+            toast.error('Failed to export audit logs')
+        }
+    }
+
+    // Get today's date for max date
+    const today = new Date().toISOString().split('T')[0]
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -28,177 +431,231 @@ const SystemReports = () => {
                 </div>
 
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-                    {/* Header section of the reports page */}
+                    {/* Header section */}
                     <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black mb-2">System Reports</h1>
-                            <p className="text-sm sm:text-base text-gray-600">Generate comprehensive system reports and analytics.</p>
-                        </div>
-                    </div>
-
-                    {/* Report categories with modern hover effects */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-                        {/* User Reports */}
-                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg sm:hover:scale-[1.01]">
-                            <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">User Reports</h3>
-                            <div className="space-y-3 sm:space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">User Registration Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Monthly user registration statistics</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">User Activity Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">User login and activity patterns</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Role Distribution Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Breakdown of users by role</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black mb-2">System Audit Logs</h1>
+                                <p className="text-sm sm:text-base text-gray-600">Monitor and track all system activities and events.</p>
                             </div>
-                        </div>
-
-                        {/* Event Reports */}
-                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg sm:hover:scale-[1.01]">
-                            <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">Event Reports</h3>
-                            <div className="space-y-3 sm:space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Event Creation Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Events created by departments</p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setAutoRefresh(!autoRefresh)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                        autoRefresh
+                                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <ArrowPathIcon className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
+                                        {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
                                     </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Event Status Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Events by approval status</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Event Performance Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Event success metrics</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* System Reports */}
-                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg sm:hover:scale-[1.01]">
-                            <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">System Reports</h3>
-                            <div className="space-y-3 sm:space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">System Usage Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Overall system usage statistics</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Error Log Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">System errors and issues</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Security Audit Report</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Security events and access logs</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Financial Reports */}
-                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg sm:hover:scale-[1.01]">
-                            <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">Financial Reports</h3>
-                            <div className="space-y-3 sm:space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Donation Summary</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Total donations and trends</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Department Financials</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Financial performance by department</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
-                                
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-gray-200 rounded-lg transition-colors duration-200 hover:bg-gray-50">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-black text-sm sm:text-base">Budget Utilization</h4>
-                                        <p className="text-xs sm:text-sm text-gray-600 mt-1">Budget usage and allocation</p>
-                                    </div>
-                                    <Button variant="primary" size="sm" className="w-full sm:w-auto">
-                                        Generate
-                                    </Button>
-                                </div>
+                                </button>
+                                <button
+                                    onClick={fetchAuditLogs}
+                                    className="px-4 py-2 text-sm font-medium text-[#800000] bg-white border border-[#800000] rounded-lg hover:bg-[#800000] hover:text-white transition-colors"
+                                >
+                                    Refresh
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    {/* Export Options */}
-                    <div className="mt-6 sm:mt-8 bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg sm:hover:scale-[1.01]">
-                        <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">Export Options</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <Button variant="primary" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100">
-                                Export as PDF
-                            </Button>
-                            <Button variant="primary" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100">
-                                Export as Excel
-                            </Button>
-                            <Button variant="primary" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100">
-                                Export as CSV
-                            </Button>
-                            <Button variant="primary" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100">
-                                Schedule Report
-                            </Button>
+                    {/* Filters Section */}
+                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-black">Filters</h2>
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors"
+                            >
+                                <FunnelIcon className="w-5 h-5" />
+                                {showFilters ? 'Hide' : 'Show'} Filters
+                            </button>
+                        </div>
+
+                        {showFilters && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {/* Search */}
+                                <div className="lg:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Search
+                                    </label>
+                                    <div className="relative">
+                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            placeholder="Search by action, user, or resource..."
+                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Date Range */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        max={today}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        End Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        max={today}
+                                        min={startDate}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                    />
+                                </div>
+
+                                {/* Priority Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Priority
+                                    </label>
+                                    <select
+                                        value={selectedPriority}
+                                        onChange={(e) => setSelectedPriority(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                    >
+                                        {PRIORITY_OPTIONS.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Success Filter */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Status
+                                    </label>
+                                    <select
+                                        value={selectedSuccess}
+                                        onChange={(e) => setSelectedSuccess(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                    >
+                                        <option value="">All Status</option>
+                                        <option value="true">Success</option>
+                                        <option value="false">Failure</option>
+                                    </select>
+                                </div>
+
+                                {/* Reset Button */}
+                                <div className="flex items-end">
+                                    <button
+                                        onClick={handleResetFilters}
+                                        className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Apply Filters Button */}
+                        {showFilters && (
+                            <div className="mt-4 flex justify-end">
+                                <button
+                                    onClick={fetchAuditLogs}
+                                    className="px-6 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#900000] transition-colors"
+                                >
+                                    Apply Filters
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Main Audit Log Table */}
+                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-black">
+                                Audit Logs {selectedCategory && `- ${selectedCategory}`}
+                            </h2>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => handleExport('pdf')}
+                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
+                                >
+                                    <DocumentArrowDownIcon className="w-4 h-4" />
+                                    PDF
+                                </button>
+                                <button
+                                    onClick={() => handleExport('excel')}
+                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
+                                >
+                                    <DocumentArrowDownIcon className="w-4 h-4" />
+                                    Excel
+                                </button>
+                                <button
+                                    onClick={() => handleExport('csv')}
+                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
+                                >
+                                    <DocumentArrowDownIcon className="w-4 h-4" />
+                                    CSV
+                                </button>
+                            </div>
+                        </div>
+
+                        {isLoading && logs.length === 0 ? (
+                            <div className="flex justify-center items-center py-12">
+                                <LoadingSpinner />
+                            </div>
+                        ) : (
+                            <AuditLogTable
+                                logs={logs}
+                                isLoading={isLoading}
+                                pagination={pagination}
+                                onPageChange={handlePageChange}
+                                onSort={handleSort}
+                                sortField={sortField}
+                                sortDirection={sortDirection}
+                            />
+                        )}
+                    </div>
+
+                    {/* Category Filter Links */}
+                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
+                        <h2 className="text-lg font-semibold text-black mb-4">Filter by Category</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <button
+                                onClick={() => handleCategoryFilter('all')}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors text-left ${
+                                    !selectedCategory
+                                        ? 'bg-[#800000] text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                            >
+                                All Categories
+                            </button>
+                            {AUDIT_CATEGORIES.map((category) => (
+                                <button
+                                    key={category.id}
+                                    onClick={() => handleCategoryFilter(category.id)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors text-left ${
+                                        selectedCategory === category.id
+                                            ? 'bg-[#800000] text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    }`}
+                                >
+                                    {category.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>

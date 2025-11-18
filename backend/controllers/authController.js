@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import transporter from "../config/nodemailer.js";
+import { createAuditLog } from "./auditLogController.js";
 
 const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
 const cookieOptions = {
@@ -163,6 +164,31 @@ export const register = async (req, res) => {
         const user = new userModel(userData);
         await user.save();
 
+        // Log user registration - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'USER_CREATED',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            newValues: {
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                userType: user.userType
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         // Generate OTP for email verification (only for Users)
         let otp = null;
         if (needsVerification) {
@@ -223,7 +249,7 @@ export const register = async (req, res) => {
                         `
                     };
                     await transporter.sendMail(mailOptions);
-                    console.log(`Verification OTP email sent successfully to ${email}`);
+                    console.log(`✅ Verification OTP email sent successfully to ${email}`);
                 } else {
                     // Send welcome email for non-User roles (no verification needed)
                     const mailOptions = {
@@ -241,12 +267,29 @@ export const register = async (req, res) => {
                         `
                     };
                     await transporter.sendMail(mailOptions);
-                    console.log(`Welcome email sent successfully to ${email}`);
+                    console.log(`✅ Welcome email sent successfully to ${email}`);
                 }
             } catch (emailError) {
-                // Log email error but don't fail registration
-                console.error(`Failed to send email to ${email}:`, emailError);
-                // Email sending failure doesn't affect registration success
+                // Log email error and create audit log
+                console.error(`❌ Failed to send email to ${email}:`, emailError);
+                const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+                const userAgent = req.headers['user-agent'] || 'Unknown';
+                
+                createAuditLog({
+                    userId: user._id,
+                    userEmail: user.email,
+                    userRole: user.role,
+                    actionType: 'EMAIL_SEND_FAILURE',
+                    resourceType: 'user',
+                    resourceId: user._id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    requestMethod: req.method,
+                    requestEndpoint: req.path,
+                    responseStatus: 200,
+                    success: false,
+                    errorMessage: `Failed to send ${needsVerification ? 'verification' : 'welcome'} email: ${emailError.message}`
+                }).catch(err => console.error('Failed to log audit:', err));
             }
         });
 
@@ -266,12 +309,44 @@ export const login = async (req, res) => {
         }
 
         const user = await userModel.findOne({ email });
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
         if (!user) {
+            // Log failed login attempt (user not found) - don't await, fire and forget
+            createAuditLog({
+                userEmail: email,
+                actionType: 'LOGIN_FAILURE',
+                resourceType: 'user',
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 401,
+                success: false,
+                errorMessage: 'User not found'
+            }).catch(err => console.error('Failed to log audit:', err));
             return res.json({ success: false, message: "Invalid email or password" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            // Log failed login attempt (wrong password) - don't await, fire and forget
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'LOGIN_FAILURE',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 401,
+                success: false,
+                errorMessage: 'Invalid password'
+            }).catch(err => console.error('Failed to log audit:', err));
             return res.json({ success: false, message: "Invalid email or password" });
         }
 
@@ -317,6 +392,24 @@ export const login = async (req, res) => {
 
             res.cookie("token", token, cookieOptions);
 
+            // Log login attempt requiring verification - don't await, fire and forget
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'USER_LOGIN',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: false,
+                errorMessage: 'Account verification required',
+                sessionId: token.substring(0, 20)
+            }).catch(err => console.error('Failed to log audit:', err));
+
             return res.json({
                 success: false,
                 message: "Please verify your email address to continue",
@@ -348,6 +441,23 @@ export const login = async (req, res) => {
         );
 
         res.cookie("token", token, cookieOptions);
+
+        // Create audit log for successful login - don't await, fire and forget
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'USER_LOGIN',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            sessionId: token.substring(0, 20) // Store partial token for session tracking
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // Always return isAccountVerified as true for exempt roles
         return res.json({
@@ -423,9 +533,56 @@ export const sendVerifyOtp = async (req, res) => {
                 </div>
             `
         };
-        await transporter.sendMail(mailOptions);
-
-        return res.json({ success: true, message: "Verification OTP sent to your email" });
+        
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`✅ Verification OTP email sent successfully to ${user.email}`);
+            
+            // Log OTP resend - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'OTP_RESENT',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true
+            }).catch(err => console.error('Failed to log audit:', err));
+            
+            return res.json({ success: true, message: "Verification OTP sent to your email" });
+        } catch (emailError) {
+            console.error(`❌ Failed to send verification OTP email to ${user.email}:`, emailError);
+            
+            // Log email send failure - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_SEND_FAILURE',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 500,
+                success: false,
+                errorMessage: `Failed to send verification OTP email: ${emailError.message}`
+            }).catch(err => console.error('Failed to log audit:', err));
+            
+            return res.json({ success: false, message: "Failed to send verification email. Please try again later." });
+        }
 
     } catch (error) {
         return res.json({ success: false, message: error.message });
@@ -474,18 +631,80 @@ export const verifyEmail = async (req, res) => {
         }
 
         if (user.verifyOtp === "" || user.verifyOtp !== otp) {
+            // Log failed OTP verification (invalid) - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_VERIFICATION',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 400,
+                success: false,
+                errorMessage: 'Invalid OTP'
+            }).catch(err => console.error('Failed to log audit:', err));
+            
             return res.json({ success: false, message: "Invalid OTP. Please check and try again." });
         }
 
         if (user.verifyOtpExpireAt < Date.now()) {
+            // Log failed OTP verification (expired) - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_VERIFICATION',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 400,
+                success: false,
+                errorMessage: 'OTP expired'
+            }).catch(err => console.error('Failed to log audit:', err));
+            
             return res.json({ success: false, message: "OTP has expired. Please request a new one." });
         }
 
         // Verify the account
+        const previousVerified = user.isAccountVerified;
         user.isAccountVerified = true;
         user.verifyOtp = "";
         user.verifyOtpExpireAt = 0;
         await user.save();
+
+        // Log successful OTP verification - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'EMAIL_VERIFICATION',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { isAccountVerified: previousVerified },
+            newValues: { isAccountVerified: true }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // Generate new token for verified user
         const token = jwt.sign(
@@ -569,9 +788,56 @@ export const sendResetOtp = async (req, res) => {
                 </div>
             `
         };
-        await transporter.sendMail(mailOptions);
+        
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`✅ Password reset OTP email sent successfully to ${email}`);
+            
+            // Log password reset request - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'PASSWORD_RESET_REQUEST',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true
+            }).catch(err => console.error('Failed to log audit:', err));
 
-        return res.json({ success: true, message: "Password reset OTP sent to email" });
+            return res.json({ success: true, message: "Password reset code sent to your email" });
+        } catch (emailError) {
+            console.error(`❌ Failed to send password reset OTP email to ${email}:`, emailError);
+            
+            // Log email send failure - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_SEND_FAILURE',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 500,
+                success: false,
+                errorMessage: `Failed to send password reset OTP email: ${emailError.message}`
+            }).catch(err => console.error('Failed to log audit:', err));
+            
+            return res.json({ success: false, message: "Failed to send password reset email. Please try again later." });
+        }
 
     } catch (error) {
         return res.json({ success: false, message: error.message });
@@ -593,12 +859,71 @@ export const verifyResetOtp = async (req, res) => {
         }
 
         if (user.resetOtp === "" || user.resetOtp !== otp) {
+            // Log failed OTP verification (invalid) - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'PASSWORD_RESET_OTP_VERIFIED',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 400,
+                success: false,
+                errorMessage: 'Invalid OTP'
+            }).catch(err => console.error('Failed to log audit:', err));
+            
             return res.json({ success: false, message: "Invalid verification code. Please check and try again." });
         }
 
         if (user.resetOtpExpireAt < Date.now()) {
+            // Log failed OTP verification (expired) - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'PASSWORD_RESET_OTP_VERIFIED',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 400,
+                success: false,
+                errorMessage: 'OTP expired'
+            }).catch(err => console.error('Failed to log audit:', err));
+            
             return res.json({ success: false, message: "Verification code has expired. Please request a new one." });
         }
+
+        // Log successful OTP verification - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'PASSWORD_RESET_OTP_VERIFIED',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // OTP is valid, but don't clear it yet - keep it for password reset step
         return res.json({ success: true, message: "Verification code verified successfully" });
@@ -635,6 +960,25 @@ export const resetPassword = async (req, res) => {
         user.resetOtp = "";
         user.resetOtpExpireAt = 0;
         await user.save();
+
+        // Log password reset - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: user._id,
+            userEmail: user.email,
+            userRole: user.role,
+            actionType: 'PASSWORD_CHANGE',
+            resourceType: 'user',
+            resourceId: user._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true
+        }).catch(err => console.error('Failed to log audit:', err));
 
         return res.json({ success: true, message: "Password reset successful" });
 
@@ -684,7 +1028,49 @@ export const isAuthenticated = async (req, res) => {
 // ===================== LOGOUT =====================
 export const logout = async (req, res) => {
     try {
+        // Get user info before clearing cookie (if token exists)
+        let userId = null;
+        let userEmail = null;
+        let userRole = null;
+        
+        try {
+            const token = req.cookies.token;
+            if (token) {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const user = await userModel.findById(decoded.id).select('email role');
+                if (user) {
+                    userId = user._id;
+                    userEmail = user.email;
+                    userRole = user.role;
+                }
+            }
+        } catch (err) {
+            // Token invalid or expired, continue with logout
+        }
+
         res.clearCookie("token", cookieOptions);
+
+        // Log logout event - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        if (userId) {
+            createAuditLog({
+                userId: userId,
+                userEmail: userEmail,
+                userRole: userRole,
+                actionType: 'USER_LOGOUT',
+                resourceType: 'user',
+                resourceId: userId,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true
+            }).catch(err => console.error('Failed to log audit:', err));
+        }
+
         return res.json({ success: true, message: "Logged out successfully" });
     } catch (error) {
         return res.json({ success: false, message: error.message });

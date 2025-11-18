@@ -1,6 +1,7 @@
 import departmentWalletModel from "../models/departmentWalletModel.js";
 import userModel from "../models/userModel.js";
 import { verifyPayMongoCredentials, maskKey } from "../utils/walletEncryption.js";
+import { createAuditLog } from "./auditLogController.js";
 
 /**
  * Create wallet for a department (System Admin only)
@@ -92,6 +93,30 @@ export const createWallet = async (req, res) => {
 
         // Return wallet info (masked keys)
         const maskedKeys = wallet.getMaskedKeys();
+
+        // Log wallet creation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'WALLET_CREATED',
+            resourceType: 'wallet',
+            resourceId: wallet._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 201,
+            success: true,
+            newValues: {
+                userId: userIdString,
+                isActive: wallet.isActive,
+                verificationStatus: wallet.verificationStatus
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.status(201).json({
             success: true,
@@ -191,8 +216,48 @@ export const updateWallet = async (req, res) => {
             updateData.lastVerificationError = null;
         }
 
+        // Capture previous values for audit log
+        const previousValues = {
+            isActive: wallet.isActive,
+            verificationStatus: wallet.verificationStatus,
+            hasWebhookSecret: !!wallet.webhookSecret
+        };
+
         Object.assign(wallet, updateData);
         await wallet.save();
+
+        // Log wallet update - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        // Determine action type based on what was updated
+        let actionType = 'WALLET_UPDATED';
+        if (webhookSecret !== undefined && webhookSecret !== null) {
+            actionType = 'WEBHOOK_SECRET_CHANGED';
+        } else if (publicKey !== undefined || secretKey !== undefined) {
+            actionType = 'WALLET_KEY_REGENERATED';
+        }
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: actionType,
+            resourceType: 'wallet',
+            resourceId: wallet._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: previousValues,
+            newValues: {
+                isActive: wallet.isActive,
+                verificationStatus: wallet.verificationStatus,
+                hasWebhookSecret: !!wallet.webhookSecret
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // Return wallet info (masked keys)
         let maskedKeys;
@@ -420,11 +485,36 @@ export const verifyWallet = async (req, res) => {
             decryptedKeys.secretKey
         );
 
+        // Capture previous verification status
+        const previousStatus = wallet.verificationStatus;
+
         // Update wallet verification status
         wallet.lastVerifiedAt = new Date();
         wallet.verificationStatus = verification.valid ? "verified" : "failed";
         wallet.lastVerificationError = verification.valid ? null : verification.error;
         await wallet.save();
+
+        // Log wallet verification - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'WALLET_VERIFICATION_CHANGED',
+            resourceType: 'wallet',
+            resourceId: wallet._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: verification.valid ? 200 : 400,
+            success: verification.valid,
+            previousValues: { verificationStatus: previousStatus },
+            newValues: { verificationStatus: wallet.verificationStatus },
+            errorMessage: verification.valid ? null : verification.error
+        }).catch(err => console.error('Failed to log audit:', err));
 
         if (verification.valid) {
             res.json({
@@ -476,6 +566,27 @@ export const deactivateWallet = async (req, res) => {
         wallet.isActive = false;
         await wallet.save();
 
+        // Log wallet deactivation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'WALLET_DEACTIVATED',
+            resourceType: 'wallet',
+            resourceId: wallet._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { isActive: true },
+            newValues: { isActive: false }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         res.json({
             success: true,
             message: "Wallet deactivated successfully",
@@ -518,6 +629,27 @@ export const reactivateWallet = async (req, res) => {
 
         wallet.isActive = true;
         await wallet.save();
+
+        // Log wallet activation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'WALLET_ACTIVATED',
+            resourceType: 'wallet',
+            resourceId: wallet._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { isActive: false },
+            newValues: { isActive: true }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({
             success: true,

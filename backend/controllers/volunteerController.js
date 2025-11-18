@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import volunteerAttendanceModel from "../models/volunteerAttendanceModel.js";
 import QRCode from 'qrcode';
 import crypto from 'crypto';
+import { createAuditLog } from "./auditLogController.js";
 
 // Get event volunteers
 export const getEventVolunteers = async (req, res) => {
@@ -95,8 +96,31 @@ export const updateVolunteerStatus = async (req, res) => {
             return res.status(404).json({ success: false, message: "Volunteer not found" });
         }
 
+        const previousStatus = event.volunteerRegistrations[volunteerIndex].status;
         event.volunteerRegistrations[volunteerIndex].status = status;
         await event.save();
+
+        // Log volunteer status update - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: userId,
+          userEmail: req.user?.email,
+          userRole: req.user?.role,
+          actionType: status === 'approved' ? 'VOLUNTEER_APPROVED' : 'VOLUNTEER_REJECTED',
+          resourceType: 'volunteer',
+          resourceId: volunteerId,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: true,
+          previousValues: { status: previousStatus },
+          newValues: { status: status },
+          metadata: { eventId: eventId }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // Send notification to volunteer
         try {
@@ -163,6 +187,26 @@ export const removeVolunteer = async (req, res) => {
         );
 
         await event.save();
+
+        // Log volunteer removal - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: userId,
+          userEmail: req.user?.email,
+          userRole: req.user?.role,
+          actionType: 'VOLUNTEER_REMOVED',
+          resourceType: 'volunteer',
+          resourceId: volunteerId,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: true,
+          metadata: { eventId: eventId }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         return res.json({ success: true, message: "Volunteer removed successfully" });
     } catch (error) {
@@ -1222,6 +1266,27 @@ export const recordAttendance = async (req, res) => {
 
         await event.save();
 
+        // Log attendance recording - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: userId,
+          userEmail: req.user?.email,
+          userRole: req.user?.role,
+          actionType: 'VOLUNTEER_ATTENDANCE_RECORDED',
+          resourceType: 'volunteer',
+          resourceId: userId,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: true,
+          newValues: { action: action, date: todayStr },
+          metadata: { eventId: event._id.toString() }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         // Prepare response message with completion evaluation for last day timeout
         let responseMessage = `${action === 'timein' ? 'Time in' : 'Time out'} recorded successfully`;
         let completionEvaluation = null;
@@ -1468,6 +1533,27 @@ export const validateAttendance = async (req, res) => {
         });
 
         await event.save();
+
+        // Log attendance validation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: userId,
+          userEmail: req.user?.email,
+          userRole: req.user?.role,
+          actionType: 'VOLUNTEER_ATTENDANCE_VALIDATED',
+          resourceType: 'volunteer',
+          resourceId: eventId,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: true,
+          newValues: { invalidatedCount: invalidatedCount },
+          metadata: { eventId: eventId }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         return res.json({ 
             success: true, 

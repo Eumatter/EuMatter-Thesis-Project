@@ -1,6 +1,7 @@
 import fs from "fs";
 import eventModel from "../models/eventModel.js";
 import { notifyFollowersOfEvent } from "../utils/notify.js";
+import { createAuditLog } from "./auditLogController.js";
 
 // Helper: Convert file to Base64 string
 const fileToBase64 = (file) => {
@@ -159,6 +160,30 @@ export const createEvent = async (req, res) => {
 
         // Emit notification (created/proposed)
         try { await notifyFollowersOfEvent(populatedEvent, 'Event Created', `${title} scheduled on ${start.toLocaleString()}`) } catch (_) {}
+
+        // Log event creation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: userId,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'EVENT_CREATED',
+            resourceType: 'event',
+            resourceId: newEvent._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 201,
+            success: true,
+            newValues: {
+                title: title,
+                status: newEvent.status || 'Pending',
+                eventCategory: finalEventCategory
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         res.status(201).json({
             message: "Event created successfully",
@@ -420,10 +445,37 @@ export const updateEvent = async (req, res) => {
 // Delete Event
 export const deleteEvent = async (req, res) => {
     try {
+        // Get event before deletion for audit log
+        const eventBefore = await eventModel.findById(req.params.id).select('title status createdBy');
+        
         const deletedEvent = await eventModel.findByIdAndDelete(req.params.id);
         if (!deletedEvent) {
             return res.status(404).json({ message: "Event not found" });
         }
+
+        // Log event deletion - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'EVENT_DELETED',
+            resourceType: 'event',
+            resourceId: deletedEvent._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: {
+                title: deletedEvent.title,
+                status: deletedEvent.status
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         try { await notifyFollowersOfEvent(deletedEvent, 'Event Cancelled', `${deletedEvent.title} was cancelled`) } catch (_) {}
         res.status(200).json({ message: "Event deleted successfully" });
     } catch (error) {
@@ -439,6 +491,13 @@ export const reviewEvent = async (req, res) => {
         if (!["Approved", "Declined"].includes(status)) {
             return res.status(400).json({ message: "Invalid status. Use Approved or Declined." });
         }
+
+        // Get event before update
+        const eventBefore = await eventModel.findById(req.params.id).select('title status');
+        if (!eventBefore) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+
         const reviewedEvent = await eventModel.findByIdAndUpdate(
             req.params.id,
             { status, reviewedBy, reviewedAt: new Date() },
@@ -449,9 +508,26 @@ export const reviewEvent = async (req, res) => {
         .populate("comments.user", "name email profileImage")
         .populate("reviewedBy", "name email profileImage");
 
-        if (!reviewedEvent) {
-            return res.status(404).json({ message: "Event not found" });
-        }
+        // Log event approval/rejection - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: status === "Approved" ? 'EVENT_APPROVED' : 'EVENT_REJECTED',
+            resourceType: 'event',
+            resourceId: reviewedEvent._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { status: eventBefore.status },
+            newValues: { status: status }
+        }).catch(err => console.error('Failed to log audit:', err));
 
         // Send notification to event creator
         try {
@@ -711,6 +787,30 @@ export const crdCreateEvent = async (req, res) => {
             .populate("volunteers", "name email")
             .populate("comments.user", "name email profileImage")
             .populate("reviewedBy", "name email profileImage");
+
+        // Log CRD event creation - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: userId,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'EVENT_CREATED',
+            resourceType: 'event',
+            resourceId: newEvent._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 201,
+            success: true,
+            newValues: {
+                title: title,
+                status: initialStatus,
+                eventCategory: 'other'
+            }
+        }).catch(err => console.error('Failed to log audit:', err));
         
         res.status(201).json({ message: "Event created successfully", event: populatedEvent });
     } catch (error) {
@@ -790,12 +890,39 @@ export const updateEventStatus = async (req, res) => {
         const { status } = req.body;
         const allowed = ["Upcoming", "Ongoing", "Completed"];
         if (!allowed.includes(status)) return res.status(400).json({ message: "Invalid status. Use Upcoming, Ongoing, or Completed." });
+        
+        // Get event before update
+        const eventBefore = await eventModel.findById(req.params.id).select('title status');
+        if (!eventBefore) return res.status(404).json({ message: "Event not found" });
+        
         const updated = await eventModel.findByIdAndUpdate(req.params.id, { status }, { new: true })
         .populate("createdBy", "name email profileImage")
         .populate("volunteers", "name email")
         .populate("comments.user", "name email profileImage")
         .populate("reviewedBy", "name email profileImage");
         if (!updated) return res.status(404).json({ message: "Event not found" });
+
+        // Log event status change - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+            userId: req.user?._id,
+            userEmail: req.user?.email,
+            userRole: req.user?.role,
+            actionType: 'EVENT_STATUS_CHANGED',
+            resourceType: 'event',
+            resourceId: updated._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            previousValues: { status: eventBefore.status },
+            newValues: { status: status }
+        }).catch(err => console.error('Failed to log audit:', err));
+
         res.status(200).json({ message: "Event status updated", event: updated });
     } catch (error) {
         res.status(500).json({ message: "Error updating status", error: error.message });

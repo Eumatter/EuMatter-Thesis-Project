@@ -8,6 +8,7 @@ import { notifyUsers } from "../utils/notify.js";
 import eventModel from "../models/eventModel.js";
 import transporter from "../config/nodemailer.js";
 import userModel from "../models/userModel.js";
+import { createAuditLog } from "./auditLogController.js";
 
 
 
@@ -579,6 +580,31 @@ export const createDonation = async (req, res) => {
 
       console.log("💵 Created cash donation entry:", donation._id);
 
+      // Log cash donation creation - don't await, fire and forget
+      const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      
+      createAuditLog({
+        userId: userId,
+        userEmail: req.user?.email || donorEmail,
+        userRole: req.user?.role,
+        actionType: 'DONATION_CREATED',
+        resourceType: 'donation',
+        resourceId: donation._id,
+        ipAddress: clientIp,
+        userAgent: userAgent,
+        requestMethod: req.method,
+        requestEndpoint: req.path,
+        responseStatus: 200,
+        success: true,
+        newValues: {
+          amount: Number(amount),
+          paymentMethod: 'cash',
+          status: 'cash_pending_verification',
+          recipientType: finalRecipientType
+        }
+      }).catch(err => console.error('Failed to log audit:', err));
+
       // Send notifications for cash donation
       try {
         const notifyUsers = (await import("../utils/notify.js")).notifyUsers;
@@ -730,6 +756,31 @@ export const createDonation = async (req, res) => {
       clientKey: paymongoPublicKey
     });
     console.log("🟢 Created donation entry:", donation._id, "Wallet:", walletUserId || "CRD");
+
+    // Log donation creation - don't await, fire and forget
+    const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    
+    createAuditLog({
+      userId: userId,
+      userEmail: req.user?.email || donorEmail,
+      userRole: req.user?.role,
+      actionType: 'DONATION_CREATED',
+      resourceType: 'donation',
+      resourceId: donation._id,
+      ipAddress: clientIp,
+      userAgent: userAgent,
+      requestMethod: req.method,
+      requestEndpoint: req.path,
+      responseStatus: 200,
+      success: true,
+      newValues: {
+        amount: Number(amount),
+        paymentMethod: paymentMethod,
+        status: 'pending',
+        recipientType: finalRecipientType
+      }
+    }).catch(err => console.error('Failed to log audit:', err));
 
     // 2️⃣ Handle GCash or other source-based payments
     if (paymentMethod === "gcash") {
@@ -1043,10 +1094,53 @@ export const confirmSourcePayment = async (req, res) => {
         // Send notifications for successful donation
         await sendDonationNotifications(donation);
         console.log("✅ Donation updated (intent - succeeded/paid):", donation.status);
+        
+        // Log payment processing success - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: donation.user,
+          userEmail: donation.donorEmail,
+          userRole: req.user?.role,
+          actionType: 'PAYMENT_PROCESSED',
+          resourceType: 'donation',
+          resourceId: donation._id,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: true,
+          newValues: { status: 'succeeded', amount: donation.amount }
+        }).catch(err => console.error('Failed to log audit:', err));
+        
         return res.json({ success: true, donation });
       } else if (["failed", "canceled"].includes(status)) {
         donation.status = "failed";
         await donation.save();
+        
+        // Log payment processing failure - don't await, fire and forget
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        createAuditLog({
+          userId: donation.user,
+          userEmail: donation.donorEmail,
+          userRole: req.user?.role,
+          actionType: 'PAYMENT_FAILURE',
+          resourceType: 'donation',
+          resourceId: donation._id,
+          ipAddress: clientIp,
+          userAgent: userAgent,
+          requestMethod: req.method,
+          requestEndpoint: req.path,
+          responseStatus: 200,
+          success: false,
+          errorMessage: `Payment ${status}`,
+          newValues: { status: 'failed', amount: donation.amount }
+        }).catch(err => console.error('Failed to log audit:', err));
+        
         // Send failure notification to donor - Transfer Failed
         if (donation.user) {
           try {
@@ -1332,6 +1426,27 @@ export const handleWebhook = async (req, res) => {
           console.log(`✅ Donation ${donation._id} marked as succeeded.`);
           // Send notifications for successful donation
           await sendDonationNotifications(donation);
+          
+          // Log webhook payment success - don't await, fire and forget
+          const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+          const userAgent = req.headers['user-agent'] || 'Unknown';
+          
+          createAuditLog({
+            userId: donation.user,
+            userEmail: donation.donorEmail,
+            userRole: null,
+            actionType: 'WEBHOOK_RECEIVED',
+            resourceType: 'donation',
+            resourceId: donation._id,
+            ipAddress: clientIp,
+            userAgent: userAgent,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: true,
+            newValues: { status: 'succeeded', webhookType: type }
+          }).catch(err => console.error('Failed to log audit:', err));
+          
           break;
   
         case "payment.failed":
@@ -1340,6 +1455,28 @@ export const handleWebhook = async (req, res) => {
           donation.status = "failed";
           await donation.save();
           console.log(`❌ Donation ${donation._id} marked as failed.`);
+          
+          // Log webhook payment failure - don't await, fire and forget
+          const clientIpFail = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+          const userAgentFail = req.headers['user-agent'] || 'Unknown';
+          
+          createAuditLog({
+            userId: donation.user,
+            userEmail: donation.donorEmail,
+            userRole: null,
+            actionType: 'WEBHOOK_RECEIVED',
+            resourceType: 'donation',
+            resourceId: donation._id,
+            ipAddress: clientIpFail,
+            userAgent: userAgentFail,
+            requestMethod: req.method,
+            requestEndpoint: req.path,
+            responseStatus: 200,
+            success: false,
+            errorMessage: `Webhook: ${type}`,
+            newValues: { status: 'failed', webhookType: type }
+          }).catch(err => console.error('Failed to log audit:', err));
+          
           // Send failure notification to donor - Transfer Failed
           if (donation.user) {
             try {
@@ -1489,6 +1626,27 @@ export const verifyCashDonation = async (req, res) => {
     donation.cashVerification.verificationNotes = verificationNotes || "";
     await donation.save();
 
+    // Log cash donation verification - don't await, fire and forget
+    const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    
+    createAuditLog({
+      userId: userId,
+      userEmail: req.user?.email,
+      userRole: req.user?.role,
+      actionType: 'CASH_DONATION_VERIFIED',
+      resourceType: 'donation',
+      resourceId: donation._id,
+      ipAddress: clientIp,
+      userAgent: userAgent,
+      requestMethod: req.method,
+      requestEndpoint: req.path,
+      responseStatus: 200,
+      success: true,
+      previousValues: { status: 'cash_pending_verification' },
+      newValues: { status: 'cash_verified', receiptNumber: receiptNumber || '' }
+    }).catch(err => console.error('Failed to log audit:', err));
+
     // Send notifications
     try {
       const notifyUsers = (await import("../utils/notify.js")).notifyUsers;
@@ -1587,6 +1745,27 @@ export const completeCashDonation = async (req, res) => {
     donation.cashVerification.completedBy = userId;
     donation.cashVerification.completedAt = new Date();
     await donation.save();
+
+    // Log cash donation completion - don't await, fire and forget
+    const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+    const userAgent = req.headers['user-agent'] || 'Unknown';
+    
+    createAuditLog({
+      userId: userId,
+      userEmail: req.user?.email,
+      userRole: req.user?.role,
+      actionType: 'CASH_DONATION_COMPLETED',
+      resourceType: 'donation',
+      resourceId: donation._id,
+      ipAddress: clientIp,
+      userAgent: userAgent,
+      requestMethod: req.method,
+      requestEndpoint: req.path,
+      responseStatus: 200,
+      success: true,
+      previousValues: { status: 'cash_verified' },
+      newValues: { status: 'cash_completed' }
+    }).catch(err => console.error('Failed to log audit:', err));
 
     // Send receipt email and notifications
     try {
