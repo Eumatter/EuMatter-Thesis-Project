@@ -95,6 +95,12 @@ const AppContent = () => {
         toast.dismiss();
     }, [location.pathname]);
 
+    // Scroll to top when navigating to a new page (applies to all routes and all roles)
+    useEffect(() => {
+        // Scroll to top instantly when route changes for immediate navigation feedback
+        window.scrollTo(0, 0);
+    }, [location.pathname]);
+
     // Determine maintenance access rules
     const publicPages = ['/', '/login', '/register', '/campaigns', '/program', '/nstp', '/about', '/terms-and-conditions', '/email-verify', '/reset-password'];
     const isPublicPage = publicPages.includes(location.pathname);
