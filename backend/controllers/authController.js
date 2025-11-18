@@ -278,7 +278,7 @@ export const register = async (req, res) => {
                     
                     // Send email asynchronously (fire and forget) - don't block registration response
                     // OTP is already saved to user record, so verification will work even if email fails
-                    sendEmailWithRetry(mailOptions, 2, 2000)
+                    sendEmailWithRetry(mailOptions, 3, 3000)
                         .then((emailResult) => {
                             console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
                             console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
@@ -312,7 +312,7 @@ export const register = async (req, res) => {
                         `
                     };
                     // Send welcome email asynchronously (fire and forget) - don't block registration response
-                    sendEmailWithRetry(mailOptions, 2, 2000)
+                    sendEmailWithRetry(mailOptions, 3, 3000)
                         .then((emailResult) => {
                             console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
                         })
@@ -424,7 +424,7 @@ export const login = async (req, res) => {
                 
                 // Send email with retry (fire and forget - don't block login response)
                 // OTP is already saved, so user can still verify even if email fails
-                sendEmailWithRetry(mailOptions, 2, 2000)
+                sendEmailWithRetry(mailOptions, 3, 3000)
                     .then(result => {
                         console.log(`✅ Verification OTP email sent during login to ${email} (MessageId: ${result.messageId || 'N/A'})`);
                     })
@@ -624,8 +624,8 @@ export const sendVerifyOtp = async (req, res) => {
         res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox. If you don't receive it, the OTP has been generated and you can try verifying with it." });
         
         // Send email in background (fire and forget)
-        // Reduced retries and timeout to fail faster if email service is unavailable
-        sendEmailWithRetry(mailOptions, 2, 2000)
+        // OTP is already saved, so verification will work even if email sending fails
+        sendEmailWithRetry(mailOptions, 3, 3000)
             .then((emailResult) => {
                 console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
                 console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
@@ -883,7 +883,7 @@ export const sendResetOtp = async (req, res) => {
         };
         
         try {
-            const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
+            const emailResult = await sendEmailWithRetry(mailOptions, 3, 3000);
             console.log(`✅ Password reset OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
             
             // Log password reset request - don't await, fire and forget
@@ -1192,7 +1192,7 @@ export const testEmail = async (req, res) => {
         };
 
         try {
-            const emailResult = await sendEmailWithRetry(testMailOptions, 3, 2000);
+            const emailResult = await sendEmailWithRetry(testMailOptions, 3, 3000);
             
             console.log(`✅ Test email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
             console.log(`   Email service status: ${emailStatus}`);

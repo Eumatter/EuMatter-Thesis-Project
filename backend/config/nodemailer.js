@@ -115,7 +115,7 @@ const isValidEmail = (email) => {
  * @param {Number} initialDelay - Initial delay in ms before retry (default: 1000)
  * @returns {Promise<Object>} Email result
  */
-export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDelay = 2000) => {
+export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDelay = 3000) => {
     // Validate email configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
         throw new Error('SMTP configuration is incomplete. Please check environment variables: SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
@@ -156,9 +156,10 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASSWORD
             },
-            connectionTimeout: isProduction ? 60000 : connectionTimeout,
-            greetingTimeout: isProduction ? 60000 : greetingTimeout,
-            socketTimeout: isProduction ? 60000 : socketTimeout,
+            // Use longer timeouts for cloud environments to allow slow connections
+            connectionTimeout: isProduction ? 90000 : connectionTimeout, // 90s for production
+            greetingTimeout: isProduction ? 90000 : greetingTimeout, // 90s for production
+            socketTimeout: isProduction ? 90000 : socketTimeout, // 90s for production
             pool: false, // Never use pooling for fresh connections
             tls: {
                 rejectUnauthorized: false
@@ -177,10 +178,16 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
         }
         
         try {
-            // Add timeout wrapper for the entire send operation (reduced timeout for faster failure)
+            // Add timeout wrapper for the entire send operation
+            // Use longer timeout for cloud environments (90s) to allow for slow SMTP connections
+            const emailTimeout = isProduction ? 90000 : 45000; // 90s for production, 45s for dev
             const sendPromise = attemptTransporter.sendMail(mailOptions);
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Email send operation timed out after 30 seconds')), 30000);
+                setTimeout(() => {
+                    const timeoutError = new Error(`Email send operation timed out after ${emailTimeout / 1000} seconds`);
+                    timeoutError.code = 'ETIMEDOUT';
+                    reject(timeoutError);
+                }, emailTimeout);
             });
             
             const result = await Promise.race([sendPromise, timeoutPromise]);
@@ -217,12 +224,15 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
             }
             
             lastError = error;
+            // Consider timeout errors as retryable - they might succeed on retry
             const isRetryable = 
                 error.code === 'ECONNECTION' || 
                 error.code === 'ETIMEDOUT' ||
                 error.code === 'ESOCKET' ||
                 error.message?.includes('timeout') ||
+                error.message?.includes('Timed out') ||
                 error.message?.includes('Connection') ||
+                error.message?.includes('timed out') ||
                 (error.responseCode && error.responseCode >= 500 && error.responseCode < 600);
             
             // Don't retry on last attempt or non-retryable errors
