@@ -12,7 +12,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import { FaEye, FaEdit, FaTrash, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
+import { FaEye, FaEdit, FaTrash, FaClock, FaCheckCircle, FaTimesCircle, FaListAlt } from 'react-icons/fa'
 
 const EventManagement = () => {
     const navigate = useNavigate()
@@ -105,6 +105,7 @@ const EventManagement = () => {
     const filteredAndSortedEvents = useMemo(() => {
         let filtered = events.filter(event => {
             // Status filter
+            if (filter === 'all') return true // Show all events
             if (filter === 'pending') return event.status === 'Pending'
             if (filter === 'approved') return event.status === 'Approved'
             if (filter === 'declined') return event.status === 'Declined'
@@ -510,57 +511,89 @@ const EventManagement = () => {
 
                     {/* Statistics Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-600 text-sm font-medium">Total Events</p>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                        {stats.total}
+                                    </p>
                                 </div>
-                                <div className="bg-gray-100 rounded-lg p-3">
-                                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                <div className="bg-white rounded-lg p-3 border border-gray-200" style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <defs>
+                                            <linearGradient id="iconGradientTotal" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#800020" />
+                                                <stop offset="100%" stopColor="#9c0000" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path stroke="url(#iconGradientTotal)" fill="url(#iconGradientTotal)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                     </svg>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-600 text-sm font-medium">Pending Review</p>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.pending}</p>
+                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                        {stats.pending}
+                                    </p>
                                 </div>
-                                <div className="bg-yellow-100 rounded-lg p-3">
-                                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <defs>
+                                            <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#800020" />
+                                                <stop offset="100%" stopColor="#9c0000" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path stroke="url(#gradientPending)" fill="url(#gradientPending)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-600 text-sm font-medium">Approved</p>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.approved}</p>
+                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                        {stats.approved}
+                                    </p>
                                 </div>
-                                <div className="bg-green-100 rounded-lg p-3">
-                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <defs>
+                                            <linearGradient id="gradientApproved" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#800020" />
+                                                <stop offset="100%" stopColor="#9c0000" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path stroke="url(#gradientApproved)" fill="url(#gradientApproved)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-600 text-sm font-medium">Declined</p>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.declined}</p>
+                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                        {stats.declined}
+                                    </p>
                                 </div>
-                                <div className="bg-red-100 rounded-lg p-3">
-                                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
+                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <defs>
+                                            <linearGradient id="gradientDeclined" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#800020" />
+                                                <stop offset="100%" stopColor="#9c0000" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path stroke="url(#gradientDeclined)" fill="url(#gradientDeclined)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                             </div>
@@ -652,77 +685,174 @@ const EventManagement = () => {
                     {/* Filter Tabs */}
                     <div className="flex flex-wrap gap-2 mb-4">
                         <button
-                            onClick={() => setFilter('pending')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
+                            onClick={() => setFilter('all')}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200"
                             style={{ 
-                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                backgroundColor: filter === 'all' ? 'transparent' : '#ffffff',
+                                backgroundImage: filter === 'all' ? 'linear-gradient(to bottom right, #800020, #9c0000)' : 'none',
                                 border: 'none',
-                                outline: 'none',
-                                transition: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                                // No hover effect - keep same styling
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                                outline: 'none'
                             }}
                         >
-                            <FaClock className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
-                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                            <div className="relative inline-flex items-center justify-center" style={{
+                                backgroundImage: filter === 'all' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
+                                WebkitBackgroundClip: filter === 'all' ? 'none' : 'text',
+                                backgroundClip: filter === 'all' ? 'none' : 'text'
+                            }}>
+                                <FaListAlt 
+                                    className="w-4 h-4" 
+                                    style={{ 
+                                        color: filter === 'all' ? '#ffffff' : '#800020',
+                                        fill: filter === 'all' ? '#ffffff' : '#800020',
+                                        filter: filter === 'all' ? 'none' : 'drop-shadow(0 0 0 #800020)'
+                                    }} 
+                                />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ 
+                                color: filter === 'all' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'all' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'all' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'all' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'all' ? 'none' : 'none'
+                            }}>
+                                All Events
+                                                            </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ 
+                                color: filter === 'all' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'all' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'all' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'all' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'all' ? 'none' : 'none'
+                            }}>
+                                {stats.total}
+                                                                </span>
+                        </button>
+                        <button
+                            onClick={() => setFilter('pending')}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200"
+                            style={{ 
+                                backgroundColor: filter === 'pending' ? 'transparent' : '#ffffff',
+                                backgroundImage: filter === 'pending' ? 'linear-gradient(to bottom right, #800020, #9c0000)' : 'none',
+                                border: 'none',
+                                outline: 'none'
+                            }}
+                        >
+                            <div className="relative inline-flex items-center justify-center" style={{
+                                backgroundImage: filter === 'pending' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
+                                WebkitBackgroundClip: filter === 'pending' ? 'none' : 'text',
+                                backgroundClip: filter === 'pending' ? 'none' : 'text'
+                            }}>
+                                <FaClock 
+                                    className="w-4 h-4" 
+                                    style={{ 
+                                        color: filter === 'pending' ? '#ffffff' : '#800020',
+                                        fill: filter === 'pending' ? '#ffffff' : '#800020',
+                                        filter: filter === 'pending' ? 'none' : 'drop-shadow(0 0 0 #800020)'
+                                    }} 
+                                />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ 
+                                color: filter === 'pending' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'pending' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'pending' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'pending' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'pending' ? 'none' : 'none'
+                            }}>
                                 Pending Review
                             </span>
-                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ 
+                                color: filter === 'pending' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'pending' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'pending' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'pending' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'pending' ? 'none' : 'none'
+                            }}>
                                 {stats.pending}
                             </span>
                         </button>
                         <button
                             onClick={() => setFilter('approved')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200"
                             style={{ 
-                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                backgroundColor: filter === 'approved' ? 'transparent' : '#ffffff',
+                                backgroundImage: filter === 'approved' ? 'linear-gradient(to bottom right, #800020, #9c0000)' : 'none',
                                 border: 'none',
-                                outline: 'none',
-                                transition: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                                // No hover effect - keep same styling
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                                outline: 'none'
                             }}
                         >
-                            <FaCheckCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
-                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                            <div className="relative inline-flex items-center justify-center" style={{
+                                backgroundImage: filter === 'approved' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
+                                WebkitBackgroundClip: filter === 'approved' ? 'none' : 'text',
+                                backgroundClip: filter === 'approved' ? 'none' : 'text'
+                            }}>
+                                <FaCheckCircle 
+                                    className="w-4 h-4" 
+                                    style={{ 
+                                        color: filter === 'approved' ? '#ffffff' : '#800020',
+                                        fill: filter === 'approved' ? '#ffffff' : '#800020',
+                                        filter: filter === 'approved' ? 'none' : 'drop-shadow(0 0 0 #800020)'
+                                    }} 
+                                />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ 
+                                color: filter === 'approved' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'approved' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'approved' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'approved' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'approved' ? 'none' : 'none'
+                            }}>
                                 Approved
-                            </span>
-                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                            </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ 
+                                color: filter === 'approved' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'approved' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'approved' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'approved' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'approved' ? 'none' : 'none'
+                            }}>
                                 {stats.approved}
                             </span>
                         </button>
                         <button
                             onClick={() => setFilter('declined')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200"
                             style={{ 
-                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                backgroundColor: filter === 'declined' ? 'transparent' : '#ffffff',
+                                backgroundImage: filter === 'declined' ? 'linear-gradient(to bottom right, #800020, #9c0000)' : 'none',
                                 border: 'none',
-                                outline: 'none',
-                                transition: 'none'
-                            }}
-                            onMouseEnter={(e) => {
-                                // No hover effect - keep same styling
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(128, 0, 32, 0.08)';
+                                outline: 'none'
                             }}
                         >
-                            <FaTimesCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020', stroke: 'none' }} />
-                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                            <div className="relative inline-flex items-center justify-center" style={{
+                                backgroundImage: filter === 'declined' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
+                                WebkitBackgroundClip: filter === 'declined' ? 'none' : 'text',
+                                backgroundClip: filter === 'declined' ? 'none' : 'text'
+                            }}>
+                                <FaTimesCircle 
+                                    className="w-4 h-4" 
+                                    style={{ 
+                                        color: filter === 'declined' ? '#ffffff' : '#800020',
+                                        fill: filter === 'declined' ? '#ffffff' : '#800020',
+                                        filter: filter === 'declined' ? 'none' : 'drop-shadow(0 0 0 #800020)'
+                                    }} 
+                                />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ 
+                                color: filter === 'declined' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'declined' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'declined' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'declined' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'declined' ? 'none' : 'none'
+                            }}>
                                 Declined
-                            </span>
-                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                    </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ 
+                                color: filter === 'declined' ? '#ffffff' : '#000000',
+                                backgroundImage: filter === 'declined' ? 'none' : 'none',
+                                WebkitBackgroundClip: filter === 'declined' ? 'none' : 'none',
+                                WebkitTextFillColor: filter === 'declined' ? '#ffffff' : '#000000',
+                                backgroundClip: filter === 'declined' ? 'none' : 'none'
+                            }}>
                                 {stats.declined}
                             </span>
                         </button>
@@ -736,6 +866,339 @@ const EventManagement = () => {
                         <LoadingSpinner size="medium" text="Loading events..." />
                     </div>
                 ) : paginatedEvents.length > 0 ? (
+                    filter === 'all' ? (
+                        /* Card View for All Events */
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {paginatedEvents.map((event) => {
+                                // Handle event image
+                                let imageUrl = null;
+                                if (event.image) {
+                                    if (event.image.startsWith('data:image')) {
+                                        imageUrl = event.image;
+                                    } else if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
+                                        imageUrl = event.image;
+                                    } else {
+                                        imageUrl = `data:image/jpeg;base64,${event.image}`;
+                                    }
+                                } else if (event.imageUrl) {
+                                    imageUrl = event.imageUrl;
+                                }
+
+                                return (
+                                    <div
+                                        key={event._id}
+                                        className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
+                                    >
+                                        {/* Event Image */}
+                                        {imageUrl ? (
+                                            <div className="w-full h-48 overflow-hidden bg-gray-100">
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={event.title}
+                                                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        e.target.nextSibling.style.display = 'flex';
+                                                    }}
+                                                />
+                                                <div className="w-full h-full bg-gradient-to-br from-[#800020] to-[#9c0000] hidden items-center justify-center">
+                                                    <svg className="w-16 h-16 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="w-full h-48 bg-gradient-to-br from-[#800020] to-[#9c0000] flex items-center justify-center">
+                                                <svg className="w-16 h-16 text-white opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        )}
+
+                                        {/* Event Content */}
+                                        <div className="p-5 flex-1 flex flex-col">
+                                            {/* Status Badge */}
+                                            <div className="mb-3">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(event.status)}`}>
+                                                    {getStatusIcon(event.status)}
+                                                    <span className="ml-1">{event.status || 'Pending'}</span>
+                                                </span>
+                                            </div>
+
+                                            {/* Event Title */}
+                                            <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+
+                                            {/* Event Description */}
+                                            {event.description && (
+                                                <div
+                                                    className="text-sm text-gray-600 mb-4 line-clamp-3 flex-1"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: event.description
+                                                            .replace(/&lt;/g, '<')
+                                                            .replace(/&gt;/g, '>')
+                                                            .replace(/&amp;/g, '&')
+                                                            .substring(0, 150) + (event.description.length > 150 ? '...' : '')
+                                                    }}
+                                                />
+                                            )}
+
+                                            {/* Event Details */}
+                                            <div className="space-y-2 mb-4">
+                                                {/* Department */}
+                                                <div className="flex items-center text-sm text-gray-600">
+                                                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                    <span className="truncate">{event.createdBy?.name || 'Unknown'}</span>
+                                                </div>
+
+                                                {/* Date */}
+                                                <div className="flex items-center text-sm text-gray-600">
+                                                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span>{formatDate(event.startDate)}</span>
+                                                </div>
+
+                                                {/* Location */}
+                                                <div className="flex items-center text-sm text-gray-600">
+                                                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                    <span className="truncate">{event.location || 'TBA'}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Features */}
+                                            <div className="flex flex-wrap gap-2 mb-4">
+                                                {event.isOpenForVolunteer && (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 font-medium">
+                                                        Volunteers
+                                                    </span>
+                                                )}
+                                                {event.isOpenForDonation && (
+                                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-green-100 text-green-800 font-medium">
+                                                        Donations
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Actions */}
+                                            <div className="flex items-center justify-end space-x-2 mt-auto pt-4 border-t border-gray-200">
+                                                {event.status === 'Proposed' && (
+                                                    <button
+                                                        onClick={() => handleAcceptEvent(event._id)}
+                                                        className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#800020',
+                                                            border: '1px solid #e5e7eb',
+                                                            outline: 'none'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                            e.currentTarget.style.color = '#ffffff';
+                                                            e.currentTarget.style.borderColor = 'transparent';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundImage = 'none';
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                            e.currentTarget.style.color = '#800020';
+                                                            e.currentTarget.style.borderColor = '#e5e7eb';
+                                                        }}
+                                                        title="Accept for Review"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                                {event.status === 'Pending' && (
+                                                    <button
+                                                        onClick={() => openReviewDetailsModal(event)}
+                                                        className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                        style={{
+                                                            backgroundColor: '#ffffff',
+                                                            color: '#800020',
+                                                            border: '1px solid #e5e7eb',
+                                                            outline: 'none'
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                            e.currentTarget.style.color = '#ffffff';
+                                                            e.currentTarget.style.borderColor = 'transparent';
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.backgroundImage = 'none';
+                                                            e.currentTarget.style.backgroundColor = '#ffffff';
+                                                            e.currentTarget.style.color = '#800020';
+                                                            e.currentTarget.style.borderColor = '#e5e7eb';
+                                                        }}
+                                                        title="Review Event"
+                                                    >
+                                                        <FaEye className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                                {event.status === 'Approved' && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => openEventDetailsModal(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="View Event"
+                                                        >
+                                                            <FaEye className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openStatusUpdate(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="Update Status"
+                                                        >
+                                                            <FaEdit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openDeleteModal(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="Delete Event"
+                                                        >
+                                                            <FaTrash className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {(event.status !== 'Proposed' && event.status !== 'Pending' && event.status !== 'Approved') && (
+                                                    <>
+                                                        <button
+                                                            onClick={() => openEventDetailsModal(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="View Event"
+                                                        >
+                                                            <FaEye className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openStatusUpdate(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="Update Status"
+                                                        >
+                                                            <FaEdit className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => openDeleteModal(event)}
+                                                            className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
+                                                            style={{
+                                                                backgroundColor: '#ffffff',
+                                                                color: '#800020',
+                                                                border: '1px solid #e5e7eb',
+                                                                outline: 'none'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                e.currentTarget.style.color = '#ffffff';
+                                                                e.currentTarget.style.borderColor = 'transparent';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                e.currentTarget.style.backgroundImage = 'none';
+                                                                e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                e.currentTarget.style.color = '#800020';
+                                                                e.currentTarget.style.borderColor = '#e5e7eb';
+                                                            }}
+                                                            title="Delete Event"
+                                                        >
+                                                            <FaTrash className="w-4 h-4" />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
                         /* Table View */
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
                             <div className="overflow-x-auto">
@@ -1031,6 +1494,7 @@ const EventManagement = () => {
                                 </table>
                             </div>
                         </div>
+                    )
                 ) : (
                     <div className="text-center py-16">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
