@@ -233,7 +233,7 @@ export const register = async (req, res) => {
         setImmediate(async () => {
             try {
                 if (needsVerification && otp) {
-                    // Send verification OTP email for both MSEUF and Guest/Outsider users
+                    // Send verification OTP email for both MSEUF and Guest users
                     const userTypeText = userType === 'MSEUF' 
                         ? (mseufCategory ? `${mseufCategory} of MSEUF` : 'MSEUF Member')
                         : (outsiderCategory ? outsiderCategory : 'Guest User');
@@ -283,7 +283,7 @@ export const register = async (req, res) => {
                     sendEmailWithRetry(mailOptions, 3, 3000)
                         .then((emailResult) => {
                             console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-                            console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
+                            console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest'}`);
                         })
                         .catch((sendError) => {
                             // Log error but don't throw - registration already succeeded and OTP is saved
@@ -292,7 +292,7 @@ export const register = async (req, res) => {
                                 message: sendError.message,
                                 code: sendError.code,
                                 userType: userType,
-                                emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'
+                                emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest'
                             });
                             // Note: OTP is still saved, user can still verify
                             console.warn(`   ⚠️  Note: OTP has been saved and verification will still work. User can use the OTP code to verify.`);
@@ -579,7 +579,7 @@ export const sendVerifyOtp = async (req, res) => {
             ? 'MSEUF Student' 
             : user.email.includes('@mseuf.edu.ph') 
                 ? 'MSEUF Faculty/Staff' 
-                : 'Guest/Outsider';
+                : 'Guest';
         
         const mailOptions = {
             from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
