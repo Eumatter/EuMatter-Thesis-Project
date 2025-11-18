@@ -299,63 +299,8 @@ const VerifyEmailPage = () => {
         }
     }
 
-    // Auto-request OTP if email is available but no OTP exists
-    useEffect(() => {
-        const autoRequestOtp = async () => {
-            if (!email || isResendTimerRunning || isResending) return
-            
-            try {
-                // Check if user exists and needs verification
-                axios.defaults.withCredentials = true
-                const { data } = await axios.post(backendUrl + 'api/auth/check-otp-status', {
-                    email: email.trim().toLowerCase()
-                }, {
-                    timeout: 10000
-                })
-                
-                if (data.success && data.requiresOtp && !data.hasOtp && !data.verified) {
-                    // No valid OTP exists, automatically request one
-                    console.log('Auto-requesting OTP for verification...')
-                    // Call resend function directly to avoid hook dependency issues
-                    const emailToUse = email.trim().toLowerCase()
-                    setIsResending(true)
-                    try {
-                        axios.defaults.withCredentials = true
-                        const resendData = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
-                            email: emailToUse
-                        }, {
-                            timeout: 30000
-                        })
-                        if (resendData.data.success) {
-                            console.log('Auto-requested OTP successfully')
-                            // Restart both timers
-                            const newExpiryTimestamp = new Date()
-                            newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
-                            restartExpiryTimer(newExpiryTimestamp)
-                            
-                            const newResendTimestamp = new Date()
-                            newResendTimestamp.setSeconds(newResendTimestamp.getSeconds() + 60) // 60 seconds cooldown
-                            restartResendTimer(newResendTimestamp)
-                        }
-                    } catch (err) {
-                        console.error('Auto-request OTP failed:', err)
-                    } finally {
-                        setIsResending(false)
-                    }
-                }
-            } catch (error) {
-                // Silently fail - user can manually request
-                console.error('Auto-request OTP check failed:', error)
-            }
-        }
-        
-        // Wait a bit before auto-requesting to avoid race conditions
-        if (email) {
-            const timer = setTimeout(autoRequestOtp, 2000)
-            return () => clearTimeout(timer)
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [email, backendUrl])
+    // OTP is sent automatically during registration - no need for auto-request
+    // Users can manually click "Resend OTP" if they don't receive the email
     
     // Redirect to register if no email after trying all sources
     useEffect(() => {
