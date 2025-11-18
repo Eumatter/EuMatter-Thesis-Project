@@ -683,68 +683,49 @@ const CRDDashboard = () => {
                                 </div>
                             </div>
                             
-                            {/* Date/Year Selector */}
-                            <div className="mb-3 sm:mb-4 rounded-lg p-3 sm:p-4 border bg-white shadow-sm" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            {/* Date/Year Selector - Consistent Height Across All Filters */}
+                            <div className="mb-3 sm:mb-4 rounded-lg p-3 sm:p-3.5 border bg-white shadow-sm min-h-[80px] flex items-center" style={{ borderColor: THEME_COLORS.maroonBg }}>
                                 {donationFilter === 'weekly' && (
-                                    <div className="flex flex-col gap-3 sm:gap-4 w-full">
-                                        {/* Header with Icon */}
-                                        <div className="flex items-center space-x-2">
-                                            <FaCalendarAlt className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
-                                            <span className="text-sm sm:text-base font-semibold" style={{ color: THEME_COLORS.maroon }}>Select Date</span>
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full">
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                            <FaCalendarAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold whitespace-nowrap" style={{ color: THEME_COLORS.maroon }}>Select Date:</span>
                                         </div>
-                                        
-                                        {/* Date Inputs - Responsive Grid */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                            {/* Month Input */}
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs sm:text-sm font-medium text-gray-700">Month & Year</label>
-                                                <input
-                                                    type="month"
-                                                    value={`${selectedWeekDate.getFullYear()}-${String(selectedWeekDate.getMonth() + 1).padStart(2, '0')}`}
-                                                    onChange={(e) => {
-                                                        const [year, month] = e.target.value.split('-')
-                                                        setSelectedWeekDate(new Date(parseInt(year), parseInt(month) - 1, 1))
-                                                    }}
-                                                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
-                                                    style={{ borderColor: THEME_COLORS.maroonBg }}
-                                                />
-                                            </div>
-                                            
-                                            {/* Date Input */}
-                                            <div className="flex flex-col gap-1.5">
-                                                <label className="text-xs sm:text-sm font-medium text-gray-700">Specific Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={selectedWeekDate.toISOString().split('T')[0]}
-                                                    onChange={(e) => setSelectedWeekDate(new Date(e.target.value))}
-                                                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
-                                                    style={{ borderColor: THEME_COLORS.maroonBg }}
-                                                />
-                                            </div>
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+                                            <input
+                                                type="month"
+                                                value={`${selectedWeekDate.getFullYear()}-${String(selectedWeekDate.getMonth() + 1).padStart(2, '0')}`}
+                                                onChange={(e) => {
+                                                    const [year, month] = e.target.value.split('-')
+                                                    setSelectedWeekDate(new Date(parseInt(year), parseInt(month) - 1, 1))
+                                                }}
+                                                className="w-full sm:w-auto px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                style={{ borderColor: THEME_COLORS.maroonBg }}
+                                            />
+                                            <input
+                                                type="date"
+                                                value={selectedWeekDate.toISOString().split('T')[0]}
+                                                onChange={(e) => setSelectedWeekDate(new Date(e.target.value))}
+                                                className="w-full sm:w-auto px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] transition-all bg-white"
+                                                style={{ borderColor: THEME_COLORS.maroonBg }}
+                                            />
                                         </div>
-                                        
-                                        {/* Week Display - Highlighted */}
-                                        <div className="mt-1 p-3 sm:p-4 rounded-lg border-2 bg-gradient-to-r from-[#800020]/5 to-[#9c0000]/5" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="text-xs sm:text-sm font-semibold text-gray-700">Week Range:</span>
-                                                <span className="text-sm sm:text-base font-bold" style={{ color: THEME_COLORS.maroon }}>
-                                                    {getStartOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {getEndOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                </span>
-                                            </div>
-                                        </div>
+                                        <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: THEME_COLORS.gray }}>
+                                            {getStartOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {getEndOfWeek(selectedWeekDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
                                     </div>
                                 )}
                                 
                                 {donationFilter === 'monthly' && (
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                                        <div className="flex items-center space-x-2">
-                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
-                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>Select Year:</span>
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full">
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                            <FaCalendarAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold whitespace-nowrap" style={{ color: THEME_COLORS.gray }}>Select Year:</span>
                                         </div>
                                         <select
                                             value={selectedYear}
                                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] bg-white"
+                                            className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800020] focus:border-[#800020] bg-white transition-all"
                                             style={{ borderColor: THEME_COLORS.maroonBg }}
                                         >
                                             {getAvailableYears().map(year => (
@@ -754,17 +735,17 @@ const CRDDashboard = () => {
                                                 <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
                                             )}
                                         </select>
-                                        <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
+                                        <span className="text-xs sm:text-sm font-medium whitespace-nowrap" style={{ color: THEME_COLORS.gray }}>
                                             Showing: {selectedYear}
                                         </span>
                                     </div>
                                 )}
                                 
                                 {donationFilter === 'yearly' && (
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                                        <div className="flex items-center space-x-2">
-                                            <FaCalendarAlt className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: THEME_COLORS.maroon }} />
-                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.gray }}>All Years:</span>
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 w-full">
+                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                            <FaCalendarAlt className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                            <span className="text-xs sm:text-sm font-semibold whitespace-nowrap" style={{ color: THEME_COLORS.gray }}>All Years:</span>
                                         </div>
                                         <span className="text-xs sm:text-sm font-medium" style={{ color: THEME_COLORS.gray }}>
                                             {getAvailableYears().length > 0 
@@ -880,20 +861,32 @@ const CRDDashboard = () => {
                                     <p className="text-xs sm:text-sm text-center" style={{ color: THEME_COLORS.grayLight }}>User statistics will appear here once users register</p>
                                 </div>
                             ) : (
-                                <>
-                                    {/* Chart Container - Responsive - Refined Design */}
-                                    <div className="flex justify-center mb-3 sm:mb-4 rounded-lg p-3 sm:p-4 border relative bg-gradient-to-br from-gray-50 to-white [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '200px', height: '200px', userSelect: 'none', WebkitUserSelect: 'none' }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                <div className="flex-1 flex flex-col gap-4 sm:gap-5">
+                                    {/* Main Stats Cards - Top Section */}
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                                        <div className="bg-gradient-to-br from-[#800020] to-[#9c0000] rounded-lg sm:rounded-xl p-4 sm:p-5 shadow-md border-2" style={{ borderColor: THEME_COLORS.maroon }}>
+                                            <div className="text-xs sm:text-sm font-semibold text-white/90 mb-1">Total Users</div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-white">{usersChartData.total}</div>
+                                        </div>
+                                        <div className="bg-gradient-to-br from-[#D4AF37] to-[#F5C842] rounded-lg sm:rounded-xl p-4 sm:p-5 shadow-md border-2" style={{ borderColor: THEME_COLORS.gold }}>
+                                            <div className="text-xs sm:text-sm font-semibold text-white/90 mb-1">Active</div>
+                                            <div className="text-2xl sm:text-3xl font-bold text-white">{usersChartData.volunteers + usersChartData.donators}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chart Container - Clean and Balanced */}
+                                    <div className="flex justify-center items-center rounded-lg border bg-white p-4 sm:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '220px', userSelect: 'none', WebkitUserSelect: 'none' }}>
+                                        <ResponsiveContainer width="100%" height="220px">
                                             <PieChart
                                                 onClick={(e) => e.preventDefault()}
                                                 style={{ outline: 'none' }}
                                             >
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.2"/>
+                                                        <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.15"/>
                                                     </filter>
                                                     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                                        <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
                                                         <feMerge>
                                                             <feMergeNode in="coloredBlur"/>
                                                             <feMergeNode in="SourceGraphic"/>
@@ -901,28 +894,26 @@ const CRDDashboard = () => {
                                                     </filter>
                                                     <linearGradient id="volunteerGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#800020" stopOpacity="1"/>
-                                                        <stop offset="50%" stopColor="#9c0000" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#800020" stopOpacity="0.95"/>
+                                                        <stop offset="100%" stopColor="#9c0000" stopOpacity="1"/>
                                                     </linearGradient>
                                                     <linearGradient id="donatorGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#D4AF37" stopOpacity="1"/>
-                                                        <stop offset="50%" stopColor="#F5C842" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#B8941F" stopOpacity="0.95"/>
+                                                        <stop offset="100%" stopColor="#F5C842" stopOpacity="1"/>
                                                     </linearGradient>
                                                 </defs>
                                                 <Pie
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="50%"
-                                                    outerRadius="80%"
-                                                    paddingAngle={3}
+                                                    innerRadius="45%"
+                                                    outerRadius="70%"
+                                                    paddingAngle={2}
                                                     dataKey="value"
                                                     animationBegin={0}
-                                                    animationDuration={1200}
+                                                    animationDuration={1000}
                                                     animationEasing="ease-out"
                                                     stroke={THEME_COLORS.white}
-                                                    strokeWidth={3}
+                                                    strokeWidth={2}
                                                 >
                                                     {pieChartData.map((entry, index) => (
                                                         <Cell 
@@ -940,12 +931,14 @@ const CRDDashboard = () => {
                                                             }}
                                                             onMouseEnter={(e) => {
                                                                 if (e && e.target) {
-                                                                    e.target.style.filter = 'url(#glow) brightness(1.1)'
+                                                                    e.target.style.filter = 'url(#glow) brightness(1.15)'
+                                                                    e.target.style.transform = 'scale(1.05)'
                                                                 }
                                                             }}
                                                             onMouseLeave={(e) => {
                                                                 if (e && e.target) {
                                                                     e.target.style.filter = 'url(#shadow)'
+                                                                    e.target.style.transform = 'scale(1)'
                                                                 }
                                                             }}
                                                         />
@@ -960,57 +953,41 @@ const CRDDashboard = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
-                                        {/* Center label - Enhanced Design */}
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                                            <div className="text-center px-2 py-1 bg-white/80 backdrop-blur-sm rounded-full border-2 shadow-lg" style={{ borderColor: THEME_COLORS.maroonBg, padding: '8px 16px' }}>
-                                                <div className="text-xl sm:text-2xl md:text-3xl font-bold" style={{ color: THEME_COLORS.maroon, lineHeight: '1.1' }}>{usersChartData.total}</div>
-                                                <div className="text-[10px] sm:text-xs font-semibold mt-0.5 text-gray-700">Total Users</div>
-                                            </div>
-                                        </div>
                                     </div>
                                     
-                                    {/* Legend - Responsive Grid Layout */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {/* User Breakdown - Clean List Design */}
+                                    <div className="space-y-2.5 sm:space-y-3">
                                         {pieChartData.map((item, index) => (
                                             <div 
                                                 key={index}
-                                                className="flex items-center justify-between p-2 sm:p-2.5 rounded-lg border hover:shadow-sm transition-all duration-200 group cursor-pointer bg-gray-50"
-                                                style={{ borderColor: THEME_COLORS.maroonBg }}
+                                                className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
+                                                style={{ borderColor: item.name === 'Volunteers' ? THEME_COLORS.maroonBg : '#FDF8E8' }}
                                             >
-                                                <div className="flex items-center space-x-2 min-w-0 flex-1">
+                                                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                                                     <div 
-                                                        className="w-3 h-3 rounded-full flex-shrink-0"
+                                                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm"
                                                         style={{ backgroundColor: item.fill }}
                                                     ></div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <span className="text-xs font-semibold block truncate" style={{ color: THEME_COLORS.maroon }}>{item.name}</span>
-                                                        <span className="text-[10px] truncate text-gray-600">{item.percentage}%</span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.maroon }}>{item.name}</div>
+                                                        <div className="text-xs sm:text-sm text-gray-600">{item.percentage}% of total</div>
                                                     </div>
                                                 </div>
-                                                <span 
-                                                    className="text-sm sm:text-base font-bold ml-2 flex-shrink-0"
-                                                    style={{ color: item.fill }}
-                                                >
-                                                    {item.value}
-                                                </span>
+                                                <div className="flex items-baseline gap-1.5 flex-shrink-0">
+                                                    <span 
+                                                        className="text-xl sm:text-2xl font-bold"
+                                                        style={{ color: item.fill }}
+                                                    >
+                                                        {item.value}
+                                                    </span>
+                                                    <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                                                        {item.value === 1 ? 'user' : 'users'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                    
-                                    {/* Additional Stats - Desktop View */}
-                                    <div className="hidden sm:grid grid-cols-2 gap-2 mt-3">
-                                        <div className="bg-gray-50 rounded-lg p-2.5 border" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                            <div className="text-[10px] font-medium mb-1 text-gray-600">Total Users</div>
-                                            <div className="text-base font-bold" style={{ color: THEME_COLORS.maroon }}>{usersChartData.total}</div>
-                                        </div>
-                                        <div className="bg-gray-50 rounded-lg p-2.5 border" style={{ borderColor: THEME_COLORS.goldBg }}>
-                                            <div className="text-[10px] font-medium mb-1 text-gray-600">Active</div>
-                                            <div className="text-base font-bold" style={{ color: THEME_COLORS.gold }}>
-                                                {usersChartData.volunteers + usersChartData.donators}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
