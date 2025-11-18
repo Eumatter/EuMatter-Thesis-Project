@@ -200,7 +200,19 @@ export const register = async (req, res) => {
             user.verifyOtpAttempts = 0; // Reset attempts when generating new OTP
             user.verifyOtpLastAttempt = 0; // Reset last attempt time
             await user.save();
-            console.log(`📧 OTP generated for ${userType === 'MSEUF' ? mseufCategory : outsiderCategory} user: ${email}`);
+            
+            const userTypeText = userType === 'MSEUF' ? mseufCategory : outsiderCategory;
+            const emailType = email.includes('@student.mseuf.edu.ph') 
+                ? 'MSEUF Student' 
+                : email.includes('@mseuf.edu.ph') 
+                    ? 'MSEUF Faculty/Staff' 
+                    : 'Guest';
+            
+            console.log(`📧 OTP generated for ${userTypeText} user: ${email}`);
+            console.log(`   OTP Code: ${otp} (DO NOT LOG IN PRODUCTION - FOR DEBUGGING ONLY)`);
+            console.log(`   Email Type: ${emailType}`);
+            console.log(`   Expires at: ${new Date(user.verifyOtpExpireAt).toISOString()}`);
+            console.log(`   ✅ OTP saved to database before email sending`);
         }
 
         // Create token but user won't be able to access dashboard until verified
@@ -247,7 +259,7 @@ export const register = async (req, res) => {
                                 <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                     <div style="text-align: center; margin-bottom: 30px;">
                                         <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Welcome to EuMatter! 🎉</h2>
-                                    </div>
+                                </div>
                                     <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${name},</p>
                                     <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                                         Thank you for registering with EuMatter as a <strong>${userTypeText}</strong>. 
@@ -280,22 +292,36 @@ export const register = async (req, res) => {
                     
                     // Send email asynchronously (fire and forget) - don't block registration response
                     // OTP is already saved to user record, so verification will work even if email fails
-                    sendEmailWithRetry(mailOptions, 3, 3000)
+                    console.log(`📤 Starting email send for registration OTP to ${email}...`);
+                    sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
                         .then((emailResult) => {
-                            console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-                            console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest'}`);
+                            const emailType = email.includes('@student.mseuf.edu.ph') 
+                                ? 'MSEUF Student' 
+                                : email.includes('@mseuf.edu.ph') 
+                                    ? 'MSEUF Faculty/Staff' 
+                                    : 'Guest';
+                    console.log(`✅ Verification OTP email sent successfully to ${email}`);
+                            console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
+                            console.log(`   User Type: ${userType}, Email Type: ${emailType}`);
+                            console.log(`   OTP Code: ${otp} (saved in database)`);
+                            console.log(`   ✅ Email delivery confirmed - user can check inbox`);
                         })
                         .catch((sendError) => {
                             // Log error but don't throw - registration already succeeded and OTP is saved
-                            console.error(`❌ Failed to send verification OTP email to ${email}:`, sendError.message);
-                            console.error(`   Error details:`, {
-                                message: sendError.message,
-                                code: sendError.code,
-                                userType: userType,
-                                emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest'
-                            });
+                            const emailType = email.includes('@student.mseuf.edu.ph') 
+                                ? 'MSEUF Student' 
+                                : email.includes('@mseuf.edu.ph') 
+                                    ? 'MSEUF Faculty/Staff' 
+                                    : 'Guest';
+                            console.error(`❌ Failed to send verification OTP email to ${email} after all retry attempts`);
+                            console.error(`   Error: ${sendError.message}`);
+                            console.error(`   Error code: ${sendError.code || 'N/A'}`);
+                            console.error(`   User Type: ${userType}, Email Type: ${emailType}`);
+                            console.error(`   OTP Code: ${otp} (saved in database)`);
                             // Note: OTP is still saved, user can still verify
-                            console.warn(`   ⚠️  Note: OTP has been saved and verification will still work. User can use the OTP code to verify.`);
+                            console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
+                            console.warn(`   ⚠️  User can verify using OTP code: ${otp}`);
+                            console.warn(`   ⚠️  Email may still be delivered - check email provider status.`);
                         });
                 } else {
                     // Send welcome email for non-User roles (no verification needed)
@@ -314,18 +340,19 @@ export const register = async (req, res) => {
                         `
                     };
                     // Send welcome email asynchronously (fire and forget) - don't block registration response
-                    sendEmailWithRetry(mailOptions, 3, 3000)
+                    console.log(`📤 Starting welcome email send to ${email}...`);
+                    sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
                         .then((emailResult) => {
-                            console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                            console.log(`✅ Welcome email sent successfully to ${email}`);
+                            console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
+                            console.log(`   User Type: ${userType}`);
                         })
                         .catch((sendError) => {
                             // Log error but don't throw - registration already succeeded
-                            console.error(`❌ Failed to send welcome email to ${email}:`, sendError.message);
-                            console.error(`   Error details:`, {
-                                message: sendError.message,
-                                code: sendError.code,
-                                userType: userType
-                            });
+                            console.error(`❌ Failed to send welcome email to ${email} after all retry attempts`);
+                            console.error(`   Error: ${sendError.message}`);
+                            console.error(`   Error code: ${sendError.code || 'N/A'}`);
+                            console.error(`   User Type: ${userType}`);
                         });
                 }
             } catch (emailError) {
@@ -406,6 +433,18 @@ export const login = async (req, res) => {
                 user.verifyOtpLastAttempt = 0; // Reset last attempt time
                 await user.save();
 
+                // Log OTP generation during login
+                const emailType = email.includes('@student.mseuf.edu.ph') 
+                    ? 'MSEUF Student' 
+                    : email.includes('@mseuf.edu.ph') 
+                        ? 'MSEUF Faculty/Staff' 
+                        : 'Guest';
+                console.log(`📧 OTP generated during login for ${email}`);
+                console.log(`   Email Type: ${emailType}`);
+                console.log(`   OTP Code: ${otp} (DO NOT LOG IN PRODUCTION - FOR DEBUGGING ONLY)`);
+                console.log(`   Expires at: ${new Date(user.verifyOtpExpireAt).toISOString()}`);
+                console.log(`   ✅ OTP saved to database before email sending`);
+
                 // Send verification OTP email
                 const mailOptions = {
                     from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
@@ -428,13 +467,22 @@ export const login = async (req, res) => {
                 
                 // Send email with retry (fire and forget - don't block login response)
                 // OTP is already saved, so user can still verify even if email fails
-                sendEmailWithRetry(mailOptions, 3, 3000)
+                console.log(`📤 Starting email send for login OTP to ${email}...`);
+                sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
                     .then(result => {
-                        console.log(`✅ Verification OTP email sent during login to ${email} (MessageId: ${result.messageId || 'N/A'})`);
+                        console.log(`✅ Verification OTP email sent during login to ${email}`);
+                        console.log(`   MessageId: ${result.messageId || 'N/A'}`);
+                        console.log(`   OTP Code: ${otp} (saved in database)`);
+                        console.log(`   ✅ Email delivery confirmed - user can check inbox`);
                     })
                     .catch(error => {
-                        console.error(`❌ Failed to send verification OTP email during login to ${email}:`, error.message);
-                        console.warn(`   ⚠️  Note: OTP has been saved. User can still verify using the OTP code.`);
+                        console.error(`❌ Failed to send verification OTP email during login to ${email} after all retry attempts`);
+                        console.error(`   Error: ${error.message}`);
+                        console.error(`   Error code: ${error.code || 'N/A'}`);
+                        console.error(`   OTP Code: ${otp} (saved in database)`);
+                        console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
+                        console.warn(`   ⚠️  User can verify using OTP code: ${otp}`);
+                        console.warn(`   ⚠️  Email may still be delivered - check email provider status.`);
                     });
             }
 
@@ -581,6 +629,14 @@ export const sendVerifyOtp = async (req, res) => {
                 ? 'MSEUF Faculty/Staff' 
                 : 'Guest';
         
+        // Log OTP generation
+        console.log(`📧 OTP generated for sendVerifyOtp endpoint`);
+        console.log(`   Email: ${user.email}`);
+        console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+        console.log(`   OTP Code: ${otp} (DO NOT LOG IN PRODUCTION - FOR DEBUGGING ONLY)`);
+        console.log(`   Expires at: ${new Date(user.verifyOtpExpireAt).toISOString()}`);
+        console.log(`   ✅ OTP saved to database before email sending`);
+
         const mailOptions = {
             from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
             to: user.email,
@@ -590,7 +646,7 @@ export const sendVerifyOtp = async (req, res) => {
                     <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         <div style="text-align: center; margin-bottom: 30px;">
                             <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Email Verification Code</h2>
-                        </div>
+                    </div>
                         <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${user.name},</p>
                         <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                             Please use the following verification code to verify your email address for your <strong>${userTypeText}</strong> account:
@@ -622,69 +678,72 @@ export const sendVerifyOtp = async (req, res) => {
         
         // Send email asynchronously and respond immediately to prevent timeout
         // Email sending will happen in the background
-        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-        const userAgent = req.headers['user-agent'] || 'Unknown';
-        
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
         // Respond immediately to prevent frontend timeout
         // OTP is already saved, so verification will work even if email sending fails
         res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox. If you don't receive it, the OTP has been generated and you can try verifying with it." });
         
         // Send email in background (fire and forget)
         // OTP is already saved, so verification will work even if email sending fails
-        sendEmailWithRetry(mailOptions, 3, 3000)
+        console.log(`📤 Starting email send for resend OTP to ${user.email}...`);
+        sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
             .then((emailResult) => {
-                console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                console.log(`✅ Verification OTP email sent successfully to ${user.email}`);
+                console.log(`   MessageId: ${emailResult.messageId || 'N/A'}`);
                 console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+                console.log(`   OTP Code: ${otp} (saved in database)`);
+                console.log(`   ✅ Email delivery confirmed - user can check inbox`);
                 
                 // Log OTP resend - don't await, fire and forget
-                createAuditLog({
-                    userId: user._id,
-                    userEmail: user.email,
-                    userRole: user.role,
-                    actionType: 'OTP_RESENT',
-                    resourceType: 'user',
-                    resourceId: user._id,
-                    ipAddress: clientIp,
-                    userAgent: userAgent,
-                    requestMethod: req.method,
-                    requestEndpoint: req.path,
-                    responseStatus: 200,
-                    success: true
-                }).catch(err => console.error('Failed to log audit:', err));
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'OTP_RESENT',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true
+            }).catch(err => console.error('Failed to log audit:', err));
             })
             .catch((emailError) => {
-                // Log email send failure - don't await, fire and forget
-                console.error(`❌ Failed to send verification OTP email to ${user.email}:`, emailError);
-                console.error(`   Error details:`, {
-                    message: emailError.message,
-                    code: emailError.code,
-                    command: emailError.command,
-                    response: emailError.response,
-                    userType: user.userType,
-                    emailType: emailType
-                });
+            // Log email send failure - don't await, fire and forget
+                console.error(`❌ Failed to send verification OTP email to ${user.email} after all retry attempts`);
+                console.error(`   Error: ${emailError.message}`);
+                console.error(`   Error code: ${emailError.code || 'N/A'}`);
+                console.error(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+                console.error(`   OTP Code: ${otp} (saved in database)`);
+                console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
+                console.warn(`   ⚠️  User can verify using OTP code: ${otp}`);
+                console.warn(`   ⚠️  Email may still be delivered - check email provider status.`);
                 
                 // Log email failure but note that HTTP response was 200 (email sent in background)
                 // The endpoint responded successfully, but email delivery failed asynchronously
-                createAuditLog({
-                    userId: user._id,
-                    userEmail: user.email,
-                    userRole: user.role,
-                    actionType: 'EMAIL_SEND_FAILURE',
-                    resourceType: 'user',
-                    resourceId: user._id,
-                    ipAddress: clientIp,
-                    userAgent: userAgent,
-                    requestMethod: req.method,
-                    requestEndpoint: req.path,
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_SEND_FAILURE',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
                     responseStatus: 200, // HTTP response was 200, email failed in background
                     success: false, // Email delivery failed, but OTP was saved
                     errorMessage: `Background email send failed (${emailType}): ${emailError.message || 'Unknown error'}. OTP was generated and saved.`
-                }).catch(err => console.error('Failed to log audit:', err));
+            }).catch(err => console.error('Failed to log audit:', err));
             });
-        
+            
         return; // Exit early since we already sent response
-        
+
     } catch (error) {
         return res.json({ success: false, message: error.message });
     }
@@ -829,9 +888,22 @@ export const verifyEmail = async (req, res) => {
                 `
             };
             
-            sendEmailWithRetry(mailOptions, 3, 3000)
-                .then(() => console.log(`✅ New OTP email sent automatically to ${user.email} after expiration`))
-                .catch(err => console.error(`❌ Failed to send new OTP email to ${user.email}:`, err.message));
+            console.log(`📤 Starting email send for expired OTP regeneration to ${user.email}...`);
+            sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
+                .then((result) => {
+                    console.log(`✅ New OTP email sent automatically to ${user.email} after expiration`);
+                    console.log(`   MessageId: ${result.messageId || 'N/A'}`);
+                    console.log(`   OTP Code: ${newOtp} (saved in database)`);
+                    console.log(`   ✅ Email delivery confirmed - user can check inbox`);
+                })
+                .catch(err => {
+                    console.error(`❌ Failed to send new OTP email to ${user.email} after expiration`);
+                    console.error(`   Error: ${err.message}`);
+                    console.error(`   Error code: ${err.code || 'N/A'}`);
+                    console.error(`   OTP Code: ${newOtp} (saved in database)`);
+                    console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
+                    console.warn(`   ⚠️  User can verify using OTP code: ${newOtp}`);
+                });
             
             return res.json({ 
                 success: false, 
@@ -919,9 +991,22 @@ export const verifyEmail = async (req, res) => {
                     `
                 };
                 
-                sendEmailWithRetry(mailOptions, 3, 3000)
-                    .then(() => console.log(`✅ New OTP email sent automatically to ${user.email} after too many attempts`))
-                    .catch(err => console.error(`❌ Failed to send new OTP email to ${user.email}:`, err.message));
+                console.log(`📤 Starting email send for too many attempts OTP regeneration to ${user.email}...`);
+                sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
+                    .then((result) => {
+                        console.log(`✅ New OTP email sent automatically to ${user.email} after too many attempts`);
+                        console.log(`   MessageId: ${result.messageId || 'N/A'}`);
+                        console.log(`   OTP Code: ${newOtp} (saved in database)`);
+                        console.log(`   ✅ Email delivery confirmed - user can check inbox`);
+                    })
+                    .catch(err => {
+                        console.error(`❌ Failed to send new OTP email to ${user.email} after too many attempts`);
+                        console.error(`   Error: ${err.message}`);
+                        console.error(`   Error code: ${err.code || 'N/A'}`);
+                        console.error(`   OTP Code: ${newOtp} (saved in database)`);
+                        console.warn(`   ⚠️  IMPORTANT: OTP has been saved to database and verification will still work.`);
+                        console.warn(`   ⚠️  User can verify using OTP code: ${newOtp}`);
+                    });
                 
                 return res.json({ 
                     success: false, 

@@ -115,10 +115,12 @@ const isValidEmail = (email) => {
  * @param {Number} initialDelay - Initial delay in ms before retry (default: 1000)
  * @returns {Promise<Object>} Email result
  */
-export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDelay = 3000) => {
+export const sendEmailWithRetry = async (mailOptions, maxRetries = 5, initialDelay = 3000) => {
     // Validate email configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-        throw new Error('SMTP configuration is incomplete. Please check environment variables: SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
+        const errorMsg = 'SMTP configuration is incomplete. Please check environment variables: SMTP_HOST, SMTP_USER, SMTP_PASSWORD';
+        console.error(`❌ ${errorMsg}`);
+        throw new Error(errorMsg);
     }
     
     // Validate sender email
@@ -169,12 +171,18 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
         });
     };
     
+    // Log email attempt start
+    console.log(`📧 Attempting to send email to ${mailOptions.to} (Subject: ${mailOptions.subject})`);
+    console.log(`   Retry attempts: ${maxRetries + 1} total`);
+    
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        let attemptTransporter = transporter;
+        // Always use fresh transporter in production/cloud to avoid connection issues
+        // In development, use fresh transporter after first attempt
+        const useFreshTransporter = isProduction || attempt > 0;
+        const attemptTransporter = useFreshTransporter ? createFreshTransporter() : transporter;
         
-        // Use fresh transporter for retries to avoid stale connections
-        if (attempt > 0 || isProduction) {
-            attemptTransporter = createFreshTransporter();
+        if (attempt > 0) {
+            console.log(`   Retry attempt ${attempt + 1}/${maxRetries + 1} for ${mailOptions.to}`);
         }
         
         try {
@@ -194,7 +202,7 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
             const result = await Promise.race([sendPromise, timeoutPromise]);
             
             // Close fresh transporter if we created one
-            if (attemptTransporter !== transporter && attemptTransporter.close) {
+            if (useFreshTransporter && attemptTransporter.close) {
                 try {
                     const closeResult = attemptTransporter.close();
                     if (closeResult && typeof closeResult.catch === 'function') {
@@ -205,15 +213,17 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
                 }
             }
             
-            if (attempt > 0) {
-                console.log(`✅ Email sent successfully on attempt ${attempt + 1}/${maxRetries + 1} to ${mailOptions.to}`);
-            } else {
-                console.log(`✅ Email sent successfully to ${mailOptions.to} (MessageId: ${result.messageId || 'N/A'})`);
-            }
+            // Success logging
+            const attemptInfo = attempt > 0 ? ` on attempt ${attempt + 1}/${maxRetries + 1}` : '';
+            console.log(`✅ Email sent successfully${attemptInfo} to ${mailOptions.to}`);
+            console.log(`   MessageId: ${result.messageId || 'N/A'}`);
+            console.log(`   Subject: ${mailOptions.subject}`);
+            console.log(`   Timestamp: ${new Date().toISOString()}`);
+            
             return result;
         } catch (error) {
             // Close fresh transporter on error
-            if (attemptTransporter !== transporter && attemptTransporter.close) {
+            if (useFreshTransporter && attemptTransporter.close) {
                 try {
                     const closeResult = attemptTransporter.close();
                     if (closeResult && typeof closeResult.catch === 'function') {
@@ -225,29 +235,38 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
             }
             
             lastError = error;
+            
             // Consider timeout errors as retryable - they might succeed on retry
             const isRetryable = 
                 error.code === 'ECONNECTION' || 
                 error.code === 'ETIMEDOUT' ||
                 error.code === 'ESOCKET' ||
+                error.code === 'EAUTH' ||
                 error.message?.includes('timeout') ||
                 error.message?.includes('Timed out') ||
                 error.message?.includes('Connection') ||
                 error.message?.includes('timed out') ||
+                error.message?.includes('Connection timeout') ||
+                error.message?.includes('Socket timeout') ||
                 (error.responseCode && error.responseCode >= 500 && error.responseCode < 600);
             
             // Don't retry on last attempt or non-retryable errors
             if (attempt === maxRetries || !isRetryable) {
                 // Log detailed error information
-                console.error(`❌ Email send failed after ${attempt + 1} attempt(s):`, {
+                console.error(`❌ Email send failed after ${attempt + 1} attempt(s) to ${mailOptions.to}:`, {
                     to: mailOptions.to,
                     subject: mailOptions.subject,
                     error: error.message,
                     code: error.code,
                     responseCode: error.responseCode,
                     command: error.command,
+                    response: error.response,
                     stack: isProduction ? undefined : error.stack // Only log stack in dev
                 });
+                console.error(`   Final error: ${error.message}`);
+                if (error.code) console.error(`   Error code: ${error.code}`);
+                if (error.responseCode) console.error(`   Response code: ${error.responseCode}`);
+                
                 throw error;
             }
             
@@ -255,6 +274,7 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
             const delay = initialDelay * Math.pow(2, attempt);
             console.warn(`⚠️ Email send failed (attempt ${attempt + 1}/${maxRetries + 1}) to ${mailOptions.to}: ${error.message}`);
             console.warn(`   Error code: ${error.code || 'N/A'}`);
+            if (error.responseCode) console.warn(`   Response code: ${error.responseCode}`);
             console.warn(`   Retrying in ${delay}ms...`);
             
             // Wait before retrying
