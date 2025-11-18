@@ -113,6 +113,8 @@ const VerifyEmailPage = () => {
             axios.defaults.withCredentials = true
             const { data } = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
                 email
+            }, {
+                timeout: 30000 // 30 seconds timeout
             })
             
             if (data.success) {
@@ -123,9 +125,24 @@ const VerifyEmailPage = () => {
                 toast.error(data.message || 'Failed to send OTP')
             }
         } catch (error) {
-            const errorMessage = error?.response?.data?.message || error.message || 'Failed to send OTP'
-            toast.error(errorMessage)
             console.error('Resend OTP error:', error)
+            
+            // Handle different error types
+            if (error.response?.status === 503) {
+                toast.error('Service temporarily unavailable. Please try again in a few moments.')
+            } else if (error.response?.status === 404) {
+                toast.error('Resend OTP endpoint not found. Please contact support.')
+            } else if (error.response?.data?.message) {
+                toast.error(error.response.data.message)
+            } else if (error.message) {
+                if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+                    toast.error('Network error. Please check your connection and try again.')
+                } else {
+                    toast.error(error.message)
+                }
+            } else {
+                toast.error('Failed to send OTP. Please try again.')
+            }
         } finally {
             setIsResending(false)
         }

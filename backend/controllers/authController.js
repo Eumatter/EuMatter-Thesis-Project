@@ -100,8 +100,8 @@ export const register = async (req, res) => {
             }
 
             // Validate MSEUF category
-            if (!mseufCategory || !["Student", "Faculty", "Staff"].includes(mseufCategory)) {
-                return res.json({ success: false, message: "Please select Student, Faculty, or Staff" });
+            if (!mseufCategory || !["Student", "Faculty", "Staff", "Alumni"].includes(mseufCategory)) {
+                return res.json({ success: false, message: "Please select Student, Faculty, Staff, or Alumni" });
             }
 
             // Validate student information if user is a student
@@ -115,8 +115,8 @@ export const register = async (req, res) => {
             }
         } else if (userType === "Outsider") {
             // Validate outsider category
-            if (!outsiderCategory || !["Alumni", "External Partner", "General Public"].includes(outsiderCategory)) {
-                return res.json({ success: false, message: "Please select your category (Alumni, External Partner, or General Public)" });
+            if (!outsiderCategory || !["External Partner", "General Public"].includes(outsiderCategory)) {
+                return res.json({ success: false, message: "Please select your category (External Partner or General Public)" });
             }
         }
 
@@ -190,12 +190,15 @@ export const register = async (req, res) => {
         }).catch(err => console.error('Failed to log audit:', err));
 
         // Generate OTP for email verification (only for Users)
+        // This applies to ALL users with role "User" regardless of userType (MSEUF or Outsider)
+        // Both MSEUF (Student/Faculty/Staff/Alumni) and Outsider (External Partner/General Public) users receive OTP
         let otp = null;
         if (needsVerification) {
             otp = String(Math.floor(100000 + Math.random() * 900000));
             user.verifyOtp = otp;
             user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
             await user.save();
+            console.log(`📧 OTP generated for ${userType === 'MSEUF' ? mseufCategory : outsiderCategory} user: ${email}`);
         }
 
         // Create token but user won't be able to access dashboard until verified
@@ -228,32 +231,58 @@ export const register = async (req, res) => {
         setImmediate(async () => {
             try {
                 if (needsVerification && otp) {
-                    // Send verification OTP email
+                    // Send verification OTP email for both MSEUF and Guest/Outsider users
+                    const userTypeText = userType === 'MSEUF' 
+                        ? (mseufCategory ? `${mseufCategory} of MSEUF` : 'MSEUF Member')
+                        : (outsiderCategory ? outsiderCategory : 'Guest User');
+                    
                     const mailOptions = {
-                        from: process.env.SENDER_EMAIL,
+                        from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
                         to: email,
                         subject: "EuMatter - Verify Your Email Address",
                         html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                                <h2 style="color: #800000;">Welcome to EuMatter! 🎉</h2>
-                                <p>Hello ${name},</p>
-                                <p>Thank you for registering with EuMatter. To complete your registration and verify your email address, please use the following verification code:</p>
-                                <div style="background-color: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
-                                    <h1 style="color: #800000; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                                <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <div style="text-align: center; margin-bottom: 30px;">
+                                        <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Welcome to EuMatter! 🎉</h2>
+                                    </div>
+                                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${name},</p>
+                                    <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                        Thank you for registering with EuMatter as a <strong>${userTypeText}</strong>. 
+                                        To complete your registration and verify your email address, please use the following verification code:
+                                    </p>
+                                    <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                        <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
+                                    </div>
+                                    <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                                        <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
+                                    </p>
+                                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+                                        If you did not create an account with EuMatter, please ignore this email.
+                                    </p>
+                                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                        <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                            Best regards,<br/>
+                                            <strong style="color: #800000;">The EuMatter Team</strong>
+                                        </p>
+                                    </div>
                                 </div>
-                                <p><strong>This code will expire in 10 minutes.</strong></p>
-                                <p>If you did not create an account with EuMatter, please ignore this email.</p>
-                                <br/>
-                                <p>Best regards,<br/>The EuMatter Team</p>
+                                <div style="text-align: center; margin-top: 20px;">
+                                    <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                                        This is an automated message. Please do not reply to this email.
+                                    </p>
+                                </div>
                             </div>
                         `
                     };
-                    await transporter.sendMail(mailOptions);
-                    console.log(`✅ Verification OTP email sent successfully to ${email}`);
+                    
+                    const emailResult = await transporter.sendMail(mailOptions);
+                    console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                    console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
                 } else {
                     // Send welcome email for non-User roles (no verification needed)
                     const mailOptions = {
-                        from: process.env.SENDER_EMAIL,
+                        from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
                         to: email,
                         subject: "Welcome to EuMatter",
                         html: `
@@ -266,12 +295,21 @@ export const register = async (req, res) => {
                             </div>
                         `
                     };
-                    await transporter.sendMail(mailOptions);
-                    console.log(`✅ Welcome email sent successfully to ${email}`);
+                    const emailResult = await transporter.sendMail(mailOptions);
+                    console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
                 }
             } catch (emailError) {
                 // Log email error and create audit log
                 console.error(`❌ Failed to send email to ${email}:`, emailError);
+                console.error(`   Error details:`, {
+                    message: emailError.message,
+                    code: emailError.code,
+                    command: emailError.command,
+                    response: emailError.response,
+                    userType: userType,
+                    emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'
+                });
+                
                 const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
                 const userAgent = req.headers['user-agent'] || 'Unknown';
                 
@@ -288,7 +326,7 @@ export const register = async (req, res) => {
                     requestEndpoint: req.path,
                     responseStatus: 200,
                     success: false,
-                    errorMessage: `Failed to send ${needsVerification ? 'verification' : 'welcome'} email: ${emailError.message}`
+                    errorMessage: `Failed to send ${needsVerification ? 'verification' : 'welcome'} email: ${emailError.message || 'Unknown error'}`
                 }).catch(err => console.error('Failed to log audit:', err));
             }
         });
@@ -514,29 +552,60 @@ export const sendVerifyOtp = async (req, res) => {
         user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
         await user.save();
 
+        // Determine user type for email personalization
+        const userTypeText = user.userType === 'MSEUF' 
+            ? (user.mseufCategory ? `${user.mseufCategory} of MSEUF` : 'MSEUF Member')
+            : (user.outsiderCategory ? user.outsiderCategory : 'Guest User');
+        
+        const emailType = user.email.includes('@student.mseuf.edu.ph') 
+            ? 'MSEUF Student' 
+            : user.email.includes('@mseuf.edu.ph') 
+                ? 'MSEUF Faculty/Staff' 
+                : 'Guest/Outsider';
+        
         const mailOptions = {
-            from: process.env.SENDER_EMAIL,
+            from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
             to: user.email,
             subject: "EuMatter - Verify Your Email Address",
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <h2 style="color: #800000;">Email Verification Code</h2>
-                    <p>Hello ${user.name},</p>
-                    <p>Please use the following verification code to verify your email address:</p>
-                    <div style="background-color: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border-radius: 5px;">
-                        <h1 style="color: #800000; font-size: 32px; letter-spacing: 5px; margin: 0;">${otp}</h1>
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                    <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">Email Verification Code</h2>
+                        </div>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${user.name},</p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                            Please use the following verification code to verify your email address for your <strong>${userTypeText}</strong> account:
+                        </p>
+                        <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                            <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${otp}</h1>
+                        </div>
+                        <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                            <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
+                        </p>
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+                            If you did not request this code, please ignore this email.
+                        </p>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                Best regards,<br/>
+                                <strong style="color: #800000;">The EuMatter Team</strong>
+                            </p>
+                        </div>
                     </div>
-                    <p><strong>This code will expire in 10 minutes.</strong></p>
-                    <p>If you did not request this code, please ignore this email.</p>
-                    <br/>
-                    <p>Best regards,<br/>The EuMatter Team</p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                            This is an automated message. Please do not reply to this email.
+                        </p>
+                    </div>
                 </div>
             `
         };
         
         try {
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ Verification OTP email sent successfully to ${user.email}`);
+            const emailResult = await transporter.sendMail(mailOptions);
+            console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+            console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
             
             // Log OTP resend - don't await, fire and forget
             const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
@@ -559,7 +628,21 @@ export const sendVerifyOtp = async (req, res) => {
             
             return res.json({ success: true, message: "Verification OTP sent to your email" });
         } catch (emailError) {
+            const emailType = user.email.includes('@student.mseuf.edu.ph') 
+                ? 'MSEUF Student' 
+                : user.email.includes('@mseuf.edu.ph') 
+                    ? 'MSEUF Faculty/Staff' 
+                    : 'Guest/Outsider';
+            
             console.error(`❌ Failed to send verification OTP email to ${user.email}:`, emailError);
+            console.error(`   Error details:`, {
+                message: emailError.message,
+                code: emailError.code,
+                command: emailError.command,
+                response: emailError.response,
+                userType: user.userType,
+                emailType: emailType
+            });
             
             // Log email send failure - don't await, fire and forget
             const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
@@ -578,10 +661,20 @@ export const sendVerifyOtp = async (req, res) => {
                 requestEndpoint: req.path,
                 responseStatus: 500,
                 success: false,
-                errorMessage: `Failed to send verification OTP email: ${emailError.message}`
+                errorMessage: `Failed to send verification OTP email (${emailType}): ${emailError.message || 'Unknown error'}`
             }).catch(err => console.error('Failed to log audit:', err));
             
-            return res.json({ success: false, message: "Failed to send verification email. Please try again later." });
+            // Provide more specific error message
+            let errorMessage = "Failed to send verification email. Please try again later.";
+            if (emailError.code === 'EAUTH' || emailError.message?.includes('authentication')) {
+                errorMessage = "Email service authentication failed. Please contact support.";
+            } else if (emailError.code === 'ECONNECTION' || emailError.message?.includes('connection')) {
+                errorMessage = "Email service connection failed. Please try again in a few moments.";
+            } else if (emailError.response) {
+                errorMessage = `Email service error: ${emailError.response}`;
+            }
+            
+            return res.json({ success: false, message: errorMessage });
         }
 
     } catch (error) {

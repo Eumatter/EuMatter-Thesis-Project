@@ -38,7 +38,7 @@ import EnvergaLogo from '../../assets/enverga-logo.png';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
-    const { backendUrl, setIsLoggedIn, setUserData } = useContext(AppContent);
+    const { backendUrl, setIsLoggedIn, setUserData, getDashboardRoute } = useContext(AppContent);
 
     // Step management - Restore from sessionStorage if available
     const [currentStep, setCurrentStep] = useState(() => {
@@ -335,22 +335,44 @@ const RegisterPage = () => {
                 
                 setUserData(data.user);
                 setIsLoggedIn(true);
-                toast.success('Registration successful! Please verify your email to continue.');
-                navigate('/email-verify', { 
-                    state: { email: formData.email } 
-                });
+                
+                if (data.requiresVerification) {
+                    // Show success message with email info
+                    const emailType = formData.email.includes('@student.mseuf.edu.ph') 
+                        ? 'MSEUF Student' 
+                        : formData.email.includes('@mseuf.edu.ph') 
+                            ? 'MSEUF Faculty/Staff' 
+                            : 'Guest/Outsider';
+                    
+                    toast.success(`Registration successful! Verification code sent to ${formData.email}`, {
+                        autoClose: 5000
+                    });
+                    
+                    // Small delay to ensure email is sent
+                    setTimeout(() => {
+                        navigate('/email-verify', { 
+                            state: { email: formData.email } 
+                        });
+                    }, 500);
+                } else {
+                    toast.success('Registration successful! Redirecting to dashboard...');
+                    const dashboardRoute = getDashboardRoute(data.user.role);
+                    navigate(dashboardRoute);
+                }
             } else {
                 toast.error(data.message || 'Registration failed');
             }
         } catch (error) {
             console.error('Registration error:', error);
             
-            // Handle timeout errors specifically
-            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Timed')) {
+            // Handle different error types
+            if (error.response?.status === 503) {
+                toast.error('Service temporarily unavailable. Please try again in a few moments.');
+            } else if (error.response?.status === 404) {
+                toast.error('Registration endpoint not found. Please contact support.');
+            } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Timed')) {
                 // Registration may have succeeded but request timed out
-                // Check if user was created by attempting to navigate to email verification
-                toast.warning('Registration may have succeeded. Please check your email for the verification code, or try logging in.');
-                // Still navigate to email verification page in case registration succeeded
+                toast.warning('Request timed out. Registration may have succeeded. Please check your email for the verification code.');
                 navigate('/email-verify', { 
                     state: { email: formData.email } 
                 });
@@ -358,8 +380,12 @@ const RegisterPage = () => {
                 // Server returned an error message
                 toast.error(error.response.data.message);
             } else if (error.message) {
-                // Other error with message
-                toast.error(error.message);
+                // Network or other error
+                if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
+                    toast.error('Network error. Please check your connection and try again.');
+                } else {
+                    toast.error(error.message);
+                }
             } else {
                 // Generic error
                 toast.error('Registration failed. Please try again.');
@@ -564,8 +590,8 @@ const RegisterPage = () => {
             <div className="relative z-10 min-h-screen flex flex-col w-full overflow-x-hidden">
             <Header />
 
-                <main className="flex-1 flex items-center justify-center py-2 md:py-3 px-4 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
-                <div className="bg-white backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.1)] rounded-2xl flex flex-col lg:flex-row w-full max-w-5xl border border-gray-100 mx-auto">
+                <main className="flex-1 flex items-center justify-center py-4 px-4 md:py-6 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
+                <div className="bg-white backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.1)] rounded-2xl flex flex-col lg:flex-row w-full max-w-5xl lg:h-[calc(85vh-20px)] max-h-[680px] overflow-hidden border border-gray-100 mx-auto">
                     {/* Column 1: Visual Design - Hidden on mobile/tablet, shown on desktop - Equal width */}
                     <div className="hidden lg:flex relative w-full lg:w-1/2 flex-col items-center justify-between p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-l-2xl">
                         <div className="flex flex-col items-center justify-center flex-grow">
@@ -588,8 +614,8 @@ const RegisterPage = () => {
                         </div>
                     </div>
 
-                    {/* Column 2: Registration Form - Equal width with no scroll */}
-                    <div className="w-full lg:w-1/2 p-2.5 md:p-3 lg:p-4 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-visible registration-form-container">
+                    {/* Column 2: Registration Form - Equal width, matching login dimensions */}
+                    <div className="w-full lg:w-1/2 p-6 md:p-8 lg:p-10 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-y-auto registration-form-container">
                         {/* Animated Background Elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
@@ -615,10 +641,10 @@ const RegisterPage = () => {
                                 </div>
                             </div>
 
-                            {/* Form Content - No scroll, auto-adjusting */}
-                            <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="flex flex-col w-full">
-                                {/* Content Area - No overflow, compact spacing */}
-                                <div className="w-full mb-1.5 md:mb-2 registration-form-content">
+                            {/* Form Content - Scrollable for Step 5 only */}
+                            <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="flex flex-col w-full flex-1 min-h-0">
+                                {/* Content Area - Scrollable for Step 5 */}
+                                <div className={`w-full mb-1.5 md:mb-2 registration-form-content ${currentStep === 5 ? 'overflow-y-auto flex-1 min-h-0' : ''}`}>
                             {/* Step 1: User Type */}
                             {currentStep === 1 && (
                                 <div className="space-y-2 md:space-y-3 animate-fade-in">
@@ -1590,17 +1616,37 @@ const RegisterPage = () => {
                     transition: all 0.3s ease;
                 }
                 
-                /* Prevent vertical scrolling in registration form */
+                /* Registration form container - scrollable when needed */
                 .registration-form-container {
-                    overflow-y: visible !important;
-                    max-height: none !important;
-                    height: auto !important;
+                    overflow-y: auto !important;
                 }
                 
-                /* Ensure no scroll on form content */
+                /* Form content - scrollable only for Step 5 */
                 .registration-form-content {
                     overflow-y: visible !important;
-                    max-height: none !important;
+                }
+                
+                .registration-form-content.overflow-y-auto {
+                    overflow-y: auto !important;
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(255, 215, 0, 0.5) transparent;
+                }
+                
+                .registration-form-content.overflow-y-auto::-webkit-scrollbar {
+                    width: 6px;
+                }
+                
+                .registration-form-content.overflow-y-auto::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                
+                .registration-form-content.overflow-y-auto::-webkit-scrollbar-thumb {
+                    background-color: rgba(255, 215, 0, 0.5);
+                    border-radius: 3px;
+                }
+                
+                .registration-form-content.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+                    background-color: rgba(255, 215, 0, 0.7);
                 }
             `}</style>
         </div>
