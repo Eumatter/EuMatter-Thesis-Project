@@ -874,9 +874,9 @@ const CRDDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* Chart Container - Clean and Balanced */}
-                                    <div className="flex justify-center items-center rounded-lg border bg-white p-4 sm:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '220px', userSelect: 'none', WebkitUserSelect: 'none' }}>
-                                        <ResponsiveContainer width="100%" height="220px">
+                                    {/* Chart Container - Responsive Doughnut Chart */}
+                                    <div className="flex justify-center items-center rounded-lg border bg-white p-3 sm:p-4 md:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '180px', height: '180px', maxHeight: '280px', userSelect: 'none', WebkitUserSelect: 'none' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
                                             <PieChart
                                                 onClick={(e) => e.preventDefault()}
                                                 style={{ outline: 'none' }}
@@ -955,37 +955,94 @@ const CRDDashboard = () => {
                                         </ResponsiveContainer>
                                     </div>
                                     
-                                    {/* User Breakdown - Clean List Design */}
+                                    {/* User Demographics - Total Volunteers, Active, Total Donators */}
                                     <div className="space-y-2.5 sm:space-y-3">
-                                        {pieChartData.map((item, index) => (
-                                            <div 
-                                                key={index}
-                                                className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
-                                                style={{ borderColor: item.name === 'Volunteers' ? THEME_COLORS.maroonBg : '#FDF8E8' }}
-                                            >
-                                                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                                                    <div 
-                                                        className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm"
-                                                        style={{ backgroundColor: item.fill }}
-                                                    ></div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.maroon }}>{item.name}</div>
-                                                        <div className="text-xs sm:text-sm text-gray-600">{item.percentage}% of total</div>
+                                        {/* Total Volunteers */}
+                                        <div 
+                                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
+                                            style={{ borderColor: THEME_COLORS.maroonBg }}
+                                        >
+                                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                                <div 
+                                                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm"
+                                                    style={{ backgroundColor: CHART_COLORS.volunteer }}
+                                                ></div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.maroon }}>Total Volunteers</div>
+                                                    <div className="text-xs sm:text-sm text-gray-600">
+                                                        {usersChartData.total > 0 ? ((usersChartData.volunteers / usersChartData.total) * 100).toFixed(1) : 0}% of total users
                                                     </div>
                                                 </div>
-                                                <div className="flex items-baseline gap-1.5 flex-shrink-0">
-                                                    <span 
-                                                        className="text-xl sm:text-2xl font-bold"
-                                                        style={{ color: item.fill }}
-                                                    >
-                                                        {item.value}
-                                                    </span>
-                                                    <span className="text-xs sm:text-sm text-gray-500 font-medium">
-                                                        {item.value === 1 ? 'user' : 'users'}
-                                                    </span>
+                                            </div>
+                                            <div className="flex items-baseline gap-1.5 flex-shrink-0">
+                                                <span 
+                                                    className="text-xl sm:text-2xl font-bold"
+                                                    style={{ color: CHART_COLORS.volunteer }}
+                                                >
+                                                    {usersChartData.volunteers}
+                                                </span>
+                                                <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                                                    {usersChartData.volunteers === 1 ? 'user' : 'users'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Active */}
+                                        <div 
+                                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
+                                            style={{ borderColor: THEME_COLORS.goldBg }}
+                                        >
+                                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                                <div 
+                                                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm bg-gradient-to-br from-[#D4AF37] to-[#F5C842]"
+                                                ></div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.gold }}>Active</div>
+                                                    <div className="text-xs sm:text-sm text-gray-600">Total active users</div>
                                                 </div>
                                             </div>
-                                        ))}
+                                            <div className="flex items-baseline gap-1.5 flex-shrink-0">
+                                                <span 
+                                                    className="text-xl sm:text-2xl font-bold"
+                                                    style={{ color: THEME_COLORS.gold }}
+                                                >
+                                                    {usersChartData.volunteers + usersChartData.donators}
+                                                </span>
+                                                <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                                                    {(usersChartData.volunteers + usersChartData.donators) === 1 ? 'user' : 'users'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Total Donators */}
+                                        <div 
+                                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
+                                            style={{ borderColor: '#FDF8E8' }}
+                                        >
+                                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                                <div 
+                                                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm"
+                                                    style={{ backgroundColor: CHART_COLORS.donator }}
+                                                ></div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.maroon }}>Total Donators</div>
+                                                    <div className="text-xs sm:text-sm text-gray-600">
+                                                        {usersChartData.total > 0 ? ((usersChartData.donators / usersChartData.total) * 100).toFixed(1) : 0}% of total users
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-baseline gap-1.5 flex-shrink-0">
+                                                <span 
+                                                    className="text-xl sm:text-2xl font-bold"
+                                                    style={{ color: CHART_COLORS.donator }}
+                                                >
+                                                    {usersChartData.donators}
+                                                </span>
+                                                <span className="text-xs sm:text-sm text-gray-500 font-medium">
+                                                    {usersChartData.donators === 1 ? 'user' : 'users'}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
