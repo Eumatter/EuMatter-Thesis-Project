@@ -6,6 +6,7 @@ import AuditLogTable from '../../../components/AuditLogTable.jsx'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import jsPDF from 'jspdf'
 import { 
     MagnifyingGlassIcon, 
     FunnelIcon, 
@@ -253,17 +254,21 @@ const SystemReports = () => {
                 ]
 
                 const csvContent = csvRows.join('\n')
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+                // Add BOM (Byte Order Mark) for UTF-8 to ensure Excel opens it correctly with proper encoding
+                const BOM = '\uFEFF'
+                const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
                 const url = window.URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                const dateStr = new Date().toISOString().split('T')[0]
-                const categoryStr = selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''
-                a.download = `audit-logs${categoryStr}-${dateStr}.csv`
+                a.setAttribute('download', `audit-logs${selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''}-${new Date().toISOString().split('T')[0]}.csv`)
+                a.style.display = 'none'
                 document.body.appendChild(a)
                 a.click()
-                document.body.removeChild(a)
-                window.URL.revokeObjectURL(url)
+                // Clean up after a delay to ensure download starts
+                setTimeout(() => {
+                    document.body.removeChild(a)
+                    window.URL.revokeObjectURL(url)
+                }, 100)
                 toast.success('Audit logs exported as CSV successfully!')
             } else if (format === 'excel') {
                 // Excel Export (as CSV with .xlsx extension, or use a library)
@@ -329,88 +334,138 @@ const SystemReports = () => {
                 ]
 
                 const csvContent = csvRows.join('\n')
-                // Convert to Excel-compatible format (tab-separated)
-                const excelContent = csvContent.replace(/,/g, '\t')
-                const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' })
+                // Convert to Excel-compatible format (tab-separated with BOM for UTF-8)
+                const BOM = '\uFEFF'
+                const excelContent = BOM + csvContent.replace(/,/g, '\t')
+                const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' })
                 const url = window.URL.createObjectURL(blob)
                 const a = document.createElement('a')
                 a.href = url
-                const dateStr = new Date().toISOString().split('T')[0]
-                const categoryStr = selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''
-                a.download = `audit-logs${categoryStr}-${dateStr}.xls`
+                a.setAttribute('download', `audit-logs${selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''}-${new Date().toISOString().split('T')[0]}.xls`)
+                a.style.display = 'none'
                 document.body.appendChild(a)
                 a.click()
-                document.body.removeChild(a)
-                window.URL.revokeObjectURL(url)
+                // Clean up after a delay to ensure download starts
+                setTimeout(() => {
+                    document.body.removeChild(a)
+                    window.URL.revokeObjectURL(url)
+                }, 100)
                 toast.success('Audit logs exported as Excel successfully!')
             } else if (format === 'pdf') {
-                // PDF Export - using window.print() for now
-                // In production, you might want to use a library like jsPDF or html2pdf
-                toast.info('PDF export: Opening print dialog. You can save as PDF from there.')
-                
-                // Create a printable version
-                const printWindow = window.open('', '_blank')
-                const printContent = `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Audit Logs Report</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; padding: 20px; }
-                            h1 { color: #800000; }
-                            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10px; }
-                            th { background-color: #800000; color: white; }
-                            tr:nth-child(even) { background-color: #f2f2f2; }
-                            .header { margin-bottom: 20px; }
-                            .meta { font-size: 12px; color: #666; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="header">
-                            <h1>System Audit Logs Report</h1>
-                            <div class="meta">
-                                <p>Generated: ${new Date().toLocaleString()}</p>
-                                ${selectedCategory ? `<p>Category: ${selectedCategory}</p>` : ''}
-                                <p>Total Records: ${logs.length}</p>
-                            </div>
-                        </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Timestamp</th>
-                                    <th>User</th>
-                                    <th>Action</th>
-                                    <th>Category</th>
-                                    <th>Resource</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${logs.map(log => `
-                                    <tr>
-                                        <td>${new Date(log.timestamp).toLocaleString()}</td>
-                                        <td>${log.userEmail || log.userName || 'System'}</td>
-                                        <td>${log.actionType || ''}</td>
-                                        <td>${log.category || ''}</td>
-                                        <td>${log.resourceType || 'N/A'}</td>
-                                        <td>${log.success ? 'Success' : 'Failure'}</td>
-                                        <td>${log.priority || ''}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </body>
-                    </html>
-                `
-                printWindow.document.write(printContent)
-                printWindow.document.close()
-                printWindow.focus()
-                setTimeout(() => {
-                    printWindow.print()
-                    toast.success('PDF export dialog opened. Use your browser\'s print to PDF feature.')
-                }, 250)
+                // PDF Export using jsPDF
+                try {
+                    const doc = new jsPDF('landscape', 'mm', 'a4')
+                    const pageHeight = doc.internal.pageSize.getHeight()
+                    const margin = 10
+                    const tableStartY = 40
+                    let currentY = tableStartY
+                    const rowHeight = 8
+                    const fontSize = 8
+                    
+                    // Header
+                    doc.setFillColor(128, 0, 0) // #800000
+                    doc.setTextColor(255, 255, 255)
+                    doc.setFontSize(16)
+                    doc.setFont('helvetica', 'bold')
+                    doc.text('System Audit Logs Report', margin, 15)
+                    
+                    // Metadata
+                    doc.setFontSize(10)
+                    doc.setFont('helvetica', 'normal')
+                    doc.setTextColor(0, 0, 0)
+                    doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 22)
+                    if (selectedCategory) {
+                        doc.text(`Category: ${selectedCategory}`, margin, 27)
+                    }
+                    doc.text(`Total Records: ${logs.length}`, margin, selectedCategory ? 32 : 27)
+                    
+                    // Table headers
+                    const headers = ['Timestamp', 'User', 'Action', 'Category', 'Resource', 'Status', 'Priority']
+                    const colWidths = [35, 35, 35, 40, 30, 20, 25]
+                    let currentX = margin
+                    
+                    doc.setFillColor(128, 0, 0)
+                    doc.setTextColor(255, 255, 255)
+                    doc.setFontSize(fontSize)
+                    doc.setFont('helvetica', 'bold')
+                    
+                    headers.forEach((header, i) => {
+                        doc.rect(currentX, currentY, colWidths[i], rowHeight, 'F')
+                        doc.text(header, currentX + 2, currentY + 5)
+                        currentX += colWidths[i]
+                    })
+                    
+                    currentY += rowHeight
+                    doc.setTextColor(0, 0, 0)
+                    doc.setFont('helvetica', 'normal')
+                    
+                    // Table rows
+                    logs.forEach((log, index) => {
+                        // Check if we need a new page
+                        if (currentY + rowHeight > pageHeight - margin) {
+                            doc.addPage()
+                            currentY = margin
+                            
+                            // Redraw headers on new page
+                            currentX = margin
+                            doc.setFillColor(128, 0, 0)
+                            doc.setTextColor(255, 255, 255)
+                            doc.setFont('helvetica', 'bold')
+                            headers.forEach((header, i) => {
+                                doc.rect(currentX, currentY, colWidths[i], rowHeight, 'F')
+                                doc.text(header, currentX + 2, currentY + 5)
+                                currentX += colWidths[i]
+                            })
+                            currentY += rowHeight
+                            doc.setTextColor(0, 0, 0)
+                            doc.setFont('helvetica', 'normal')
+                        }
+                        
+                        const formatDate = (dateString) => {
+                            if (!dateString) return 'N/A'
+                            try {
+                                const date = new Date(dateString)
+                                return date.toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })
+                            } catch {
+                                return 'Invalid Date'
+                            }
+                        }
+                        
+                        const rowData = [
+                            formatDate(log.timestamp),
+                            (log.userEmail || log.userName || 'System').substring(0, 20),
+                            (log.actionType || '').substring(0, 20),
+                            (log.category || '').substring(0, 25),
+                            (log.resourceType || 'N/A').substring(0, 18),
+                            log.success ? 'Success' : 'Failure',
+                            (log.priority || '').substring(0, 12)
+                        ]
+                        
+                        currentX = margin
+                        rowData.forEach((cell, i) => {
+                            doc.text(cell, currentX + 2, currentY + 5)
+                            doc.rect(currentX, currentY, colWidths[i], rowHeight, 'S')
+                            currentX += colWidths[i]
+                        })
+                        
+                        currentY += rowHeight
+                    })
+                    
+                    // Save PDF
+                    const dateStr = new Date().toISOString().split('T')[0]
+                    const categoryStr = selectedCategory ? `-${selectedCategory.replace(/[^a-zA-Z0-9]/g, '_')}` : ''
+                    doc.save(`audit-logs${categoryStr}-${dateStr}.pdf`)
+                    toast.success('Audit logs exported as PDF successfully!')
+                } catch (error) {
+                    console.error('PDF export error:', error)
+                    toast.error('Failed to generate PDF. Please try again.')
+                }
             }
         } catch (error) {
             console.error('Export error:', error)

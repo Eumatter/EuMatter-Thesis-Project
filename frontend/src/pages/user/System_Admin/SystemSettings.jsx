@@ -172,7 +172,7 @@ const SystemSettings = () => {
                         className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-lg"
                     >
                         <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md">
                                 <FaCog className="w-6 h-6 text-white" />
                             </div>
                             <div>
@@ -192,7 +192,7 @@ const SystemSettings = () => {
                             className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg"
                         >
                             <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md">
                                     <FaTools className="w-5 h-5 text-white" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-black">Maintenance Mode</h3>
@@ -365,7 +365,7 @@ const SystemSettings = () => {
                             className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg"
                         >
                             <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md">
                                     <FaEnvelope className="w-5 h-5 text-white" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-black">Email Settings</h3>
@@ -399,7 +399,7 @@ const SystemSettings = () => {
                             className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg"
                         >
                             <div className="flex items-center space-x-3 mb-4 sm:mb-6">
-                                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md">
                                     <FaShieldAlt className="w-5 h-5 text-white" />
                                 </div>
                                 <h3 className="text-lg sm:text-xl font-semibold text-black">Security Settings</h3>

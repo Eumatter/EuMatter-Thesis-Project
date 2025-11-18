@@ -164,18 +164,16 @@ const AuditLogTable = ({
                                         <SortIcon field="priority" />
                                     </div>
                                 </th>
-                                <th 
-                                    scope="col"
-                                    className="px-3 py-3.5 text-center text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[80px]"
-                                >
-                                    Details
-                                </th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {logs.map((log) => (
                                 <React.Fragment key={log._id}>
-                                    <tr className="hover:bg-gray-50 transition-colors">
+                                    <tr 
+                                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                        onClick={() => toggleRow(log._id)}
+                                        title={expandedRows.has(log._id) ? 'Click to hide details' : 'Click to show details'}
+                                    >
                                         <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-900">
                                             <div className="font-medium">{formatDate(log.timestamp)}</div>
                                         </td>
@@ -234,32 +232,27 @@ const AuditLogTable = ({
                                             </span>
                                         </td>
                                         <td className="px-3 py-3.5 whitespace-nowrap">
-                                            {log.priority ? (
-                                                <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityBadge(log.priority)}`}>
-                                                    {log.priority}
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-gray-400">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3.5 whitespace-nowrap text-center">
-                                            <button
-                                                onClick={() => toggleRow(log._id)}
-                                                className="inline-flex items-center justify-center w-8 h-8 text-[#800000] hover:text-[#900000] hover:bg-gray-100 rounded-md transition-colors"
-                                                aria-label="Toggle details"
-                                                title={expandedRows.has(log._id) ? 'Hide details' : 'Show details'}
-                                            >
-                                                {expandedRows.has(log._id) ? (
-                                                    <ChevronUpIcon className="w-5 h-5" />
+                                            <div className="flex items-center gap-2">
+                                                {log.priority ? (
+                                                    <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityBadge(log.priority)}`}>
+                                                        {log.priority}
+                                                    </span>
                                                 ) : (
-                                                    <ChevronDownIcon className="w-5 h-5" />
+                                                    <span className="text-xs text-gray-400">-</span>
                                                 )}
-                                            </button>
+                                                <div className="ml-auto">
+                                                    {expandedRows.has(log._id) ? (
+                                                        <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+                                                    ) : (
+                                                        <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                                                    )}
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                     {expandedRows.has(log._id) && (
                                         <tr>
-                                            <td colSpan="9" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
+                                            <td colSpan="8" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-2">Request Details</h4>
