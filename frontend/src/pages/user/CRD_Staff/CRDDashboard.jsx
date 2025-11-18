@@ -862,20 +862,8 @@ const CRDDashboard = () => {
                                 </div>
                             ) : (
                                 <div className="flex-1 flex flex-col gap-4 sm:gap-5">
-                                    {/* Main Stats Cards - Top Section */}
-                                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                                        <div className="bg-gradient-to-br from-[#800020] to-[#9c0000] rounded-lg sm:rounded-xl p-4 sm:p-5 shadow-md border-2" style={{ borderColor: THEME_COLORS.maroon }}>
-                                            <div className="text-xs sm:text-sm font-semibold text-white/90 mb-1">Total Users</div>
-                                            <div className="text-2xl sm:text-3xl font-bold text-white">{usersChartData.total}</div>
-                                        </div>
-                                        <div className="bg-gradient-to-br from-[#D4AF37] to-[#F5C842] rounded-lg sm:rounded-xl p-4 sm:p-5 shadow-md border-2" style={{ borderColor: THEME_COLORS.gold }}>
-                                            <div className="text-xs sm:text-sm font-semibold text-white/90 mb-1">Active</div>
-                                            <div className="text-2xl sm:text-3xl font-bold text-white">{usersChartData.volunteers + usersChartData.donators}</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Chart Container - Responsive Doughnut Chart */}
-                                    <div className="flex justify-center items-center rounded-lg border bg-white p-3 sm:p-4 md:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '180px', height: '180px', maxHeight: '280px', userSelect: 'none', WebkitUserSelect: 'none' }}>
+                                    {/* Chart Container - Responsive Doughnut Chart with Center Label */}
+                                    <div className="flex justify-center items-center rounded-lg border bg-white p-3 sm:p-4 md:p-6 relative [&_svg]:outline-none [&_svg]:focus:outline-none [&_*]:outline-none [&_*]:focus:outline-none" style={{ borderColor: THEME_COLORS.maroonBg, minHeight: '200px', height: '200px', maxHeight: '300px', userSelect: 'none', WebkitUserSelect: 'none' }}>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart
                                                 onClick={(e) => e.preventDefault()}
@@ -883,10 +871,10 @@ const CRDDashboard = () => {
                                             >
                                                 <defs>
                                                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.15"/>
+                                                        <feDropShadow dx="0" dy="3" stdDeviation="3" floodOpacity="0.2"/>
                                                     </filter>
                                                     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                                        <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                                                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                                                         <feMerge>
                                                             <feMergeNode in="coloredBlur"/>
                                                             <feMergeNode in="SourceGraphic"/>
@@ -894,26 +882,30 @@ const CRDDashboard = () => {
                                                     </filter>
                                                     <linearGradient id="volunteerGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#800020" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#9c0000" stopOpacity="1"/>
+                                                        <stop offset="50%" stopColor="#9c0000" stopOpacity="1"/>
+                                                        <stop offset="100%" stopColor="#800020" stopOpacity="1"/>
                                                     </linearGradient>
                                                     <linearGradient id="donatorGradient" x1="0" y1="0" x2="1" y2="1">
                                                         <stop offset="0%" stopColor="#D4AF37" stopOpacity="1"/>
-                                                        <stop offset="100%" stopColor="#F5C842" stopOpacity="1"/>
+                                                        <stop offset="50%" stopColor="#F5C842" stopOpacity="1"/>
+                                                        <stop offset="100%" stopColor="#D4AF37" stopOpacity="1"/>
                                                     </linearGradient>
                                                 </defs>
                                                 <Pie
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="45%"
-                                                    outerRadius="70%"
-                                                    paddingAngle={2}
+                                                    innerRadius="50%"
+                                                    outerRadius="75%"
+                                                    paddingAngle={3}
                                                     dataKey="value"
                                                     animationBegin={0}
-                                                    animationDuration={1000}
-                                                    animationEasing="ease-out"
+                                                    animationDuration={1500}
+                                                    animationEasing="ease-in-out"
                                                     stroke={THEME_COLORS.white}
-                                                    strokeWidth={2}
+                                                    strokeWidth={2.5}
+                                                    startAngle={90}
+                                                    endAngle={450}
                                                 >
                                                     {pieChartData.map((entry, index) => (
                                                         <Cell 
@@ -922,7 +914,7 @@ const CRDDashboard = () => {
                                                             style={{ 
                                                                 filter: 'url(#shadow)',
                                                                 cursor: 'default',
-                                                                transition: 'all 0.2s ease',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                                                 outline: 'none'
                                                             }}
                                                             onClick={(e) => {
@@ -931,14 +923,16 @@ const CRDDashboard = () => {
                                                             }}
                                                             onMouseEnter={(e) => {
                                                                 if (e && e.target) {
-                                                                    e.target.style.filter = 'url(#glow) brightness(1.15)'
-                                                                    e.target.style.transform = 'scale(1.05)'
+                                                                    e.target.style.filter = 'url(#glow) brightness(1.2)'
+                                                                    e.target.style.transform = 'scale(1.08)'
+                                                                    e.target.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                                                 }
                                                             }}
                                                             onMouseLeave={(e) => {
                                                                 if (e && e.target) {
                                                                     e.target.style.filter = 'url(#shadow)'
                                                                     e.target.style.transform = 'scale(1)'
+                                                                    e.target.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                                                 }
                                                             }}
                                                         />
@@ -953,9 +947,19 @@ const CRDDashboard = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        {/* Center Label - Active and Total Users */}
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                                            <div className="text-center px-3 py-2">
+                                                <div className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1" style={{ color: THEME_COLORS.gold, lineHeight: '1.2' }}>
+                                                    {usersChartData.volunteers + usersChartData.donators}
+                                                </div>
+                                                <div className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.maroon }}>Active</div>
+                                                <div className="text-[10px] sm:text-xs font-medium mt-1.5" style={{ color: THEME_COLORS.gray }}>Total Users</div>
+                                            </div>
+                                        </div>
                                     </div>
                                     
-                                    {/* User Demographics - Total Volunteers, Active, Total Donators */}
+                                    {/* User Demographics - Total Volunteers and Total Donators Only */}
                                     <div className="space-y-2.5 sm:space-y-3">
                                         {/* Total Volunteers */}
                                         <div 
@@ -983,33 +987,6 @@ const CRDDashboard = () => {
                                                 </span>
                                                 <span className="text-xs sm:text-sm text-gray-500 font-medium">
                                                     {usersChartData.volunteers === 1 ? 'user' : 'users'}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Active */}
-                                        <div 
-                                            className="flex items-center justify-between p-3 sm:p-4 rounded-lg border-2 bg-white hover:shadow-md transition-all duration-200"
-                                            style={{ borderColor: THEME_COLORS.goldBg }}
-                                        >
-                                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                                                <div 
-                                                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 shadow-sm bg-gradient-to-br from-[#D4AF37] to-[#F5C842]"
-                                                ></div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-sm sm:text-base font-bold mb-0.5" style={{ color: THEME_COLORS.gold }}>Active</div>
-                                                    <div className="text-xs sm:text-sm text-gray-600">Total active users</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-baseline gap-1.5 flex-shrink-0">
-                                                <span 
-                                                    className="text-xl sm:text-2xl font-bold"
-                                                    style={{ color: THEME_COLORS.gold }}
-                                                >
-                                                    {usersChartData.volunteers + usersChartData.donators}
-                                                </span>
-                                                <span className="text-xs sm:text-sm text-gray-500 font-medium">
-                                                    {(usersChartData.volunteers + usersChartData.donators) === 1 ? 'user' : 'users'}
                                                 </span>
                                             </div>
                                         </div>
