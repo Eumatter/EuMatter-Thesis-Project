@@ -620,85 +620,67 @@ export const sendVerifyOtp = async (req, res) => {
             `
         };
         
-        try {
-            const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
-            console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-            console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
-            
-            // Log OTP resend - don't await, fire and forget
-            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-            const userAgent = req.headers['user-agent'] || 'Unknown';
-            
-            createAuditLog({
-                userId: user._id,
-                userEmail: user.email,
-                userRole: user.role,
-                actionType: 'OTP_RESENT',
-                resourceType: 'user',
-                resourceId: user._id,
-                ipAddress: clientIp,
-                userAgent: userAgent,
-                requestMethod: req.method,
-                requestEndpoint: req.path,
-                responseStatus: 200,
-                success: true
-            }).catch(err => console.error('Failed to log audit:', err));
-            
-            return res.json({ success: true, message: "Verification OTP sent to your email" });
-        } catch (emailError) {
-            const emailType = user.email.includes('@student.mseuf.edu.ph') 
-                ? 'MSEUF Student' 
-                : user.email.includes('@mseuf.edu.ph') 
-                    ? 'MSEUF Faculty/Staff' 
-                    : 'Guest/Outsider';
-            
-            console.error(`❌ Failed to send verification OTP email to ${user.email}:`, emailError);
-            console.error(`   Error details:`, {
-                message: emailError.message,
-                code: emailError.code,
-                command: emailError.command,
-                response: emailError.response,
-                userType: user.userType,
-                emailType: emailType
+        // Send email asynchronously and respond immediately to prevent timeout
+        // Email sending will happen in the background
+        const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        // Respond immediately to prevent frontend timeout
+        res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox in a few moments." });
+        
+        // Send email in background (fire and forget)
+        sendEmailWithRetry(mailOptions, 3, 2000)
+            .then((emailResult) => {
+                console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
+                
+                // Log OTP resend - don't await, fire and forget
+                createAuditLog({
+                    userId: user._id,
+                    userEmail: user.email,
+                    userRole: user.role,
+                    actionType: 'OTP_RESENT',
+                    resourceType: 'user',
+                    resourceId: user._id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    requestMethod: req.method,
+                    requestEndpoint: req.path,
+                    responseStatus: 200,
+                    success: true
+                }).catch(err => console.error('Failed to log audit:', err));
+            })
+            .catch((emailError) => {
+                // Log email send failure - don't await, fire and forget
+                console.error(`❌ Failed to send verification OTP email to ${user.email}:`, emailError);
+                console.error(`   Error details:`, {
+                    message: emailError.message,
+                    code: emailError.code,
+                    command: emailError.command,
+                    response: emailError.response,
+                    userType: user.userType,
+                    emailType: emailType
+                });
+                
+                createAuditLog({
+                    userId: user._id,
+                    userEmail: user.email,
+                    userRole: user.role,
+                    actionType: 'EMAIL_SEND_FAILURE',
+                    resourceType: 'user',
+                    resourceId: user._id,
+                    ipAddress: clientIp,
+                    userAgent: userAgent,
+                    requestMethod: req.method,
+                    requestEndpoint: req.path,
+                    responseStatus: 500,
+                    success: false,
+                    errorMessage: `Failed to send verification OTP email (${emailType}): ${emailError.message || 'Unknown error'}`
+                }).catch(err => console.error('Failed to log audit:', err));
             });
-            
-            // Log email send failure - don't await, fire and forget
-            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-            const userAgent = req.headers['user-agent'] || 'Unknown';
-            
-            createAuditLog({
-                userId: user._id,
-                userEmail: user.email,
-                userRole: user.role,
-                actionType: 'EMAIL_SEND_FAILURE',
-                resourceType: 'user',
-                resourceId: user._id,
-                ipAddress: clientIp,
-                userAgent: userAgent,
-                requestMethod: req.method,
-                requestEndpoint: req.path,
-                responseStatus: 500,
-                success: false,
-                errorMessage: `Failed to send verification OTP email (${emailType}): ${emailError.message || 'Unknown error'}`
-            }).catch(err => console.error('Failed to log audit:', err));
-            
-            // Provide more specific error message
-            let errorMessage = "Failed to send verification email after multiple attempts. Please try again later.";
-            if (emailError.code === 'EAUTH' || emailError.message?.includes('authentication')) {
-                errorMessage = "Email service authentication failed. Please contact support.";
-            } else if (emailError.code === 'ECONNECTION' || emailError.code === 'ETIMEDOUT' || emailError.message?.includes('timeout') || emailError.message?.includes('Connection')) {
-                errorMessage = "Email service connection timed out. Please try again in a few moments. If the problem persists, contact support.";
-            } else if (emailError.code === 'ESOCKET') {
-                errorMessage = "Email service socket error. Please try again in a few moments.";
-            } else if (emailError.responseCode) {
-                errorMessage = `Email service error (${emailError.responseCode}): ${emailError.response || 'Please try again later'}`;
-            } else if (emailError.response) {
-                errorMessage = `Email service error: ${emailError.response}`;
-            }
-            
-            return res.json({ success: false, message: errorMessage });
-        }
-
+        
+        return; // Exit early since we already sent response
+        
     } catch (error) {
         return res.json({ success: false, message: error.message });
     }

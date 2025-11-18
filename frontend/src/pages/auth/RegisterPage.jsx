@@ -325,7 +325,7 @@ const RegisterPage = () => {
             };
 
             const { data } = await axios.post(backendUrl + 'api/auth/register', registrationData, {
-                timeout: 30000 // 30 seconds timeout
+                timeout: 60000 // 60 seconds timeout for registration (allows time for email to be queued)
             });
             
             if (data.success) {

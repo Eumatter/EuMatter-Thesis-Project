@@ -114,7 +114,7 @@ const VerifyEmailPage = () => {
             const { data } = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
                 email
             }, {
-                timeout: 30000 // 30 seconds timeout
+                timeout: 90000 // 90 seconds timeout for email operations
             })
             
             if (data.success) {
@@ -128,7 +128,12 @@ const VerifyEmailPage = () => {
             console.error('Resend OTP error:', error)
             
             // Handle different error types
-            if (error.response?.status === 503) {
+            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                // Email might still be sent in background, give user info
+                toast.warning('Request is taking longer than expected. The email may still be sent. Please check your inbox.')
+                // Still show success message as email might be processing
+                setResendCooldown(60)
+            } else if (error.response?.status === 503) {
                 toast.error('Service temporarily unavailable. Please try again in a few moments.')
             } else if (error.response?.status === 404) {
                 toast.error('Resend OTP endpoint not found. Please contact support.')

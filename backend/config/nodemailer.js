@@ -18,6 +18,10 @@ const connectionTimeout = isProduction ? 30000 : 15000; // 30s for production, 1
 const greetingTimeout = isProduction ? 30000 : 15000;
 const socketTimeout = isProduction ? 30000 : 15000;
 
+// Connection pooling causes issues in cloud environments like Render.com
+// Use direct connections instead of pooling for better reliability
+const usePooling = process.env.EMAIL_USE_POOLING === 'true' && !isProduction;
+
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port,
@@ -26,22 +30,25 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
     },
-    // Connection timeout and retry options
-    connectionTimeout: connectionTimeout,
-    greetingTimeout: greetingTimeout,
-    socketTimeout: socketTimeout,
-    // Retry configuration
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    rateLimit: 14, // Limit to 14 messages per second (Brevo limit)
+    // Connection timeout and retry options - increased for cloud environments
+    connectionTimeout: isProduction ? 60000 : connectionTimeout, // 60s for production
+    greetingTimeout: isProduction ? 60000 : greetingTimeout, // 60s for production
+    socketTimeout: isProduction ? 60000 : socketTimeout, // 60s for production
+    // Retry configuration - disable pooling in production/cloud
+    pool: usePooling,
+    maxConnections: usePooling ? 5 : 1, // Single connection when not pooling
+    maxMessages: usePooling ? 100 : 1,
+    rateLimit: usePooling ? 14 : false, // Disable rate limiting when not pooling
     // Enable debug in development
     debug: process.env.NODE_ENV === 'development',
     logger: process.env.NODE_ENV === 'development',
     // Additional options for better reliability
     tls: {
         rejectUnauthorized: false // Allow self-signed certificates if needed
-    }
+    },
+    // Connection options for better reliability
+    requireTLS: port === 587, // Require TLS for port 587
+    requireSSL: port === 465 // Require SSL for port 465
 })
 
 // Non-blocking connection verification with timeout
@@ -108,7 +115,7 @@ const isValidEmail = (email) => {
  * @param {Number} initialDelay - Initial delay in ms before retry (default: 1000)
  * @returns {Promise<Object>} Email result
  */
-export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDelay = 1000) => {
+export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDelay = 2000) => {
     // Validate email configuration
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
         throw new Error('SMTP configuration is incomplete. Please check environment variables: SMTP_HOST, SMTP_USER, SMTP_PASSWORD');
@@ -139,9 +146,50 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
     
     let lastError = null;
     
+    // Create a new transporter for each attempt to avoid connection pool issues
+    const createFreshTransporter = () => {
+        return nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port,
+            secure: port === 465,
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASSWORD
+            },
+            connectionTimeout: isProduction ? 60000 : connectionTimeout,
+            greetingTimeout: isProduction ? 60000 : greetingTimeout,
+            socketTimeout: isProduction ? 60000 : socketTimeout,
+            pool: false, // Never use pooling for fresh connections
+            tls: {
+                rejectUnauthorized: false
+            },
+            requireTLS: port === 587,
+            requireSSL: port === 465
+        });
+    };
+    
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        let attemptTransporter = transporter;
+        
+        // Use fresh transporter for retries to avoid stale connections
+        if (attempt > 0 || isProduction) {
+            attemptTransporter = createFreshTransporter();
+        }
+        
         try {
-            const result = await transporter.sendMail(mailOptions);
+            // Add timeout wrapper for the entire send operation
+            const sendPromise = attemptTransporter.sendMail(mailOptions);
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Email send operation timed out after 60 seconds')), 60000);
+            });
+            
+            const result = await Promise.race([sendPromise, timeoutPromise]);
+            
+            // Close fresh transporter if we created one
+            if (attemptTransporter !== transporter && attemptTransporter.close) {
+                attemptTransporter.close().catch(() => {}); // Ignore close errors
+            }
+            
             if (attempt > 0) {
                 console.log(`✅ Email sent successfully on attempt ${attempt + 1}/${maxRetries + 1} to ${mailOptions.to}`);
             } else {
@@ -149,6 +197,11 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
             }
             return result;
         } catch (error) {
+            // Close fresh transporter on error
+            if (attemptTransporter !== transporter && attemptTransporter.close) {
+                attemptTransporter.close().catch(() => {}); // Ignore close errors
+            }
+            
             lastError = error;
             const isRetryable = 
                 error.code === 'ECONNECTION' || 
@@ -168,14 +221,16 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
                     error: error.message,
                     code: error.code,
                     responseCode: error.responseCode,
-                    command: error.command
+                    command: error.command,
+                    stack: isProduction ? undefined : error.stack // Only log stack in dev
                 });
                 throw error;
             }
             
-            // Calculate delay with exponential backoff
+            // Calculate delay with exponential backoff (longer delays for cloud)
             const delay = initialDelay * Math.pow(2, attempt);
             console.warn(`⚠️ Email send failed (attempt ${attempt + 1}/${maxRetries + 1}) to ${mailOptions.to}: ${error.message}`);
+            console.warn(`   Error code: ${error.code || 'N/A'}`);
             console.warn(`   Retrying in ${delay}ms...`);
             
             // Wait before retrying
