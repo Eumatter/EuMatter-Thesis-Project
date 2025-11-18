@@ -187,7 +187,14 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
             
             // Close fresh transporter if we created one
             if (attemptTransporter !== transporter && attemptTransporter.close) {
-                attemptTransporter.close().catch(() => {}); // Ignore close errors
+                try {
+                    const closeResult = attemptTransporter.close();
+                    if (closeResult && typeof closeResult.catch === 'function') {
+                        closeResult.catch(() => {}); // Ignore close errors
+                    }
+                } catch (closeError) {
+                    // Ignore close errors silently
+                }
             }
             
             if (attempt > 0) {
@@ -199,18 +206,24 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
         } catch (error) {
             // Close fresh transporter on error
             if (attemptTransporter !== transporter && attemptTransporter.close) {
-                attemptTransporter.close().catch(() => {}); // Ignore close errors
+                try {
+                    const closeResult = attemptTransporter.close();
+                    if (closeResult && typeof closeResult.catch === 'function') {
+                        closeResult.catch(() => {}); // Ignore close errors
+                    }
+                } catch (closeError) {
+                    // Ignore close errors silently
+                }
             }
             
             lastError = error;
             const isRetryable = 
                 error.code === 'ECONNECTION' || 
                 error.code === 'ETIMEDOUT' ||
+                error.code === 'ESOCKET' ||
                 error.message?.includes('timeout') ||
                 error.message?.includes('Connection') ||
-                error.code === 'ESOCKET' ||
-                error.code === 'ETIMEDOUT' ||
-                (error.responseCode >= 500 && error.responseCode < 600);
+                (error.responseCode && error.responseCode >= 500 && error.responseCode < 600);
             
             // Don't retry on last attempt or non-retryable errors
             if (attempt === maxRetries || !isRetryable) {
