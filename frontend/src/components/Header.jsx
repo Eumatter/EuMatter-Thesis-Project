@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContent } from '../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { motion } from 'framer-motion';
 import EnvergaLogo from '../assets/enverga-logo.png';
 import { formatNotificationPayload, getNotificationIcon, getNotificationColorClass } from '../utils/notificationFormatter.js';
 import { 
@@ -48,14 +47,8 @@ const Header = () => {
 	const [maintenanceInfo, setMaintenanceInfo] = useState(null);
 	const [timeRemaining, setTimeRemaining] = useState(null);
 	const [maintenanceAllowedRoles, setMaintenanceAllowedRoles] = useState(['System Administrator', 'CRD Staff']);
-	const [isMounted, setIsMounted] = useState(false);
     const dropdownRef = useRef(null);
     const bellRef = useRef(null);
-
-    // Trigger mount animation
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
 
     // Close dropdowns when clicking outside
     useEffect(() => {
@@ -418,85 +411,16 @@ const Header = () => {
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
                     <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 min-w-0 flex-1">
-                        {/* Logo with advanced animation */}
-                        <motion.div 
-                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 flex-shrink-0"
-                            initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                            animate={isMounted ? { 
-                                scale: 1, 
-                                rotate: 0, 
-                                opacity: 1 
-                            } : {}}
-                            transition={{ 
-                                type: "spring", 
-                                stiffness: 200, 
-                                damping: 15,
-                                duration: 0.6
-                            }}
-                            whileHover={{ 
-                                scale: 1.05, 
-                                rotate: 5,
-                                transition: { duration: 0.2 }
-                            }}
-                        >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 flex-shrink-0">
                             <img 
                                 src={EnvergaLogo} 
                                 alt="Enverga University Logo" 
                                 className="w-full h-full object-contain"
                             />
-                        </motion.div>
+                        </div>
                         <div className="min-w-0 flex-1 overflow-hidden">
-                            {/* EUMATTER text with letter-by-letter animation */}
-                            <motion.h1 
-                                className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-extrabold text-[#800000] truncate tracking-tight leading-tight"
-                                initial={{ opacity: 0, x: -50 }}
-                                animate={isMounted ? { 
-                                    opacity: 1, 
-                                    x: 0 
-                                } : {}}
-                                transition={{ 
-                                    delay: 0.2,
-                                    duration: 0.6,
-                                    ease: [0.25, 0.46, 0.45, 0.94]
-                                }}
-                            >
-                                {"EUMATTER".split("").map((letter, index) => (
-                                    <motion.span
-                                        key={index}
-                                        initial={{ opacity: 0, y: -15, scale: 0.8 }}
-                                        animate={isMounted ? { 
-                                            opacity: 1, 
-                                            y: 0, 
-                                            scale: 1
-                                        } : { opacity: 0 }}
-                                        transition={{
-                                            delay: 0.3 + (index * 0.05),
-                                            duration: 0.4,
-                                            ease: [0.25, 0.46, 0.45, 0.94]
-                                        }}
-                                        style={{ display: 'inline-block' }}
-                                    >
-                                        {letter === ' ' ? '\u00A0' : letter}
-                                    </motion.span>
-                                ))}
-                            </motion.h1>
-                            {/* Subtitle with slide and fade animation */}
-                            <motion.p 
-                                className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm xl:text-base 2xl:text-lg font-medium text-[#800000] uppercase tracking-wide truncate leading-tight mt-0.5"
-                                initial={{ opacity: 0, x: -30, y: 10 }}
-                                animate={isMounted ? { 
-                                    opacity: 1, 
-                                    x: 0, 
-                                    y: 0 
-                                } : {}}
-                                transition={{ 
-                                    delay: 0.7,
-                                    duration: 0.5,
-                                    ease: [0.25, 0.46, 0.45, 0.94]
-                                }}
-                            >
-                                Community Relations Department
-                            </motion.p>
+                            <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-extrabold text-[#800000] truncate tracking-tight leading-tight">EUMATTER</h1>
+                            <p className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm xl:text-base 2xl:text-lg font-medium text-[#800000] uppercase tracking-wide truncate leading-tight mt-0.5">Community Relations Department</p>
                         </div>
                     </div>
 
@@ -1061,63 +985,16 @@ const Header = () => {
                             {/* Header with close button - Enhanced design */}
                             <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
                                 <div className="flex items-center gap-3">
-                                    <motion.div 
-                                        className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-md"
-                                        initial={{ scale: 0, rotate: -180, opacity: 0 }}
-                                        animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                                        transition={{ 
-                                            type: "spring", 
-                                            stiffness: 200, 
-                                            damping: 15,
-                                            duration: 0.5,
-                                            delay: 0.1
-                                        }}
-                                    >
+                                    <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-md">
                                         <img 
                                             src={EnvergaLogo} 
                                             alt="Enverga University Logo" 
                                             className="w-7 h-7 object-contain"
                                         />
-                                    </motion.div>
+                                    </div>
                                     <div>
-                                        <motion.div 
-                                            className="text-base font-extrabold tracking-tight"
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ 
-                                                delay: 0.3,
-                                                duration: 0.4,
-                                                ease: "easeOut"
-                                            }}
-                                        >
-                                            {"EUMATTER".split("").map((letter, index) => (
-                                                <motion.span
-                                                    key={index}
-                                                    initial={{ opacity: 0, y: -10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{
-                                                        delay: 0.4 + (index * 0.03),
-                                                        duration: 0.3,
-                                                        ease: "easeOut"
-                                                    }}
-                                                    style={{ display: 'inline-block' }}
-                                                >
-                                                    {letter === ' ' ? '\u00A0' : letter}
-                                                </motion.span>
-                                            ))}
-                                        </motion.div>
-                                        <motion.div 
-                                            className="text-xs opacity-90 font-medium"
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 0.9, y: 0 }}
-                                            transition={{ 
-                                                delay: 0.6,
-                                                duration: 0.4,
-                                                ease: "easeOut"
-                                            }}
-                                        >
-                                            Navigation Menu
-                                        </motion.div>
+                                        <div className="text-base font-extrabold tracking-tight">EUMATTER</div>
+                                        <div className="text-xs opacity-90 font-medium">Navigation Menu</div>
                                     </div>
                                 </div>
                                 <button

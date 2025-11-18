@@ -652,7 +652,7 @@ const EventManagement = () => {
                     <div className="flex flex-wrap gap-2 mb-4">
                         <button
                             onClick={() => setFilter('pending')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',
@@ -669,7 +669,7 @@ const EventManagement = () => {
                         </button>
                         <button
                             onClick={() => setFilter('approved')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',
@@ -686,7 +686,7 @@ const EventManagement = () => {
                         </button>
                         <button
                             onClick={() => setFilter('declined')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer"
                             style={{ 
                                 backgroundColor: 'rgba(128, 0, 32, 0.08)',
                                 border: 'none',

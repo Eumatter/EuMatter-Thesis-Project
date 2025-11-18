@@ -912,8 +912,8 @@ const CRDDashboard = () => {
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="42%"
-                                                    outerRadius="83%"
+                                                    innerRadius="43%"
+                                                    outerRadius="82%"
                                                     paddingAngle={4}
                                                     dataKey="value"
                                                     animationBegin={0}

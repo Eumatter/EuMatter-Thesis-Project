@@ -352,9 +352,9 @@ const RegisterPage = () => {
                     sessionStorage.setItem('verificationEmail', formData.email.trim().toLowerCase())
                     
                     // Navigate immediately - email is sent in background, OTP is already saved
-                    navigate('/email-verify', { 
-                        state: { email: formData.email } 
-                    });
+                navigate('/email-verify', { 
+                    state: { email: formData.email } 
+                });
                 } else {
                     toast.success('Registration successful! Redirecting to dashboard...');
                     const dashboardRoute = getDashboardRoute(data.user.role);
@@ -388,7 +388,7 @@ const RegisterPage = () => {
                 if (error.message.includes('Network Error') || error.message.includes('Failed to fetch')) {
                     toast.error('Network error. Please check your connection and try again.');
                 } else {
-                    toast.error(error.message);
+                toast.error(error.message);
                 }
             } else {
                 // Generic error
@@ -1545,7 +1545,7 @@ const RegisterPage = () => {
                                         
                                         {currentStep !== 6 ? (
                                             <button
-                                                type="submit" 
+                                type="submit" 
                                                 className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 border-2 border-yellow-300/50 flex-shrink-0 min-w-[100px] md:min-w-[130px]"
                                             >
                                                 <span>Next Step</span>
@@ -1553,7 +1553,7 @@ const RegisterPage = () => {
                                             </button>
                                         ) : (
                                             <button
-                                                type="submit" 
+                                type="submit" 
                                                 disabled={isLoading || !formData.acceptedTerms}
                                                 className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none border-2 border-yellow-300/50 flex-shrink-0 min-w-[120px] md:min-w-[150px]"
                                             >
