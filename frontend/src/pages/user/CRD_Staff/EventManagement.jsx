@@ -519,15 +519,18 @@ const EventManagement = () => {
                                         {stats.total}
                                     </p>
                                 </div>
-                                <div className="bg-white rounded-lg p-3 border border-gray-200" style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <div className="bg-gradient-to-br from-[#800020]/10 to-[#9c0000]/10 rounded-xl p-3 border border-[#800020]/20 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
-                                            <linearGradient id="iconGradientTotal" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <linearGradient id="iconGradientTotal" x1="0%" y1="0%" x2="100%" y2="100%">
                                                 <stop offset="0%" stopColor="#800020" />
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <path stroke="url(#iconGradientTotal)" fill="url(#iconGradientTotal)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z" fill="url(#iconGradientTotal)" />
+                                        <circle cx="9" cy="13" r="1.5" fill="url(#iconGradientTotal)" />
+                                        <circle cx="15" cy="13" r="1.5" fill="url(#iconGradientTotal)" />
+                                        <path d="M12 17c-1.1 0-2-.9-2-2h4c0 1.1-.9 2-2 2z" fill="url(#iconGradientTotal)" />
                                     </svg>
                                 </div>
                             </div>
@@ -541,15 +544,16 @@ const EventManagement = () => {
                                         {stats.pending}
                                     </p>
                                 </div>
-                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
-                                            <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="100%">
                                                 <stop offset="0%" stopColor="#800020" />
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <path stroke="url(#gradientPending)" fill="url(#gradientPending)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientPending)" fill="none" strokeWidth="2" />
+                                        <path d="M12 6v6l4 2" stroke="url(#gradientPending)" fill="none" strokeWidth="2.5" strokeLinecap="round" />
                                     </svg>
                                 </div>
                             </div>
@@ -563,15 +567,17 @@ const EventManagement = () => {
                                         {stats.approved}
                                     </p>
                                 </div>
-                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
-                                            <linearGradient id="gradientApproved" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <linearGradient id="gradientApproved" x1="0%" y1="0%" x2="100%" y2="100%">
                                                 <stop offset="0%" stopColor="#800020" />
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <path stroke="url(#gradientApproved)" fill="url(#gradientApproved)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <circle cx="12" cy="12" r="10" fill="url(#gradientApproved)" opacity="0.1" />
+                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientApproved)" fill="none" strokeWidth="2" />
+                                        <path d="M9 12l2 2 4-4" stroke="url(#gradientApproved)" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </div>
                             </div>
@@ -585,15 +591,17 @@ const EventManagement = () => {
                                         {stats.declined}
                                     </p>
                                 </div>
-                                <div className="bg-white rounded-lg p-3 border border-gray-200 relative inline-flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
-                                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-3 border border-red-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
-                                            <linearGradient id="gradientDeclined" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <linearGradient id="gradientDeclined" x1="0%" y1="0%" x2="100%" y2="100%">
                                                 <stop offset="0%" stopColor="#800020" />
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <path stroke="url(#gradientDeclined)" fill="url(#gradientDeclined)" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <circle cx="12" cy="12" r="10" fill="url(#gradientDeclined)" opacity="0.1" />
+                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientDeclined)" fill="none" strokeWidth="2" />
+                                        <path d="M15 9l-6 6M9 9l6 6" stroke="url(#gradientDeclined)" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 </div>
                             </div>
