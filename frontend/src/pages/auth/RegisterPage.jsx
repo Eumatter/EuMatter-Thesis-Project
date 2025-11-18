@@ -491,7 +491,7 @@ const RegisterPage = () => {
     };
     
     return (
-            <div className="w-full mb-4 px-2 sm:px-3">
+            <div className="w-full mb-1.5 md:mb-2 px-1 sm:px-2">
                 <div className="flex items-start justify-between max-w-4xl mx-auto">
                     {[1, 2, 3, 4, 5, 6].map((stepNum, index) => {
                         const isActive = stepNum === currentStep;
@@ -502,29 +502,29 @@ const RegisterPage = () => {
                         
                         return (
                             <React.Fragment key={stepNum}>
-                                <div className={`flex flex-col items-center flex-1 min-w-0 ${!isLast ? 'mr-1 sm:mr-2' : ''}`}>
+                                <div className={`flex flex-col items-center flex-1 min-w-0 ${!isLast ? 'mr-0.5 sm:mr-1' : ''}`}>
                                     {/* Step Circle */}
                                     <div
-                                        className={`w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-lg flex-shrink-0 ${
+                                        className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-lg flex-shrink-0 ${
                                             isCompleted
-                                                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-green-500/50 scale-110'
+                                                ? 'bg-gradient-to-br from-green-400 to-green-600 text-white shadow-green-500/50 scale-105'
                                                 : isSkipped
                                                 ? 'bg-gray-600/50 text-gray-400 opacity-50 border-2 border-gray-500/50'
                                                 : isActive
-                                                ? 'bg-gradient-to-br from-[#800000] to-red-900 text-white shadow-red-900/50 scale-110 ring-2 ring-yellow-400'
+                                                ? 'bg-gradient-to-br from-[#800000] to-red-900 text-white shadow-red-900/50 scale-105 ring-2 ring-yellow-400'
                                                 : 'bg-white/30 text-white border-2 border-white/50'
                                         }`}
                                         title={label.join(' ')}
                                     >
-                                        {isCompleted ? <FaCheck className="text-xs sm:text-sm" /> : stepNum}
+                                        {isCompleted ? <FaCheck className="text-[10px] sm:text-xs" /> : <span className="text-[10px] sm:text-xs md:text-sm">{stepNum}</span>}
                                     </div>
                                     
                                     {/* Step Label - Two rows for multi-word labels */}
-                                    <div className="mt-1.5 sm:mt-2 text-center leading-tight w-full">
+                                    <div className="mt-1 sm:mt-1.5 text-center leading-tight w-full">
                                         {label.map((word, wordIndex) => (
                                             <div 
                                                 key={wordIndex}
-                                                className={`text-[9px] sm:text-[10px] md:text-xs font-medium whitespace-nowrap ${
+                                                className={`text-[8px] sm:text-[9px] md:text-[10px] font-medium whitespace-nowrap ${
                                                     isActive ? 'text-white font-semibold' : 
                                                     isSkipped ? 'text-gray-500 opacity-50' :
                                                     'text-gray-200'
@@ -538,7 +538,7 @@ const RegisterPage = () => {
                                 
                                 {/* Connector Line */}
                                 {!isLast && (
-                                    <div className={`flex-1 h-0.5 sm:h-1 mt-3.5 sm:mt-4 md:mt-5 mx-0.5 sm:mx-1 ${
+                                    <div className={`flex-1 h-0.5 sm:h-0.5 md:h-1 mt-3 sm:mt-3.5 md:mt-4 mx-0.5 sm:mx-1 ${
                                         isCompleted ? 'bg-green-500' : 'bg-gray-300'
                                     } transition-colors duration-300`} />
                                 )}
@@ -564,8 +564,8 @@ const RegisterPage = () => {
             <div className="relative z-10 min-h-screen flex flex-col w-full overflow-x-hidden">
             <Header />
 
-                <main className="flex-1 flex items-center justify-center py-4 px-4 md:py-6 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
-                <div className="bg-white backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.1)] rounded-2xl flex flex-col lg:flex-row w-full max-w-5xl overflow-hidden border border-gray-100 mx-auto">
+                <main className="flex-1 flex items-center justify-center py-2 md:py-3 px-4 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
+                <div className="bg-white backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.1)] rounded-2xl flex flex-col lg:flex-row w-full max-w-5xl border border-gray-100 mx-auto">
                     {/* Column 1: Visual Design - Hidden on mobile/tablet, shown on desktop - Equal width */}
                     <div className="hidden lg:flex relative w-full lg:w-1/2 flex-col items-center justify-between p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-l-2xl">
                         <div className="flex flex-col items-center justify-center flex-grow">
@@ -589,55 +589,55 @@ const RegisterPage = () => {
                     </div>
 
                     {/* Column 2: Registration Form - Equal width with no scroll */}
-                    <div className="w-full lg:w-1/2 p-3 md:p-4 lg:p-6 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-visible">
+                    <div className="w-full lg:w-1/2 p-2.5 md:p-3 lg:p-4 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-visible registration-form-container">
                         {/* Animated Background Elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
                         
                         <div className="relative z-10 flex flex-col w-full">
-                            {/* Header Section */}
-                            <div className="flex-shrink-0 mb-2 md:mb-3">
-                                <div className="text-center mb-3">
-                                    <h1 className="text-2xl md:text-3xl font-extrabold text-white mb-2 bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text text-transparent">
+                            {/* Header Section - More Compact */}
+                            <div className="flex-shrink-0 mb-1.5 md:mb-2">
+                                <div className="text-center mb-1.5 md:mb-2">
+                                    <h1 className="text-xl md:text-2xl lg:text-2xl font-extrabold text-white mb-1 bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text text-transparent">
                                         Create Account
                                     </h1>
                                     <div className="flex items-center justify-center space-x-2">
-                                        <div className="h-1 w-10 bg-[#FFD700] rounded-full"></div>
-                                        <p className="text-xs md:text-sm text-gray-200 font-medium">
-                                            {currentStep === 6 ? 'Review Your Information' : `Step ${currentStep} of ${totalSteps}`}
+                                        <div className="h-0.5 w-8 md:w-10 bg-[#FFD700] rounded-full"></div>
+                                        <p className="text-[10px] md:text-xs text-gray-200 font-medium">
+                                            {currentStep === 6 ? 'Review' : `Step ${currentStep}/${totalSteps}`}
                                         </p>
-                                        <div className="h-1 w-10 bg-[#FFD700] rounded-full"></div>
+                                        <div className="h-0.5 w-8 md:w-10 bg-[#FFD700] rounded-full"></div>
                         </div>
                                 </div>
 
-                                <div className="mb-3">
+                                <div className="mb-1.5 md:mb-2">
                                     {renderStepIndicator()}
                                 </div>
                             </div>
 
                             {/* Form Content - No scroll, auto-adjusting */}
                             <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="flex flex-col w-full">
-                                {/* Content Area - No overflow */}
-                                <div className="w-full mb-2 md:mb-3">
+                                {/* Content Area - No overflow, compact spacing */}
+                                <div className="w-full mb-1.5 md:mb-2 registration-form-content">
                             {/* Step 1: User Type */}
                             {currentStep === 1 && (
-                                <div className="space-y-3 md:space-y-4 animate-fade-in">
-                                    <div className="text-center mb-2 md:mb-3">
-                                        <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1 flex items-center justify-center">
-                                            <FaUsers className="mr-2 text-[#FFD700] text-sm md:text-base" />
+                                <div className="space-y-2 md:space-y-3 animate-fade-in">
+                                    <div className="text-center mb-1.5 md:mb-2">
+                                        <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-0.5 flex items-center justify-center">
+                                            <FaUsers className="mr-1.5 text-[#FFD700] text-xs md:text-sm" />
                                             User Type
                                         </h3>
-                                        <p className="text-gray-200 text-xs md:text-sm">
+                                        <p className="text-gray-200 text-[10px] md:text-xs">
                                             Please select your user type to continue
                                         </p>
                                     </div>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                                         {/* MSEUF Option */}
                                         <button
                                             type="button"
                                             onClick={() => handleChange('userType', 'MSEUF')}
-                                            className={`group relative p-4 md:p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${
+                                            className={`group relative p-3 md:p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-xl ${
                                                 formData.userType === 'MSEUF'
                                                     ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
                                                     : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
@@ -657,33 +657,33 @@ const RegisterPage = () => {
                                             )}
                                             
                                             {/* Icon Container */}
-                                            <div className={`mb-2 md:mb-3 flex justify-center transition-transform duration-300 ${formData.userType === 'MSEUF' ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                            <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 ${formData.userType === 'MSEUF' ? 'scale-105' : 'group-hover:scale-105'}`}>
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                     formData.userType === 'MSEUF'
                                                         ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                         : 'bg-white/20 group-hover:bg-white/30'
                                                 }`}>
-                                                    <FaUniversity className={`text-xl md:text-2xl ${
+                                                    <FaUniversity className={`text-lg md:text-xl ${
                                                         formData.userType === 'MSEUF' ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                     } transition-colors duration-300`} />
                                                 </div>
                                             </div>
                                             
                                             {/* Content */}
-                                            <div className="text-center space-y-1">
-                                                <h4 className={`text-base md:text-lg font-bold transition-colors duration-300 ${
+                                            <div className="text-center space-y-0.5">
+                                                <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
                                                     formData.userType === 'MSEUF' ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                 }`}>
                                                     MSEUF Member
                                                 </h4>
-                                                <p className="text-gray-200 text-xs leading-snug px-1">
-                                                    I am a student, faculty, staff, or alumni of MSEUF
+                                                <p className="text-gray-200 text-[10px] md:text-xs leading-tight px-1">
+                                                    Student, faculty, staff, or alumni
                                                 </p>
-                                                <div className="flex items-center justify-center space-x-1.5 mt-1.5 pt-1.5 border-t border-white/20">
-                                                    <FaGraduationCap className="text-white/70 text-xs" />
-                                                    <FaChalkboard className="text-white/70 text-xs" />
-                                                    <FaUserTie className="text-white/70 text-xs" />
-                                                    <FaUserGraduate className="text-white/70 text-xs" />
+                                                <div className="flex items-center justify-center space-x-1 mt-1 pt-1 border-t border-white/20">
+                                                    <FaGraduationCap className="text-white/70 text-[10px]" />
+                                                    <FaChalkboard className="text-white/70 text-[10px]" />
+                                                    <FaUserTie className="text-white/70 text-[10px]" />
+                                                    <FaUserGraduate className="text-white/70 text-[10px]" />
                                                 </div>
                                             </div>
                                             
@@ -697,7 +697,7 @@ const RegisterPage = () => {
                                         <button
                                             type="button"
                                             onClick={() => handleChange('userType', 'Outsider')}
-                                            className={`group relative p-4 md:p-5 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${
+                                            className={`group relative p-3 md:p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-xl ${
                                                 formData.userType === 'Outsider'
                                                     ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
                                                     : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
@@ -717,31 +717,31 @@ const RegisterPage = () => {
                                             )}
                                             
                                             {/* Icon Container */}
-                                            <div className={`mb-2 md:mb-3 flex justify-center transition-transform duration-300 ${formData.userType === 'Outsider' ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                            <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 ${formData.userType === 'Outsider' ? 'scale-105' : 'group-hover:scale-105'}`}>
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                     formData.userType === 'Outsider'
                                                         ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                         : 'bg-white/20 group-hover:bg-white/30'
                                                 }`}>
-                                                    <FaUsers className={`text-xl md:text-2xl ${
+                                                    <FaUsers className={`text-lg md:text-xl ${
                                                         formData.userType === 'Outsider' ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                     } transition-colors duration-300`} />
                                                 </div>
                                             </div>
                                             
                                             {/* Content */}
-                                            <div className="text-center space-y-1">
-                                                <h4 className={`text-base md:text-lg font-bold transition-colors duration-300 ${
+                                            <div className="text-center space-y-0.5">
+                                                <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
                                                     formData.userType === 'Outsider' ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                 }`}>
                                                     Guest
                                                 </h4>
-                                                <p className="text-gray-200 text-xs leading-snug px-1">
-                                                    I am a guest or external user
+                                                <p className="text-gray-200 text-[10px] md:text-xs leading-tight px-1">
+                                                    Guest or external user
                                                 </p>
-                                                <div className="flex items-center justify-center space-x-1.5 mt-1.5 pt-1.5 border-t border-white/20">
-                                                    <FaUser className="text-white/70 text-xs" />
-                                                    <FaUsers className="text-white/70 text-xs" />
+                                                <div className="flex items-center justify-center space-x-1 mt-1 pt-1 border-t border-white/20">
+                                                    <FaUser className="text-white/70 text-[10px]" />
+                                                    <FaUsers className="text-white/70 text-[10px]" />
                                                 </div>
                                             </div>
                                             
@@ -765,30 +765,30 @@ const RegisterPage = () => {
 
                             {/* Step 2: Basic Information */}
                             {currentStep === 2 && (
-                                <div className="space-y-2 md:space-y-2.5 animate-fade-in">
-                                    <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1.5 md:mb-2 flex items-center">
-                                        <FaUser className="mr-2 text-xs md:text-sm" />
+                                <div className="space-y-1.5 md:space-y-2 animate-fade-in">
+                                    <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-1 flex items-center">
+                                        <FaUser className="mr-1.5 text-xs" />
                                         Basic Information
                                     </h3>
                                     
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-2.5">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 md:gap-2">
                                         <div>
-                                            <label className="block text-xs font-medium text-white mb-1.5">First Name *</label>
+                                            <label className="block text-[10px] md:text-xs font-medium text-white mb-1">First Name *</label>
                                     <input
                                         type="text"
                                         placeholder="Jane"
-                                                className={`w-full rounded-lg border ${errors.firstName ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                className={`w-full rounded-lg border ${errors.firstName ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                 value={formData.firstName}
                                                 onChange={(e) => handleChange('firstName', e.target.value)}
                                             />
                                             {errors.firstName && <p className="text-red-200 text-xs mt-0.5">{errors.firstName}</p>}
                                 </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-white mb-1.5">Last Name *</label>
+                                            <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Last Name *</label>
                                     <input
                                         type="text"
                                         placeholder="Doe"
-                                                className={`w-full rounded-lg border ${errors.lastName ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                className={`w-full rounded-lg border ${errors.lastName ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                 value={formData.lastName}
                                                 onChange={(e) => handleChange('lastName', e.target.value)}
                                             />
@@ -797,14 +797,14 @@ const RegisterPage = () => {
                             </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaEnvelope className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaEnvelope className="mr-1 text-[10px]" />
                                             Email *
                                         </label>
                                 <input
                                     type="email"
                                     placeholder={formData.userType === 'MSEUF' ? (formData.mseufCategory === 'Student' ? 'A22-34197@student.mseuf.edu.ph' : 'juan.delacruz@mseuf.edu.ph') : 'you@example.com'}
-                                            className={`w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.email ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.email}
                                             onChange={(e) => handleChange('email', e.target.value)}
                                         />
@@ -827,14 +827,14 @@ const RegisterPage = () => {
                             </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaLock className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaLock className="mr-1 text-[10px]" />
                                             Password *
                                         </label>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
-                                            className={`w-full rounded-lg border ${errors.password ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.password ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.password}
                                             onChange={(e) => handleChange('password', e.target.value)}
                                         />
@@ -842,11 +842,11 @@ const RegisterPage = () => {
                             </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5">Confirm Password *</label>
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Confirm Password *</label>
                                 <input
                                     type="password"
                                     placeholder="••••••••"
-                                            className={`w-full rounded-lg border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.confirmPassword}
                                             onChange={(e) => handleChange('confirmPassword', e.target.value)}
                                         />
@@ -857,21 +857,21 @@ const RegisterPage = () => {
 
                             {/* Step 3: Personal Information */}
                             {currentStep === 3 && (
-                                <div className="space-y-2 md:space-y-2.5 animate-fade-in">
-                                    <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1.5 md:mb-2 flex items-center">
-                                        <FaUser className="mr-2 text-xs md:text-sm" />
+                                <div className="space-y-1.5 md:space-y-2 animate-fade-in">
+                                    <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-1 flex items-center">
+                                        <FaUser className="mr-1.5 text-xs" />
                                         Personal Information
                                     </h3>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaCalendar className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaCalendar className="mr-1 text-[10px]" />
                                             Birthday *
                                         </label>
                                         <input
                                             type="date"
                                             max={new Date().toISOString().split('T')[0]}
-                                            className={`w-full rounded-lg border ${errors.birthday ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.birthday ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.birthday}
                                             onChange={(e) => handleChange('birthday', e.target.value)}
                                         />
@@ -879,12 +879,12 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaVenusMars className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaVenusMars className="mr-1 text-[10px]" />
                                             Gender *
                                         </label>
                                         <select
-                                            className={`w-full rounded-lg border ${errors.gender ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.gender ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.gender}
                                             onChange={(e) => handleChange('gender', e.target.value)}
                                         >
@@ -898,14 +898,14 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaMapMarkerAlt className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaMapMarkerAlt className="mr-1 text-[10px]" />
                                             Address *
                                         </label>
                                         <textarea
                                             placeholder="Enter your complete address"
                                             rows="2"
-                                            className={`w-full rounded-lg border ${errors.address ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700] resize-none`}
+                                            className={`w-full rounded-lg border ${errors.address ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700] resize-none`}
                                             value={formData.address}
                                             onChange={(e) => handleChange('address', e.target.value)}
                                         />
@@ -913,14 +913,14 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-white mb-1.5 flex items-center">
-                                            <FaPhone className="mr-1.5 text-xs" />
+                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                            <FaPhone className="mr-1 text-[10px]" />
                                             Contact Number *
                                         </label>
                                         <input
                                             type="tel"
                                             placeholder="09XX XXX XXXX"
-                                            className={`w-full rounded-lg border ${errors.contact ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                            className={`w-full rounded-lg border ${errors.contact ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                             value={formData.contact}
                                             onChange={(e) => handleChange('contact', e.target.value)}
                                         />
@@ -934,18 +934,18 @@ const RegisterPage = () => {
                             {currentStep === 4 && (
                                 <>
                                     {formData.userType === 'MSEUF' ? (
-                                        <div className="space-y-3 md:space-y-4 animate-fade-in">
-                                            <div className="text-center mb-2 md:mb-3">
-                                                <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1 flex items-center justify-center">
-                                                    <FaGraduationCap className="mr-2 text-[#FFD700] text-sm md:text-base" />
+                                        <div className="space-y-2 md:space-y-3 animate-fade-in">
+                                            <div className="text-center mb-1.5 md:mb-2">
+                                                <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-0.5 flex items-center justify-center">
+                                                    <FaGraduationCap className="mr-1.5 text-[#FFD700] text-xs md:text-sm" />
                                                     MSEUF Category
                                                 </h3>
-                                                <p className="text-gray-200 text-xs md:text-sm">
-                                                    Please select your affiliation category
+                                                <p className="text-gray-200 text-[10px] md:text-xs">
+                                                    Select your affiliation
                                                 </p>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-2">
                                                 {[
                                                     { name: 'Student', icon: FaGraduationCap, description: 'Currently enrolled student' },
                                                     { name: 'Faculty', icon: FaChalkboard, description: 'Teaching staff member' },
@@ -956,7 +956,7 @@ const RegisterPage = () => {
                                                         key={name}
                                                         type="button"
                                                         onClick={() => handleChange('mseufCategory', name)}
-                                                        className={`group relative p-3 md:p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
+                                                        className={`group relative p-2 md:p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
                                                             formData.mseufCategory === name
                                                                 ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
                                                                 : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
@@ -1018,18 +1018,18 @@ const RegisterPage = () => {
                                             )}
                                         </div>
                                     ) : formData.userType === 'Outsider' ? (
-                                        <div className="space-y-3 md:space-y-4 animate-fade-in">
-                                            <div className="text-center mb-2 md:mb-3">
-                                                <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1 flex items-center justify-center">
-                                                    <FaUsers className="mr-2 text-[#FFD700] text-sm md:text-base" />
+                                        <div className="space-y-2 md:space-y-3 animate-fade-in">
+                                            <div className="text-center mb-1.5 md:mb-2">
+                                                <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-0.5 flex items-center justify-center">
+                                                    <FaUsers className="mr-1.5 text-[#FFD700] text-xs md:text-sm" />
                                                     Guest Category
                                                 </h3>
-                                                <p className="text-gray-200 text-xs md:text-sm">
-                                                    Please select your category
+                                                <p className="text-gray-200 text-[10px] md:text-xs">
+                                                    Select your category
                                                 </p>
                                             </div>
                                             
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                                                 {[
                                                     { name: 'External Partner', icon: FaHandshake, description: 'Partner organization or institution' },
                                                     { name: 'General Public', icon: FaGlobe, description: 'Community member or public user' }
@@ -1038,7 +1038,7 @@ const RegisterPage = () => {
                                                         key={name}
                                                         type="button"
                                                         onClick={() => handleChange('outsiderCategory', name)}
-                                                        className={`group relative p-3 md:p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
+                                                        className={`group relative p-2.5 md:p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
                                                             formData.outsiderCategory === name
                                                                 ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
                                                                 : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
@@ -1111,8 +1111,8 @@ const RegisterPage = () => {
                             {currentStep === 5 && (
                                 <>
                                     {formData.userType === 'MSEUF' ? (
-                                <div className="space-y-2 md:space-y-2.5 animate-fade-in">
-                                    <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1.5 md:mb-2 flex items-center">
+                                <div className="space-y-1.5 md:space-y-2 animate-fade-in">
+                                    <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-1 flex items-center">
                                         {formData.mseufCategory === 'Student' ? (
                                             <FaGraduationCap className="mr-2 text-sm" />
                                         ) : formData.mseufCategory === 'Faculty' ? (
@@ -1129,9 +1129,9 @@ const RegisterPage = () => {
                                     {formData.mseufCategory === 'Student' && (
                                         <>
                                             <div>
-                                                <label className="block text-xs font-medium text-white mb-1.5">Student Year *</label>
+                                                <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Student Year *</label>
                                                 <select
-                                                    className={`w-full rounded-lg border ${errors.studentYear ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                    className={`w-full rounded-lg border ${errors.studentYear ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                     value={formData.studentYear}
                                                     onChange={(e) => handleChange('studentYear', e.target.value)}
                                                 >
@@ -1147,9 +1147,9 @@ const RegisterPage = () => {
                                             </div>
                                             
                                             <div>
-                                                <label className="block text-xs font-medium text-white mb-1.5">Department *</label>
+                                                <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Department *</label>
                                                 <select
-                                                    className={`w-full rounded-lg border ${errors.department ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                    className={`w-full rounded-lg border ${errors.department ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                     value={formData.department}
                                                     onChange={(e) => {
                                                         handleChange('department', e.target.value);
@@ -1165,9 +1165,9 @@ const RegisterPage = () => {
                                             </div>
                                             
                                             <div>
-                                                <label className="block text-xs font-medium text-white mb-1.5">Course *</label>
+                                                <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Course *</label>
                                                 <select
-                                                    className={`w-full rounded-lg border ${errors.course ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                    className={`w-full rounded-lg border ${errors.course ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                     value={formData.course}
                                                     onChange={(e) => handleChange('course', e.target.value)}
                                                     disabled={!formData.department}
@@ -1188,9 +1188,9 @@ const RegisterPage = () => {
                                     {/* Faculty/Staff/Alumni fields - Department only (optional) */}
                                     {(formData.mseufCategory === 'Faculty' || formData.mseufCategory === 'Staff' || formData.mseufCategory === 'Alumni') && (
                                         <div>
-                                            <label className="block text-xs font-medium text-white mb-1.5">Department (Optional)</label>
+                                            <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Department (Optional)</label>
                                             <select
-                                                className={`w-full rounded-lg border ${errors.department ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
+                                                className={`w-full rounded-lg border ${errors.department ? 'border-red-500' : 'border-gray-400'} bg-white text-gray-900 px-2.5 py-1.5 md:px-3 md:py-2 text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-[#FFD700]`}
                                                 value={formData.department}
                                                 onChange={(e) => handleChange('department', e.target.value)}
                                             >
@@ -1225,8 +1225,8 @@ const RegisterPage = () => {
                                     )}
                                     </div>
                                     ) : formData.userType === 'Outsider' ? (
-                                        <div className="space-y-2 md:space-y-2.5 animate-fade-in">
-                                            <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1.5 md:mb-2 flex items-center">
+                                        <div className="space-y-1.5 md:space-y-2 animate-fade-in">
+                                            <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-1 flex items-center">
                                                 {formData.outsiderCategory === 'External Partner' ? (
                                                     <FaHandshake className="mr-2 text-sm" />
                                                 ) : (
@@ -1291,27 +1291,27 @@ const RegisterPage = () => {
 
                             {/* Step 6: Review and Submit */}
                             {currentStep === 6 && (
-                                <div className="space-y-2 md:space-y-3 animate-fade-in">
+                                <div className="space-y-1.5 md:space-y-2 animate-fade-in">
                                     {/* Header Section */}
-                                    <div className="text-center mb-2 md:mb-3">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-[#FFD700] to-yellow-400 rounded-full mb-1.5 md:mb-2 shadow-lg shadow-yellow-500/50">
-                                            <FaCheckCircle className="text-[#800000] text-lg md:text-xl" />
+                                    <div className="text-center mb-1.5 md:mb-2">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#FFD700] to-yellow-400 rounded-full mb-1 shadow-lg shadow-yellow-500/50">
+                                            <FaCheckCircle className="text-[#800000] text-sm md:text-lg" />
                                         </div>
-                                        <h3 className="text-base md:text-lg lg:text-xl font-bold text-white mb-1">Review Your Information</h3>
-                                        <p className="text-gray-200 text-xs md:text-sm">Please verify all information before submitting</p>
+                                        <h3 className="text-sm md:text-base lg:text-lg font-bold text-white mb-0.5">Review Information</h3>
+                                        <p className="text-gray-200 text-[10px] md:text-xs">Verify before submitting</p>
                             </div>
 
                                     {/* Information Cards Grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 md:gap-2">
                                         {/* Personal Information Card */}
-                                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 md:p-3 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-                                            <div className="flex items-center mb-1.5 md:mb-2 pb-1.5 md:pb-2 border-b border-white/20">
-                                                <div className="w-7 h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center mr-2">
-                                                    <FaUser className="text-[#FFD700] text-xs md:text-sm" />
+                                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 md:p-2.5 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                            <div className="flex items-center mb-1 pb-1 border-b border-white/20">
+                                                <div className="w-6 h-6 md:w-7 md:h-7 bg-white/20 rounded-lg flex items-center justify-center mr-1.5">
+                                                    <FaUser className="text-[#FFD700] text-[10px] md:text-xs" />
                                                 </div>
-                                                <h4 className="text-xs md:text-sm lg:text-base font-bold text-white">Personal Information</h4>
+                                                <h4 className="text-[10px] md:text-xs lg:text-sm font-bold text-white">Personal Info</h4>
                                             </div>
-                                            <div className="space-y-1.5 md:space-y-2">
+                                            <div className="space-y-1 md:space-y-1.5">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] text-gray-300 uppercase tracking-wider mb-0.5">Full Name</span>
                                                     <span className="text-white font-semibold text-xs md:text-sm">{formData.firstName} {formData.lastName}</span>
@@ -1338,14 +1338,14 @@ const RegisterPage = () => {
                                         </div>
 
                                         {/* Contact & Location Card */}
-                                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2.5 md:p-3 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
-                                            <div className="flex items-center mb-1.5 md:mb-2 pb-1.5 md:pb-2 border-b border-white/20">
-                                                <div className="w-7 h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center mr-2">
-                                                    <FaMapMarkerAlt className="text-[#FFD700] text-xs md:text-sm" />
+                                        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-2 md:p-2.5 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                            <div className="flex items-center mb-1 pb-1 border-b border-white/20">
+                                                <div className="w-6 h-6 md:w-7 md:h-7 bg-white/20 rounded-lg flex items-center justify-center mr-1.5">
+                                                    <FaMapMarkerAlt className="text-[#FFD700] text-[10px] md:text-xs" />
                                                 </div>
-                                                <h4 className="text-xs md:text-sm lg:text-base font-bold text-white">Contact & Location</h4>
+                                                <h4 className="text-[10px] md:text-xs lg:text-sm font-bold text-white">Contact & Location</h4>
                                             </div>
-                                            <div className="space-y-1.5 md:space-y-2">
+                                            <div className="space-y-1 md:space-y-1.5">
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] text-gray-300 uppercase tracking-wider mb-0.5">Address</span>
                                                     <span className="text-white font-semibold text-xs md:text-sm">{formData.address || 'N/A'}</span>
@@ -1358,18 +1358,18 @@ const RegisterPage = () => {
                                         </div>
 
                                         {/* Account Type Card */}
-                                        <div className={`bg-white/10 backdrop-blur-sm rounded-xl p-2.5 md:p-3 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 ${formData.userType === 'MSEUF' || formData.userType === 'Outsider' ? 'sm:col-span-2' : ''}`}>
-                                            <div className="flex items-center mb-1.5 md:mb-2 pb-1.5 md:pb-2 border-b border-white/20">
-                                                <div className="w-7 h-7 md:w-8 md:h-8 bg-white/20 rounded-lg flex items-center justify-center mr-2">
+                                        <div className={`bg-white/10 backdrop-blur-sm rounded-lg p-2 md:p-2.5 border border-white/20 shadow-lg hover:shadow-xl transition-all duration-300 ${formData.userType === 'MSEUF' || formData.userType === 'Outsider' ? 'sm:col-span-2' : ''}`}>
+                                            <div className="flex items-center mb-1 pb-1 border-b border-white/20">
+                                                <div className="w-6 h-6 md:w-7 md:h-7 bg-white/20 rounded-lg flex items-center justify-center mr-1.5">
                                                     {formData.userType === 'MSEUF' ? (
-                                                        <FaUniversity className="text-[#FFD700] text-xs md:text-sm" />
+                                                        <FaUniversity className="text-[#FFD700] text-[10px] md:text-xs" />
                                                     ) : (
-                                                        <FaUsers className="text-[#FFD700] text-xs md:text-sm" />
+                                                        <FaUsers className="text-[#FFD700] text-[10px] md:text-xs" />
                                                     )}
                                                 </div>
-                                                <h4 className="text-xs md:text-sm lg:text-base font-bold text-white">Account Type</h4>
+                                                <h4 className="text-[10px] md:text-xs lg:text-sm font-bold text-white">Account Type</h4>
                                             </div>
-                                            <div className="space-y-1.5 md:space-y-2">
+                                            <div className="space-y-1 md:space-y-1.5">
                                                 <div className="flex items-center justify-between p-2 bg-gradient-to-r from-yellow-500/20 to-yellow-400/10 rounded-lg border border-yellow-400/30">
                                                     <span className="text-[10px] text-gray-300 uppercase tracking-wider">User Type</span>
                                                     <span className="text-[#FFD700] font-bold text-xs md:text-sm">{formData.userType}</span>
@@ -1415,37 +1415,36 @@ const RegisterPage = () => {
                                     </div>
 
                                     {/* Verification Notice */}
-                                    <div className="relative bg-gradient-to-r from-yellow-500/20 via-yellow-400/15 to-yellow-500/20 border-2 border-yellow-400/40 rounded-xl p-2.5 md:p-3 shadow-lg overflow-hidden">
+                                    <div className="relative bg-gradient-to-r from-yellow-500/20 via-yellow-400/15 to-yellow-500/20 border-2 border-yellow-400/40 rounded-lg p-2 md:p-2.5 shadow-lg overflow-hidden">
                                         {/* Animated Background */}
                                         <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-transparent animate-pulse"></div>
                                         
-                                        <div className="relative z-10 flex items-start space-x-2">
-                                            <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 bg-yellow-400/30 rounded-full flex items-center justify-center">
-                                                <FaEnvelope className="text-yellow-300 text-xs md:text-sm" />
+                                        <div className="relative z-10 flex items-start space-x-1.5">
+                                            <div className="flex-shrink-0 w-6 h-6 md:w-7 md:h-7 bg-yellow-400/30 rounded-full flex items-center justify-center">
+                                                <FaEnvelope className="text-yellow-300 text-[10px] md:text-xs" />
                                             </div>
                                             <div className="flex-1">
-                                                <h5 className="text-yellow-200 font-bold text-xs mb-0.5 md:mb-1 flex items-center">
-                                                    <FaCheckCircle className="mr-1 text-xs" />
+                                                <h5 className="text-yellow-200 font-bold text-[10px] md:text-xs mb-0.5 flex items-center">
+                                                    <FaCheckCircle className="mr-1 text-[10px]" />
                                                     Email Verification Required
                                                 </h5>
-                                                <p className="text-yellow-100 text-[9px] md:text-[10px] leading-snug">
-                                                    After registration, you will receive a <strong className="text-yellow-200">6-digit verification code</strong> via email. 
-                                                    You must verify your email address before accessing the dashboard.
+                                                <p className="text-yellow-100 text-[9px] leading-tight">
+                                                    You'll receive a <strong className="text-yellow-200">6-digit code</strong> via email to verify your account.
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Security Notice */}
-                                    <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-2 md:p-2.5 flex items-start space-x-2">
-                                        <FaCheckCircle className="text-blue-300 text-xs mt-0.5 flex-shrink-0" />
-                                        <p className="text-blue-100 text-[9px] md:text-[10px]">
-                                            Your information is secure and will only be used for account verification and platform access.
+                                    <div className="bg-blue-500/10 border border-blue-400/30 rounded-lg p-1.5 md:p-2 flex items-start space-x-1.5">
+                                        <FaCheckCircle className="text-blue-300 text-[10px] mt-0.5 flex-shrink-0" />
+                                        <p className="text-blue-100 text-[9px]">
+                                            Your information is secure and will only be used for account verification.
                                         </p>
                                     </div>
 
                                     {/* Terms and Conditions */}
-                                    <div id="terms-section" className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 border-2 border-gray-700/50 rounded-xl p-3 md:p-4 space-y-2 md:space-y-3">
+                                    <div id="terms-section" className="bg-gradient-to-r from-gray-800/40 to-gray-900/40 border-2 border-gray-700/50 rounded-lg p-2 md:p-3 space-y-1.5 md:space-y-2">
                                         <div className="flex items-start space-x-3">
                                             <input
                                                 type="checkbox"
@@ -1501,31 +1500,31 @@ const RegisterPage = () => {
                                 </div>
 
                                 {/* Navigation Buttons - Fixed at bottom of form */}
-                                <div className="flex-shrink-0 flex flex-col space-y-2 md:space-y-2.5 pt-2 md:pt-2.5 border-t border-white/30 mt-2 md:mt-3">
+                                <div className="flex-shrink-0 flex flex-col space-y-1.5 md:space-y-2 pt-1.5 md:pt-2 border-t border-white/30 mt-1.5 md:mt-2">
                                     <div className="flex justify-between items-center gap-3 w-full">
                                         <button
                                             type="button"
                                             onClick={handleBack}
                                             disabled={currentStep === 1 || isLoading}
-                                            className="group flex items-center justify-center space-x-2 px-4 md:px-6 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/10 border border-white/20 hover:border-white/40 hover:shadow-lg transform hover:scale-105 disabled:hover:scale-100 text-sm md:text-base flex-shrink-0 min-w-[100px]"
+                                            className="group flex items-center justify-center space-x-1.5 px-3 md:px-4 py-1.5 md:py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/10 border border-white/20 hover:border-white/40 hover:shadow-lg transform hover:scale-105 disabled:hover:scale-100 text-xs md:text-sm flex-shrink-0 min-w-[80px] md:min-w-[100px]"
                                         >
-                                            <FaArrowLeft className="transition-transform duration-300 group-hover:-translate-x-1 text-sm" />
+                                            <FaArrowLeft className="transition-transform duration-300 group-hover:-translate-x-1 text-xs md:text-sm" />
                                             <span className="font-semibold">Back</span>
                                         </button>
                                         
                                         {currentStep !== 6 ? (
                                             <button
                                 type="submit" 
-                                                className="group flex items-center justify-center space-x-2 px-6 md:px-8 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-xl hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-sm md:text-base transform hover:scale-105 active:scale-95 border-2 border-yellow-300/50 flex-shrink-0 min-w-[130px]"
+                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 border-2 border-yellow-300/50 flex-shrink-0 min-w-[100px] md:min-w-[130px]"
                                             >
                                                 <span>Next Step</span>
-                                                <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1 text-sm" />
+                                                <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1 text-xs md:text-sm" />
                                             </button>
                                         ) : (
                                             <button
                                 type="submit" 
                                                 disabled={isLoading || !formData.acceptedTerms}
-                                                className="group flex items-center justify-center space-x-2 px-6 md:px-8 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-xl hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-sm md:text-base transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none border-2 border-yellow-300/50 flex-shrink-0 min-w-[150px]"
+                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none border-2 border-yellow-300/50 flex-shrink-0 min-w-[120px] md:min-w-[150px]"
                                             >
                                                 {isLoading ? (
                                                     <>
@@ -1543,11 +1542,11 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     {/* Login Link - Always at bottom */}
-                                    <div className="text-xs md:text-sm text-center pt-1.5 border-t border-white/20">
+                                    <div className="text-[10px] md:text-xs text-center pt-1 border-t border-white/20">
                             <span className="text-gray-200">Already have an account? </span>
                                         <Link 
                                             to="/login" 
-                                            className="text-[#FFD700] hover:text-yellow-300 font-bold transition-colors duration-200 underline decoration-2 underline-offset-2 hover:decoration-yellow-300"
+                                            className="text-[#FFD700] hover:text-yellow-300 font-bold transition-colors duration-200 underline decoration-2 underline-offset-1 hover:decoration-yellow-300"
                                         >
                                             Log in
                                         </Link>
@@ -1589,6 +1588,19 @@ const RegisterPage = () => {
                 /* Smooth transitions for form */
                 form {
                     transition: all 0.3s ease;
+                }
+                
+                /* Prevent vertical scrolling in registration form */
+                .registration-form-container {
+                    overflow-y: visible !important;
+                    max-height: none !important;
+                    height: auto !important;
+                }
+                
+                /* Ensure no scroll on form content */
+                .registration-form-content {
+                    overflow-y: visible !important;
+                    max-height: none !important;
                 }
             `}</style>
         </div>
