@@ -624,7 +624,7 @@ const RegisterPage = () => {
                             {/* Header Section - More Compact */}
                             <div className="flex-shrink-0 mb-1.5 md:mb-2">
                                 <div className="text-center mb-1.5 md:mb-2">
-                                    <h1 className="text-xl md:text-2xl lg:text-2xl font-extrabold text-white mb-1 bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text text-transparent">
+                                    <h1 className="text-xl md:text-2xl lg:text-2xl font-extrabold mb-1 bg-gradient-to-r from-white via-yellow-100 to-white bg-clip-text text-transparent">
                                         Create Account
                                     </h1>
                                     <div className="flex items-center justify-center space-x-2">
@@ -643,8 +643,8 @@ const RegisterPage = () => {
 
                             {/* Form Content - Scrollable for Step 5 only */}
                             <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="flex flex-col w-full flex-1 min-h-0">
-                                {/* Content Area - Scrollable for Step 5 */}
-                                <div className={`w-full mb-2 md:mb-2.5 registration-form-content ${currentStep === 5 ? 'overflow-y-auto flex-1 min-h-0' : 'flex-shrink-0'}`}>
+                                {/* Content Area - Scrollable for Step 5 and Step 6 */}
+                                <div className={`w-full mb-2 md:mb-2.5 registration-form-content ${currentStep === 5 || currentStep === 6 ? 'overflow-y-auto flex-1 min-h-0' : 'flex-shrink-0'}`}>
                             {/* Step 1: User Type */}
                             {currentStep === 1 && (
                                 <div className="space-y-2 md:space-y-3 animate-fade-in">
@@ -658,15 +658,15 @@ const RegisterPage = () => {
                                         </p>
                                     </div>
                                     
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                         {/* MSEUF Option */}
                                         <button
                                             type="button"
                                             onClick={() => handleChange('userType', 'MSEUF')}
-                                            className={`group relative p-3 md:p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-xl ${
+                                            className={`group relative flex flex-col items-center justify-between p-4 md:p-5 lg:p-6 rounded-xl border-2 transition-all duration-300 ease-in-out hover:shadow-2xl min-h-[180px] md:min-h-[200px] lg:min-h-[220px] ${
                                                 formData.userType === 'MSEUF'
-                                                    ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
-                                                    : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
+                                                    ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50 scale-[1.02]'
+                                                    : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm hover:scale-[1.01]'
                                             }`}
                                             style={{
                                                 borderWidth: '2px',
@@ -677,44 +677,44 @@ const RegisterPage = () => {
                                         >
                                             {/* Selected Indicator */}
                                             {formData.userType === 'MSEUF' && (
-                                                <div className="absolute top-2 right-2 w-6 h-6 bg-[#FFD700] rounded-full flex items-center justify-center animate-bounce-in">
-                                                    <FaCheckCircle className="text-[#800000] text-sm" />
+                                                <div className="absolute top-2 right-2 w-6 h-6 md:w-7 md:h-7 bg-[#FFD700] rounded-full flex items-center justify-center animate-bounce-in z-10">
+                                                    <FaCheckCircle className="text-[#800000] text-xs md:text-sm" />
                                                 </div>
                                             )}
                                             
                                             {/* Icon Container */}
-                                            <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 ${formData.userType === 'MSEUF' ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                            <div className={`flex-shrink-0 mb-3 md:mb-4 flex justify-center transition-transform duration-300 ${formData.userType === 'MSEUF' ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                     formData.userType === 'MSEUF'
                                                         ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                         : 'bg-white/20 group-hover:bg-white/30'
                                                 }`}>
-                                                    <FaUniversity className={`text-lg md:text-xl ${
+                                                    <FaUniversity className={`text-xl md:text-2xl lg:text-3xl ${
                                                         formData.userType === 'MSEUF' ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                     } transition-colors duration-300`} />
                                                 </div>
                                             </div>
                                             
                                             {/* Content */}
-                                            <div className="text-center space-y-0.5">
-                                                <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
+                                            <div className="flex-grow flex flex-col justify-center items-center text-center space-y-1 md:space-y-1.5 w-full">
+                                                <h4 className={`text-base md:text-lg lg:text-xl font-bold transition-colors duration-300 ${
                                                     formData.userType === 'MSEUF' ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                 }`}>
                                                     MSEUF Member
                                                 </h4>
-                                                <p className="text-gray-200 text-[10px] md:text-xs leading-tight px-1">
+                                                <p className="text-gray-200 text-xs md:text-sm leading-relaxed px-2 mb-2 md:mb-3">
                                                     Student, faculty, staff, or alumni
                                                 </p>
-                                                <div className="flex items-center justify-center space-x-1 mt-1 pt-1 border-t border-white/20">
-                                                    <FaGraduationCap className="text-white/70 text-[10px]" />
-                                                    <FaChalkboard className="text-white/70 text-[10px]" />
-                                                    <FaUserTie className="text-white/70 text-[10px]" />
-                                                    <FaUserGraduate className="text-white/70 text-[10px]" />
+                                                <div className="flex items-center justify-center space-x-1.5 md:space-x-2 mt-auto pt-2 md:pt-3 border-t border-white/20 w-full">
+                                                    <FaGraduationCap className="text-white/70 text-xs md:text-sm" />
+                                                    <FaChalkboard className="text-white/70 text-xs md:text-sm" />
+                                                    <FaUserTie className="text-white/70 text-xs md:text-sm" />
+                                                    <FaUserGraduate className="text-white/70 text-xs md:text-sm" />
                                                 </div>
                                             </div>
                                             
                                             {/* Hover Glow Effect */}
-                                            <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                            <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
                                                 formData.userType === 'MSEUF' ? '' : 'bg-gradient-to-br from-yellow-400/10 to-transparent'
                                             }`}></div>
                                         </button>
@@ -723,10 +723,10 @@ const RegisterPage = () => {
                                         <button
                                             type="button"
                                             onClick={() => handleChange('userType', 'Outsider')}
-                                            className={`group relative p-3 md:p-4 rounded-lg border-2 transition-all duration-300 hover:shadow-xl ${
+                                            className={`group relative flex flex-col items-center justify-between p-4 md:p-5 lg:p-6 rounded-xl border-2 transition-all duration-300 ease-in-out hover:shadow-2xl min-h-[180px] md:min-h-[200px] lg:min-h-[220px] ${
                                                 formData.userType === 'Outsider'
-                                                    ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
-                                                    : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
+                                                    ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50 scale-[1.02]'
+                                                    : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm hover:scale-[1.01]'
                                             }`}
                                             style={{
                                                 borderWidth: '2px',
@@ -737,42 +737,42 @@ const RegisterPage = () => {
                                         >
                                             {/* Selected Indicator */}
                                             {formData.userType === 'Outsider' && (
-                                                <div className="absolute top-2 right-2 w-6 h-6 bg-[#FFD700] rounded-full flex items-center justify-center animate-bounce-in">
-                                                    <FaCheckCircle className="text-[#800000] text-sm" />
+                                                <div className="absolute top-2 right-2 w-6 h-6 md:w-7 md:h-7 bg-[#FFD700] rounded-full flex items-center justify-center animate-bounce-in z-10">
+                                                    <FaCheckCircle className="text-[#800000] text-xs md:text-sm" />
                                                 </div>
                                             )}
                                             
                                             {/* Icon Container */}
-                                            <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 ${formData.userType === 'Outsider' ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                            <div className={`flex-shrink-0 mb-3 md:mb-4 flex justify-center transition-transform duration-300 ${formData.userType === 'Outsider' ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                     formData.userType === 'Outsider'
                                                         ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                         : 'bg-white/20 group-hover:bg-white/30'
                                                 }`}>
-                                                    <FaUsers className={`text-lg md:text-xl ${
+                                                    <FaUsers className={`text-xl md:text-2xl lg:text-3xl ${
                                                         formData.userType === 'Outsider' ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                     } transition-colors duration-300`} />
                                                 </div>
                                             </div>
                                             
                                             {/* Content */}
-                                            <div className="text-center space-y-0.5">
-                                                <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
+                                            <div className="flex-grow flex flex-col justify-center items-center text-center space-y-1 md:space-y-1.5 w-full">
+                                                <h4 className={`text-base md:text-lg lg:text-xl font-bold transition-colors duration-300 ${
                                                     formData.userType === 'Outsider' ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                 }`}>
                                                     Guest
                                                 </h4>
-                                                <p className="text-gray-200 text-[10px] md:text-xs leading-tight px-1">
+                                                <p className="text-gray-200 text-xs md:text-sm leading-relaxed px-2 mb-2 md:mb-3">
                                                     Guest or external user
                                                 </p>
-                                                <div className="flex items-center justify-center space-x-1 mt-1 pt-1 border-t border-white/20">
-                                                    <FaUser className="text-white/70 text-[10px]" />
-                                                    <FaUsers className="text-white/70 text-[10px]" />
+                                                <div className="flex items-center justify-center space-x-1.5 md:space-x-2 mt-auto pt-2 md:pt-3 border-t border-white/20 w-full">
+                                                    <FaUser className="text-white/70 text-xs md:text-sm" />
+                                                    <FaUsers className="text-white/70 text-xs md:text-sm" />
                                                 </div>
                                             </div>
                                             
                                             {/* Hover Glow Effect */}
-                                            <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                            <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
                                                 formData.userType === 'Outsider' ? '' : 'bg-gradient-to-br from-yellow-400/10 to-transparent'
                                             }`}></div>
                                         </button>
@@ -823,7 +823,7 @@ const RegisterPage = () => {
                             </div>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaEnvelope className="mr-1 text-[10px]" />
                                             Email *
                                         </label>
@@ -853,7 +853,7 @@ const RegisterPage = () => {
                             </div>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaLock className="mr-1 text-[10px]" />
                                             Password *
                                         </label>
@@ -890,7 +890,7 @@ const RegisterPage = () => {
                                     </h3>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaCalendar className="mr-1 text-[10px]" />
                                             Birthday *
                                         </label>
@@ -905,7 +905,7 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaVenusMars className="mr-1 text-[10px]" />
                                             Gender *
                                         </label>
@@ -924,7 +924,7 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaMapMarkerAlt className="mr-1 text-[10px]" />
                                             Address *
                                         </label>
@@ -939,7 +939,7 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
+                                        <label className="text-[10px] md:text-xs font-medium text-white mb-1 flex items-center">
                                             <FaPhone className="mr-1 text-[10px]" />
                                             Contact Number *
                                         </label>
@@ -971,7 +971,7 @@ const RegisterPage = () => {
                                                 </p>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 md:gap-2">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                                                 {[
                                                     { name: 'Student', icon: FaGraduationCap, description: 'Currently enrolled student' },
                                                     { name: 'Faculty', icon: FaChalkboard, description: 'Teaching staff member' },
@@ -982,10 +982,10 @@ const RegisterPage = () => {
                                                         key={name}
                                                         type="button"
                                                         onClick={() => handleChange('mseufCategory', name)}
-                                                        className={`group relative p-2 md:p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
+                                                        className={`group relative flex flex-col items-center justify-between p-3 md:p-4 rounded-xl border-2 transition-all duration-300 ease-in-out hover:shadow-2xl min-h-[140px] md:min-h-[160px] lg:min-h-[180px] ${
                                                             formData.mseufCategory === name
-                                                                ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
-                                                                : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
+                                                                ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50 scale-[1.02]'
+                                                                : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm hover:scale-[1.01]'
                                                         }`}
                                                         style={{
                                                             borderWidth: '2px',
@@ -996,38 +996,38 @@ const RegisterPage = () => {
                                                     >
                                                         {/* Selected Indicator */}
                                                         {formData.mseufCategory === name && (
-                                                            <div className="absolute top-2 right-2 w-5 h-5 bg-[#FFD700] rounded-full flex items-center justify-center z-10">
-                                                                <FaCheckCircle className="text-[#800000] text-[10px]" />
+                                                            <div className="absolute top-2 right-2 w-5 h-5 md:w-6 md:h-6 bg-[#FFD700] rounded-full flex items-center justify-center z-10 animate-bounce-in">
+                                                                <FaCheckCircle className="text-[#800000] text-[10px] md:text-xs" />
                                                             </div>
                                                         )}
                                                         
                                                         {/* Icon */}
-                                                        <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 flex-shrink-0 ${formData.mseufCategory === name ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                                        <div className={`flex-shrink-0 mb-2 md:mb-3 flex justify-center transition-transform duration-300 ${formData.mseufCategory === name ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                            <div className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                                 formData.mseufCategory === name
                                                                     ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                                     : 'bg-white/20 group-hover:bg-white/30'
                                                             }`}>
-                                                                <Icon className={`text-lg md:text-xl ${
+                                                                <Icon className={`text-lg md:text-xl lg:text-2xl ${
                                                                     formData.mseufCategory === name ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                                 } transition-colors duration-300`} />
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Content */}
-                                                        <div className="text-center space-y-0.5 flex-grow flex flex-col justify-center">
-                                                            <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
+                                                        <div className="flex-grow flex flex-col justify-center items-center text-center space-y-1 w-full">
+                                                            <h4 className={`text-xs md:text-sm lg:text-base font-bold transition-colors duration-300 ${
                                                                 formData.mseufCategory === name ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                             }`}>
                                                                 {name}
                                                             </h4>
-                                                            <p className="text-gray-300 text-[9px] md:text-[10px] leading-tight px-0.5 break-words">
+                                                            <p className="text-gray-300 text-[9px] md:text-[10px] leading-relaxed px-1 break-words">
                                                                 {description}
                                                             </p>
                                                         </div>
                                                         
                                                         {/* Hover Glow */}
-                                                        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                                        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
                                                             formData.mseufCategory === name ? '' : 'bg-gradient-to-br from-yellow-400/10 to-transparent'
                                                         }`}></div>
                                                     </button>
@@ -1055,7 +1055,7 @@ const RegisterPage = () => {
                                                 </p>
                                             </div>
                                             
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                                                 {[
                                                     { name: 'External Partner', icon: FaHandshake, description: 'Partner organization or institution' },
                                                     { name: 'General Public', icon: FaGlobe, description: 'Community member or public user' }
@@ -1064,10 +1064,10 @@ const RegisterPage = () => {
                                                         key={name}
                                                         type="button"
                                                         onClick={() => handleChange('outsiderCategory', name)}
-                                                        className={`group relative p-2.5 md:p-3 rounded-lg border-2 transition-all duration-300 hover:shadow-xl flex flex-col ${
+                                                        className={`group relative flex flex-col items-center justify-between p-4 md:p-5 lg:p-6 rounded-xl border-2 transition-all duration-300 ease-in-out hover:shadow-2xl min-h-[180px] md:min-h-[200px] lg:min-h-[220px] ${
                                                             formData.outsiderCategory === name
-                                                                ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50'
-                                                                : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm'
+                                                                ? 'border-[#FFD700] bg-gradient-to-br from-yellow-50/30 via-yellow-100/20 to-yellow-50/10 shadow-xl shadow-yellow-500/50 scale-[1.02]'
+                                                                : 'border-gray-300/50 bg-white/10 hover:border-yellow-400/70 hover:bg-white/15 backdrop-blur-sm hover:scale-[1.01]'
                                                         }`}
                                                         style={{
                                                             borderWidth: '2px',
@@ -1078,38 +1078,38 @@ const RegisterPage = () => {
                                                     >
                                                         {/* Selected Indicator */}
                                                         {formData.outsiderCategory === name && (
-                                                            <div className="absolute top-2 right-2 w-5 h-5 bg-[#FFD700] rounded-full flex items-center justify-center z-10">
-                                                                <FaCheckCircle className="text-[#800000] text-[10px]" />
+                                                            <div className="absolute top-2 right-2 w-6 h-6 md:w-7 md:h-7 bg-[#FFD700] rounded-full flex items-center justify-center z-10 animate-bounce-in">
+                                                                <FaCheckCircle className="text-[#800000] text-xs md:text-sm" />
                                                             </div>
                                                         )}
                                                         
                                                         {/* Icon */}
-                                                        <div className={`mb-1.5 md:mb-2 flex justify-center transition-transform duration-300 flex-shrink-0 ${formData.outsiderCategory === name ? 'scale-105' : 'group-hover:scale-105'}`}>
-                                                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                                        <div className={`flex-shrink-0 mb-3 md:mb-4 flex justify-center transition-transform duration-300 ${formData.outsiderCategory === name ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                                            <div className={`w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
                                                                 formData.outsiderCategory === name
                                                                     ? 'bg-gradient-to-br from-[#FFD700] to-yellow-400 shadow-lg shadow-yellow-500/50'
                                                                     : 'bg-white/20 group-hover:bg-white/30'
                                                             }`}>
-                                                                <Icon className={`text-lg md:text-xl ${
+                                                                <Icon className={`text-xl md:text-2xl lg:text-3xl ${
                                                                     formData.outsiderCategory === name ? 'text-[#800000]' : 'text-white group-hover:text-[#FFD700]'
                                                                 } transition-colors duration-300`} />
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Content */}
-                                                        <div className="text-center space-y-0.5 flex-grow flex flex-col justify-center">
-                                                            <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${
+                                                        <div className="flex-grow flex flex-col justify-center items-center text-center space-y-1 md:space-y-1.5 w-full">
+                                                            <h4 className={`text-base md:text-lg lg:text-xl font-bold transition-colors duration-300 ${
                                                                 formData.outsiderCategory === name ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                             }`}>
                                                                 {name}
                                                             </h4>
-                                                            <p className="text-gray-300 text-[9px] md:text-[10px] leading-tight px-0.5 break-words">
+                                                            <p className="text-gray-200 text-xs md:text-sm leading-relaxed px-2 mb-2 md:mb-3">
                                                                 {description}
                                                             </p>
                                                         </div>
                                                         
                                                         {/* Hover Glow */}
-                                                        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                                                        <div className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
                                                             formData.outsiderCategory === name ? '' : 'bg-gradient-to-br from-yellow-400/10 to-transparent'
                                                         }`}></div>
                                                     </button>
@@ -1624,7 +1624,7 @@ const RegisterPage = () => {
                     flex-direction: column;
                 }
                 
-                /* Form content - scrollable only for Step 5 */
+                /* Form content - scrollable for Step 5 and Step 6 */
                 .registration-form-content {
                     overflow-y: visible !important;
                     flex-shrink: 0;
