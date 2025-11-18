@@ -171,14 +171,9 @@ const SystemSettings = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8 transition-all duration-300 hover:shadow-lg"
                     >
-                        <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md">
-                                <FaCog className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black">System Settings</h1>
-                                <p className="text-sm sm:text-base text-gray-600">Configure system preferences and settings.</p>
-                            </div>
+                        <div className="mb-2">
+                            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black">System Settings</h1>
+                            <p className="text-sm sm:text-base text-gray-600">Configure system preferences and settings.</p>
                         </div>
                     </motion.div>
 
@@ -273,7 +268,9 @@ const SystemSettings = () => {
                                                         className="w-5 h-5 text-[#800000] border-gray-300 rounded focus:ring-[#800000] focus:ring-2 cursor-pointer"
                                                     />
                                                     <div className="flex items-center space-x-2 flex-1">
-                                                        <FaUserShield className="w-5 h-5 text-[#800000]" />
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                                                            <FaUserShield className="w-4 h-4 text-white" />
+                                                        </div>
                                                         <span className="text-sm font-medium text-gray-900">System Administrator</span>
                                                     </div>
                                                 </label>
@@ -287,7 +284,9 @@ const SystemSettings = () => {
                                                         className="w-5 h-5 text-[#800000] border-gray-300 rounded focus:ring-[#800000] focus:ring-2 cursor-pointer"
                                                     />
                                                     <div className="flex items-center space-x-2 flex-1">
-                                                        <FaUserTie className="w-5 h-5 text-[#800000]" />
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                                                            <FaUserTie className="w-4 h-4 text-white" />
+                                                        </div>
                                                         <span className="text-sm font-medium text-gray-900">CRD Staff</span>
                                                     </div>
                                                 </label>
@@ -301,7 +300,9 @@ const SystemSettings = () => {
                                                         className="w-5 h-5 text-[#800000] border-gray-300 rounded focus:ring-[#800000] focus:ring-2 cursor-pointer"
                                                     />
                                                     <div className="flex items-center space-x-2 flex-1">
-                                                        <FaUsers className="w-5 h-5 text-[#800000]" />
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                                                            <FaUsers className="w-4 h-4 text-white" />
+                                                        </div>
                                                         <span className="text-sm font-medium text-gray-900">Department/Organization</span>
                                                     </div>
                                                 </label>
@@ -315,7 +316,9 @@ const SystemSettings = () => {
                                                         className="w-5 h-5 text-[#800000] border-gray-300 rounded focus:ring-[#800000] focus:ring-2 cursor-pointer"
                                                     />
                                                     <div className="flex items-center space-x-2 flex-1">
-                                                        <FaUser className="w-5 h-5 text-[#800000]" />
+                                                        <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                                                            <FaUser className="w-4 h-4 text-white" />
+                                                        </div>
                                                         <span className="text-sm font-medium text-gray-900">User</span>
                                                     </div>
                                                 </label>
