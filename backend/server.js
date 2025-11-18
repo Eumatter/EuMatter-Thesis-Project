@@ -28,10 +28,14 @@ import { startFeedbackScheduler } from './utils/feedbackScheduler.js'
 import { startQRScheduler } from './utils/qrScheduler.js'
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 8000; // Default to 8000 if not set
 
-// Connect to DB
-connectDB();
+// Connect to DB - handle async properly to prevent server crash
+connectDB().catch((error) => {
+    console.error('❌ Failed to initialize database connection:', error);
+    console.warn('⚠️  Server will continue to start, but database operations may fail');
+    // Don't exit - let server start even if DB connection fails initially
+});
 
 // Middleware
 app.use(express.json());
@@ -190,15 +194,11 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start Server
-if (!port) {
-    console.error("❌ PORT environment variable is not set!");
-    console.error("💡 Set PORT in your .env file (e.g., PORT=8000)");
-    process.exit(1);
-}
+// Start Server - ensure we always bind to a port
+const serverPort = port || 8000;
 
-app.listen(port, () => {
-    console.log(`🚀 Server running on port ${port}`);
+app.listen(serverPort, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${serverPort}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     
     // Check critical environment variables (warn only, don't crash)
@@ -213,13 +213,23 @@ app.listen(port, () => {
     }
 });
 
-// Handle server errors
+// Handle server errors gracefully
+app.on('error', (error) => {
+    console.error('❌ Server error:', error);
+    // Don't exit - let the process handle it
+});
+
+// Handle server errors gracefully
 process.on('unhandledRejection', (error) => {
     console.error('❌ Unhandled Promise Rejection:', error);
-    // Don't exit in development, but log the error
-    if (process.env.NODE_ENV === 'production') {
+    console.error('Stack:', error?.stack);
+    // Log but don't exit - allow server to continue running
+    // Only exit if it's a critical error that prevents the server from functioning
+    if (error?.message?.includes('EADDRINUSE')) {
+        console.error('❌ Port already in use. Exiting...');
         process.exit(1);
     }
+    // For other errors, log but continue
 });
 
 process.on('uncaughtException', (error) => {
