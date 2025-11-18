@@ -1,6 +1,6 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
-import transporter from "../config/nodemailer.js";
+import { sendEmailWithRetry } from "../config/nodemailer.js";
 import { createAuditLog } from "./auditLogController.js";
 
 /**
@@ -279,6 +279,7 @@ export const sendChangePasswordOtp = async (req, res) => {
         user.resetOtpExpireAt = Date.now() + 15 * 60 * 1000; // 15 minutes
         await user.save();
 
+        // Prepare email - send asynchronously (fire-and-forget) so OTP is saved even if email fails
         const mailOptions = {
             from: process.env.SENDER_EMAIL,
             to: user.email,
@@ -298,7 +299,18 @@ export const sendChangePasswordOtp = async (req, res) => {
                 </div>
             `
         };
-        await transporter.sendMail(mailOptions);
+
+        // Send email asynchronously - don't block the response
+        // OTP is already saved, so user can still verify even if email fails
+        setImmediate(async () => {
+            try {
+                await sendEmailWithRetry(mailOptions, 3, 3000);
+                console.log(`✅ Password change OTP email sent successfully to ${user.email}`);
+            } catch (emailError) {
+                console.error(`❌ Failed to send password change OTP email to ${user.email}:`, emailError.message);
+                // Don't throw - OTP is already saved, user can still verify
+            }
+        });
 
         return res.json({ success: true, message: "Password change OTP sent to your email" });
 

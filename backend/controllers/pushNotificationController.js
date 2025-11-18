@@ -97,21 +97,32 @@ export const unsubscribeFromPush = async (req, res) => {
 
 /**
  * Get VAPID public key
+ * Returns 200 with null publicKey if not configured (push notifications are optional)
  */
 export const getVapidKey = async (req, res) => {
     try {
         const publicKey = getVapidPublicKey();
         if (!publicKey) {
-            return res.status(503).json({ 
-                message: 'Push notifications not configured',
-                error: 'VAPID keys not set'
+            // Return 200 with null - push notifications are optional, not an error
+            return res.status(200).json({ 
+                publicKey: null,
+                configured: false,
+                message: 'Push notifications not configured. This is optional and does not affect other features.'
             });
         }
         
-        res.json({ publicKey });
+        res.status(200).json({ 
+            publicKey,
+            configured: true
+        });
     } catch (error) {
         console.error('Error getting VAPID key:', error);
-        res.status(500).json({ message: 'Failed to get VAPID key' });
+        // Return 200 with null on error - don't treat as critical failure
+        res.status(200).json({ 
+            publicKey: null,
+            configured: false,
+            message: 'Unable to retrieve VAPID key'
+        });
     }
 };
 

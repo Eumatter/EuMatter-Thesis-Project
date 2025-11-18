@@ -5,6 +5,7 @@ const backendUrl = getBackendUrl();
 
 /**
  * Get VAPID public key from backend
+ * Returns null if push notifications are not configured (this is optional)
  */
 export async function getVapidPublicKey() {
     try {
@@ -13,21 +14,22 @@ export async function getVapidPublicKey() {
             ? `${backendUrl}api/push/vapid-key` 
             : `${backendUrl}/api/push/vapid-key`;
         
-        // Make request with error handling that suppresses 404/503
+        // Make request - endpoint now returns 200 even when not configured
         const response = await axios.get(url, {
+            timeout: 5000, // 5 second timeout
             validateStatus: function (status) {
-                // Don't throw errors for 404 or 503 - these mean VAPID is not configured
-                // Return true to prevent axios from throwing an error for these status codes
-                return (status >= 200 && status < 300) || status === 404 || status === 503;
+                // Accept 200 status codes only
+                return status === 200;
             }
         });
         
-        // Check if we got a valid response
-        if (response.status === 200 && response.data?.publicKey) {
+        // Check if we got a valid response with a public key
+        if (response.status === 200 && response.data?.publicKey && response.data?.configured) {
             return response.data.publicKey;
         }
         
-        // Service unavailable or not configured - return null silently
+        // Not configured or publicKey is null - return null silently
+        // Push notifications are optional, so this is not an error
         return null;
     } catch (error) {
         // Silently fail for any error - push notifications are optional

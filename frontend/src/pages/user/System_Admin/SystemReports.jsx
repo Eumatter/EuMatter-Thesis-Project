@@ -80,7 +80,9 @@ const SystemReports = () => {
             
             const params = new URLSearchParams({
                 page: pagination.page.toString(),
-                limit: pagination.limit.toString()
+                limit: pagination.limit.toString(),
+                sortBy: sortField,
+                sortOrder: sortDirection
             })
             
             if (selectedCategory) params.append('category', selectedCategory)
@@ -112,7 +114,7 @@ const SystemReports = () => {
         } finally {
             setIsLoading(false)
         }
-    }, [backendUrl, pagination.page, pagination.limit, selectedCategory, selectedPriority, selectedSuccess, searchTerm, startDate, endDate])
+    }, [backendUrl, pagination.page, pagination.limit, selectedCategory, selectedPriority, selectedSuccess, searchTerm, startDate, endDate, sortField, sortDirection])
 
     // Initial fetch when filters change
     useEffect(() => {
@@ -142,7 +144,14 @@ const SystemReports = () => {
 
     // Handle page change
     const handlePageChange = (newPage) => {
-        setPagination(prev => ({ ...prev, page: newPage }))
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            setPagination(prev => ({ ...prev, page: newPage }))
+        }
+    }
+    
+    // Handle page size change
+    const handlePageSizeChange = (newLimit) => {
+        setPagination(prev => ({ ...prev, limit: parseInt(newLimit), page: 1 }))
     }
 
     // Handle sort
@@ -583,32 +592,57 @@ const SystemReports = () => {
 
                     {/* Main Audit Log Table */}
                     <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                             <h2 className="text-lg font-semibold text-black">
                                 Audit Logs {selectedCategory && `- ${selectedCategory}`}
                             </h2>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => handleExport('pdf')}
-                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
-                                >
-                                    <DocumentArrowDownIcon className="w-4 h-4" />
-                                    PDF
-                                </button>
-                                <button
-                                    onClick={() => handleExport('excel')}
-                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
-                                >
-                                    <DocumentArrowDownIcon className="w-4 h-4" />
-                                    Excel
-                                </button>
-                                <button
-                                    onClick={() => handleExport('csv')}
-                                    className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2"
-                                >
-                                    <DocumentArrowDownIcon className="w-4 h-4" />
-                                    CSV
-                                </button>
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Page Size Selector */}
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="pageSize" className="text-sm text-gray-700 whitespace-nowrap">
+                                        Show:
+                                    </label>
+                                    <select
+                                        id="pageSize"
+                                        value={pagination.limit}
+                                        onChange={(e) => handlePageSizeChange(e.target.value)}
+                                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] bg-white"
+                                    >
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                        <option value="200">200</option>
+                                    </select>
+                                    <span className="text-sm text-gray-600 whitespace-nowrap">per page</span>
+                                </div>
+                                
+                                {/* Export Buttons */}
+                                <div className="flex items-center gap-2 border-l border-gray-300 pl-3">
+                                    <button
+                                        onClick={() => handleExport('pdf')}
+                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        title="Export as PDF"
+                                    >
+                                        <DocumentArrowDownIcon className="w-4 h-4" />
+                                        <span className="hidden sm:inline">PDF</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleExport('excel')}
+                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        title="Export as Excel"
+                                    >
+                                        <DocumentArrowDownIcon className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Excel</span>
+                                    </button>
+                                    <button
+                                        onClick={() => handleExport('csv')}
+                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        title="Export as CSV"
+                                    >
+                                        <DocumentArrowDownIcon className="w-4 h-4" />
+                                        <span className="hidden sm:inline">CSV</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

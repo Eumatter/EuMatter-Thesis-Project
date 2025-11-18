@@ -94,132 +94,172 @@ const AuditLogTable = ({
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 bg-white">
-                <thead className="bg-gray-50">
-                    <tr>
-                        <th 
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('timestamp')}
-                        >
-                            <div className="flex items-center">
-                                Timestamp
-                                <SortIcon field="timestamp" />
-                            </div>
-                        </th>
-                        <th 
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('userEmail')}
-                        >
-                            <div className="flex items-center">
-                                User
-                                <SortIcon field="userEmail" />
-                            </div>
-                        </th>
-                        <th 
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('actionType')}
-                        >
-                            <div className="flex items-center">
-                                Action
-                                <SortIcon field="actionType" />
-                            </div>
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Category
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Resource
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            IP Address
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th 
-                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('priority')}
-                        >
-                            <div className="flex items-center">
-                                Priority
-                                <SortIcon field="priority" />
-                            </div>
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Details
-                        </th>
-                    </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                    {logs.map((log) => (
-                        <React.Fragment key={log._id}>
-                            <tr className="hover:bg-gray-50 transition-colors">
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                    {formatDate(log.timestamp)}
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap text-sm">
-                                    <div>
-                                        <div className="font-medium text-gray-900">
-                                            {log.userName || log.userEmail || 'System'}
-                                        </div>
-                                        {log.userRole && (
-                                            <div className="text-xs text-gray-500">{log.userRole}</div>
-                                        )}
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-300 bg-white" style={{ minWidth: '1200px' }}>
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[140px]"
+                                    onClick={() => handleSort('timestamp')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Timestamp
+                                        <SortIcon field="timestamp" />
                                     </div>
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-900">
-                                    <div className="max-w-xs truncate" title={log.actionType}>
-                                        {log.actionType}
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                                    onClick={() => handleSort('userEmail')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        User
+                                        <SortIcon field="userEmail" />
                                     </div>
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">
-                                    {log.category}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-600">
-                                    {log.resourceType ? (
-                                        <div>
-                                            <div className="font-medium">{log.resourceType}</div>
-                                            {log.resourceId && (
-                                                <div className="text-xs text-gray-400 truncate max-w-[100px]">
-                                                    {log.resourceId.toString().substring(0, 8)}...
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        'N/A'
-                                    )}
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                                    {log.ipAddress || 'N/A'}
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(log.success)}`}>
-                                        {log.success ? 'Success' : 'Failure'}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap">
-                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getPriorityBadge(log.priority)}`}>
-                                        {log.priority}
-                                    </span>
-                                </td>
-                                <td className="px-4 py-3 whitespace-nowrap text-center">
-                                    <button
-                                        onClick={() => toggleRow(log._id)}
-                                        className="text-[#800000] hover:text-[#900000] transition-colors"
-                                        aria-label="Toggle details"
-                                    >
-                                        {expandedRows.has(log._id) ? (
-                                            <ChevronUpIcon className="w-5 h-5" />
-                                        ) : (
-                                            <ChevronDownIcon className="w-5 h-5" />
-                                        )}
-                                    </button>
-                                </td>
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[150px]"
+                                    onClick={() => handleSort('actionType')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Action
+                                        <SortIcon field="actionType" />
+                                    </div>
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[180px]"
+                                >
+                                    Category
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[120px]"
+                                >
+                                    Resource
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[120px]"
+                                >
+                                    IP Address
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[100px]"
+                                >
+                                    Status
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                                    onClick={() => handleSort('priority')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Priority
+                                        <SortIcon field="priority" />
+                                    </div>
+                                </th>
+                                <th 
+                                    scope="col"
+                                    className="px-3 py-3.5 text-center text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[80px]"
+                                >
+                                    Details
+                                </th>
                             </tr>
-                            {expandedRows.has(log._id) && (
-                                <tr>
-                                    <td colSpan="9" className="px-4 py-4 bg-gray-50">
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {logs.map((log) => (
+                                <React.Fragment key={log._id}>
+                                    <tr className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-900">
+                                            <div className="font-medium">{formatDate(log.timestamp)}</div>
+                                        </td>
+                                        <td className="px-3 py-3.5 text-sm">
+                                            <div className="max-w-[120px]">
+                                                <div className="font-medium text-gray-900 truncate" title={log.userName || log.userEmail || 'System'}>
+                                                    {log.userName || log.userEmail || 'System'}
+                                                </div>
+                                                {log.userRole && (
+                                                    <div className="text-xs text-gray-500 truncate" title={log.userRole}>
+                                                        {log.userRole}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3.5 text-sm text-gray-900">
+                                            <div className="max-w-[150px]">
+                                                <div className="truncate font-medium" title={log.actionType}>
+                                                    {log.actionType || 'N/A'}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3.5 text-sm text-gray-700">
+                                            <div className="max-w-[180px]">
+                                                <div className="truncate" title={log.category}>
+                                                    {log.category || 'N/A'}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3.5 text-sm text-gray-700">
+                                            <div className="max-w-[120px]">
+                                                {log.resourceType ? (
+                                                    <>
+                                                        <div className="font-medium truncate" title={log.resourceType}>
+                                                            {log.resourceType}
+                                                        </div>
+                                                        {log.resourceId && (
+                                                            <div className="text-xs text-gray-500 truncate" title={log.resourceId}>
+                                                                ID: {log.resourceId.toString().substring(0, 8)}...
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <span className="text-gray-400">N/A</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-700">
+                                            <div className="font-mono text-xs" title={log.ipAddress || 'N/A'}>
+                                                {log.ipAddress || 'N/A'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-3.5 whitespace-nowrap">
+                                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(log.success)}`}>
+                                                {log.success ? 'Success' : 'Failure'}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-3.5 whitespace-nowrap">
+                                            {log.priority ? (
+                                                <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityBadge(log.priority)}`}>
+                                                    {log.priority}
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-3.5 whitespace-nowrap text-center">
+                                            <button
+                                                onClick={() => toggleRow(log._id)}
+                                                className="inline-flex items-center justify-center w-8 h-8 text-[#800000] hover:text-[#900000] hover:bg-gray-100 rounded-md transition-colors"
+                                                aria-label="Toggle details"
+                                                title={expandedRows.has(log._id) ? 'Hide details' : 'Show details'}
+                                            >
+                                                {expandedRows.has(log._id) ? (
+                                                    <ChevronUpIcon className="w-5 h-5" />
+                                                ) : (
+                                                    <ChevronDownIcon className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {expandedRows.has(log._id) && (
+                                        <tr>
+                                            <td colSpan="9" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-2">Request Details</h4>
@@ -294,101 +334,120 @@ const AuditLogTable = ({
                                         </div>
                                     </td>
                                 </tr>
-                            )}
-                        </React.Fragment>
-                    ))}
-                </tbody>
-            </table>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-                <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-                    <div className="flex-1 flex justify-between sm:hidden">
+                <div className="bg-white px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 sm:px-6">
+                    {/* Mobile Pagination */}
+                    <div className="flex-1 flex justify-between items-center w-full sm:hidden">
                         <button
                             onClick={() => onPageChange(pagination.page - 1)}
                             disabled={pagination.page === 1}
-                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg transition-colors ${
                                 pagination.page === 1
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                             }`}
                         >
+                            <ChevronLeftIcon className="w-4 h-4 mr-1" />
                             Previous
                         </button>
+                        <div className="text-sm text-gray-700">
+                            Page <span className="font-semibold">{pagination.page}</span> of <span className="font-semibold">{pagination.totalPages}</span>
+                        </div>
                         <button
                             onClick={() => onPageChange(pagination.page + 1)}
                             disabled={pagination.page === pagination.totalPages}
-                            className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg transition-colors ${
                                 pagination.page === pagination.totalPages
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
                             }`}
                         >
                             Next
+                            <ChevronRightIcon className="w-4 h-4 ml-1" />
                         </button>
                     </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                        <div>
+                    
+                    {/* Desktop Pagination */}
+                    <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between w-full">
+                        <div className="flex items-center gap-2">
                             <p className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
-                                <span className="font-medium">
+                                Showing <span className="font-semibold text-gray-900">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
+                                <span className="font-semibold text-gray-900">
                                     {Math.min(pagination.page * pagination.limit, pagination.total)}
                                 </span>{' '}
-                                of <span className="font-medium">{pagination.total}</span> results
+                                of <span className="font-semibold text-gray-900">{pagination.total}</span> results
                             </p>
                         </div>
-                        <div>
-                            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                                <button
-                                    onClick={() => onPageChange(pagination.page - 1)}
-                                    disabled={pagination.page === 1}
-                                    className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                                        pagination.page === 1
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-500 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <ChevronLeftIcon className="h-5 w-5" />
-                                </button>
-                                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                                    let pageNum;
-                                    if (pagination.totalPages <= 5) {
-                                        pageNum = i + 1;
-                                    } else if (pagination.page <= 3) {
-                                        pageNum = i + 1;
-                                    } else if (pagination.page >= pagination.totalPages - 2) {
-                                        pageNum = pagination.totalPages - 4 + i;
-                                    } else {
-                                        pageNum = pagination.page - 2 + i;
-                                    }
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => onPageChange(pageNum)}
-                                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                pagination.page === pageNum
-                                                    ? 'z-10 bg-[#800000] border-[#800000] text-white'
-                                                    : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                                <button
-                                    onClick={() => onPageChange(pagination.page + 1)}
-                                    disabled={pagination.page === pagination.totalPages}
-                                    className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                                        pagination.page === pagination.totalPages
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-gray-500 hover:bg-gray-50'
-                                    }`}
-                                >
-                                    <ChevronRightIcon className="h-5 w-5" />
-                                </button>
-                            </nav>
-                        </div>
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <button
+                                onClick={() => onPageChange(pagination.page - 1)}
+                                disabled={pagination.page === 1}
+                                className={`relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium transition-colors ${
+                                    pagination.page === 1
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                }`}
+                                aria-label="Previous page"
+                            >
+                                <ChevronLeftIcon className="h-5 w-5" />
+                            </button>
+                            {Array.from({ length: Math.min(7, pagination.totalPages) }, (_, i) => {
+                                let pageNum;
+                                if (pagination.totalPages <= 7) {
+                                    pageNum = i + 1;
+                                } else if (pagination.page <= 4) {
+                                    pageNum = i + 1;
+                                } else if (pagination.page >= pagination.totalPages - 3) {
+                                    pageNum = pagination.totalPages - 6 + i;
+                                } else {
+                                    pageNum = pagination.page - 3 + i;
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => onPageChange(pageNum)}
+                                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
+                                            pagination.page === pageNum
+                                                ? 'z-10 bg-[#800000] border-[#800000] text-white'
+                                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                        }`}
+                                        aria-label={`Page ${pageNum}`}
+                                        aria-current={pagination.page === pageNum ? 'page' : undefined}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                onClick={() => onPageChange(pagination.page + 1)}
+                                disabled={pagination.page === pagination.totalPages}
+                                className={`relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium transition-colors ${
+                                    pagination.page === pagination.totalPages
+                                        ? 'text-gray-400 cursor-not-allowed'
+                                        : 'text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                }`}
+                                aria-label="Next page"
+                            >
+                                <ChevronRightIcon className="h-5 w-5" />
+                            </button>
+                        </nav>
                     </div>
+                </div>
+            )}
+            
+            {/* Pagination Info for Mobile */}
+            {pagination && pagination.totalPages > 1 && (
+                <div className="bg-gray-50 px-4 py-2 text-center text-xs text-gray-600 sm:hidden border-t border-gray-200">
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
                 </div>
             )}
         </div>

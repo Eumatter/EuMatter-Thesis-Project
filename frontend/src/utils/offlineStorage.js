@@ -109,18 +109,54 @@ export async function getPendingRecords() {
         const store = transaction.objectStore(STORE_NAME);
         const index = store.index('synced');
         
-        const request = index.getAll(false); // Get all unsynced records
+        // Use cursor with IDBKeyRange to properly query for false values
+        // getAll(false) doesn't work reliably across all browsers
+        const request = index.openCursor(IDBKeyRange.only(false));
         
         return new Promise((resolve, reject) => {
-            request.onsuccess = () => {
-                resolve(request.result || []);
+            const records = [];
+            
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    records.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    // No more records, return what we found
+                    resolve(records);
+                }
             };
+            
             request.onerror = () => {
-                reject(request.error);
+                // If cursor fails, try fallback: get all and filter
+                try {
+                    const fallbackRequest = store.openCursor();
+                    const fallbackRecords = [];
+                    
+                    fallbackRequest.onsuccess = (fallbackEvent) => {
+                        const fallbackCursor = fallbackEvent.target.result;
+                        if (fallbackCursor) {
+                            if (fallbackCursor.value.synced === false) {
+                                fallbackRecords.push(fallbackCursor.value);
+                            }
+                            fallbackCursor.continue();
+                        } else {
+                            resolve(fallbackRecords);
+                        }
+                    };
+                    
+                    fallbackRequest.onerror = () => {
+                        reject(fallbackRequest.error);
+                    };
+                } catch (fallbackError) {
+                    console.error('Fallback query also failed:', fallbackError);
+                    reject(request.error || fallbackError);
+                }
             };
         });
     } catch (error) {
         console.error('Error getting pending records:', error);
+        // Return empty array instead of throwing to prevent app crashes
         return [];
     }
 }
