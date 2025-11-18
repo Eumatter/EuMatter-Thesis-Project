@@ -62,6 +62,8 @@ const userSchema = new mongoose.Schema({
     // Email verification OTP (aligned with controllers)
     verifyOtp: { type: String, default: '' },
     verifyOtpExpireAt: { type: Number, default: 0 },
+    verifyOtpAttempts: { type: Number, default: 0 }, // Track failed attempts
+    verifyOtpLastAttempt: { type: Number, default: 0 }, // Timestamp of last attempt
     isAccountVerified: { type: Boolean, default: false },
     // Password reset OTP (aligned with controllers)
     resetOtp: { type: String, default: '' },

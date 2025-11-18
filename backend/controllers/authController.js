@@ -197,6 +197,8 @@ export const register = async (req, res) => {
             otp = String(Math.floor(100000 + Math.random() * 900000));
             user.verifyOtp = otp;
             user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+            user.verifyOtpAttempts = 0; // Reset attempts when generating new OTP
+            user.verifyOtpLastAttempt = 0; // Reset last attempt time
             await user.save();
             console.log(`📧 OTP generated for ${userType === 'MSEUF' ? mseufCategory : outsiderCategory} user: ${email}`);
         }
@@ -400,6 +402,8 @@ export const login = async (req, res) => {
                 const otp = String(Math.floor(100000 + Math.random() * 900000));
                 user.verifyOtp = otp;
                 user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+                user.verifyOtpAttempts = 0; // Reset attempts when generating new OTP
+                user.verifyOtpLastAttempt = 0; // Reset last attempt time
                 await user.save();
 
                 // Send verification OTP email
@@ -562,6 +566,8 @@ export const sendVerifyOtp = async (req, res) => {
         const otp = String(Math.floor(100000 + Math.random() * 900000));
         user.verifyOtp = otp;
         user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+        user.verifyOtpAttempts = 0; // Reset attempts when generating new OTP
+        user.verifyOtpLastAttempt = 0; // Reset last attempt time
         await user.save();
 
         // Determine user type for email personalization
@@ -658,6 +664,8 @@ export const sendVerifyOtp = async (req, res) => {
                     emailType: emailType
                 });
                 
+                // Log email failure but note that HTTP response was 200 (email sent in background)
+                // The endpoint responded successfully, but email delivery failed asynchronously
                 createAuditLog({
                     userId: user._id,
                     userEmail: user.email,
@@ -669,9 +677,9 @@ export const sendVerifyOtp = async (req, res) => {
                     userAgent: userAgent,
                     requestMethod: req.method,
                     requestEndpoint: req.path,
-                    responseStatus: 500,
-                    success: false,
-                    errorMessage: `Failed to send verification OTP email (${emailType}): ${emailError.message || 'Unknown error'}`
+                    responseStatus: 200, // HTTP response was 200, email failed in background
+                    success: false, // Email delivery failed, but OTP was saved
+                    errorMessage: `Background email send failed (${emailType}): ${emailError.message || 'Unknown error'}. OTP was generated and saved.`
                 }).catch(err => console.error('Failed to log audit:', err));
             });
         
@@ -685,15 +693,24 @@ export const sendVerifyOtp = async (req, res) => {
 // ===================== VERIFY EMAIL =====================
 export const verifyEmail = async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        let { email, otp } = req.body;
+        
+        // Normalize inputs - trim whitespace, convert to lowercase email
+        email = email?.trim().toLowerCase();
+        otp = otp?.trim().replace(/\s/g, ''); // Remove all whitespace from OTP
         
         if (!email || !otp) {
             return res.json({ success: false, message: "Email and OTP are required" });
         }
 
-        const user = await userModel.findOne({ email });
+        // Validate OTP format (must be 6 digits)
+        if (!/^\d{6}$/.test(otp)) {
+            return res.json({ success: false, message: "OTP must be exactly 6 digits. Please check and try again." });
+        }
+
+        const user = await userModel.findOne({ email: email.toLowerCase() });
         if (!user) {
-            return res.json({ success: false, message: "User not found" });
+            return res.json({ success: false, message: "User not found. Please check your email address." });
         }
 
         // Roles that do NOT require email verification
@@ -723,8 +740,9 @@ export const verifyEmail = async (req, res) => {
             return res.json({ success: true, message: "Account already verified" });
         }
 
-        if (user.verifyOtp === "" || user.verifyOtp !== otp) {
-            // Log failed OTP verification (invalid) - don't await, fire and forget
+        // Check if OTP exists
+        if (!user.verifyOtp || user.verifyOtp === "") {
+            // Log failed OTP verification (no OTP) - don't await, fire and forget
             const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
             const userAgent = req.headers['user-agent'] || 'Unknown';
             
@@ -741,12 +759,17 @@ export const verifyEmail = async (req, res) => {
                 requestEndpoint: req.path,
                 responseStatus: 400,
                 success: false,
-                errorMessage: 'Invalid OTP'
+                errorMessage: 'No OTP found. Please request a new code.'
             }).catch(err => console.error('Failed to log audit:', err));
             
-            return res.json({ success: false, message: "Invalid OTP. Please check and try again." });
+            return res.json({ 
+                success: false, 
+                message: "No verification code found. Please request a new code.",
+                actionRequired: "resend_otp"
+            });
         }
 
+        // Check if OTP is expired
         if (user.verifyOtpExpireAt < Date.now()) {
             // Log failed OTP verification (expired) - don't await, fire and forget
             const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
@@ -768,14 +791,160 @@ export const verifyEmail = async (req, res) => {
                 errorMessage: 'OTP expired'
             }).catch(err => console.error('Failed to log audit:', err));
             
-            return res.json({ success: false, message: "OTP has expired. Please request a new one." });
+            // Generate and save new OTP automatically as fallback
+            const newOtp = String(Math.floor(100000 + Math.random() * 900000));
+            user.verifyOtp = newOtp;
+            user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+            await user.save();
+            
+            // Send new OTP email in background
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+                to: user.email,
+                subject: "EuMatter - New Verification Code",
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                        <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <div style="text-align: center; margin-bottom: 30px;">
+                                <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">New Verification Code</h2>
+                            </div>
+                            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${user.name},</p>
+                            <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Your previous verification code has expired. Here's your new verification code:
+                            </p>
+                            <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${newOtp}</h1>
+                            </div>
+                            <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                                <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
+                            </p>
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                    Best regards,<br/>
+                                    <strong style="color: #800000;">The EuMatter Team</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `
+            };
+            
+            sendEmailWithRetry(mailOptions, 3, 3000)
+                .then(() => console.log(`✅ New OTP email sent automatically to ${user.email} after expiration`))
+                .catch(err => console.error(`❌ Failed to send new OTP email to ${user.email}:`, err.message));
+            
+            return res.json({ 
+                success: false, 
+                message: "The verification code has expired. A new code has been generated and sent to your email. Please check your inbox.",
+                actionRequired: "code_regenerated",
+                codeSent: true
+            });
         }
 
-        // Verify the account
+        // Verify OTP (case-sensitive comparison)
+        if (user.verifyOtp !== otp) {
+            // Log failed OTP verification (invalid) - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            // Check how many attempts remain (limit to 5 attempts per 15 minutes)
+            const lastAttemptTime = user.verifyOtpLastAttempt || 0;
+            const attemptsWindow = 15 * 60 * 1000; // 15 minutes
+            const attemptsCount = (user.verifyOtpAttempts || 0);
+            
+            if (Date.now() - lastAttemptTime > attemptsWindow) {
+                // Reset attempts if window passed
+                user.verifyOtpAttempts = 1;
+            } else {
+                user.verifyOtpAttempts = (attemptsCount || 0) + 1;
+            }
+            user.verifyOtpLastAttempt = Date.now();
+            await user.save();
+            
+            const remainingAttempts = Math.max(0, 5 - (user.verifyOtpAttempts || 0));
+            
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'EMAIL_VERIFICATION',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 400,
+                success: false,
+                errorMessage: `Invalid OTP. Attempt ${user.verifyOtpAttempts}/5`
+            }).catch(err => console.error('Failed to log audit:', err));
+            
+            if (remainingAttempts === 0) {
+                // Too many attempts - generate new OTP
+                const newOtp = String(Math.floor(100000 + Math.random() * 900000));
+                user.verifyOtp = newOtp;
+                user.verifyOtpExpireAt = Date.now() + 10 * 60 * 1000;
+                user.verifyOtpAttempts = 0;
+                await user.save();
+                
+                // Send new OTP email in background
+                const mailOptions = {
+                    from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+                    to: user.email,
+                    subject: "EuMatter - New Verification Code (Too Many Attempts)",
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                            <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div style="text-align: center; margin-bottom: 30px;">
+                                    <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">New Verification Code</h2>
+                                </div>
+                                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello ${user.name},</p>
+                                <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                    Due to multiple failed attempts, a new verification code has been generated for your security:
+                                </p>
+                                <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                                    <h1 style="color: #800000; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">${newOtp}</h1>
+                                </div>
+                                <p style="color: #374151; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                                    <strong style="color: #dc2626;">⚠️ This code will expire in 10 minutes.</strong>
+                                </p>
+                                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                        Best regards,<br/>
+                                        <strong style="color: #800000;">The EuMatter Team</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                };
+                
+                sendEmailWithRetry(mailOptions, 3, 3000)
+                    .then(() => console.log(`✅ New OTP email sent automatically to ${user.email} after too many attempts`))
+                    .catch(err => console.error(`❌ Failed to send new OTP email to ${user.email}:`, err.message));
+                
+                return res.json({ 
+                    success: false, 
+                    message: "Too many incorrect attempts. A new verification code has been generated and sent to your email. Please check your inbox.",
+                    actionRequired: "code_regenerated",
+                    codeSent: true
+                });
+            }
+            
+            return res.json({ 
+                success: false, 
+                message: `Incorrect verification code. Please check and try again. ${remainingAttempts > 0 ? `(${remainingAttempts} attempt${remainingAttempts !== 1 ? 's' : ''} remaining)` : ''}`,
+                remainingAttempts
+            });
+        }
+
+        // OTP is valid - verify the account
         const previousVerified = user.isAccountVerified;
         user.isAccountVerified = true;
         user.verifyOtp = "";
         user.verifyOtpExpireAt = 0;
+        user.verifyOtpAttempts = 0; // Reset attempts
+        user.verifyOtpLastAttempt = 0; // Reset last attempt
         await user.save();
 
         // Log successful OTP verification - don't await, fire and forget
@@ -818,6 +987,66 @@ export const verifyEmail = async (req, res) => {
                 role: user.role,
                 isAccountVerified: true
             }
+        });
+
+    } catch (error) {
+        return res.json({ success: false, message: error.message });
+    }
+};
+
+// ===================== CHECK OTP STATUS =====================
+/**
+ * Check OTP status without consuming it (helpful for debugging and user feedback)
+ */
+export const checkOtpStatus = async (req, res) => {
+    try {
+        let { email } = req.body;
+        
+        // Normalize email
+        email = email?.trim().toLowerCase();
+        
+        if (!email) {
+            return res.json({ success: false, message: "Email is required" });
+        }
+
+        const user = await userModel.findOne({ email: email.toLowerCase() });
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        // Roles that do NOT require email verification
+        const rolesNotRequiringVerification = ['CRD Staff', 'System Administrator', 'Department/Organization'];
+        const isRoleExempt = rolesNotRequiringVerification.includes(user.role);
+        
+        if (isRoleExempt || user.isAccountVerified) {
+            return res.json({ 
+                success: true, 
+                message: "Account is verified",
+                verified: true,
+                requiresOtp: false
+            });
+        }
+
+        const hasOtp = !!(user.verifyOtp && user.verifyOtp !== "");
+        const isExpired = user.verifyOtpExpireAt < Date.now();
+        const remainingAttempts = Math.max(0, 5 - (user.verifyOtpAttempts || 0));
+        const timeUntilExpiry = user.verifyOtpExpireAt > Date.now() 
+            ? Math.floor((user.verifyOtpExpireAt - Date.now()) / 1000 / 60) // minutes
+            : 0;
+
+        return res.json({
+            success: true,
+            verified: false,
+            requiresOtp: true,
+            hasOtp: hasOtp && !isExpired,
+            isExpired: isExpired,
+            remainingAttempts: remainingAttempts,
+            timeUntilExpiry: timeUntilExpiry, // in minutes
+            message: hasOtp 
+                ? (isExpired 
+                    ? "OTP has expired. Please request a new code."
+                    : `OTP is valid for ${timeUntilExpiry} more minute${timeUntilExpiry !== 1 ? 's' : ''}.`)
+                : "No OTP found. Please request a verification code."
         });
 
     } catch (error) {

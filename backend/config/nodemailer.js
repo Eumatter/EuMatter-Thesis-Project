@@ -156,10 +156,10 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASSWORD
             },
-            // Use longer timeouts for cloud environments to allow slow connections
-            connectionTimeout: isProduction ? 90000 : connectionTimeout, // 90s for production
-            greetingTimeout: isProduction ? 90000 : greetingTimeout, // 90s for production
-            socketTimeout: isProduction ? 90000 : socketTimeout, // 90s for production
+            // Use reasonable timeouts - even slow SMTP servers should respond within 30s
+            connectionTimeout: isProduction ? 30000 : connectionTimeout, // 30s for production
+            greetingTimeout: isProduction ? 30000 : greetingTimeout, // 30s for production
+            socketTimeout: isProduction ? 30000 : socketTimeout, // 30s for production
             pool: false, // Never use pooling for fresh connections
             tls: {
                 rejectUnauthorized: false
@@ -179,8 +179,9 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 4, initialDel
         
         try {
             // Add timeout wrapper for the entire send operation
-            // Use longer timeout for cloud environments (90s) to allow for slow SMTP connections
-            const emailTimeout = isProduction ? 90000 : 45000; // 90s for production, 45s for dev
+            // Use reasonable timeout to fail fast if SMTP is unresponsive
+            // Even cloud SMTP servers should respond within 30 seconds
+            const emailTimeout = isProduction ? 30000 : 20000; // 30s for production, 20s for dev
             const sendPromise = attemptTransporter.sendMail(mailOptions);
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {

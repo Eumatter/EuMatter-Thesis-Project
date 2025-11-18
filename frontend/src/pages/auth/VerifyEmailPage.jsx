@@ -41,8 +41,11 @@ const VerifyEmailPage = () => {
             return
         }
         
-        if (!otp || otp.length !== 6) {
-            toast.error('Please enter a valid 6-digit OTP')
+        // Normalize OTP - remove whitespace, ensure it's 6 digits
+        const normalizedOtp = otp.trim().replace(/\s/g, '')
+        
+        if (!normalizedOtp || normalizedOtp.length !== 6 || !/^\d{6}$/.test(normalizedOtp)) {
+            toast.error('Please enter a valid 6-digit code')
             return
         }
 
@@ -50,8 +53,8 @@ const VerifyEmailPage = () => {
         try {
             axios.defaults.withCredentials = true
             const { data } = await axios.post(backendUrl + 'api/auth/verify-email', {
-                email,
-                otp
+                email: email.trim().toLowerCase(),
+                otp: normalizedOtp
             }, {
                 timeout: 30000 // 30 seconds timeout
             })
@@ -74,23 +77,50 @@ const VerifyEmailPage = () => {
                     }
                 }, 1000)
             } else {
-                toast.error(data.message || 'Verification failed. Please try again.')
-                // Clear OTP on error to allow retry
-                setOtp('')
+                // Handle different error scenarios
+                if (data.actionRequired === 'code_regenerated' && data.codeSent) {
+                    toast.warning(data.message || 'A new code has been sent to your email. Please check your inbox.')
+                    setOtp('') // Clear OTP input for new code
+                    setResendCooldown(60) // Reset cooldown since new code was sent
+                } else if (data.actionRequired === 'resend_otp') {
+                    toast.error(data.message || 'Please request a new verification code.')
+                    setOtp('')
+                } else if (data.remainingAttempts !== undefined) {
+                    toast.error(data.message || 'Incorrect code. Please try again.')
+                    // Don't clear OTP if there are attempts remaining - let user correct it
+                    if (data.remainingAttempts === 0) {
+                        setOtp('') // Clear if no attempts left (new code sent)
+                        setResendCooldown(60)
+                    }
+                } else {
+                    toast.error(data.message || 'Verification failed. Please try again.')
+                    setOtp('')
+                }
             }
         } catch (error) {
             console.error('Email verification error:', error)
             const errorMessage = error?.response?.data?.message || error.message || 'Failed to verify email. Please try again.'
-            toast.error(errorMessage)
             
-            // Clear OTP on error to allow retry
-            setOtp('')
-            
-            // If OTP expired, suggest resending
-            if (errorMessage.toLowerCase().includes('expired')) {
+            // Handle specific error types
+            if (error.response?.data?.actionRequired === 'code_regenerated' && error.response?.data?.codeSent) {
+                toast.warning(error.response.data.message || 'A new code has been sent to your email.')
+                setOtp('')
+                setResendCooldown(60)
+            } else if (error.response?.data?.actionRequired === 'resend_otp') {
+                toast.error(error.response.data.message || 'Please request a new verification code.')
+                setOtp('')
+            } else if (error.response?.status === 400 && errorMessage.toLowerCase().includes('expired')) {
+                toast.error(errorMessage)
                 setTimeout(() => {
-                    toast.info('You can request a new code using the "Resend OTP" button below.')
+                    toast.info('A new code may have been sent. Please check your email or click "Resend OTP".')
                 }, 2000)
+                setOtp('')
+            } else if (error.response?.status === 500) {
+                toast.error('Server error occurred. Please try again in a moment.')
+                setOtp('')
+            } else {
+                toast.error(errorMessage)
+                setOtp('')
             }
         } finally {
             setIsLoading(false)
@@ -218,13 +248,18 @@ const VerifyEmailPage = () => {
                                     autoFocus
                                 />
                                 <p className="text-xs text-gray-500 text-center">
-                                    {otp.length}/6 digits
+                                    {otp.replace(/\s/g, '').length}/6 digits
                                 </p>
+                                {otp.length > 0 && otp.replace(/\s/g, '').length !== 6 && (
+                                    <p className="text-xs text-red-500 text-center">
+                                        Please enter exactly 6 digits
+                                    </p>
+                                )}
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={isLoading || otp.length !== 6}
+                                disabled={isLoading || otp.replace(/\s/g, '').length !== 6}
                                 className="w-full bg-gradient-to-r from-[#800000] to-red-900 text-white hover:from-red-900 hover:to-[#800000] font-semibold transition-all duration-200 rounded-lg px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {isLoading ? (
@@ -281,9 +316,13 @@ const VerifyEmailPage = () => {
                         </div>
 
                         {/* Help Text */}
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4 space-y-2">
                             <p className="text-xs text-yellow-800 text-center">
                                 <strong>Tip:</strong> Check your spam folder if you don't see the email. The code is valid for 10 minutes.
+                            </p>
+                            <p className="text-xs text-yellow-700 text-center">
+                                <strong>Alternative:</strong> Even if the email hasn't arrived yet, the OTP has been generated. 
+                                You can try verifying with the code from your previous email, or click "Resend OTP" to get a new code.
                             </p>
                         </div>
                     </div>

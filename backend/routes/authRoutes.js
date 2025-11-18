@@ -1,6 +1,6 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
-import { isAuthenticated, login, logout, register, resetPassword, sendResetOtp, sendVerifyOtp, verifyEmail, verifyResetOtp, testEmail, getEmailStatus } from '../controllers/authController.js'
+import { isAuthenticated, login, logout, register, resetPassword, sendResetOtp, sendVerifyOtp, verifyEmail, verifyResetOtp, testEmail, getEmailStatus, checkOtpStatus } from '../controllers/authController.js'
 import userAuth from '../middleware/userAuth.js';
 const authRouter = express.Router();
 
@@ -50,6 +50,7 @@ authRouter.post('/logout', logout); // No rate limit for logout
 authRouter.post('/send-verify-otp', otpLimiter, sendVerifyOtp); // No auth required - can send by email
 authRouter.post('/verify-email', otpLimiter, verifyEmail); // No auth required - verify by email and OTP
 authRouter.post('/verify-account', otpLimiter, userAuth, verifyEmail); // Alternative route with auth (for backwards compatibility)
+authRouter.post('/check-otp-status', checkOtpStatus); // Check OTP status without consuming it (no rate limit - read-only)
 authRouter.get('/is-authenticated', lenientAuthLimiter, isAuthenticated);
 authRouter.post('/send-reset-otp', otpLimiter, sendResetOtp);
 authRouter.post('/verify-reset-otp', otpLimiter, verifyResetOtp);
