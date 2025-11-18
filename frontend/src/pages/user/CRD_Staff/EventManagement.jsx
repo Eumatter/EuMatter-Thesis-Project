@@ -737,19 +737,20 @@ const EventManagement = () => {
                                 outline: 'none'
                             }}
                         >
-                            <div className="relative inline-flex items-center justify-center" style={{
-                                backgroundImage: filter === 'pending' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
-                                WebkitBackgroundClip: filter === 'pending' ? 'none' : 'text',
-                                backgroundClip: filter === 'pending' ? 'none' : 'text'
-                            }}>
-                                <FaClock 
-                                    className="w-4 h-4" 
-                                    style={{ 
-                                        color: filter === 'pending' ? '#ffffff' : '#800020',
-                                        fill: filter === 'pending' ? '#ffffff' : '#800020',
-                                        filter: filter === 'pending' ? 'none' : 'drop-shadow(0 0 0 #800020)'
-                                    }} 
-                                />
+                            <div className="relative inline-flex items-center justify-center">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="gradientPendingIcon" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="#800020" />
+                                            <stop offset="100%" stopColor="#9c0000" />
+                                        </linearGradient>
+                                    </defs>
+                                    {filter === 'pending' ? (
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="#ffffff" />
+                                    ) : (
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" fill="url(#gradientPendingIcon)" />
+                                    )}
+                                </svg>
                             </div>
                             <span className="text-sm font-semibold" style={{ 
                                 color: filter === 'pending' ? '#ffffff' : '#000000',
@@ -780,19 +781,20 @@ const EventManagement = () => {
                                 outline: 'none'
                             }}
                         >
-                            <div className="relative inline-flex items-center justify-center" style={{
-                                backgroundImage: filter === 'approved' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
-                                WebkitBackgroundClip: filter === 'approved' ? 'none' : 'text',
-                                backgroundClip: filter === 'approved' ? 'none' : 'text'
-                            }}>
-                                <FaCheckCircle 
-                                    className="w-4 h-4" 
-                                    style={{ 
-                                        color: filter === 'approved' ? '#ffffff' : '#800020',
-                                        fill: filter === 'approved' ? '#ffffff' : '#800020',
-                                        filter: filter === 'approved' ? 'none' : 'drop-shadow(0 0 0 #800020)'
-                                    }} 
-                                />
+                            <div className="relative inline-flex items-center justify-center">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="gradientApprovedIcon" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="#800020" />
+                                            <stop offset="100%" stopColor="#9c0000" />
+                                        </linearGradient>
+                                    </defs>
+                                    {filter === 'approved' ? (
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#ffffff" />
+                                    ) : (
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="url(#gradientApprovedIcon)" />
+                                    )}
+                                </svg>
                             </div>
                             <span className="text-sm font-semibold" style={{ 
                                 color: filter === 'approved' ? '#ffffff' : '#000000',
@@ -823,19 +825,20 @@ const EventManagement = () => {
                                 outline: 'none'
                             }}
                         >
-                            <div className="relative inline-flex items-center justify-center" style={{
-                                backgroundImage: filter === 'declined' ? 'none' : 'linear-gradient(to right, #800020, #9c0000)',
-                                WebkitBackgroundClip: filter === 'declined' ? 'none' : 'text',
-                                backgroundClip: filter === 'declined' ? 'none' : 'text'
-                            }}>
-                                <FaTimesCircle 
-                                    className="w-4 h-4" 
-                                    style={{ 
-                                        color: filter === 'declined' ? '#ffffff' : '#800020',
-                                        fill: filter === 'declined' ? '#ffffff' : '#800020',
-                                        filter: filter === 'declined' ? 'none' : 'drop-shadow(0 0 0 #800020)'
-                                    }} 
-                                />
+                            <div className="relative inline-flex items-center justify-center">
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="gradientDeclinedIcon" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="#800020" />
+                                            <stop offset="100%" stopColor="#9c0000" />
+                                        </linearGradient>
+                                    </defs>
+                                    {filter === 'declined' ? (
+                                        <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" fill="#ffffff" />
+                                    ) : (
+                                        <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" fill="url(#gradientDeclinedIcon)" />
+                                    )}
+                                </svg>
                             </div>
                             <span className="text-sm font-semibold" style={{ 
                                 color: filter === 'declined' ? '#ffffff' : '#000000',
