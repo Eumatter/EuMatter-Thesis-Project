@@ -930,29 +930,12 @@ const CRDDashboard = () => {
                                                             fill={entry.name === 'Volunteers' ? 'url(#volunteerGradient)' : 'url(#donatorGradient)'}
                                                             style={{ 
                                                                 filter: 'url(#shadow)',
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                                                cursor: 'default',
                                                                 outline: 'none'
                                                             }}
                                                             onClick={(e) => {
                                                                 e.preventDefault()
                                                                 e.stopPropagation()
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                if (e && e.target) {
-                                                                    e.target.style.filter = 'url(#glow) brightness(1.25) drop-shadow(0 4px 8px rgba(0,0,0,0.3))'
-                                                                    e.target.style.transform = 'scale(1.1) translateZ(0)'
-                                                                    e.target.style.transition = 'all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                                                                    e.target.style.zIndex = '10'
-                                                                }
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                if (e && e.target) {
-                                                                    e.target.style.filter = 'url(#shadow)'
-                                                                    e.target.style.transform = 'scale(1) translateZ(0)'
-                                                                    e.target.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
-                                                                    e.target.style.zIndex = '1'
-                                                                }
                                                             }}
                                                         />
                                                     ))}
