@@ -1,7 +1,7 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import transporter from "../config/nodemailer.js";
+import transporter, { sendEmailWithRetry } from "../config/nodemailer.js";
 import { createAuditLog } from "./auditLogController.js";
 
 const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
@@ -276,9 +276,14 @@ export const register = async (req, res) => {
                         `
                     };
                     
-                    const emailResult = await transporter.sendMail(mailOptions);
-                    console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-                    console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
+                    try {
+                        const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
+                        console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                        console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
+                    } catch (sendError) {
+                        // Re-throw to be caught by outer catch block
+                        throw sendError;
+                    }
                 } else {
                     // Send welcome email for non-User roles (no verification needed)
                     const mailOptions = {
@@ -295,8 +300,13 @@ export const register = async (req, res) => {
                             </div>
                         `
                     };
-                    const emailResult = await transporter.sendMail(mailOptions);
-                    console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                    try {
+                        const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
+                        console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                    } catch (sendError) {
+                        // Re-throw to be caught by outer catch block
+                        throw sendError;
+                    }
                 }
             } catch (emailError) {
                 // Log email error and create audit log
@@ -402,7 +412,7 @@ export const login = async (req, res) => {
 
                 // Send verification OTP email
                 const mailOptions = {
-                    from: process.env.SENDER_EMAIL,
+                    from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
                     to: email,
                     subject: "EuMatter - Verify Your Email Address",
                     html: `
@@ -419,7 +429,15 @@ export const login = async (req, res) => {
                         </div>
                     `
                 };
-                await transporter.sendMail(mailOptions);
+                
+                // Send email with retry (fire and forget - don't block login response)
+                sendEmailWithRetry(mailOptions, 3, 2000)
+                    .then(result => {
+                        console.log(`✅ Verification OTP email sent during login to ${email} (MessageId: ${result.messageId || 'N/A'})`);
+                    })
+                    .catch(error => {
+                        console.error(`❌ Failed to send verification OTP email during login to ${email}:`, error.message);
+                    });
             }
 
             const token = jwt.sign(
@@ -603,7 +621,7 @@ export const sendVerifyOtp = async (req, res) => {
         };
         
         try {
-            const emailResult = await transporter.sendMail(mailOptions);
+            const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
             console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
             console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);
             
@@ -665,11 +683,15 @@ export const sendVerifyOtp = async (req, res) => {
             }).catch(err => console.error('Failed to log audit:', err));
             
             // Provide more specific error message
-            let errorMessage = "Failed to send verification email. Please try again later.";
+            let errorMessage = "Failed to send verification email after multiple attempts. Please try again later.";
             if (emailError.code === 'EAUTH' || emailError.message?.includes('authentication')) {
                 errorMessage = "Email service authentication failed. Please contact support.";
-            } else if (emailError.code === 'ECONNECTION' || emailError.message?.includes('connection')) {
-                errorMessage = "Email service connection failed. Please try again in a few moments.";
+            } else if (emailError.code === 'ECONNECTION' || emailError.code === 'ETIMEDOUT' || emailError.message?.includes('timeout') || emailError.message?.includes('Connection')) {
+                errorMessage = "Email service connection timed out. Please try again in a few moments. If the problem persists, contact support.";
+            } else if (emailError.code === 'ESOCKET') {
+                errorMessage = "Email service socket error. Please try again in a few moments.";
+            } else if (emailError.responseCode) {
+                errorMessage = `Email service error (${emailError.responseCode}): ${emailError.response || 'Please try again later'}`;
             } else if (emailError.response) {
                 errorMessage = `Email service error: ${emailError.response}`;
             }
@@ -883,8 +905,8 @@ export const sendResetOtp = async (req, res) => {
         };
         
         try {
-            await transporter.sendMail(mailOptions);
-            console.log(`✅ Password reset OTP email sent successfully to ${email}`);
+            const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
+            console.log(`✅ Password reset OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
             
             // Log password reset request - don't await, fire and forget
             const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
@@ -929,7 +951,19 @@ export const sendResetOtp = async (req, res) => {
                 errorMessage: `Failed to send password reset OTP email: ${emailError.message}`
             }).catch(err => console.error('Failed to log audit:', err));
             
-            return res.json({ success: false, message: "Failed to send password reset email. Please try again later." });
+            // Provide more specific error message
+            let errorMessage = "Failed to send password reset email after multiple attempts. Please try again later.";
+            if (emailError.code === 'EAUTH' || emailError.message?.includes('authentication')) {
+                errorMessage = "Email service authentication failed. Please contact support.";
+            } else if (emailError.code === 'ECONNECTION' || emailError.code === 'ETIMEDOUT' || emailError.message?.includes('timeout') || emailError.message?.includes('Connection')) {
+                errorMessage = "Email service connection timed out. Please try again in a few moments. If the problem persists, contact support.";
+            } else if (emailError.code === 'ESOCKET') {
+                errorMessage = "Email service socket error. Please try again in a few moments.";
+            } else if (emailError.responseCode) {
+                errorMessage = `Email service error (${emailError.responseCode}): ${emailError.response || 'Please try again later'}`;
+            }
+            
+            return res.json({ success: false, message: errorMessage });
         }
 
     } catch (error) {
