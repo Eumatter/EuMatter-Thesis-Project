@@ -734,7 +734,7 @@ const RegisterPage = () => {
                                                 <h4 className={`text-lg md:text-xl font-bold transition-colors duration-300 ${
                                                     formData.userType === 'Outsider' ? 'text-[#FFD700]' : 'text-white group-hover:text-yellow-200'
                                                 }`}>
-                                                    Guest / Outsider
+                                                    Guest
                                                 </h4>
                                                 <p className="text-gray-200 text-xs md:text-sm leading-snug px-1">
                                                     I am a guest or external user
