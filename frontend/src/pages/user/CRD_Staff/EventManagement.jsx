@@ -12,7 +12,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
-import { FaEye, FaEdit, FaTrash } from 'react-icons/fa'
+import { FaEye, FaEdit, FaTrash, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa'
 
 const EventManagement = () => {
     const navigate = useNavigate()
@@ -21,7 +21,7 @@ const EventManagement = () => {
     // State management
     const [events, setEvents] = useState([])
     const [isLoading, setIsLoading] = useState(true)
-    const [filter, setFilter] = useState('all') // all, pending, approved, declined
+    const [filter, setFilter] = useState('pending') // pending, approved, declined
     const [searchTerm, setSearchTerm] = useState('')
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortOrder, setSortOrder] = useState('desc')
@@ -108,7 +108,7 @@ const EventManagement = () => {
             if (filter === 'pending') return event.status === 'Pending'
             if (filter === 'approved') return event.status === 'Approved'
             if (filter === 'declined') return event.status === 'Declined'
-            return true
+            return false
         })
 
         // Search filter
@@ -272,7 +272,7 @@ const EventManagement = () => {
     }
 
     const resetFilters = () => {
-        setFilter('all')
+        setFilter('pending')
         setSearchTerm('')
         setSortBy('createdAt')
         setSortOrder('desc')
@@ -650,42 +650,57 @@ const EventManagement = () => {
 
                     {/* Filter Tabs */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                        <Button
-                            variant={filter === 'all' ? 'primary' : 'ghostDark'}
-                            size="sm"
-                            onClick={() => setFilter('all')}
-                            className={`flex items-center space-x-2 ${filter === 'all' ? 'bg-red-900 text-white' : 'text-red-900 hover:text-red-700'}`}
-                        >
-                            <span>All Events</span>
-                            <span className={`rounded-full px-2 py-1 text-xs ${filter === 'all' ? 'bg-white text-red-900' : 'bg-red-100 text-red-800'}`}>{stats.total}</span>
-                        </Button>
-                        <Button
-                            variant={filter === 'pending' ? 'primary' : 'ghostDark'}
-                            size="sm"
+                        <button
                             onClick={() => setFilter('pending')}
-                            className={`flex items-center space-x-2 ${filter === 'pending' ? 'bg-red-900 text-white' : 'text-red-900 hover:text-red-700'}`}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            style={{ 
+                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                border: 'none',
+                                outline: 'none'
+                            }}
                         >
-                            <span>Pending Review</span>
-                            <span className={`rounded-full px-2 py-1 text-xs ${filter === 'pending' ? 'bg-white text-red-900' : 'bg-red-100 text-red-800'}`}>{stats.pending}</span>
-                        </Button>
-                        <Button
-                            variant={filter === 'approved' ? 'primary' : 'ghostDark'}
-                            size="sm"
+                            <FaClock className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                Pending Review
+                            </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                {stats.pending}
+                            </span>
+                        </button>
+                        <button
                             onClick={() => setFilter('approved')}
-                            className={`flex items-center space-x-2 ${filter === 'approved' ? 'bg-red-900 text-white' : 'text-red-900 hover:text-red-700'}`}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            style={{ 
+                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                border: 'none',
+                                outline: 'none'
+                            }}
                         >
-                            <span>Approved</span>
-                            <span className={`rounded-full px-2 py-1 text-xs ${filter === 'approved' ? 'bg-white text-red-900' : 'bg-red-100 text-red-800'}`}>{stats.approved}</span>
-                        </Button>
-                        <Button
-                            variant={filter === 'declined' ? 'primary' : 'ghostDark'}
-                            size="sm"
+                            <FaCheckCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                Approved
+                            </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                {stats.approved}
+                            </span>
+                        </button>
+                        <button
                             onClick={() => setFilter('declined')}
-                            className={`flex items-center space-x-2 ${filter === 'declined' ? 'bg-red-900 text-white' : 'text-red-900 hover:text-red-700'}`}
+                            className="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200"
+                            style={{ 
+                                backgroundColor: 'rgba(128, 0, 32, 0.08)',
+                                border: 'none',
+                                outline: 'none'
+                            }}
                         >
-                            <span>Declined</span>
-                            <span className={`rounded-full px-2 py-1 text-xs ${filter === 'declined' ? 'bg-white text-red-900' : 'bg-red-100 text-red-800'}`}>{stats.declined}</span>
-                        </Button>
+                            <FaTimesCircle className="w-4 h-4" style={{ color: '#800020', fill: '#800020' }} />
+                            <span className="text-sm font-semibold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                Declined
+                            </span>
+                            <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                {stats.declined}
+                            </span>
+                        </button>
                     </div>
 
                 </div>
@@ -764,65 +779,130 @@ const EventManagement = () => {
                                                         {event.status === 'Proposed' && (
                                                             <button
                                                                 onClick={() => handleAcceptEvent(event._id)}
-                                                                className="p-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors duration-200"
+                                                                className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                style={{ 
+                                                                    backgroundColor: '#ffffff',
+                                                                    color: '#800020'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                    e.currentTarget.style.color = '#ffffff';
+                                                                    const icon = e.currentTarget.querySelector('svg');
+                                                                    if (icon) icon.style.color = '#ffffff';
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    e.currentTarget.style.backgroundImage = 'none';
+                                                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                    e.currentTarget.style.color = '#800020';
+                                                                    const icon = e.currentTarget.querySelector('svg');
+                                                                    if (icon) icon.style.color = '#800020';
+                                                                }}
                                                                 title="Accept for Review"
                                                             >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#800020' }}>
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
                                                                 </svg>
                                                             </button>
                                                         )}
                                                         {event.status === 'Pending' && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => openReviewDetailsModal(event)}
-                                                                    className="p-2 rounded-lg bg-red-900 hover:bg-red-800 text-white transition-colors duration-200"
-                                                                    title="Review Details"
-                                                                >
-                                                                    <FaEye className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => handleReviewEvent(event._id, 'Approved')}
-                                                                    className="p-2 rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors duration-200"
-                                                                    title="Approve"
-                                                                >
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => openReviewModal(event)}
-                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
-                                                                    title="Decline"
-                                                                >
-                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                onClick={() => openReviewDetailsModal(event)}
+                                                                className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                style={{ 
+                                                                    backgroundColor: '#ffffff',
+                                                                    color: '#800020'
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                    e.currentTarget.style.color = '#ffffff';
+                                                                    const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                    if (icon) icon.style.color = '#ffffff';
+                                                                }}
+                                                                onMouseLeave={(e) => {
+                                                                    e.currentTarget.style.backgroundImage = 'none';
+                                                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                    e.currentTarget.style.color = '#800020';
+                                                                    const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                    if (icon) icon.style.color = '#800020';
+                                                                }}
+                                                                title="Review Event"
+                                                            >
+                                                                <FaEye className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
+                                                            </button>
                                                         )}
                                                         {event.status === 'Approved' && (
                                                             <>
                                                                 <button
                                                                     onClick={() => openEventDetailsModal(event)}
-                                                                    className="p-2 rounded-lg border-2 border-red-600 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="View"
                                                                 >
-                                                                    <FaEye className="w-4 h-4" />
+                                                                    <FaEye className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => openStatusUpdate(event)}
-                                                                    className="p-2 rounded-lg bg-gray-700 hover:bg-gray-800 text-white transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="Update Status"
                                                                 >
-                                                                    <FaEdit className="w-4 h-4" />
+                                                                    <FaEdit className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => openDeleteModal(event)}
-                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="Delete"
                                                                 >
-                                                                    <FaTrash className="w-4 h-4" />
+                                                                    <FaTrash className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                             </>
                                                         )}
@@ -830,24 +910,75 @@ const EventManagement = () => {
                                                             <>
                                                                 <button
                                                                     onClick={() => openEventDetailsModal(event)}
-                                                                    className="p-2 rounded-lg border-2 border-red-600 text-red-600 hover:bg-red-50 transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="View"
                                                                 >
-                                                                    <FaEye className="w-4 h-4" />
+                                                                    <FaEye className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => openStatusUpdate(event)}
-                                                                    className="p-2 rounded-lg border-2 border-gray-600 text-gray-600 hover:bg-gray-50 transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="Update Status"
                                                                 >
-                                                                    <FaEdit className="w-4 h-4" />
+                                                                    <FaEdit className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => openDeleteModal(event)}
-                                                                    className="p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors duration-200"
+                                                                    className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
+                                                                    style={{ 
+                                                                        backgroundColor: '#ffffff',
+                                                                        color: '#800020'
+                                                                    }}
+                                                                    onMouseEnter={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'linear-gradient(to bottom right, #800020, #9c0000)';
+                                                                        e.currentTarget.style.color = '#ffffff';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#ffffff';
+                                                                    }}
+                                                                    onMouseLeave={(e) => {
+                                                                        e.currentTarget.style.backgroundImage = 'none';
+                                                                        e.currentTarget.style.backgroundColor = '#ffffff';
+                                                                        e.currentTarget.style.color = '#800020';
+                                                                        const icon = e.currentTarget.querySelector('svg, .react-icons');
+                                                                        if (icon) icon.style.color = '#800020';
+                                                                    }}
                                                                     title="Delete"
                                                                 >
-                                                                    <FaTrash className="w-4 h-4" />
+                                                                    <FaTrash className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
                                                             </>
                                                         )}
@@ -1757,33 +1888,51 @@ const EventManagement = () => {
             )}
             {/* Review Details Modal - Enhanced for better workflow */}
             {showReviewModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
+                <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-md flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
                     <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto border border-gray-200">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <div className="flex items-center space-x-2 mb-2">
-                                        <div className="bg-blue-100 rounded-full p-2">
-                                            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-2xl font-bold text-gray-900">Step 1: Review Event Details</h3>
-                                            <p className="text-sm text-blue-600 font-medium">First step in the approval process</p>
-                                        </div>
-                                    </div>
-                                    <p className="text-gray-600 mt-2">Carefully review all event information, attachments, and requirements before making your decision</p>
+                                    <h3 className="text-2xl font-bold text-gray-900">Review Event</h3>
+                                    <p className="text-sm text-gray-600 mt-1">Review all event details before making your decision</p>
                                 </div>
                                 <button
                                     onClick={closeReviewDetailsModal}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg"
+                                    title="Close"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
+
+                            {/* Event Image */}
+                            {selectedEvent.image && (() => {
+                                let imageUrl = null;
+                                if (selectedEvent.image) {
+                                    if (selectedEvent.image.startsWith('data:image')) {
+                                        imageUrl = selectedEvent.image;
+                                    } else if (selectedEvent.image.startsWith('http://') || selectedEvent.image.startsWith('https://')) {
+                                        imageUrl = selectedEvent.image;
+                                    } else {
+                                        imageUrl = `data:image/jpeg;base64,${selectedEvent.image}`;
+                                    }
+                                }
+                                return imageUrl ? (
+                                    <div className="mb-6 rounded-xl overflow-hidden border border-gray-200">
+                                        <img 
+                                            src={imageUrl} 
+                                            alt={selectedEvent.title}
+                                            className="w-full h-64 object-cover"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    </div>
+                                ) : null;
+                            })()}
 
                             {/* Event Details */}
                             <div className="bg-gray-50 rounded-xl p-6 mb-6 border border-gray-200">
@@ -1924,51 +2073,28 @@ const EventManagement = () => {
                                 </div>
                             )}
 
-                            {/* Action Buttons - Enhanced workflow */}
-                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <p className="text-sm font-semibold text-blue-900 mb-1">Review Process:</p>
-                                        <ol className="text-xs text-blue-800 space-y-1 list-decimal list-inside">
-                                            <li>Review all event details and attachments above</li>
-                                            <li>Check if the event meets all requirements</li>
-                                            <li>Make your decision: Approve or Decline</li>
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="flex space-x-4">
-                                <Button
-                                    variant="ghostDark"
-                                    onClick={closeReviewDetailsModal}
-                                    className="flex-1 py-3 rounded-xl text-gray-700 hover:text-gray-900"
-                                >
-                                    Close
-                                </Button>
+                            {/* Action Buttons */}
+                            <div className="flex space-x-4 pt-4 border-t border-gray-200">
                                 <Button
                                     onClick={() => handleReviewEvent(selectedEvent._id, 'Approved')}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2"
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span>Approve Event</span>
+                                    <span>Approve</span>
                                 </Button>
                                 <Button
                                     onClick={() => {
                                         closeReviewDetailsModal()
                                         openReviewModal(selectedEvent)
                                     }}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2"
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center space-x-2 transition-all duration-200"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                    <span>Decline Event</span>
+                                    <span>Decline</span>
                                 </Button>
                             </div>
                         </div>

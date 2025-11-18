@@ -121,8 +121,8 @@ const CRDDashboard = () => {
             
             // Store all events for calculations
             setAllEventsData(events)
-            // Set all events (limit to 4 for display)
-            setAllEvents(events.slice(0, 4))
+            // Set all events (limit to 3 for display)
+            setAllEvents(events.slice(0, 3))
             
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
@@ -154,7 +154,7 @@ const CRDDashboard = () => {
                 navigate('/crd-staff/donations')
                 break
             case 'leaderboards':
-                navigate('/crd-staff/leaderboards')
+                navigate('/crd-staff/leaderboard')
                 break
             default:
                 break
@@ -912,8 +912,8 @@ const CRDDashboard = () => {
                                                     data={pieChartData}
                                                     cx="50%"
                                                     cy="50%"
-                                                    innerRadius="40%"
-                                                    outerRadius="85%"
+                                                    innerRadius="42%"
+                                                    outerRadius="83%"
                                                     paddingAngle={4}
                                                     dataKey="value"
                                                     animationBegin={0}
@@ -969,7 +969,7 @@ const CRDDashboard = () => {
                                         {/* Center Label - Active and Total Users - Smaller Text */}
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
                                             <div className="text-center px-2 py-1">
-                                                <div className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: THEME_COLORS.gold, lineHeight: '1.1' }}>
+                                                <div className="text-xl sm:text-2xl font-bold mb-0.5" style={{ color: THEME_COLORS.maroon, lineHeight: '1.1' }}>
                                                     {usersChartData.volunteers + usersChartData.donators}
                                                 </div>
                                                 <div className="text-[10px] sm:text-xs font-semibold" style={{ color: THEME_COLORS.maroon }}>Active</div>
