@@ -615,12 +615,12 @@ const RegisterPage = () => {
                     </div>
 
                     {/* Column 2: Registration Form - Equal width, matching login dimensions */}
-                    <div className="w-full lg:w-1/2 p-6 md:p-8 lg:p-10 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-y-auto registration-form-container">
+                    <div className="w-full lg:w-1/2 p-4 md:p-5 lg:p-6 flex flex-col bg-gradient-to-br from-[#800000] via-[#A00000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none relative overflow-hidden registration-form-container">
                         {/* Animated Background Elements */}
                         <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse"></div>
                         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
                         
-                        <div className="relative z-10 flex flex-col w-full">
+                        <div className="relative z-10 flex flex-col w-full h-full min-h-0">
                             {/* Header Section - More Compact */}
                             <div className="flex-shrink-0 mb-1.5 md:mb-2">
                                 <div className="text-center mb-1.5 md:mb-2">
@@ -644,7 +644,7 @@ const RegisterPage = () => {
                             {/* Form Content - Scrollable for Step 5 only */}
                             <form onSubmit={currentStep === totalSteps ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="flex flex-col w-full flex-1 min-h-0">
                                 {/* Content Area - Scrollable for Step 5 */}
-                                <div className={`w-full mb-1.5 md:mb-2 registration-form-content ${currentStep === 5 ? 'overflow-y-auto flex-1 min-h-0' : ''}`}>
+                                <div className={`w-full mb-2 md:mb-2.5 registration-form-content ${currentStep === 5 ? 'overflow-y-auto flex-1 min-h-0' : 'flex-shrink-0'}`}>
                             {/* Step 1: User Type */}
                             {currentStep === 1 && (
                                 <div className="space-y-2 md:space-y-3 animate-fade-in">
@@ -1525,32 +1525,33 @@ const RegisterPage = () => {
 
                                 </div>
 
-                                {/* Navigation Buttons - Fixed at bottom of form */}
-                                <div className="flex-shrink-0 flex flex-col space-y-1.5 md:space-y-2 pt-1.5 md:pt-2 border-t border-white/30 mt-1.5 md:mt-2">
+                                {/* Navigation Buttons - Fixed at bottom of container */}
+                                <div className="flex-shrink-0 flex flex-col space-y-2 md:space-y-2.5 pt-2 md:pt-3 mt-auto border-t border-white/30">
+                                    {/* Action Buttons Row */}
                                     <div className="flex justify-between items-center gap-3 w-full">
                                         <button
                                             type="button"
                                             onClick={handleBack}
                                             disabled={currentStep === 1 || isLoading}
-                                            className="group flex items-center justify-center space-x-1.5 px-3 md:px-4 py-1.5 md:py-2 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/10 border border-white/20 hover:border-white/40 hover:shadow-lg transform hover:scale-105 disabled:hover:scale-100 text-xs md:text-sm flex-shrink-0 min-w-[80px] md:min-w-[100px]"
+                                            className="group flex items-center justify-center space-x-1.5 px-3 md:px-4 py-2 md:py-2.5 bg-white/10 backdrop-blur-sm text-white rounded-lg hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white/10 border border-white/20 hover:border-white/40 hover:shadow-lg transform hover:scale-105 disabled:hover:scale-100 text-xs md:text-sm font-semibold flex-shrink-0 min-w-[80px] md:min-w-[100px]"
                                         >
                                             <FaArrowLeft className="transition-transform duration-300 group-hover:-translate-x-1 text-xs md:text-sm" />
-                                            <span className="font-semibold">Back</span>
+                                            <span>Back</span>
                                         </button>
                                         
                                         {currentStep !== 6 ? (
                                             <button
-                                type="submit" 
-                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 border-2 border-yellow-300/50 flex-shrink-0 min-w-[100px] md:min-w-[130px]"
+                                                type="submit" 
+                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 border-2 border-yellow-300/50 flex-shrink-0 min-w-[100px] md:min-w-[130px]"
                                             >
                                                 <span>Next Step</span>
                                                 <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-1 text-xs md:text-sm" />
                                             </button>
                                         ) : (
                                             <button
-                                type="submit" 
+                                                type="submit" 
                                                 disabled={isLoading || !formData.acceptedTerms}
-                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-1.5 md:py-2 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none border-2 border-yellow-300/50 flex-shrink-0 min-w-[120px] md:min-w-[150px]"
+                                                className="group flex items-center justify-center space-x-1.5 px-4 md:px-6 py-2 md:py-2.5 bg-gradient-to-r from-[#FFD700] via-yellow-400 to-[#FFD700] text-[#800000] rounded-lg hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 font-bold text-xs md:text-sm transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none border-2 border-yellow-300/50 flex-shrink-0 min-w-[120px] md:min-w-[150px]"
                                             >
                                                 {isLoading ? (
                                                     <>
@@ -1567,12 +1568,12 @@ const RegisterPage = () => {
                                         )}
                                     </div>
                                     
-                                    {/* Login Link - Always at bottom */}
-                                    <div className="text-[10px] md:text-xs text-center pt-1 border-t border-white/20">
-                            <span className="text-gray-200">Already have an account? </span>
+                                    {/* Login Link - Clean bottom section */}
+                                    <div className="text-center pt-2 border-t border-white/20">
+                                        <span className="text-gray-200 text-[10px] md:text-xs">Already have an account? </span>
                                         <Link 
                                             to="/login" 
-                                            className="text-[#FFD700] hover:text-yellow-300 font-bold transition-colors duration-200 underline decoration-2 underline-offset-1 hover:decoration-yellow-300"
+                                            className="text-[#FFD700] hover:text-yellow-300 font-semibold transition-colors duration-200 underline decoration-2 underline-offset-2 hover:decoration-yellow-300 text-[10px] md:text-xs"
                                         >
                                             Log in
                                         </Link>
@@ -1616,18 +1617,23 @@ const RegisterPage = () => {
                     transition: all 0.3s ease;
                 }
                 
-                /* Registration form container - scrollable when needed */
+                /* Registration form container - no overflow, uses flex layout */
                 .registration-form-container {
-                    overflow-y: auto !important;
+                    overflow: hidden !important;
+                    display: flex;
+                    flex-direction: column;
                 }
                 
                 /* Form content - scrollable only for Step 5 */
                 .registration-form-content {
                     overflow-y: visible !important;
+                    flex-shrink: 0;
                 }
                 
                 .registration-form-content.overflow-y-auto {
                     overflow-y: auto !important;
+                    flex: 1 1 auto;
+                    min-height: 0;
                     scrollbar-width: thin;
                     scrollbar-color: rgba(255, 215, 0, 0.5) transparent;
                 }
