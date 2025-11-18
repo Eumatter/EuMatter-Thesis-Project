@@ -4,8 +4,8 @@ const pushSubscriptionSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "user",
-        required: true,
-        index: true
+        required: true
+        // Index is defined below in compound index { userId: 1, isActive: 1 }
     },
     endpoint: {
         type: String,

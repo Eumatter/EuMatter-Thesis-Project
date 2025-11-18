@@ -1,6 +1,6 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
-import { isAuthenticated, login, logout, register, resetPassword, sendResetOtp, sendVerifyOtp, verifyEmail, verifyResetOtp } from '../controllers/authController.js'
+import { isAuthenticated, login, logout, register, resetPassword, sendResetOtp, sendVerifyOtp, verifyEmail, verifyResetOtp, testEmail, getEmailStatus } from '../controllers/authController.js'
 import userAuth from '../middleware/userAuth.js';
 const authRouter = express.Router();
 
@@ -54,5 +54,9 @@ authRouter.get('/is-authenticated', lenientAuthLimiter, isAuthenticated);
 authRouter.post('/send-reset-otp', otpLimiter, sendResetOtp);
 authRouter.post('/verify-reset-otp', otpLimiter, verifyResetOtp);
 authRouter.post('/reset-password', otpLimiter, resetPassword);
+
+// Admin-only email testing endpoints
+authRouter.post('/test-email', userAuth, testEmail);
+authRouter.get('/email-status', userAuth, getEmailStatus);
 
 export default authRouter;

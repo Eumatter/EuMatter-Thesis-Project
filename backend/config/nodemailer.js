@@ -48,36 +48,39 @@ const transporter = nodemailer.createTransport({
 let emailServiceStatus = 'pending';
 
 if (process.env.VERIFY_EMAIL_CONNECTION !== 'false') {
-    // Use setTimeout to make verification non-blocking and add a timeout
-    const verificationTimeout = setTimeout(() => {
-        if (emailServiceStatus === 'pending') {
-            emailServiceStatus = 'timeout';
-            console.warn('⚠️ Email service verification timed out. Email sending will still work, but verification is incomplete.');
-            console.warn('   This is common in cloud environments. Email sending will be attempted when needed.');
-        }
-    }, 20000); // 20 second timeout for verification
+    // Use setImmediate to make verification truly non-blocking
+    setImmediate(() => {
+        // Use setTimeout to add a timeout wrapper
+        const verificationTimeout = setTimeout(() => {
+            if (emailServiceStatus === 'pending') {
+                emailServiceStatus = 'timeout';
+                console.warn('⚠️ Email service verification timed out after 20 seconds.');
+                console.warn('   This is common in cloud environments (Render, Heroku, etc.).');
+                console.warn('   Email sending will still work - verification is just a startup check.');
+                console.warn('   To disable verification, set VERIFY_EMAIL_CONNECTION=false');
+            }
+        }, 20000); // 20 second timeout for verification
 
-    transporter.verify((error, success) => {
-        clearTimeout(verificationTimeout);
-        
-        if (error) {
-            emailServiceStatus = 'failed';
-            console.error('❌ Email service connection verification failed:', error.message);
-            console.error('   Error code:', error.code || 'N/A');
-            console.error('   Note: Email sending will still be attempted when needed.');
-            console.error('   Please verify SMTP configuration if emails fail to send:');
-            console.error('   - SMTP_HOST');
-            console.error('   - SMTP_PORT');
-            console.error('   - SMTP_USER');
-            console.error('   - SMTP_PASSWORD');
-            console.error('   - SENDER_EMAIL');
-        } else {
-            emailServiceStatus = 'verified';
-            console.log('✅ Email service connection verified successfully');
-            console.log(`   SMTP Host: ${process.env.SMTP_HOST || 'Not set'}`);
-            console.log(`   SMTP Port: ${port}`);
-            console.log(`   Sender Email: ${process.env.SENDER_EMAIL || 'Not set'}`);
-        }
+        transporter.verify((error, success) => {
+            clearTimeout(verificationTimeout);
+            
+            if (error) {
+                emailServiceStatus = 'failed';
+                console.error('❌ Email service connection verification failed:', error.message);
+                console.error('   Error code:', error.code || 'N/A');
+                console.error('   Note: Email sending will still be attempted when needed.');
+                if (missingVars.length > 0) {
+                    console.error('   ⚠️ Some required environment variables are missing - check above.');
+                }
+            } else {
+                emailServiceStatus = 'verified';
+                console.log('✅ Email service connection verified successfully');
+                console.log(`   SMTP Host: ${process.env.SMTP_HOST || 'Not set'}`);
+                console.log(`   SMTP Port: ${port}`);
+                console.log(`   Sender Email: ${process.env.SENDER_EMAIL || 'Not set'}`);
+                console.log(`   Environment: ${isProduction ? 'Production' : 'Development'}`);
+            }
+        });
     });
 } else {
     emailServiceStatus = 'skipped';

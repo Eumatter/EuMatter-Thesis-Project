@@ -1152,6 +1152,179 @@ export const isAuthenticated = async (req, res) => {
     }
 };
 
+// ===================== TEST EMAIL (ADMIN ONLY) =====================
+export const testEmail = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (!req.user || !['System Administrator', 'CRD Staff'].includes(req.user.role)) {
+            return res.json({ success: false, message: "Unauthorized. Admin access required." });
+        }
+
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.json({ success: false, message: "Email address is required" });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.json({ success: false, message: "Invalid email address format" });
+        }
+
+        // Get email service status
+        const { getEmailServiceStatus } = await import("../config/nodemailer.js");
+        const emailStatus = getEmailServiceStatus();
+
+        const testMailOptions = {
+            from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
+            to: email,
+            subject: "EuMatter - Test Email",
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+                    <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <h2 style="color: #800000; font-size: 28px; margin: 0 0 10px 0;">✅ Test Email Successful</h2>
+                        </div>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">Hello,</p>
+                        <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                            This is a test email from EuMatter to verify that email sending is working correctly.
+                        </p>
+                        <div style="background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 25px; text-align: center; margin: 30px 0; border-radius: 8px; border: 2px solid #e5e7eb;">
+                            <p style="color: #800000; font-size: 18px; margin: 0; font-weight: bold;">Email Service Status: ${emailStatus}</p>
+                            <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">Timestamp: ${new Date().toLocaleString()}</p>
+                        </div>
+                        <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+                            If you received this email, it means the email configuration is working correctly!
+                        </p>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                                Best regards,<br/>
+                                <strong style="color: #800000;">The EuMatter Team</strong>
+                            </p>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                            This is a test email. Please do not reply.
+                        </p>
+                    </div>
+                </div>
+            `
+        };
+
+        try {
+            const emailResult = await sendEmailWithRetry(testMailOptions, 3, 2000);
+            
+            console.log(`✅ Test email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+            console.log(`   Email service status: ${emailStatus}`);
+            console.log(`   Sent by: ${req.user.name} (${req.user.email})`);
+
+            // Log test email - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: req.user.id,
+                userEmail: req.user.email,
+                userRole: req.user.role,
+                actionType: 'EMAIL_TEST',
+                resourceType: 'system',
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 200,
+                success: true,
+                newValues: {
+                    testEmail: email,
+                    emailServiceStatus: emailStatus,
+                    messageId: emailResult.messageId
+                }
+            }).catch(err => console.error('Failed to log audit:', err));
+
+            return res.json({ 
+                success: true, 
+                message: `Test email sent successfully to ${email}`,
+                emailServiceStatus: emailStatus,
+                messageId: emailResult.messageId
+            });
+        } catch (emailError) {
+            console.error(`❌ Failed to send test email to ${email}:`, emailError);
+            
+            // Log test email failure - don't await, fire and forget
+            const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
+            const userAgent = req.headers['user-agent'] || 'Unknown';
+            
+            createAuditLog({
+                userId: req.user.id,
+                userEmail: req.user.email,
+                userRole: req.user.role,
+                actionType: 'EMAIL_TEST',
+                resourceType: 'system',
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 500,
+                success: false,
+                errorMessage: `Failed to send test email: ${emailError.message || 'Unknown error'}`
+            }).catch(err => console.error('Failed to log audit:', err));
+
+            let errorMessage = "Failed to send test email after multiple attempts.";
+            if (emailError.code === 'EAUTH') {
+                errorMessage = "Email service authentication failed. Please check SMTP credentials.";
+            } else if (emailError.code === 'ECONNECTION' || emailError.code === 'ETIMEDOUT') {
+                errorMessage = "Email service connection timed out. Please check network connectivity and SMTP settings.";
+            } else if (emailError.code === 'ESOCKET') {
+                errorMessage = "Email service socket error. Please check SMTP configuration.";
+            }
+
+            return res.json({ 
+                success: false, 
+                message: errorMessage,
+                error: emailError.message,
+                emailServiceStatus: emailStatus
+            });
+        }
+
+    } catch (error) {
+        return res.json({ success: false, message: error.message });
+    }
+};
+
+// ===================== EMAIL STATUS (ADMIN ONLY) =====================
+export const getEmailStatus = async (req, res) => {
+    try {
+        // Check if user is admin
+        if (!req.user || !['System Administrator', 'CRD Staff'].includes(req.user.role)) {
+            return res.json({ success: false, message: "Unauthorized. Admin access required." });
+        }
+
+        const { getEmailServiceStatus } = await import("../config/nodemailer.js");
+        const emailStatus = getEmailServiceStatus();
+
+        const statusInfo = {
+            status: emailStatus,
+            smtpHost: process.env.SMTP_HOST ? '✓ Configured' : '✗ Not set',
+            smtpPort: process.env.SMTP_PORT || '587 (default)',
+            smtpUser: process.env.SMTP_USER ? '✓ Configured' : '✗ Not set',
+            smtpPassword: process.env.SMTP_PASSWORD ? '✓ Configured' : '✗ Not set',
+            senderEmail: process.env.SENDER_EMAIL || 'Not set',
+            environment: process.env.NODE_ENV || 'development',
+            isProduction: process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
+        };
+
+        return res.json({ 
+            success: true, 
+            emailService: statusInfo
+        });
+
+    } catch (error) {
+        return res.json({ success: false, message: error.message });
+    }
+};
+
 // ===================== LOGOUT =====================
 export const logout = async (req, res) => {
     try {
