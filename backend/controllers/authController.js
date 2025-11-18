@@ -276,14 +276,25 @@ export const register = async (req, res) => {
                         `
                     };
                     
-                    try {
-                        const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
-                        console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-                        console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
-                    } catch (sendError) {
-                        // Re-throw to be caught by outer catch block
-                        throw sendError;
-                    }
+                    // Send email asynchronously (fire and forget) - don't block registration response
+                    // OTP is already saved to user record, so verification will work even if email fails
+                    sendEmailWithRetry(mailOptions, 2, 2000)
+                        .then((emailResult) => {
+                            console.log(`✅ Verification OTP email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                            console.log(`   User Type: ${userType}, Email Type: ${email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'}`);
+                        })
+                        .catch((sendError) => {
+                            // Log error but don't throw - registration already succeeded and OTP is saved
+                            console.error(`❌ Failed to send verification OTP email to ${email}:`, sendError.message);
+                            console.error(`   Error details:`, {
+                                message: sendError.message,
+                                code: sendError.code,
+                                userType: userType,
+                                emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'
+                            });
+                            // Note: OTP is still saved, user can still verify
+                            console.warn(`   ⚠️  Note: OTP has been saved and verification will still work. User can use the OTP code to verify.`);
+                        });
                 } else {
                     // Send welcome email for non-User roles (no verification needed)
                     const mailOptions = {
@@ -300,45 +311,21 @@ export const register = async (req, res) => {
                             </div>
                         `
                     };
-                    try {
-                        const emailResult = await sendEmailWithRetry(mailOptions, 3, 2000);
-                        console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
-                    } catch (sendError) {
-                        // Re-throw to be caught by outer catch block
-                        throw sendError;
-                    }
+                    // Send welcome email asynchronously (fire and forget) - don't block registration response
+                    sendEmailWithRetry(mailOptions, 2, 2000)
+                        .then((emailResult) => {
+                            console.log(`✅ Welcome email sent successfully to ${email} (MessageId: ${emailResult.messageId || 'N/A'})`);
+                        })
+                        .catch((sendError) => {
+                            // Log error but don't throw - registration already succeeded
+                            console.error(`❌ Failed to send welcome email to ${email}:`, sendError.message);
+                            console.error(`   Error details:`, {
+                                message: sendError.message,
+                                code: sendError.code,
+                                userType: userType
+                            });
+                        });
                 }
-            } catch (emailError) {
-                // Log email error and create audit log
-                console.error(`❌ Failed to send email to ${email}:`, emailError);
-                console.error(`   Error details:`, {
-                    message: emailError.message,
-                    code: emailError.code,
-                    command: emailError.command,
-                    response: emailError.response,
-                    userType: userType,
-                    emailType: email.includes('@student.mseuf.edu.ph') ? 'MSEUF Student' : email.includes('@mseuf.edu.ph') ? 'MSEUF Faculty/Staff' : 'Guest/Outsider'
-                });
-                
-                const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
-                const userAgent = req.headers['user-agent'] || 'Unknown';
-                
-                createAuditLog({
-                    userId: user._id,
-                    userEmail: user.email,
-                    userRole: user.role,
-                    actionType: 'EMAIL_SEND_FAILURE',
-                    resourceType: 'user',
-                    resourceId: user._id,
-                    ipAddress: clientIp,
-                    userAgent: userAgent,
-                    requestMethod: req.method,
-                    requestEndpoint: req.path,
-                    responseStatus: 200,
-                    success: false,
-                    errorMessage: `Failed to send ${needsVerification ? 'verification' : 'welcome'} email: ${emailError.message || 'Unknown error'}`
-                }).catch(err => console.error('Failed to log audit:', err));
-            }
         });
 
     } catch (error) {
@@ -431,12 +418,14 @@ export const login = async (req, res) => {
                 };
                 
                 // Send email with retry (fire and forget - don't block login response)
-                sendEmailWithRetry(mailOptions, 3, 2000)
+                // OTP is already saved, so user can still verify even if email fails
+                sendEmailWithRetry(mailOptions, 2, 2000)
                     .then(result => {
                         console.log(`✅ Verification OTP email sent during login to ${email} (MessageId: ${result.messageId || 'N/A'})`);
                     })
                     .catch(error => {
                         console.error(`❌ Failed to send verification OTP email during login to ${email}:`, error.message);
+                        console.warn(`   ⚠️  Note: OTP has been saved. User can still verify using the OTP code.`);
                     });
             }
 
@@ -626,10 +615,12 @@ export const sendVerifyOtp = async (req, res) => {
         const userAgent = req.headers['user-agent'] || 'Unknown';
         
         // Respond immediately to prevent frontend timeout
-        res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox in a few moments." });
+        // OTP is already saved, so verification will work even if email sending fails
+        res.json({ success: true, message: "Verification OTP is being sent to your email. Please check your inbox. If you don't receive it, the OTP has been generated and you can try verifying with it." });
         
         // Send email in background (fire and forget)
-        sendEmailWithRetry(mailOptions, 3, 2000)
+        // Reduced retries and timeout to fail faster if email service is unavailable
+        sendEmailWithRetry(mailOptions, 2, 2000)
             .then((emailResult) => {
                 console.log(`✅ Verification OTP email sent successfully to ${user.email} (MessageId: ${emailResult.messageId || 'N/A'})`);
                 console.log(`   User Type: ${user.userType || 'N/A'}, Email Type: ${emailType}`);

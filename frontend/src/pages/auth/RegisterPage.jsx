@@ -325,7 +325,7 @@ const RegisterPage = () => {
             };
 
             const { data } = await axios.post(backendUrl + 'api/auth/register', registrationData, {
-                timeout: 60000 // 60 seconds timeout for registration (allows time for email to be queued)
+                timeout: 30000 // 30 seconds timeout for registration (email is sent in background)
             });
             
             if (data.success) {
@@ -344,16 +344,14 @@ const RegisterPage = () => {
                             ? 'MSEUF Faculty/Staff' 
                             : 'Guest/Outsider';
                     
-                    toast.success(`Registration successful! Verification code sent to ${formData.email}`, {
+                    toast.success(`Registration successful! Verification code is being sent to ${formData.email}. Please check your inbox in a few moments.`, {
                         autoClose: 5000
                     });
                     
-                    // Small delay to ensure email is sent
-                    setTimeout(() => {
-                        navigate('/email-verify', { 
-                            state: { email: formData.email } 
-                        });
-                    }, 500);
+                    // Navigate immediately - email is sent in background, OTP is already saved
+                    navigate('/email-verify', { 
+                        state: { email: formData.email } 
+                    });
                 } else {
                     toast.success('Registration successful! Redirecting to dashboard...');
                     const dashboardRoute = getDashboardRoute(data.user.role);

@@ -177,10 +177,10 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 3, initialDel
         }
         
         try {
-            // Add timeout wrapper for the entire send operation
+            // Add timeout wrapper for the entire send operation (reduced timeout for faster failure)
             const sendPromise = attemptTransporter.sendMail(mailOptions);
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Email send operation timed out after 60 seconds')), 60000);
+                setTimeout(() => reject(new Error('Email send operation timed out after 30 seconds')), 30000);
             });
             
             const result = await Promise.race([sendPromise, timeoutPromise]);

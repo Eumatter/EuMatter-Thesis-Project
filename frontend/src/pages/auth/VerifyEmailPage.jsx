@@ -114,15 +114,17 @@ const VerifyEmailPage = () => {
             const { data } = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
                 email
             }, {
-                timeout: 90000 // 90 seconds timeout for email operations
+                timeout: 30000 // 30 seconds timeout (backend responds immediately, email sent in background)
             })
             
             if (data.success) {
-                toast.success('New verification code sent to your email!')
+                // Show backend message or a clearer message about OTP generation
+                const message = data.message || 'New verification code is being sent to your email. You can try verifying with the code even if the email hasn\'t arrived yet.'
+                toast.success(message)
                 setResendCooldown(60) // 60 second cooldown
                 setOtp('') // Clear current OTP input
             } else {
-                toast.error(data.message || 'Failed to send OTP')
+                toast.error(data.message || 'Failed to generate OTP')
             }
         } catch (error) {
             console.error('Resend OTP error:', error)
