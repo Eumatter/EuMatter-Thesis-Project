@@ -12,15 +12,59 @@ import { FaEnvelope, FaCheckCircle, FaArrowLeft, FaClock } from 'react-icons/fa'
 const VerifyEmailPage = () => {
     const navigate = useNavigate()
     const location = useLocation()
-    const { backendUrl, setUserData, setIsLoggedIn, getDashboardRoute } = useContext(AppContent)
+    const { backendUrl, setUserData, setIsLoggedIn, getDashboardRoute, userData } = useContext(AppContent)
     
     const [otp, setOtp] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [resendCooldown, setResendCooldown] = useState(0)
     const [isResending, setIsResending] = useState(false)
+    const [email, setEmail] = useState('')
     
-    // Get email from location state or use a default
-    const email = location.state?.email || ''
+    // Get email from location state, sessionStorage, or userData context
+    useEffect(() => {
+        const getEmail = () => {
+            // Priority 1: Location state (from navigation)
+            if (location.state?.email) {
+                const emailValue = location.state.email.trim().toLowerCase()
+                setEmail(emailValue)
+                sessionStorage.setItem('verificationEmail', emailValue)
+                return
+            }
+            
+            // Priority 2: SessionStorage (for page refresh)
+            const savedEmail = sessionStorage.getItem('verificationEmail')
+            if (savedEmail) {
+                setEmail(savedEmail.trim().toLowerCase())
+                return
+            }
+            
+            // Priority 3: UserData from context (if logged in but not verified)
+            if (userData?.email && !userData?.isAccountVerified) {
+                const emailValue = userData.email.trim().toLowerCase()
+                setEmail(emailValue)
+                sessionStorage.setItem('verificationEmail', emailValue)
+                return
+            }
+            
+            // Priority 4: Try to get from authenticated user via API
+            const fetchUserEmail = async () => {
+                try {
+                    axios.defaults.withCredentials = true
+                    const { data } = await axios.get(backendUrl + 'api/auth/is-authenticated')
+                    if (data.success && data.user?.email && !data.user?.isAccountVerified) {
+                        const emailValue = data.user.email.trim().toLowerCase()
+                        setEmail(emailValue)
+                        sessionStorage.setItem('verificationEmail', emailValue)
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch user email:', error)
+                }
+            }
+            fetchUserEmail()
+        }
+        
+        getEmail()
+    }, [location.state, userData, backendUrl])
     
     // Countdown timer for resend OTP
     useEffect(() => {
@@ -35,7 +79,9 @@ const VerifyEmailPage = () => {
     const handleVerifyEmail = async (e) => {
         e.preventDefault()
         
-        if (!email) {
+        const emailToUse = email.trim().toLowerCase()
+        
+        if (!emailToUse) {
             toast.error('Email not found. Please register again.')
             navigate('/register')
             return
@@ -53,13 +99,19 @@ const VerifyEmailPage = () => {
         try {
             axios.defaults.withCredentials = true
             const { data } = await axios.post(backendUrl + 'api/auth/verify-email', {
-                email: email.trim().toLowerCase(),
+                email: emailToUse,
                 otp: normalizedOtp
             }, {
-                timeout: 30000 // 30 seconds timeout
+                timeout: 30000, // 30 seconds timeout
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
             
             if (data.success) {
+                // Clear verification email from sessionStorage on success
+                sessionStorage.removeItem('verificationEmail')
+                
                 toast.success('Email verified successfully! Redirecting...')
                 // Update user data if available
                 if (data.user) {
@@ -185,13 +237,68 @@ const VerifyEmailPage = () => {
         }
     }
 
-    // Redirect to register if no email
+    // Auto-request OTP if email is available but no OTP exists
+    useEffect(() => {
+        const autoRequestOtp = async () => {
+            if (!email || resendCooldown > 0 || isResending) return
+            
+            try {
+                // Check if user exists and needs verification
+                axios.defaults.withCredentials = true
+                const { data } = await axios.post(backendUrl + 'api/auth/check-otp-status', {
+                    email: email.trim().toLowerCase()
+                }, {
+                    timeout: 10000
+                })
+                
+                if (data.success && data.requiresOtp && !data.hasOtp && !data.verified) {
+                    // No valid OTP exists, automatically request one
+                    console.log('Auto-requesting OTP for verification...')
+                    // Call resend function directly to avoid hook dependency issues
+                    const emailToUse = email.trim().toLowerCase()
+                    setIsResending(true)
+                    try {
+                        axios.defaults.withCredentials = true
+                        const resendData = await axios.post(backendUrl + 'api/auth/send-verify-otp', {
+                            email: emailToUse
+                        }, {
+                            timeout: 30000
+                        })
+                        if (resendData.data.success) {
+                            console.log('Auto-requested OTP successfully')
+                            setResendCooldown(60)
+                        }
+                    } catch (err) {
+                        console.error('Auto-request OTP failed:', err)
+                    } finally {
+                        setIsResending(false)
+                    }
+                }
+            } catch (error) {
+                // Silently fail - user can manually request
+                console.error('Auto-request OTP check failed:', error)
+            }
+        }
+        
+        // Wait a bit before auto-requesting to avoid race conditions
+        if (email) {
+            const timer = setTimeout(autoRequestOtp, 2000)
+            return () => clearTimeout(timer)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [email, backendUrl])
+    
+    // Redirect to register if no email after trying all sources
     useEffect(() => {
         if (!email) {
-            toast.warning('No email found. Redirecting to registration...')
-            setTimeout(() => {
-                navigate('/register')
-            }, 2000)
+            const checkAgain = setTimeout(() => {
+                if (!email) {
+                    toast.warning('No email found. Redirecting to registration...')
+                    sessionStorage.removeItem('verificationEmail')
+                    navigate('/register')
+                }
+            }, 3000)
+            return () => clearTimeout(checkAgain)
         }
     }, [email, navigate])
 

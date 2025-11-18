@@ -348,6 +348,9 @@ const RegisterPage = () => {
                         autoClose: 5000
                     });
                     
+                    // Store email in sessionStorage for verification page (in case of refresh)
+                    sessionStorage.setItem('verificationEmail', formData.email.trim().toLowerCase())
+                    
                     // Navigate immediately - email is sent in background, OTP is already saved
                     navigate('/email-verify', { 
                         state: { email: formData.email } 
@@ -371,6 +374,9 @@ const RegisterPage = () => {
             } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout') || error.message?.includes('Timed')) {
                 // Registration may have succeeded but request timed out
                 toast.warning('Request timed out. Registration may have succeeded. Please check your email for the verification code.');
+                // Store email in sessionStorage for verification page (in case of refresh)
+                sessionStorage.setItem('verificationEmail', formData.email.trim().toLowerCase())
+                
                 navigate('/email-verify', { 
                     state: { email: formData.email } 
                 });

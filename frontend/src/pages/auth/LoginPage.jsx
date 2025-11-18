@@ -273,6 +273,11 @@ const Login = () => {
             const response = await axios.post(`${baseUrl}/api/auth/login`, {
                 email,
                 password
+            }, {
+                timeout: 30000, // 30 seconds timeout
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             const { data } = response;
@@ -309,6 +314,9 @@ const Login = () => {
                 
                 const rolesRequiringVerification = ['User'];
                 if (rolesRequiringVerification.includes(data.user.role) && !data.user.isAccountVerified) {
+                    // Store email in sessionStorage for verification page (in case of refresh)
+                    sessionStorage.setItem('verificationEmail', data.user.email.trim().toLowerCase())
+                    
                     showWarning('Please verify your email address to continue');
                     navigate('/email-verify', { 
                         state: { email: data.user.email } 
@@ -322,6 +330,9 @@ const Login = () => {
             } else if (data.requiresVerification) {
                 const rolesRequiringVerification = ['User'];
                 if (rolesRequiringVerification.includes(data.user.role)) {
+                    // Store email in sessionStorage for verification page (in case of refresh)
+                    sessionStorage.setItem('verificationEmail', data.user.email.trim().toLowerCase())
+                    
                     setUserData(data.user);
                     setIsLoggedIn(true);
                     showWarning(data.message || 'Please verify your email address to continue');
@@ -339,12 +350,24 @@ const Login = () => {
             console.error('Login error:', error);
             let errorMessage = 'Login failed. Please try again.';
             
-            if (error.response?.status === 404) {
+            // Handle network errors specifically
+            if (error.code === 'ERR_NETWORK' || error.code === 'ERR_NETWORK_CHANGED' || error.message?.includes('Network Error')) {
+                errorMessage = 'Network connection error. Please check your internet connection and try again.';
+            } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                errorMessage = 'Request timed out. The server is taking too long to respond. Please try again.';
+            } else if (error.response?.status === 404) {
                 errorMessage = 'Login service not found. Please check the API URL.';
+            } else if (error.response?.status === 500) {
+                errorMessage = 'Server error occurred. Please try again in a moment.';
+            } else if (error.response?.status === 503) {
+                errorMessage = 'Service temporarily unavailable. Please try again in a moment.';
             } else if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
-            } else if (error.request) {
-                errorMessage = 'No response from server. Please try again.';
+            } else if (error.request && !error.response) {
+                // Request was made but no response received
+                errorMessage = 'No response from server. Please check your internet connection and try again.';
+            } else if (error.message) {
+                errorMessage = `Connection error: ${error.message}`;
             }
             
             showError(errorMessage);

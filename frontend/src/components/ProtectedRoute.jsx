@@ -24,6 +24,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
                         // Check if account is verified - redirect to verification if not (ONLY for Users)
                         const rolesRequiringVerification = ['User'];
                         if (rolesRequiringVerification.includes(data.user.role) && !data.user.isAccountVerified) {
+                            // Store email in sessionStorage for verification page (in case of refresh)
+                            sessionStorage.setItem('verificationEmail', data.user.email.trim().toLowerCase())
+                            
                             return navigate('/email-verify', { 
                                 state: { email: data.user.email, fromProtectedRoute: true } 
                             })
