@@ -8,6 +8,8 @@ import { AppContent } from '../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { FaEnvelope, FaCheckCircle, FaArrowLeft, FaClock } from 'react-icons/fa'
+import OtpInput from 'react-otp-input'
+import { useTimer } from 'react-timer-hook'
 
 const VerifyEmailPage = () => {
     const navigate = useNavigate()
@@ -16,9 +18,45 @@ const VerifyEmailPage = () => {
     
     const [otp, setOtp] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [resendCooldown, setResendCooldown] = useState(0)
     const [isResending, setIsResending] = useState(false)
     const [email, setEmail] = useState('')
+    
+    // Timer for OTP expiration (10 minutes)
+    const expiryTimestamp = new Date()
+    expiryTimestamp.setSeconds(expiryTimestamp.getSeconds() + 600) // 10 minutes
+    
+    const {
+        seconds: expirySeconds,
+        minutes: expiryMinutes,
+        isRunning: isExpiryTimerRunning,
+        restart: restartExpiryTimer
+    } = useTimer({ 
+        expiryTimestamp,
+        onExpire: () => {
+            // OTP expired - can show message or auto-request new one
+            if (otp) {
+                toast.warning('Verification code has expired. Please request a new code.')
+                setOtp('')
+            }
+        }
+    })
+    
+    // Timer for resend cooldown (60 seconds)
+    const resendCooldownTimestamp = new Date()
+    resendCooldownTimestamp.setSeconds(resendCooldownTimestamp.getSeconds() + 60)
+    
+    const {
+        seconds: resendCooldownSeconds,
+        isRunning: isResendTimerRunning,
+        restart: restartResendTimer,
+        pause: pauseResendTimer
+    } = useTimer({
+        expiryTimestamp: resendCooldownTimestamp,
+        autoStart: false, // Don't start until user tries to resend
+        onExpire: () => {
+            // Cooldown finished
+        }
+    })
     
     // Get email from location state, sessionStorage, or userData context
     useEffect(() => {
@@ -66,15 +104,15 @@ const VerifyEmailPage = () => {
         getEmail()
     }, [location.state, userData, backendUrl])
     
-    // Countdown timer for resend OTP
+    // Restart expiry timer when email is set (initial load)
     useEffect(() => {
-        if (resendCooldown > 0) {
-            const timer = setTimeout(() => {
-                setResendCooldown(resendCooldown - 1)
-            }, 1000)
-            return () => clearTimeout(timer)
+        if (email) {
+            const newExpiryTimestamp = new Date()
+            newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+            restartExpiryTimer(newExpiryTimestamp)
         }
-    }, [resendCooldown])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [email]) // Only restart when email changes (initial load)
 
     const handleVerifyEmail = async (e) => {
         e.preventDefault()
@@ -133,7 +171,11 @@ const VerifyEmailPage = () => {
                 if (data.actionRequired === 'code_regenerated' && data.codeSent) {
                     toast.warning(data.message || 'A new code has been sent to your email. Please check your inbox.')
                     setOtp('') // Clear OTP input for new code
-                    setResendCooldown(60) // Reset cooldown since new code was sent
+                    // Restart both timers for new code
+                    const newExpiryTimestamp = new Date()
+                    newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+                    restartExpiryTimer(newExpiryTimestamp)
+                    pauseResendTimer() // Stop resend timer since new code was sent
                 } else if (data.actionRequired === 'resend_otp') {
                     toast.error(data.message || 'Please request a new verification code.')
                     setOtp('')
@@ -142,7 +184,11 @@ const VerifyEmailPage = () => {
                     // Don't clear OTP if there are attempts remaining - let user correct it
                     if (data.remainingAttempts === 0) {
                         setOtp('') // Clear if no attempts left (new code sent)
-                        setResendCooldown(60)
+                        // Restart both timers for new code
+                        const newExpiryTimestamp = new Date()
+                        newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+                        restartExpiryTimer(newExpiryTimestamp)
+                        pauseResendTimer() // Stop resend timer since new code was sent
                     }
                 } else {
                     toast.error(data.message || 'Verification failed. Please try again.')
@@ -157,7 +203,11 @@ const VerifyEmailPage = () => {
             if (error.response?.data?.actionRequired === 'code_regenerated' && error.response?.data?.codeSent) {
                 toast.warning(error.response.data.message || 'A new code has been sent to your email.')
                 setOtp('')
-                setResendCooldown(60)
+                // Restart both timers for new code
+                const newExpiryTimestamp = new Date()
+                newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+                restartExpiryTimer(newExpiryTimestamp)
+                pauseResendTimer() // Stop resend timer since new code was sent
             } else if (error.response?.data?.actionRequired === 'resend_otp') {
                 toast.error(error.response.data.message || 'Please request a new verification code.')
                 setOtp('')
@@ -182,11 +232,12 @@ const VerifyEmailPage = () => {
     const handleResendOtp = async () => {
         if (!email) {
             toast.error('Email not found. Please register again.')
+            navigate('/register')
             return
         }
 
-        if (resendCooldown > 0) {
-            toast.warning(`Please wait ${resendCooldown} seconds before requesting a new code`)
+        if (isResendTimerRunning) {
+            toast.warning(`Please wait ${resendCooldownSeconds} seconds before requesting a new code`)
             return
         }
 
@@ -203,7 +254,16 @@ const VerifyEmailPage = () => {
                 // Show backend message or a clearer message about OTP generation
                 const message = data.message || 'New verification code is being sent to your email. You can try verifying with the code even if the email hasn\'t arrived yet.'
                 toast.success(message)
-                setResendCooldown(60) // 60 second cooldown
+                
+                // Restart both timers
+                const newExpiryTimestamp = new Date()
+                newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+                restartExpiryTimer(newExpiryTimestamp)
+                
+                const newResendTimestamp = new Date()
+                newResendTimestamp.setSeconds(newResendTimestamp.getSeconds() + 60) // 60 seconds cooldown
+                restartResendTimer(newResendTimestamp)
+                
                 setOtp('') // Clear current OTP input
             } else {
                 toast.error(data.message || 'Failed to generate OTP')
@@ -215,8 +275,10 @@ const VerifyEmailPage = () => {
             if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
                 // Email might still be sent in background, give user info
                 toast.warning('Request is taking longer than expected. The email may still be sent. Please check your inbox.')
-                // Still show success message as email might be processing
-                setResendCooldown(60)
+                // Still start cooldown timer as email might be processing
+                const newResendTimestamp = new Date()
+                newResendTimestamp.setSeconds(newResendTimestamp.getSeconds() + 60) // 60 seconds cooldown
+                restartResendTimer(newResendTimestamp)
             } else if (error.response?.status === 503) {
                 toast.error('Service temporarily unavailable. Please try again in a few moments.')
             } else if (error.response?.status === 404) {
@@ -240,7 +302,7 @@ const VerifyEmailPage = () => {
     // Auto-request OTP if email is available but no OTP exists
     useEffect(() => {
         const autoRequestOtp = async () => {
-            if (!email || resendCooldown > 0 || isResending) return
+            if (!email || isResendTimerRunning || isResending) return
             
             try {
                 // Check if user exists and needs verification
@@ -266,7 +328,14 @@ const VerifyEmailPage = () => {
                         })
                         if (resendData.data.success) {
                             console.log('Auto-requested OTP successfully')
-                            setResendCooldown(60)
+                            // Restart both timers
+                            const newExpiryTimestamp = new Date()
+                            newExpiryTimestamp.setSeconds(newExpiryTimestamp.getSeconds() + 600) // 10 minutes
+                            restartExpiryTimer(newExpiryTimestamp)
+                            
+                            const newResendTimestamp = new Date()
+                            newResendTimestamp.setSeconds(newResendTimestamp.getSeconds() + 60) // 60 seconds cooldown
+                            restartResendTimer(newResendTimestamp)
                         }
                     } catch (err) {
                         console.error('Auto-request OTP failed:', err)
@@ -328,7 +397,11 @@ const VerifyEmailPage = () => {
                                 <p className="text-[#800000] font-semibold text-base md:text-lg break-all">{email || 'your email'}</p>
                                 <p className="text-xs text-gray-500 mt-2">
                                     <FaClock className="inline mr-1" />
-                                    Code expires in 10 minutes
+                                    {isExpiryTimerRunning ? (
+                                        <span>Code expires in {expiryMinutes}:{expirySeconds.toString().padStart(2, '0')}</span>
+                                    ) : (
+                                        <span className="text-red-500">Code has expired</span>
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -339,25 +412,37 @@ const VerifyEmailPage = () => {
                                 <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
                                     Enter Verification Code
                                 </label>
-                                <input
-                                    id="otp"
-                                    type="text"
-                                    inputMode="numeric"
-                                    placeholder="000000"
-                                    value={otp}
-                                    onChange={(e) => {
-                                        const value = e.target.value.replace(/\D/g, '').slice(0, 6)
-                                        setOtp(value)
-                                    }}
-                                    className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] text-center text-3xl tracking-[0.5em] font-bold text-gray-900 placeholder:text-gray-300"
-                                    maxLength={6}
-                                    autoComplete="one-time-code"
-                                    autoFocus
-                                />
+                                <div className="flex justify-center">
+                                    <OtpInput
+                                        value={otp}
+                                        onChange={setOtp}
+                                        numInputs={6}
+                                        inputType="number"
+                                        renderSeparator={<span className="mx-1 md:mx-2"></span>}
+                                        renderInput={(props) => (
+                                            <input
+                                                {...props}
+                                                className="!w-10 !h-12 md:!w-12 md:!h-14 lg:!w-14 lg:!h-16 text-2xl md:text-3xl font-bold text-center rounded-lg border-2 border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#FFD700] focus:border-[#FFD700] text-gray-900 bg-white transition-all duration-200"
+                                                style={{
+                                                    fontSize: '1.5rem',
+                                                    fontWeight: 'bold'
+                                                }}
+                                            />
+                                        )}
+                                        shouldAutoFocus
+                                        inputStyle={{
+                                            width: '2.5rem',
+                                            height: '3rem'
+                                        }}
+                                        containerStyle={{
+                                            justifyContent: 'center'
+                                        }}
+                                    />
+                                </div>
                                 <p className="text-xs text-gray-500 text-center">
-                                    {otp.replace(/\s/g, '').length}/6 digits
+                                    {otp.length}/6 digits
                                 </p>
-                                {otp.length > 0 && otp.replace(/\s/g, '').length !== 6 && (
+                                {otp.length > 0 && otp.length !== 6 && (
                                     <p className="text-xs text-red-500 text-center">
                                         Please enter exactly 6 digits
                                     </p>
@@ -366,7 +451,7 @@ const VerifyEmailPage = () => {
 
                             <button
                                 type="submit"
-                                disabled={isLoading || otp.replace(/\s/g, '').length !== 6}
+                                disabled={isLoading || otp.length !== 6 || !isExpiryTimerRunning}
                                 className="w-full bg-gradient-to-r from-[#800000] to-red-900 text-white hover:from-red-900 hover:to-[#800000] font-semibold transition-all duration-200 rounded-lg px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {isLoading ? (
@@ -390,7 +475,7 @@ const VerifyEmailPage = () => {
                             </p>
                             <button
                                 onClick={handleResendOtp}
-                                disabled={isResending || isLoading || resendCooldown > 0}
+                                disabled={isResending || isLoading || isResendTimerRunning}
                                 className="text-[#800000] hover:text-red-900 font-semibold transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mx-auto"
                             >
                                 {isResending ? (
@@ -398,10 +483,10 @@ const VerifyEmailPage = () => {
                                         <LoadingSpinner size="tiny" inline />
                                         <span>Sending...</span>
                                     </>
-                                ) : resendCooldown > 0 ? (
+                                ) : isResendTimerRunning ? (
                                     <>
                                         <FaClock className="text-sm" />
-                                        <span>Resend OTP ({resendCooldown}s)</span>
+                                        <span>Resend OTP ({resendCooldownSeconds}s)</span>
                                     </>
                                 ) : (
                                     <>
