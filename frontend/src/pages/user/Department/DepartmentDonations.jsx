@@ -22,6 +22,8 @@ const DepartmentDonations = () => {
     const [sortOrder, setSortOrder] = useState('desc')
     const [selectedDonation, setSelectedDonation] = useState(null)
     const [showModal, setShowModal] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage] = useState(10)
 
     useEffect(() => {
         fetchDonations()
@@ -148,11 +150,42 @@ const DepartmentDonations = () => {
         })
 
         setFilteredDonations(filtered)
+        setCurrentPage(1) // Reset to first page when filters change
     }
+
+    // Pagination logic
+    const totalPages = Math.ceil(filteredDonations.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const paginatedDonations = filteredDonations.slice(startIndex, endIndex)
 
     const getEventTitle = (eventId) => {
         const event = events.find(e => e._id === eventId)
         return event?.title || 'Unknown Event'
+    }
+
+    // Mask donor name (e.g., "Luigi Amarillo" -> "Lu**i Am*****o")
+    const maskDonorName = (name) => {
+        if (!name || name === 'Anonymous') {
+            return 'Anonymous'
+        }
+        
+        const parts = name.trim().split(' ')
+        const maskedParts = parts.map(part => {
+            if (part.length <= 2) {
+                return part
+            }
+            if (part.length === 3) {
+                return part.charAt(0) + '**' + part.charAt(2)
+            }
+            // First 2 letters, then asterisks, then last letter
+            const firstTwo = part.substring(0, 2)
+            const lastLetter = part.charAt(part.length - 1)
+            const asterisks = '*'.repeat(Math.max(2, part.length - 3))
+            return firstTwo + asterisks + lastLetter
+        })
+        
+        return maskedParts.join(' ')
     }
 
     const getTotalDonations = () => {
@@ -249,11 +282,11 @@ const DepartmentDonations = () => {
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
                                 <p className="text-gray-600 text-xs sm:text-sm font-medium mb-1">Total Donations</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">₱{stats.total.toLocaleString()}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{stats.total.toLocaleString()}</p>
                                 <p className="text-xs text-green-600 mt-1 hidden sm:block">+12% from last month</p>
                             </div>
-                            <div className="w-10 h-10 sm:w-12 sm:h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                 </svg>
                             </div>
@@ -264,11 +297,11 @@ const DepartmentDonations = () => {
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
                                 <p className="text-gray-600 text-xs sm:text-sm font-medium mb-1">Total Donors</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats.count}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{stats.count}</p>
                                 <p className="text-xs text-blue-600 mt-1 hidden sm:block">+8% from last month</p>
                             </div>
-                            <div className="w-10 h-10 sm:w-12 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                 </svg>
                             </div>
@@ -279,11 +312,11 @@ const DepartmentDonations = () => {
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
                                 <p className="text-gray-600 text-xs sm:text-sm font-medium mb-1">Average Donation</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">₱{stats.average.toLocaleString()}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{stats.average.toLocaleString()}</p>
                                 <p className="text-xs text-purple-600 mt-1 hidden sm:block">+5% from last month</p>
                             </div>
-                            <div className="w-10 h-10 sm:w-12 sm:h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
@@ -294,11 +327,11 @@ const DepartmentDonations = () => {
                         <div className="flex items-center justify-between">
                             <div className="min-w-0 flex-1">
                                 <p className="text-gray-600 text-xs sm:text-sm font-medium mb-1">This Month</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">₱{stats.thisMonth.toLocaleString()}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{stats.thisMonth.toLocaleString()}</p>
                                 <p className="text-xs text-orange-600 mt-1 hidden sm:block">Current month</p>
                             </div>
-                            <div className="w-10 h-10 sm:w-12 sm:h-14 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
                             </div>
@@ -419,7 +452,7 @@ const DepartmentDonations = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-100">
-                                        {filteredDonations.map((donation, index) => (
+                                        {paginatedDonations.map((donation, index) => (
                                             <tr key={donation._id} className={`hover:bg-gray-50 transition-all duration-200 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
                                                 <td className="px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                     <div className="flex items-center">
@@ -429,7 +462,7 @@ const DepartmentDonations = () => {
                                                             </span>
                                                         </div>
                                                         <div className="ml-3 sm:ml-4 min-w-0">
-                                                            <div className="text-sm font-semibold text-gray-900 truncate">{donation.donorName || 'Anonymous'}</div>
+                                                            <div className="text-sm font-semibold text-gray-900 truncate">{maskDonorName(donation.donorName)}</div>
                                                             <div className="text-xs sm:text-sm text-gray-500 truncate">{donation.donorEmail || 'No email'}</div>
                                                         </div>
                                                     </div>
@@ -438,7 +471,7 @@ const DepartmentDonations = () => {
                                                     <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{getEventTitle(donation.eventId)}</div>
                                                 </td>
                                                 <td className="px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
-                                                    <div className="text-base sm:text-lg font-bold text-gray-900">₱{parseFloat(donation.amount || 0).toLocaleString()}</div>
+                                                    <div className="text-base sm:text-lg font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{parseFloat(donation.amount || 0).toLocaleString()}</div>
                                                 </td>
                                                 <td className="px-6 lg:px-8 py-4 sm:py-6 whitespace-nowrap">
                                                     <span className={`inline-flex px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-bold rounded-full ${
@@ -475,7 +508,7 @@ const DepartmentDonations = () => {
 
                             {/* Mobile Card View */}
                             <div className="lg:hidden p-4 sm:p-6 space-y-4">
-                                {filteredDonations.map((donation) => (
+                                {paginatedDonations.map((donation) => (
                                     <div key={donation._id} className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200">
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -485,7 +518,7 @@ const DepartmentDonations = () => {
                                                     </span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-semibold text-gray-900 truncate">{donation.donorName || 'Anonymous'}</div>
+                                                    <div className="text-sm font-semibold text-gray-900 truncate">{maskDonorName(donation.donorName)}</div>
                                                     <div className="text-xs text-gray-500 truncate">{donation.donorEmail || 'No email'}</div>
                                                 </div>
                                             </div>
@@ -507,7 +540,7 @@ const DepartmentDonations = () => {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-xs text-gray-500">Amount</p>
-                                                    <p className="text-lg font-bold text-gray-900">₱{parseFloat(donation.amount || 0).toLocaleString()}</p>
+                                                    <p className="text-lg font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{parseFloat(donation.amount || 0).toLocaleString()}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-gray-500">Date</p>
@@ -528,6 +561,67 @@ const DepartmentDonations = () => {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="px-4 sm:px-6 lg:px-8 py-4 border-t border-gray-200 bg-gray-50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="text-sm text-gray-700">
+                                            Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredDonations.length)}</span> of <span className="font-medium">{filteredDonations.length}</span> donations
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                                    currentPage === 1
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                                }`}
+                                            >
+                                                Previous
+                                            </button>
+                                            <div className="flex items-center space-x-1">
+                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                                    if (
+                                                        page === 1 ||
+                                                        page === totalPages ||
+                                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                                    ) {
+                                                        return (
+                                                            <button
+                                                                key={page}
+                                                                onClick={() => setCurrentPage(page)}
+                                                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                                                    currentPage === page
+                                                                        ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white'
+                                                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                                                }`}
+                                                            >
+                                                                {page}
+                                                            </button>
+                                                        )
+                                                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                                        return <span key={page} className="px-2 text-gray-500">...</span>
+                                                    }
+                                                    return null
+                                                })}
+                                            </div>
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className={`px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                                                    currentPage === totalPages
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                                }`}
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className="text-center py-16">
@@ -575,7 +669,7 @@ const DepartmentDonations = () => {
                                 <div className="space-y-2">
                                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Donor Information</label>
                                     <div className="bg-gray-50 p-3 sm:p-4 rounded-lg sm:rounded-xl">
-                                        <p className="text-base sm:text-lg font-semibold text-gray-900">{selectedDonation.donorName || 'Anonymous'}</p>
+                                        <p className="text-base sm:text-lg font-semibold text-gray-900">{maskDonorName(selectedDonation.donorName)}</p>
                                         <p className="text-xs sm:text-sm text-gray-600">{selectedDonation.donorEmail || 'No email provided'}</p>
                                     </div>
                                 </div>
