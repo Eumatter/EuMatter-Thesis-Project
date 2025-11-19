@@ -12,6 +12,8 @@ const DepartmentReports = () => {
     const navigate = useNavigate()
     const { userData, backendUrl } = useContext(AppContent)
     const [events, setEvents] = useState([])
+    const [donations, setDonations] = useState([])
+    const [users, setUsers] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [selectedPeriod, setSelectedPeriod] = useState('month')
     const [selectedEvent, setSelectedEvent] = useState('all')
@@ -29,10 +31,53 @@ const DepartmentReports = () => {
         try {
             setIsLoading(true)
             axios.defaults.withCredentials = true
-            const { data } = await axios.get(backendUrl + 'api/events')
-            if (data) {
-                const departmentEvents = data.filter(e => e?.createdBy?._id === userData?._id)
+            
+            // Fetch events
+            const eventsRes = await axios.get(backendUrl + 'api/events')
+            if (eventsRes.data) {
+                const departmentEvents = eventsRes.data.filter(e => e?.createdBy?._id === userData?._id)
                 setEvents(departmentEvents)
+                
+                // Extract donations from events
+                const allDonations = []
+                departmentEvents.forEach(event => {
+                    if (event.donations && event.donations.length > 0) {
+                        event.donations.forEach(donation => {
+                            allDonations.push({
+                                ...donation,
+                                eventId: event._id,
+                                eventTitle: event.title
+                            })
+                        })
+                    }
+                })
+                setDonations(allDonations)
+            }
+            
+            // Try to fetch users (may fail if no access)
+            try {
+                const usersRes = await axios.get(backendUrl + 'api/users', { withCredentials: true })
+                if (usersRes.data) {
+                    setUsers(usersRes.data)
+                }
+            } catch (userError) {
+                // If users API fails, extract unique users from donations and departmentEvents
+                const uniqueUsers = new Map()
+                departmentEvents.forEach(event => {
+                    if (event.volunteers && event.volunteers.length > 0) {
+                        event.volunteers.forEach(vol => {
+                            if (vol.userId && !uniqueUsers.has(vol.userId.toString())) {
+                                uniqueUsers.set(vol.userId.toString(), vol)
+                            }
+                        })
+                    }
+                })
+                allDonations.forEach(donation => {
+                    if (donation.donor && !uniqueUsers.has(donation.donor._id?.toString() || donation.donor.toString())) {
+                        uniqueUsers.set(donation.donor._id?.toString() || donation.donor.toString(), donation.donor)
+                    }
+                })
+                setUsers(Array.from(uniqueUsers.values()))
             }
         } catch (error) {
             console.error('Error fetching data:', error)
@@ -42,18 +87,112 @@ const DepartmentReports = () => {
         }
     }
 
-    // Generate realistic mock data for demographics and analytics
-    const generateMockData = () => {
+    // Generate data from actual events, donations, and users
+    const generateData = () => {
         const totalEvents = events.length
-        const totalDonations = events.reduce((sum, event) => sum + (event.totalDonations || 0), 0)
-        const totalVolunteers = events.reduce((sum, event) => sum + (event.volunteers?.length || 0), 0)
+        const totalDonations = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+        const uniqueVolunteers = new Set()
+        events.forEach(event => {
+            if (event.volunteers && event.volunteers.length > 0) {
+                event.volunteers.forEach(vol => {
+                    if (vol.userId) {
+                        uniqueVolunteers.add(vol.userId.toString())
+                    }
+                })
+            }
+        })
+        const totalVolunteers = uniqueVolunteers.size
+        
+        // Calculate demographics from actual data
+        const donorCategories = {
+            'Student': 0,
+            'Alumni': 0,
+            'Faculty/Staff': 0,
+            'Guest': 0
+        }
+        
+        donations.forEach(donation => {
+            if (donation.donor) {
+                const donor = typeof donation.donor === 'object' ? donation.donor : users.find(u => u._id === donation.donor)
+                if (donor) {
+                    if (donor.mseufCategory === 'Student') donorCategories['Student']++
+                    else if (donor.mseufCategory === 'Alumni') donorCategories['Alumni']++
+                    else if (donor.mseufCategory === 'Faculty/Staff') donorCategories['Faculty/Staff']++
+                    else donorCategories['Guest']++
+                } else {
+                    donorCategories['Guest']++
+                }
+            } else {
+                donorCategories['Guest']++
+            }
+        })
+        
+        const totalDonors = Object.values(donorCategories).reduce((sum, count) => sum + count, 0)
+        const donorDemographics = Object.entries(donorCategories)
+            .filter(([_, count]) => count > 0)
+            .map(([category, count]) => ({
+                category,
+                count,
+                percentage: totalDonors > 0 ? Math.round((count / totalDonors) * 100 * 10) / 10 : 0
+            }))
+        
+        // Event status distribution
+        const eventStatusCounts = {
+            'Approved': events.filter(e => e.status === 'Approved').length,
+            'Pending': events.filter(e => e.status === 'Pending' || e.status === 'Proposed').length,
+            'Completed': events.filter(e => e.status === 'Completed').length,
+            'Upcoming': events.filter(e => e.status === 'Upcoming').length,
+            'Ongoing': events.filter(e => e.status === 'Ongoing').length
+        }
+        
+        const eventStatusData = Object.entries(eventStatusCounts)
+            .filter(([_, count]) => count > 0)
+            .map(([status, count]) => ({
+                status,
+                count,
+                percentage: totalEvents > 0 ? Math.round((count / totalEvents) * 100 * 10) / 10 : 0
+            }))
+        
+        // Monthly trends from actual data
+        const monthlyTrends = []
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        
+        months.forEach((monthName, monthIndex) => {
+            const monthEvents = events.filter(e => {
+                const eventDate = new Date(e.startDate)
+                return eventDate.getMonth() === monthIndex
+            })
+            
+            const monthDonations = donations.filter(d => {
+                const donationDate = new Date(d.donatedAt || d.createdAt)
+                return donationDate.getMonth() === monthIndex
+            })
+            
+            const monthVolunteers = new Set()
+            monthEvents.forEach(event => {
+                if (event.volunteers && event.volunteers.length > 0) {
+                    event.volunteers.forEach(vol => {
+                        if (vol.userId) {
+                            monthVolunteers.add(vol.userId.toString())
+                        }
+                    })
+                }
+            })
+            
+            monthlyTrends.push({
+                month: monthName,
+                events: monthEvents.length,
+                donations: monthDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0),
+                volunteers: monthVolunteers.size
+            })
+        })
         
         return {
             // Event Statistics
             eventStats: {
                 total: totalEvents,
                 approved: events.filter(e => e.status === 'Approved').length,
-                pending: events.filter(e => e.status === 'Proposed').length,
+                pending: events.filter(e => e.status === 'Pending' || e.status === 'Proposed').length,
                 completed: events.filter(e => e.status === 'Completed').length,
                 upcoming: events.filter(e => e.status === 'Upcoming').length
             },
@@ -61,68 +200,37 @@ const DepartmentReports = () => {
             // Financial Statistics
             financialStats: {
                 totalDonations: totalDonations,
-                averageDonation: totalDonations > 0 ? totalDonations / events.filter(e => e.donations?.length > 0).length : 0,
+                averageDonation: donations.length > 0 ? totalDonations / donations.length : 0,
                 monthlyGrowth: 15.2,
-                topEvent: events.reduce((max, event) => 
-                    (event.totalDonations || 0) > (max.totalDonations || 0) ? event : max, events[0] || {}
-                )
+                topEvent: events.reduce((max, event) => {
+                    const eventDonations = donations.filter(d => d.eventId === event._id)
+                    const eventTotal = eventDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                    const maxTotal = donations.filter(d => d.eventId === max._id).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                    return eventTotal > maxTotal ? event : max
+                }, events[0] || {})
             },
             
             // Demographics Data
             demographics: {
-                ageGroups: [
-                    { range: '18-25', count: 45, percentage: 28 },
-                    { range: '26-35', count: 62, percentage: 38 },
-                    { range: '36-45', count: 38, percentage: 23 },
-                    { range: '46-55', count: 18, percentage: 11 }
-                ],
-                genderDistribution: [
-                    { gender: 'Female', count: 89, percentage: 54.6 },
-                    { gender: 'Male', count: 74, percentage: 45.4 }
-                ],
-                locationDistribution: [
-                    { location: 'Metro Manila', count: 78, percentage: 47.9 },
-                    { location: 'Cavite', count: 32, percentage: 19.6 },
-                    { location: 'Laguna', count: 28, percentage: 17.2 },
-                    { location: 'Rizal', count: 15, percentage: 9.2 },
-                    { location: 'Others', count: 10, percentage: 6.1 }
-                ],
-                volunteerTypes: [
-                    { type: 'Regular Volunteers', count: 95, percentage: 58.3 },
-                    { type: 'Event Coordinators', count: 28, percentage: 17.2 },
-                    { type: 'Technical Support', count: 22, percentage: 13.5 },
-                    { type: 'First Aid', count: 18, percentage: 11.0 }
-                ]
+                donorCategories: donorDemographics,
+                eventStatus: eventStatusData,
+                volunteerCount: totalVolunteers,
+                donationCount: donations.length
             },
             
             // Engagement Metrics
             engagement: {
                 averageAttendance: 78.5,
                 volunteerRetention: 82.3,
-                socialMediaReach: 15420,
-                emailOpenRate: 67.8,
                 eventSatisfaction: 4.6
             },
             
             // Monthly Trends
-            monthlyTrends: [
-                { month: 'Jan', events: 3, donations: 12500, volunteers: 45 },
-                { month: 'Feb', events: 5, donations: 18750, volunteers: 62 },
-                { month: 'Mar', events: 4, donations: 15200, volunteers: 58 },
-                { month: 'Apr', events: 6, donations: 22300, volunteers: 78 },
-                { month: 'May', events: 7, donations: 28900, volunteers: 89 },
-                { month: 'Jun', events: 5, donations: 19800, volunteers: 65 },
-                { month: 'Jul', events: 8, donations: 31200, volunteers: 95 },
-                { month: 'Aug', events: 6, donations: 25600, volunteers: 72 },
-                { month: 'Sep', events: 9, donations: 34500, volunteers: 108 },
-                { month: 'Oct', events: 7, donations: 27800, volunteers: 84 },
-                { month: 'Nov', events: 5, donations: 20100, volunteers: 61 },
-                { month: 'Dec', events: 4, donations: 16800, volunteers: 52 }
-            ]
+            monthlyTrends: monthlyTrends
         }
     }
 
-    const data = generateMockData()
+    const data = generateData()
 
     const handleExportReport = (format) => {
         const reportData = {
@@ -158,10 +266,10 @@ const DepartmentReports = () => {
         }
     }
 
-    const StatCard = ({ title, value, subtitle, icon, color, trend }) => (
+    const StatCard = ({ title, value, subtitle, icon, trend }) => (
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 group">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
+                <div className="flex items-center justify-center flex-shrink-0">
                     {icon}
                 </div>
                 {trend && (
@@ -173,7 +281,7 @@ const DepartmentReports = () => {
                     </div>
                 )}
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 truncate">{value}</h3>
+            <h3 className="text-xl sm:text-2xl font-bold mb-1 truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{value}</h3>
             <p className="text-gray-600 text-xs sm:text-sm font-medium">{title}</p>
             {subtitle && <p className="text-gray-500 text-xs mt-1 hidden sm:block">{subtitle}</p>}
         </div>
@@ -318,49 +426,57 @@ const DepartmentReports = () => {
 
     // Enhanced Bar Chart Component
     const BarChart = ({ data, colors, height = 200 }) => {
-        const maxValue = Math.max(...data.map(item => item.value))
+        const maxValue = Math.max(...data.map(item => item.value), 1)
+        const maroonShades = ['#800020', '#9c0000', '#a0002a', '#b30024', '#c40028']
         
         return (
             <div className="space-y-4 sm:space-y-6">
-                {data.map((item, index) => (
-                    <div key={index} className="group">
-                        <div className="flex justify-between items-center mb-2 sm:mb-3">
-                            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                                <div className="relative flex-shrink-0">
-                                    <div 
-                                        className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm ${colors[index].includes('indigo') ? 'bg-indigo-500' : colors[index].includes('purple') ? 'bg-purple-500' : colors[index].includes('pink') ? 'bg-pink-500' : colors[index].includes('orange') ? 'bg-orange-500' : colors[index].includes('emerald') ? 'bg-emerald-500' : colors[index].includes('blue') ? 'bg-blue-500' : 'bg-gray-500'}`}
-                                    ></div>
-                                    <div 
-                                        className={`absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20 ${colors[index].includes('indigo') ? 'bg-indigo-500' : colors[index].includes('purple') ? 'bg-purple-500' : colors[index].includes('pink') ? 'bg-pink-500' : colors[index].includes('orange') ? 'bg-orange-500' : colors[index].includes('emerald') ? 'bg-emerald-500' : colors[index].includes('blue') ? 'bg-blue-500' : 'bg-gray-500'}`}
-                                    ></div>
+                {data.map((item, index) => {
+                    const colorIndex = index % maroonShades.length
+                    const barColor = maroonShades[colorIndex]
+                    return (
+                        <div key={index} className="group">
+                            <div className="flex justify-between items-center mb-2 sm:mb-3">
+                                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                                    <div className="relative flex-shrink-0">
+                                        <div 
+                                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm"
+                                            style={{ backgroundColor: barColor }}
+                                        ></div>
+                                        <div 
+                                            className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20"
+                                            style={{ backgroundColor: barColor }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{item.label}</span>
                                 </div>
-                                <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{item.label}</span>
-                            </div>
-                            <div className="text-right flex-shrink-0 ml-2">
-                                <span className="text-base sm:text-lg font-bold text-gray-900">{item.value}</span>
-                                <span className="text-[10px] sm:text-xs text-gray-500 ml-1">({item.percentage}%)</span>
-                            </div>
-                        </div>
-                        <div className="relative">
-                            <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4 shadow-inner">
-                                <div 
-                                    className={`${colors[index]} h-3 sm:h-4 rounded-full transition-all duration-1000 ease-out shadow-sm group-hover:shadow-md`}
-                                    style={{ 
-                                        width: `${(item.value / maxValue) * 100}%`,
-                                        animationDelay: `${index * 0.1}s`
-                                    }}
-                                >
-                                    <div className="w-full h-full bg-white bg-opacity-20 rounded-full animate-pulse"></div>
+                                <div className="text-right flex-shrink-0 ml-2">
+                                    <span className="text-base sm:text-lg font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{item.value}</span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 ml-1">({item.percentage}%)</span>
                                 </div>
                             </div>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-[10px] sm:text-xs font-medium text-white mix-blend-difference">
-                                    {Math.round((item.value / maxValue) * 100)}%
-                                </span>
+                            <div className="relative">
+                                <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4 shadow-inner">
+                                    <div 
+                                        className="h-3 sm:h-4 rounded-full transition-all duration-1000 ease-out shadow-sm group-hover:shadow-md"
+                                        style={{ 
+                                            width: `${(item.value / maxValue) * 100}%`,
+                                            background: `linear-gradient(to right, ${barColor}, ${maroonShades[(colorIndex + 1) % maroonShades.length]})`,
+                                            animationDelay: `${index * 0.1}s`
+                                        }}
+                                    >
+                                        <div className="w-full h-full bg-white bg-opacity-20 rounded-full animate-pulse"></div>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-[10px] sm:text-xs font-medium text-white mix-blend-difference">
+                                        {Math.round((item.value / maxValue) * 100)}%
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
         )
     }
@@ -414,33 +530,33 @@ const DepartmentReports = () => {
                 </div>
 
                 {/* Header Section */}
-                <div className="mb-6 sm:mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Analytics & Reports</h1>
-                            <p className="text-sm sm:text-base text-gray-600 mt-2">Comprehensive insights into your department's performance</p>
+                <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="min-w-0">
+                            <h1 className="text-3xl font-bold text-black mb-2">Analytics & Reports</h1>
+                            <p className="text-gray-600">
+                                Comprehensive insights into your department's performance
+                            </p>
                         </div>
-                        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
-                            <Button 
-                                variant="primary" 
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <button 
                                 onClick={() => handleExportReport('pdf')}
-                                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <span>Export PDF</span>
-                            </Button>
-                            <Button 
-                                variant="primary" 
+                            </button>
+                            <button 
                                 onClick={() => handleExportReport('csv')}
-                                className="flex items-center justify-center space-x-2 w-full sm:w-auto"
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <span>Export CSV</span>
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -521,175 +637,154 @@ const DepartmentReports = () => {
                         title="Total Events"
                         value={data.eventStats.total}
                         subtitle={`${data.eventStats.approved} approved`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-                        color="bg-gradient-to-br from-indigo-500 to-indigo-600"
+                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                         trend={12.5}
                     />
                     <StatCard
                         title="Total Donations"
                         value={`₱${data.financialStats.totalDonations.toLocaleString()}`}
-                        subtitle={`₱${data.financialStats.averageDonation.toLocaleString()} average`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>}
-                        color="bg-gradient-to-br from-emerald-500 to-emerald-600"
+                        subtitle={`₱${Math.round(data.financialStats.averageDonation).toLocaleString()} average`}
+                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>}
                         trend={8.3}
                     />
                     <StatCard
                         title="Active Volunteers"
-                        value={data.demographics.ageGroups.reduce((sum, group) => sum + group.count, 0)}
+                        value={data.demographics.volunteerCount}
                         subtitle={`${data.engagement.volunteerRetention}% retention`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-                        color="bg-gradient-to-br from-purple-500 to-purple-600"
+                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
                         trend={15.7}
                     />
                     <StatCard
-                        title="Satisfaction Rate"
-                        value={`${data.engagement.eventSatisfaction}/5.0`}
-                        subtitle={`${data.engagement.averageAttendance}% attendance`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>}
-                        color="bg-gradient-to-br from-orange-500 to-orange-600"
+                        title="Total Donors"
+                        value={data.demographics.donationCount}
+                        subtitle={`${data.demographics.donorCategories.length} categories`}
+                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
                         trend={5.2}
                     />
                 </div>
 
                 {/* Demographics Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-                    {/* Age Distribution - Bar Chart */}
+                    {/* Donor Categories - Bar Chart */}
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Age Distribution</h3>
-                        <BarChart
-                            data={data.demographics.ageGroups.map(group => ({
-                                label: `${group.range} years`,
-                                value: group.count,
-                                percentage: group.percentage
-                            }))}
-                            colors={[
-                                'bg-gradient-to-r from-indigo-500 to-indigo-600',
-                                'bg-gradient-to-r from-purple-500 to-purple-600',
-                                'bg-gradient-to-r from-pink-500 to-pink-600',
-                                'bg-gradient-to-r from-orange-500 to-orange-600'
-                            ]}
-                        />
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donor Demographics</h3>
+                        {data.demographics.donorCategories.length > 0 ? (
+                            <BarChart
+                                data={data.demographics.donorCategories.map(cat => ({
+                                    label: cat.category,
+                                    value: cat.count,
+                                    percentage: cat.percentage
+                                }))}
+                                colors={[
+                                    'bg-gradient-to-r from-[#800020] to-[#9c0000]',
+                                    'bg-gradient-to-r from-[#9c0000] to-[#a0002a]',
+                                    'bg-gradient-to-r from-[#a0002a] to-[#b30024]',
+                                    'bg-gradient-to-r from-[#b30024] to-[#c40028]'
+                                ]}
+                            />
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">No donor data available</div>
+                        )}
                     </div>
 
-                    {/* Gender Distribution - Advanced Donut Chart */}
+                    {/* Event Status Distribution - Advanced Donut Chart */}
                     <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Gender Distribution</h3>
-                        <DonutChart
-                            data={data.demographics.genderDistribution.map(gender => ({
-                                label: gender.gender,
-                                value: gender.count,
-                                percentage: gender.percentage
-                            }))}
-                            colors={['#ec4899', '#3b82f6']}
-                            size={220}
-                            strokeWidth={24}
-                            title="Volunteers"
-                            subtitle="Gender breakdown"
-                        />
-                    </div>
-                </div>
-
-                {/* Location & Volunteer Types */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-                    {/* Location Distribution - Bar Chart */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Geographic Distribution</h3>
-                        <BarChart
-                            data={data.demographics.locationDistribution.map(location => ({
-                                label: location.location,
-                                value: location.count,
-                                percentage: location.percentage
-                            }))}
-                            colors={[
-                                'bg-gradient-to-r from-emerald-500 to-emerald-600',
-                                'bg-gradient-to-r from-blue-500 to-blue-600',
-                                'bg-gradient-to-r from-purple-500 to-purple-600',
-                                'bg-gradient-to-r from-pink-500 to-pink-600',
-                                'bg-gradient-to-r from-gray-500 to-gray-600'
-                            ]}
-                        />
-                    </div>
-
-                    {/* Volunteer Types - Advanced Donut Chart */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Volunteer Categories</h3>
-                        <DonutChart
-                            data={data.demographics.volunteerTypes.map(type => ({
-                                label: type.type,
-                                value: type.count,
-                                percentage: type.percentage
-                            }))}
-                            colors={['#6366f1', '#8b5cf6', '#ec4899', '#f97316']}
-                            size={220}
-                            strokeWidth={24}
-                            title="Volunteers"
-                            subtitle="Category breakdown"
-                        />
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Status Distribution</h3>
+                        {data.demographics.eventStatus.length > 0 ? (
+                            <DonutChart
+                                data={data.demographics.eventStatus.map(status => ({
+                                    label: status.status,
+                                    value: status.count,
+                                    percentage: status.percentage
+                                }))}
+                                colors={['#800020', '#9c0000', '#a0002a', '#b30024', '#c40028']}
+                                size={220}
+                                strokeWidth={24}
+                                title="Events"
+                                subtitle="Status breakdown"
+                            />
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">No event data available</div>
+                        )}
                     </div>
                 </div>
 
                 {/* Monthly Trends Chart */}
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">Monthly Performance Trends</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Monthly Performance Trends</h3>
                     <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                         <div className="grid grid-cols-12 gap-1 sm:gap-2 lg:gap-4 min-w-[600px] sm:min-w-0">
-                            {data.monthlyTrends.map((month, index) => (
-                                <div key={month.month} className="text-center">
-                                    <div className="text-[10px] sm:text-xs font-medium text-gray-500 mb-1 sm:mb-2">{month.month}</div>
-                                    <div className="space-y-0.5 sm:space-y-1">
-                                        <div className="h-12 sm:h-16 bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-t transition-all duration-300 hover:from-indigo-600 hover:to-indigo-500" style={{height: `${(month.events / 9) * 48}px`}}></div>
-                                        <div className="text-[10px] sm:text-xs text-gray-600">{month.events} events</div>
-                                        <div className="text-[9px] sm:text-xs text-gray-500 truncate">₱{(month.donations / 1000).toFixed(0)}k</div>
+                            {data.monthlyTrends.map((month, index) => {
+                                const maxEvents = Math.max(...data.monthlyTrends.map(m => m.events), 1)
+                                const maxDonations = Math.max(...data.monthlyTrends.map(m => m.donations), 1)
+                                const maxVolunteers = Math.max(...data.monthlyTrends.map(m => m.volunteers), 1)
+                                return (
+                                    <div key={month.month} className="text-center">
+                                        <div className="text-[10px] sm:text-xs font-medium text-gray-500 mb-1 sm:mb-2">{month.month}</div>
+                                        <div className="space-y-0.5 sm:space-y-1">
+                                            <div 
+                                                className="bg-gradient-to-t from-[#800020] to-[#9c0000] rounded-t transition-all duration-300 hover:from-[#9c0000] hover:to-[#a0002a]" 
+                                                style={{
+                                                    height: `${Math.max(20, (month.events / maxEvents) * 80)}px`,
+                                                    minHeight: '20px'
+                                                }}
+                                            ></div>
+                                            <div className="text-[10px] sm:text-xs font-medium" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{month.events}</div>
+                                            <div className="text-[9px] sm:text-xs text-gray-500 truncate">₱{(month.donations / 1000).toFixed(0)}k</div>
+                                            <div className="text-[9px] sm:text-xs text-gray-400">{month.volunteers} vol</div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
                 </div>
 
                 {/* Engagement Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Social Media Reach</h4>
-                        <div className="text-2xl sm:text-3xl font-bold text-indigo-600 mb-2">{data.engagement.socialMediaReach.toLocaleString()}</div>
-                        <p className="text-xs sm:text-sm text-gray-600">Total followers across platforms</p>
-                    </div>
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Email Open Rate</h4>
-                        <div className="text-2xl sm:text-3xl font-bold text-emerald-600 mb-2">{data.engagement.emailOpenRate}%</div>
-                        <p className="text-xs sm:text-sm text-gray-600">Average email engagement</p>
-                    </div>
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Average Attendance</h4>
-                        <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-2">{data.engagement.averageAttendance}%</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Average Attendance</h4>
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{data.engagement.averageAttendance}%</div>
                         <p className="text-xs sm:text-sm text-gray-600">Event participation rate</p>
                     </div>
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Volunteer Retention</h4>
-                        <div className="text-2xl sm:text-3xl font-bold text-orange-600 mb-2">{data.engagement.volunteerRetention}%</div>
+                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Volunteer Retention</h4>
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div className="text-2xl sm:text-3xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{data.engagement.volunteerRetention}%</div>
                         <p className="text-xs sm:text-sm text-gray-600">Returning volunteers</p>
                     </div>
                 </div>
 
                 {/* Top Performing Event */}
-                {data.financialStats.topEvent && (
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
+                {data.financialStats.topEvent && data.financialStats.topEvent._id && (
+                    <div className="bg-gradient-to-r from-[#800020] to-[#9c0000] rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
                         <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-0">
                             <div className="text-center lg:text-left w-full lg:w-auto">
                                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">Top Performing Event</h3>
-                                <p className="text-indigo-100 text-sm sm:text-base lg:text-lg mb-4 truncate">{data.financialStats.topEvent.title}</p>
+                                <p className="text-white/90 text-sm sm:text-base lg:text-lg mb-4 truncate">{data.financialStats.topEvent.title || 'N/A'}</p>
                                 <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                                     <div className="text-center lg:text-left">
-                                        <p className="text-indigo-200 text-xs sm:text-sm">Total Donations</p>
-                                        <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">₱{data.financialStats.topEvent.totalDonations?.toLocaleString() || '0'}</p>
+                                        <p className="text-white/80 text-xs sm:text-sm">Total Donations</p>
+                                        <p className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
+                                            ₱{donations.filter(d => d.eventId === data.financialStats.topEvent._id).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0).toLocaleString()}
+                                        </p>
                                     </div>
                                     <div className="text-center lg:text-left">
-                                        <p className="text-indigo-200 text-xs sm:text-sm">Volunteers</p>
+                                        <p className="text-white/80 text-xs sm:text-sm">Volunteers</p>
                                         <p className="text-lg sm:text-xl lg:text-2xl font-bold">{data.financialStats.topEvent.volunteers?.length || 0}</p>
                                     </div>
                                     <div className="text-center lg:text-left">
-                                        <p className="text-indigo-200 text-xs sm:text-sm">Status</p>
-                                        <p className="text-base sm:text-lg lg:text-xl font-bold truncate">{data.financialStats.topEvent.status}</p>
+                                        <p className="text-white/80 text-xs sm:text-sm">Status</p>
+                                        <p className="text-base sm:text-lg lg:text-xl font-bold truncate">{data.financialStats.topEvent.status || 'N/A'}</p>
                                     </div>
                                 </div>
                             </div>
