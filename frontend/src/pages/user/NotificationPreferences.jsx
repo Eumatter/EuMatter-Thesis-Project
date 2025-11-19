@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BellIcon, DevicePhoneMobileIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import { BellIcon, DevicePhoneMobileIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
 import { getBackendUrl } from '../../utils/backendUrl.js';
 import { toast } from 'react-toastify';

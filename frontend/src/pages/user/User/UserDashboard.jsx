@@ -10,7 +10,7 @@ import { notifyError, notifySuccess } from '../../../utils/notify';
 import Reactions from '../../../components/social/Reactions';
 import CommentModal from '../../../components/social/CommentModal';
 import { Tooltip } from 'react-tooltip';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaCalendarAlt, FaClock, FaDollarSign, FaSearch, FaBell, FaImage, FaMapMarkerAlt, FaComment } from 'react-icons/fa';
 
 const UserDashboard = () => {
     const navigate = useNavigate();
@@ -616,26 +616,26 @@ const UserDashboard = () => {
                                  {/* Events Joined and Hours - 2 Column on Mobile */}
                                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-2">
                                      {/* Events Joined */}
-                                     <div className="flex flex-col items-center justify-center bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg shadow-md">
+                                     <div className="flex flex-col items-center justify-center bg-white rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:shadow-md shadow-sm border border-gray-100">
                                          <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
-                                             <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
-                                                 <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                             <div className="rounded-full p-2 lg:p-1.5">
+                                                 <FaCalendarAlt className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-[#800000] flex-shrink-0" />
                                              </div>
-                                             <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Events Joined</span>
+                                             <span className="text-xs sm:text-sm lg:text-sm text-[#800000] font-medium text-center lg:text-left">Events Joined</span>
                                         </div>
-                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-white mt-2 lg:mt-0">
+                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-[#800000] mt-2 lg:mt-0">
                                             {eventsJoined}
                                         </span>
                                     </div>
                                      {/* Hours Volunteered */}
-                                     <div className="flex flex-col items-center justify-center bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg shadow-md">
+                                     <div className="flex flex-col items-center justify-center bg-white rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:shadow-md shadow-sm border border-gray-100">
                                          <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
-                                             <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
-                                                 <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                             <div className="rounded-full p-2 lg:p-1.5">
+                                                 <FaClock className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-[#800000] flex-shrink-0" />
                                              </div>
-                                             <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Total Hours</span>
+                                             <span className="text-xs sm:text-sm lg:text-sm text-[#800000] font-medium text-center lg:text-left">Total Hours</span>
                                         </div>
-                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-white mt-2 lg:mt-0">
+                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-[#800000] mt-2 lg:mt-0">
                                             {hoursDisplay}
                                         </span>
                                     </div>
@@ -657,7 +657,7 @@ const UserDashboard = () => {
                                  >
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
                                          <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
-                                             <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                             <FaBell className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" />
                                          </div>
                                          <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Pending Feedback</span>
                                     </div>
@@ -675,32 +675,30 @@ const UserDashboard = () => {
                             <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-2">
                                 <button 
                                     onClick={() => handleDonate()}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 touch-manipulation group border border-gray-100"
                                 >
-                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <div className="rounded-full p-2 lg:p-1.5">
+                                        <FaDollarSign className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#800000] flex-shrink-0 transition-colors duration-200" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Donate</span>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold transition-colors duration-200 text-center lg:text-left">Donate</span>
                                 </button>
                                 <button 
                                     onClick={() => navigate('/user/events')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 touch-manipulation group border border-gray-100"
                                 >
-                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+                                    <div className="rounded-full p-2 lg:p-1.5">
+                                        <FaSearch className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#800000] flex-shrink-0 transition-colors duration-200" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Browse Events</span>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold transition-colors duration-200 text-center lg:text-left">Browse Events</span>
                                 </button>
                                 <button
                                     onClick={() => navigate('/user/volunteer-history')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 touch-manipulation group border border-gray-100"
                                 >
-                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                    <div className="rounded-full p-2 lg:p-1.5">
+                                        <FaClock className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#800000] flex-shrink-0 transition-colors duration-200" />
                                     </div>
-                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Volunteer Hours</span>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold transition-colors duration-200 text-center lg:text-left">Volunteer Hours</span>
                                 </button>
                             </div>
                         </div>
@@ -771,9 +769,7 @@ const UserDashboard = () => {
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100">
                                                         <div className="text-center p-6">
-                                                            <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
+                                                            <FaImage className="w-12 h-12 mx-auto text-gray-400" />
                                                             <p className="mt-3 text-sm text-gray-500">No event image available</p>
                                                         </div>
                                                     </div>
@@ -789,7 +785,7 @@ const UserDashboard = () => {
                                                     </p>
                                                 )}
                                                 <div className="flex items-center text-sm text-gray-500">
-                                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                    <FaMapMarkerAlt className="w-4 h-4 mr-1" />
                                                     {event.location || 'Location TBA'}
                                                 </div>
                                             </div>
@@ -816,9 +812,7 @@ const UserDashboard = () => {
                                                         onClick={() => handleOpenComments(event._id)}
                                                         className="flex items-center text-gray-500 hover:text-[#800000] transition-colors duration-200 text-sm font-medium cursor-pointer group"
                                                     >
-                                                        <svg className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                        </svg>
+                                                        <FaComment className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200" />
                                                         <span className="group-hover:underline whitespace-nowrap">{eventComments.length || 0} {eventComments.length === 1 ? 'Comment' : 'Comments'}</span>
                                                     </button>
                                                 </div>
@@ -930,9 +924,7 @@ const UserDashboard = () => {
                             <div className="bg-gradient-to-br from-yellow-50 via-amber-50/80 to-yellow-50 border-2 border-yellow-200/60 rounded-xl shadow-lg p-4 sm:p-5 transition-all duration-300 hover:shadow-xl">
                                 <div className="flex items-start gap-3 mb-3">
                                     <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                        </svg>
+                                        <FaBell className="w-5 h-5 text-white" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-base sm:text-lg font-bold text-[#800000] mb-1">Pending Volunteer Feedback</h3>

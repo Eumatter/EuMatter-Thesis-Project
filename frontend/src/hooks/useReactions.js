@@ -287,9 +287,6 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
 
     // On success, optionally refetch to ensure consistency
     onSuccess: (result) => {
-      // Optionally invalidate and refetch to ensure server state is synced
-      // queryClient.invalidateQueries({ queryKey });
-      
       // Update cache with server response to ensure consistency
       if (result?.data?.reactions) {
         queryClient.setQueryData(queryKey, (old) => {
@@ -298,7 +295,8 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
           // Handle DELETE response (no userReaction) vs POST response (has userReaction)
           let userReaction = null;
           if (result.operation === 'DELETE') {
-            userReaction = null; // DELETE always sets userReaction to null
+            // DELETE always sets userReaction to null - ensure no outline/border
+            userReaction = null;
           } else {
             // POST response includes userReaction in reactions object
             userReaction = serverReactions.userReaction !== undefined 
@@ -312,9 +310,15 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
           return {
             ...old,
             reactions: reactionCounts,
-            userReaction: userReaction,
+            userReaction: userReaction, // Explicitly set to null for DELETE
           };
         });
+      } else if (result?.operation === 'DELETE') {
+        // If DELETE succeeded but no data returned, ensure userReaction is null
+        queryClient.setQueryData(queryKey, (old) => ({
+          ...old,
+          userReaction: null,
+        }));
       }
     },
 

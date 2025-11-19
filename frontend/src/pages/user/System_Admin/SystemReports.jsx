@@ -12,7 +12,7 @@ import {
     FunnelIcon, 
     ArrowPathIcon,
     DocumentArrowDownIcon
-} from '@heroicons/react/24/outline'
+} from '@heroicons/react/24/solid'
 
 // Category definitions
 const AUDIT_CATEGORIES = [

@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { AppContent } from '../../../context/AppContext.jsx';
 import { FaWallet, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaEdit, FaPlus, FaSearch, FaFilter, FaKey } from 'react-icons/fa';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon } from '@heroicons/react/24/solid';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 
 const WalletManagement = () => {

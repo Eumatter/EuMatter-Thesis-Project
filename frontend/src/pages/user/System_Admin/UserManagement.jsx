@@ -7,7 +7,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx';
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { PlusIcon, UserGroupIcon, UserIcon, AcademicCapIcon, BuildingOfficeIcon, ShieldCheckIcon, ClockIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, UserGroupIcon, UserIcon, AcademicCapIcon, BuildingOfficeIcon, ShieldCheckIcon, ClockIcon, ChevronLeftIcon, ChevronRightIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { Dialog, Transition } from '@headlessui/react';
 import AddUserModal from './AddUserModal';
 

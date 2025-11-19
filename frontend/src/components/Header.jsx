@@ -477,7 +477,7 @@ const Header = () => {
 								title="Notifications"
 								aria-label="Notifications"
 							>
-								<svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+								<FaBell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
 								{unreadCount > 0 && (
 									<span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-semibold min-w-[16px] sm:min-w-[18px] text-center">{unreadCount > 99 ? '99+' : unreadCount}</span>
 								)}
@@ -636,14 +636,9 @@ const Header = () => {
                                     </div>
                                 )}
                                 {/* Dropdown arrow - Only show on desktop (lg and above) */}
-                                <svg
-                                    className={`hidden lg:block w-4 text-gray-600 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
+                                <FaChevronRight 
+                                    className={`hidden lg:block w-4 text-gray-600 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-90' : ''}`}
+                                />
                             </button>
                             {/* Desktop Dropdown - Keep for desktop screens only */}
                             {isDropdownOpen && (
@@ -797,6 +792,7 @@ const Header = () => {
                             {isDropdownOpen && (
                                 <div 
                                     className="lg:hidden profile-slider-container pointer-events-none"
+                                    style={{ zIndex: 99999 }}
                                 >
                                     {/* Backdrop overlay with full blur */}
                                     <div 
@@ -804,7 +800,9 @@ const Header = () => {
                                         onClick={() => setIsDropdownOpen(false)}
                                         style={{
                                             animation: 'fadeIn 0.3s ease-out',
-                                            zIndex: 99999
+                                            zIndex: 99999,
+                                            backdropFilter: 'blur(24px)',
+                                            WebkitBackdropFilter: 'blur(24px)'
                                         }}
                                     />
                                     {/* Slider menu from right - Full height */}
@@ -978,7 +976,9 @@ const Header = () => {
                             className="fixed inset-0 bg-black/70 backdrop-blur-xl pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
-                                animation: 'fadeIn 0.25s ease-out'
+                                animation: 'fadeIn 0.25s ease-out',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}

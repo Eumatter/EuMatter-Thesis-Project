@@ -730,7 +730,7 @@ const EventManagement = () => {
                 <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="min-w-0">
-                            <h1 className="text-3xl font-bold text-black mb-2">Event Management</h1>
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Management</h1>
                             <p className="text-gray-600">
                                 Create and manage your department events and proposals.
                             </p>

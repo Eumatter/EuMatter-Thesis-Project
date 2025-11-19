@@ -143,16 +143,13 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
           flex items-center justify-center px-4 py-2 rounded-full 
           transition-all duration-300 
           ${userReaction 
-            ? `${reactionEmojis[userReaction]?.bgColor || 'bg-blue-50'} border-2 shadow-sm ${reactionEmojis[userReaction]?.hoverBg || 'hover:bg-blue-100'}` 
-            : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent hover:border-gray-200'
+            ? `${reactionEmojis[userReaction]?.bgColor || 'bg-blue-50'} shadow-sm ${reactionEmojis[userReaction]?.hoverBg || 'hover:bg-blue-100'}` 
+            : 'bg-gray-50 hover:bg-gray-100'
           }
           transform hover:scale-105 active:scale-95
           focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-1
           font-medium
         `}
-        style={{
-          borderColor: userReaction ? reactionEmojis[userReaction]?.color : 'transparent',
-        }}
           onMouseEnter={() => setShowPicker(true)}
         onMouseLeave={() => {
           // Keep picker open if hovering over it

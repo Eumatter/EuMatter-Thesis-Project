@@ -1,6 +1,6 @@
 import React, { useState, useContext, Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, UserCircleIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, BuildingOffice2Icon, UserGroupIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, UserCircleIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, BuildingOffice2Icon, UserGroupIcon, ShieldCheckIcon } from '@heroicons/react/24/solid';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../../../components/LoadingSpinner';
