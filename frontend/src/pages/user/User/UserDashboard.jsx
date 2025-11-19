@@ -786,7 +786,10 @@ const UserDashboard = () => {
                                                     <div className="flex items-center">
                                                         <Reactions 
                                                             eventId={event._id} 
-                                                            initialReactions={event.reactions || {}} 
+                                                            initialReactions={{
+                                                                reactions: event.reactions || {},
+                                                                userReaction: event.reactions?.userReaction || null
+                                                            }}
                                                             onReact={handleReact}
                                                             currentUserId={userData?._id}
                                                         />

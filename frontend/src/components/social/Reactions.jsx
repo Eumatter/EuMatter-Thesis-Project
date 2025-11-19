@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Tooltip } from 'react-tooltip';
+import { useReactions } from '../../hooks/useReactions';
 
 // Emoji reactions with colors
 const reactionEmojis = {
@@ -15,62 +16,32 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
   const [showPicker, setShowPicker] = useState(false);
   const [hoveredReaction, setHoveredReaction] = useState(null);
   const [animatingReaction, setAnimatingReaction] = useState(null);
-  const [reactionCounts, setReactionCounts] = useState({});
-  const [userReaction, setUserReaction] = useState(null);
   const pickerRef = useRef(null);
   const buttonRef = useRef(null);
   const longPressTimerRef = useRef(null);
   const isLongPressRef = useRef(false);
   const touchStartTimeRef = useRef(0);
 
-  // Process reactions data - handle both formats (arrays or counts)
-  useEffect(() => {
-    if (!initialReactions) {
-      setReactionCounts({ like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 });
-      setUserReaction(null);
-      return;
-    }
-
-    // Check if reactions is already in count format (has userReaction property or numeric values)
-    const hasUserReaction = initialReactions.userReaction !== undefined;
-    const hasCounts = typeof initialReactions.like === 'number';
-
-    if (hasCounts || hasUserReaction) {
-      // Already in count format
-      setReactionCounts({
-        like: initialReactions.like || 0,
-        love: initialReactions.love || 0,
-        haha: initialReactions.haha || 0,
-        wow: initialReactions.wow || 0,
-        sad: initialReactions.sad || 0,
-        angry: initialReactions.angry || 0,
-      });
-      setUserReaction(initialReactions.userReaction || null);
-    } else {
-      // Convert array format to counts
-      const counts = {};
-      let userReact = null;
-
-      Object.keys(reactionEmojis).forEach(type => {
-        const reactionArray = initialReactions[type];
-        if (Array.isArray(reactionArray)) {
-          counts[type] = reactionArray.length;
-          // Check if current user has reacted
-          if (currentUserId && reactionArray.some(id => {
-            const idStr = typeof id === 'object' ? id.toString() : id;
-            return idStr === currentUserId.toString();
-          })) {
-            userReact = type;
-          }
-        } else {
-          counts[type] = 0;
-        }
-      });
-
-      setReactionCounts(counts);
-      setUserReaction(userReact);
-    }
-  }, [initialReactions, currentUserId]);
+  // Use React Query hook for reactions management
+  // Pass initialReactions to initialize the cache
+  const { reactionData, isLoading, react, isReacting } = useReactions(
+    eventId, 
+    currentUserId,
+    initialReactions?.reactions || initialReactions
+  );
+  
+  // Extract reaction counts and user reaction from query data
+  // Priority: React Query cache > initialReactions > defaults
+  const reactionCounts = reactionData?.reactions || initialReactions?.reactions || {
+    like: initialReactions?.like || 0,
+    love: initialReactions?.love || 0,
+    haha: initialReactions?.haha || 0,
+    wow: initialReactions?.wow || 0,
+    sad: initialReactions?.sad || 0,
+    angry: initialReactions?.angry || 0,
+  };
+  
+  const userReaction = reactionData?.userReaction ?? initialReactions?.userReaction ?? null;
 
   // Close picker when clicking outside
   useEffect(() => {
@@ -116,49 +87,20 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
   }, []);
 
   const handleReaction = async (reactionType) => {
-    // If clicking the same reaction, remove it
-    const newReaction = userReaction === reactionType ? null : reactionType;
-    const previousReaction = userReaction;
-    
-    // Store previous counts for rollback
-    const previousCounts = { ...reactionCounts };
-    
-    // Optimistic update - update counts immediately
-    setReactionCounts(prev => {
-      const newCounts = { ...prev };
-      
-      // Remove previous reaction count
-      if (previousReaction && newCounts[previousReaction] > 0) {
-        newCounts[previousReaction] = Math.max(0, newCounts[previousReaction] - 1);
-      }
-      
-      // Add new reaction count (if not removing)
-      if (newReaction) {
-        // Only increment if we're adding a new reaction (not just switching)
-        if (!previousReaction || previousReaction !== newReaction) {
-          newCounts[newReaction] = (newCounts[newReaction] || 0) + 1;
-        }
-      }
-      
-      return newCounts;
-    });
-    
-    setUserReaction(newReaction);
+    // Close picker and animate
     setShowPicker(false);
     setAnimatingReaction(reactionType);
     
     // Reset animation after a short delay
     setTimeout(() => setAnimatingReaction(null), 600);
 
-    // Call the parent handler
+    // Use React Query mutation - handles optimistic updates and rollback automatically
+    react({ reactionType });
+
+    // Call the parent handler for backward compatibility (if provided)
     if (onReact) {
-      const result = await onReact(eventId, newReaction || reactionType);
-      
-      // If the API call failed, revert the optimistic update
-      if (result === false) {
-        setReactionCounts(previousCounts);
-        setUserReaction(previousReaction);
-      }
+      const newReaction = userReaction === reactionType ? null : reactionType;
+      await onReact(eventId, newReaction || reactionType);
     }
   };
 
