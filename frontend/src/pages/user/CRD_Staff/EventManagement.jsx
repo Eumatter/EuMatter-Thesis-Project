@@ -300,12 +300,6 @@ const EventManagement = () => {
         setCurrentPage(1)
     }
 
-    const toInputDateTime = (value) => {
-        if (!value) return ''
-    // Balanced input classes
-    const inputBase = 'w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 placeholder-gray-400'
-    const controlLabel = 'block text-sm font-medium text-gray-700 mb-2'
-
     // Live previews for create
     useEffect(() => {
         if (createImageFile) {
@@ -316,9 +310,13 @@ const EventManagement = () => {
             setCreateImagePreviewUrl('')
         }
     }, [createImageFile])
+    
     useEffect(() => {
         if (createDocFile) setCreateDocPreviewName(createDocFile.name); else setCreateDocPreviewName('')
     }, [createDocFile])
+
+    const toInputDateTime = (value) => {
+        if (!value) return ''
         const date = new Date(value)
         if (isNaN(date.getTime())) return ''
         const tzOffset = date.getTimezoneOffset() * 60000
@@ -890,8 +888,6 @@ const EventManagement = () => {
                             </span>
                         </button>
                     </div>
-
-                </div>
 
                 {/* Events List */}
                 {isLoading ? (
