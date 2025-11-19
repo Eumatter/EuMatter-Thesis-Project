@@ -181,7 +181,7 @@ const DepartmentLeaderboard = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <main className="max-w-7xl mx-auto px-6 py-8">
                 {/* Back Button - Top Left (Mobile/Tablet Only) */}
                 <div className="mb-4 lg:hidden">
                     <button
@@ -197,7 +197,7 @@ const DepartmentLeaderboard = () => {
 
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">Leaderboards</h1>
                             <p className="text-gray-600 text-lg">Recognizing top-performing departments and their contributions</p>

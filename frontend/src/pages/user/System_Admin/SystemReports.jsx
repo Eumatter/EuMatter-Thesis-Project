@@ -494,9 +494,9 @@ const SystemReports = () => {
                     <h1 className="ml-3 text-xl font-bold text-[#800000]">System Admin</h1>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-                    {/* Header section */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                <div className="max-w-7xl mx-auto px-6 py-8">
+                    {/* Header Section */}
+                    <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>

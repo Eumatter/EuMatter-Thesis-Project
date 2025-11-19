@@ -374,24 +374,26 @@ const CRDDonations = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
             <Header />
             
-            <main className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                {/* Page Header */}
-                <div className="mb-8">
+            <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Back Button - Top Left (Mobile/Tablet Only) */}
+                <div className="mb-4 lg:hidden">
                     <button
                         onClick={() => navigate('/crd-staff/dashboard')}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-[#800000] transition-colors mb-4 lg:hidden group"
+                        className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
                     >
-                        <FaArrowLeft className="text-sm transform group-hover:-translate-x-1 transition-transform duration-200" />
-                        <span className="text-sm font-medium">Back to Dashboard</span>
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Dashboard
                     </button>
-                    
-                    {/* Header Section with Container */}
-                    <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-2">Donations</h1>
-                                <p className="text-gray-600 text-lg">Manage and track all donation types across your organization</p>
-                            </div>
+                </div>
+
+                {/* Header Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Donations</h1>
+                            <p className="text-gray-600 text-lg">Manage and track all donation types across your organization</p>
                         </div>
                     </div>
                 </div>

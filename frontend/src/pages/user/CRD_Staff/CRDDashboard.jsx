@@ -540,10 +540,10 @@ const CRDDashboard = () => {
         <div className="min-h-screen" style={{ backgroundColor: THEME_COLORS.whiteBg }}>
             <Header />
             
-            <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-                {/* Welcome Section */}
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5 lg:mb-6 border" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <main className="max-w-7xl mx-auto px-6 py-8">
+                {/* Header Section */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
                             <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>

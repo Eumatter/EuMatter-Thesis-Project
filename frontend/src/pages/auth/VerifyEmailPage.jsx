@@ -140,7 +140,7 @@ const VerifyEmailPage = () => {
                 email: emailToUse,
                 otp: normalizedOtp
             }, {
-                timeout: 30000, // 30 seconds timeout
+                timeout: 60000, // 60 seconds timeout (increased to handle slow connections and backend processing)
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -198,6 +198,33 @@ const VerifyEmailPage = () => {
         } catch (error) {
             console.error('Email verification error:', error)
             const errorMessage = error?.response?.data?.message || error.message || 'Failed to verify email. Please try again.'
+            
+            // Handle timeout errors specifically
+            if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                toast.warning('Request is taking longer than expected. The verification may still be processing. Please wait a moment and try again, or check if your email was verified.')
+                // Don't clear OTP immediately - user might want to retry
+                // Check if verification actually succeeded by making a quick status check
+                setTimeout(async () => {
+                    try {
+                        axios.defaults.withCredentials = true
+                        const statusCheck = await axios.get(backendUrl + 'api/auth/is-authenticated', { timeout: 10000 })
+                        if (statusCheck.data.success && statusCheck.data.user?.isAccountVerified) {
+                            toast.success('Email verified successfully! Redirecting...')
+                            setUserData(statusCheck.data.user)
+                            setIsLoggedIn(true)
+                            sessionStorage.removeItem('verificationEmail')
+                            setTimeout(() => {
+                                const dashboardRoute = getDashboardRoute(statusCheck.data.user.role)
+                                navigate(dashboardRoute)
+                            }, 1000)
+                        }
+                    } catch (statusError) {
+                        // Status check failed, user should retry verification
+                        console.error('Status check failed:', statusError)
+                    }
+                }, 2000)
+                return // Exit early for timeout - don't clear OTP yet
+            }
             
             // Handle specific error types
             if (error.response?.data?.actionRequired === 'code_regenerated' && error.response?.data?.codeSent) {
