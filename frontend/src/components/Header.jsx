@@ -79,42 +79,19 @@ const Header = () => {
                 setTimeout(() => {
                     document.body.classList.add('mobile-menu-open');
                     
-                    // Blur the root container - this will blur everything inside it
-                    const rootElement = document.getElementById('root');
-                    if (rootElement) {
-                        rootElement.classList.add('mobile-menu-blur');
-                    }
-                    
-                    // Also blur all direct children of root (App wrapper, etc.)
-                    if (rootElement) {
-                        Array.from(rootElement.children).forEach(child => {
-                            child.classList.add('mobile-menu-blur');
-                        });
-                    }
-                    
-                    // Blur header specifically
+                    // Get header first to exclude it from blur
                     const header = document.querySelector('header');
-                    if (header) {
-                        header.classList.add('mobile-menu-blur');
-                    }
                     
-                    // Blur all main content areas and sections
+                    // Blur all main content areas and sections (excluding header)
                     const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
                     mainContents.forEach(content => {
-                        // Skip menu overlay elements
+                        // Skip menu overlay elements and header
                         if (!content.closest('.mobile-menu-overlay') && 
+                            !content.closest('header') &&
+                            content !== header &&
                             !content.classList.contains('mobile-menu-overlay') &&
                             !content.classList.contains('mobile-menu-slider')) {
                             content.classList.add('mobile-menu-blur');
-                        }
-                    });
-                    
-                    // Also blur body's direct children divs
-                    Array.from(document.body.children).forEach(child => {
-                        if (child.id !== 'root' && 
-                            !child.classList.contains('mobile-menu-overlay') &&
-                            !child.classList.contains('mobile-menu-slider')) {
-                            child.classList.add('mobile-menu-blur');
                         }
                     });
                 }, 0);
@@ -126,27 +103,9 @@ const Header = () => {
             // Remove blur class from body and all content
             document.body.classList.remove('mobile-menu-open');
             
-            const rootElement = document.getElementById('root');
-            if (rootElement) {
-                rootElement.classList.remove('mobile-menu-blur');
-                Array.from(rootElement.children).forEach(child => {
-                    child.classList.remove('mobile-menu-blur');
-                });
-            }
-            
-            const header = document.querySelector('header');
-            if (header) {
-                header.classList.remove('mobile-menu-blur');
-            }
-            
             const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
             mainContents.forEach(content => {
                 content.classList.remove('mobile-menu-blur');
-            });
-            
-            // Remove blur from body's direct children
-            Array.from(document.body.children).forEach(child => {
-                child.classList.remove('mobile-menu-blur');
             });
         }
         return () => {
@@ -155,26 +114,9 @@ const Header = () => {
             document.body.style.width = 'unset';
             document.body.classList.remove('mobile-menu-open');
             
-            const rootElement = document.getElementById('root');
-            if (rootElement) {
-                rootElement.classList.remove('mobile-menu-blur');
-                Array.from(rootElement.children).forEach(child => {
-                    child.classList.remove('mobile-menu-blur');
-                });
-            }
-            
-            const header = document.querySelector('header');
-            if (header) {
-                header.classList.remove('mobile-menu-blur');
-            }
-            
             const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
             mainContents.forEach(content => {
                 content.classList.remove('mobile-menu-blur');
-            });
-            
-            Array.from(document.body.children).forEach(child => {
-                child.classList.remove('mobile-menu-blur');
             });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
