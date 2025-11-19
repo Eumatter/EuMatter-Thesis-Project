@@ -135,6 +135,31 @@ export function getNotificationIconType(type) {
 }
 
 /**
+ * Get notification icon as emoji (backward compatibility)
+ * This is a fallback for components that haven't migrated to React Icons yet
+ */
+export function getNotificationIcon(type) {
+    const iconMap = {
+        'event_created': '📅',
+        'event_updated': '🔄',
+        'event_cancelled': '❌',
+        'event_reminder': '⏰',
+        'volunteer_invitation': '👥',
+        'volunteer_approved': '✅',
+        'volunteer_registered': '📝',
+        'volunteer_invitation_accepted': '🎉',
+        'donation_received': '💰',
+        'donation_success': '💳',
+        'feedback_deadline': '⚠️',
+        'attendance_recorded': '✅',
+        'comment_added': '💬',
+        'reaction_added': '👍',
+    };
+    
+    return iconMap[type] || '🔔';
+}
+
+/**
  * Get notification color class based on type
  * All icons use maroon color for consistency
  */
