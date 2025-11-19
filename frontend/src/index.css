@@ -263,8 +263,14 @@ html[data-font-size="extra-large"] {
   .main-content,
   section,
   article,
+  main > div,
+  main > div > div,
+  [role="main"] > div,
+  [role="main"] > div > div,
   div[class*="container"],
-  div[class*="wrapper"] {
+  div[class*="wrapper"],
+  div[class*="grid"],
+  div[class*="flex"] {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -297,11 +303,27 @@ html[data-font-size="extra-large"] {
     will-change: filter;
   }
   
+  /* Blur all divs inside main content when mobile menu is open */
+  body.mobile-menu-open main.mobile-menu-blur > div,
+  body.mobile-menu-open main.mobile-menu-blur > div > div,
+  body.mobile-menu-open [role="main"].mobile-menu-blur > div,
+  body.mobile-menu-open [role="main"].mobile-menu-blur > div > div,
+  body.mobile-menu-open .main-content.mobile-menu-blur > div,
+  body.mobile-menu-open .main-content.mobile-menu-blur > div > div {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
   /* Blur sections, articles, containers, and wrappers when mobile menu is open (but not header) */
   body.mobile-menu-open section.mobile-menu-blur:not(header section),
   body.mobile-menu-open article.mobile-menu-blur:not(header article),
+  body.mobile-menu-open div.mobile-menu-blur:not(header div):not(.mobile-menu-overlay):not(.mobile-menu-slider),
   body.mobile-menu-open div[class*="container"].mobile-menu-blur:not(header div),
-  body.mobile-menu-open div[class*="wrapper"].mobile-menu-blur:not(header div) {
+  body.mobile-menu-open div[class*="wrapper"].mobile-menu-blur:not(header div),
+  body.mobile-menu-open div[class*="grid"].mobile-menu-blur:not(header div),
+  body.mobile-menu-open div[class*="flex"].mobile-menu-blur:not(header div) {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -321,8 +343,14 @@ html[data-font-size="extra-large"] {
   .main-content,
   section,
   article,
+  main > div,
+  main > div > div,
+  [role="main"] > div,
+  [role="main"] > div > div,
   div[class*="container"],
-  div[class*="wrapper"] {
+  div[class*="wrapper"],
+  div[class*="grid"],
+  div[class*="flex"] {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
