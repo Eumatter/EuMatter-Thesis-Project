@@ -820,14 +820,14 @@ const EventManagement = () => {
                                 </div>
                             </div>
                             
-                            <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)] scrollbar-thin">
+                            <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)] scrollbar-thin bg-white">
                                 <form onSubmit={handleSubmit} className="space-y-8">
                                     {/* Section 1: Basic Information */}
                                     <div className="space-y-6 animate-slide-down">
-                                        <div className="flex items-center space-x-3 pb-3 border-b-2 border-[#d4af37]/20">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-[#800020] to-[#a0002a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]/30">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <div className="flex items-center space-x-3 pb-3 border-b border-gray-200">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
+                                                <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                 </div>
                                         <div>
@@ -841,19 +841,19 @@ const EventManagement = () => {
 
                                         {/* Event Title */}
                                         <div className="space-y-2">
-                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                     <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                                     </svg>
                                         </div>
-                                                <span>Event Title <span className="text-[#800020] font-bold">*</span></span>
+                                                <span>Event Title <span className="text-[#800020] font-semibold">*</span></span>
                                             </label>
                                 <input
                                     type="text"
                                     value={formData.title}
                                     onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                                                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                                 placeholder="Enter a catchy event title"
                                     required
                                 />
@@ -878,20 +878,20 @@ const EventManagement = () => {
 
                                         {/* Location */}
                                         <div className="space-y-2">
-                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                     <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     </svg>
                                                 </div>
-                                                <span>Location <span className="text-[#800020] font-bold">*</span></span>
+                                                <span>Location <span className="text-[#800020] font-semibold">*</span></span>
                                             </label>
                                 <input
                                     type="text"
                                     value={formData.location}
                                     onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                                                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                                 placeholder="Enter event location or venue"
                                     required
                                 />
@@ -900,20 +900,20 @@ const EventManagement = () => {
                                         {/* Date & Time */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="space-y-2">
-                                                <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                    <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                    <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                         <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
                                                     </div>
-                                                    <span>Start Date & Time <span className="text-[#800020] font-bold">*</span></span>
+                                                    <span>Start Date & Time <span className="text-[#800020] font-semibold">*</span></span>
                                                 </label>
                                     <input
                                         type="datetime-local"
                                         value={formData.startDate}
                                         onChange={e => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
                                         min={nowLocal}
-                                                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                         required
                                     />
                                                 <p className="text-xs text-gray-500 flex items-center space-x-1">
@@ -924,20 +924,20 @@ const EventManagement = () => {
                                                 </p>
                                 </div>
                                             <div className="space-y-2">
-                                                <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                    <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                    <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                         <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
                                                     </div>
-                                                    <span>End Date & Time <span className="text-[#800020] font-bold">*</span></span>
+                                                    <span>End Date & Time <span className="text-[#800020] font-semibold">*</span></span>
                                                 </label>
                                     <input
                                         type="datetime-local"
                                         value={formData.endDate}
                                         onChange={e => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
                                         min={formData.startDate || nowLocal}
-                                                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                         required
                                     />
                                                 <p className="text-xs text-gray-500 flex items-center space-x-1">
@@ -1021,18 +1021,17 @@ const EventManagement = () => {
                             
                                     {/* Section 3: Media & Documents */}
                                     <div className="space-y-6 animate-slide-down">
-                                        <div className="flex items-center space-x-3 pb-3 border-b-2 border-[#d4af37]/20">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-[#800020] to-[#a0002a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]/30">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        <div className="flex items-center space-x-3 pb-3 border-b border-gray-200">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
+                                                <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                    <span>Media & Documents</span>
-                                                    <span className="text-[#d4af37] text-sm">★</span>
+                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                    Media & Documents
                                                 </h3>
-                                                <p className="text-sm text-gray-600">Upload images and supporting documents</p>
+                                                <p className="text-sm text-gray-500">Upload images and supporting documents</p>
                                             </div>
                                         </div>
 
@@ -1158,18 +1157,17 @@ const EventManagement = () => {
                             
                                     {/* Section 4: Event Options */}
                                     <div className="space-y-6 animate-slide-down">
-                                        <div className="flex items-center space-x-3 pb-3 border-b-2 border-[#d4af37]/20">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-[#800020] to-[#a0002a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]/30">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                        <div className="flex items-center space-x-3 pb-3 border-b border-gray-200">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
+                                                <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                                                 </svg>
                                             </div>
                                         <div>
-                                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                    <span>Event Options</span>
-                                                    <span className="text-[#d4af37] text-sm">★</span>
+                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                    Event Options
                                                 </h3>
-                                                <p className="text-sm text-gray-600">Configure donation and volunteer settings</p>
+                                                <p className="text-sm text-gray-500">Configure donation and volunteer settings</p>
                                             </div>
                                         </div>
 
@@ -1617,7 +1615,7 @@ const EventManagement = () => {
                                 )}
                             </div>
                                     {/* Submit Buttons */}
-                                    <div className="flex justify-end gap-4 pt-6 border-t-2 border-[#d4af37]/20 sticky bottom-0 bg-white pb-2">
+                                    <div className="flex justify-center items-center gap-4 pt-8 mt-8 border-t border-gray-200 sticky bottom-0 bg-white pb-4 px-4">
                                         <button 
                                             type="button" 
                                             onClick={() => {
@@ -1656,16 +1654,16 @@ const EventManagement = () => {
                                                     setRecurrenceMonthday('')
                                                 }, 200)
                                             }}
-                                            className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+                                            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
                                         >
                                             Cancel
                                         </button>
                                         <button 
                                             type="submit" 
-                                            className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#800020] to-[#a0002a] text-white font-bold shadow-lg transition-all duration-200 hover:from-[#a0002a] hover:to-[#800020] hover:shadow-xl hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020] focus-visible:ring-offset-2 flex items-center space-x-2 border-2 border-[#d4af37]/30"
+                                            className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#9c0000] text-white font-semibold shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020]/50 focus-visible:ring-offset-2 flex items-center space-x-2"
                                         >
-                                            <svg className="w-5 h-5 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                             <span>Propose Event</span>
                                         </button>
@@ -1735,7 +1733,7 @@ const EventManagement = () => {
                                 </div>
                             </div>
 
-                            <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)] scrollbar-thin">
+                            <div className="p-8 overflow-y-auto max-h-[calc(95vh-120px)] scrollbar-thin bg-white">
                                 <form
                                     onSubmit={async (e) => {
                                         e.preventDefault()
@@ -1871,36 +1869,35 @@ const EventManagement = () => {
                                 >
                                     {/* Section 1: Basic Information */}
                                     <div className="space-y-6 animate-slide-down">
-                                        <div className="flex items-center space-x-3 pb-3 border-b-2 border-[#d4af37]/20">
-                                            <div className="w-12 h-12 bg-gradient-to-br from-[#800020] to-[#a0002a] rounded-2xl flex items-center justify-center shadow-lg border-2 border-[#d4af37]/30">
-                                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        <div className="flex items-center space-x-3 pb-3 border-b border-gray-200">
+                                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
+                                                <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
                                     <div>
-                                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                    <span>Basic Information</span>
-                                                    <span className="text-[#d4af37] text-sm">★</span>
+                                                <h3 className="text-lg font-semibold text-gray-900">
+                                                    Basic Information
                                                 </h3>
-                                                <p className="text-sm text-gray-600">Essential details about your event</p>
+                                                <p className="text-sm text-gray-500">Essential details about your event</p>
                                             </div>
                                         </div>
 
                                         {/* Event Title */}
                                         <div className="space-y-2">
-                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                     <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                                                     </svg>
                                                 </div>
-                                                <span>Event Title <span className="text-[#800020] font-bold">*</span></span>
+                                                <span>Event Title <span className="text-[#800020] font-semibold">*</span></span>
                                             </label>
                                         <input
                                             type="text"
                                             value={postForm.title}
                                             onChange={e => setPostForm(prev => ({ ...prev, title: e.target.value }))}
-                                                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                                 placeholder="Enter a catchy event title"
                                             required
                                         />
@@ -1908,10 +1905,10 @@ const EventManagement = () => {
 
                                         {/* Description */}
                                         <div className="space-y-2">
-                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                     <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h7" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                                                     </svg>
                                                 </div>
                                                 <span>Description</span>
@@ -1925,20 +1922,20 @@ const EventManagement = () => {
 
                                         {/* Location */}
                                         <div className="space-y-2">
-                                            <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                            <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                     <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                     </svg>
                                                 </div>
-                                                <span>Location <span className="text-[#800020] font-bold">*</span></span>
+                                                <span>Location <span className="text-[#800020] font-semibold">*</span></span>
                                             </label>
                                         <input
                                             type="text"
                                             value={postForm.location}
                                             onChange={e => setPostForm(prev => ({ ...prev, location: e.target.value }))}
-                                                className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder-gray-400 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                                 placeholder="Enter event location or venue"
                                             required
                                         />
@@ -1947,46 +1944,46 @@ const EventManagement = () => {
                                         {/* Date & Time */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div className="space-y-2">
-                                                <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                    <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                    <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                         <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
                                                     </div>
-                                                    <span>Start Date & Time <span className="text-[#800020] font-bold">*</span></span>
+                                                    <span>Start Date & Time <span className="text-[#800020] font-semibold">*</span></span>
                                                 </label>
                                             <input
                                                 type="datetime-local"
                                                 value={postForm.startDate}
                                                 onChange={e => setPostForm(prev => ({ ...prev, startDate: e.target.value }))}
                                                 min={nowLocal}
-                                                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
+                                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
                                                 required
-                                            />
+                                    />
                                                 <p className="text-xs text-gray-500 flex items-center space-x-1">
-                                                    <svg className="w-3 h-3 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
                                                     <span>Use your local date and time</span>
                                                 </p>
-                                        </div>
+                                </div>
                                             <div className="space-y-2">
-                                                <label className="flex items-center space-x-2 text-sm font-semibold text-[#800020]">
-                                                    <div className="w-8 h-8 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
+                                                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+                                                    <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm">
                                                         <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
                                                     </div>
-                                                    <span>End Date & Time <span className="text-[#800020] font-bold">*</span></span>
+                                                    <span>End Date & Time <span className="text-[#800020] font-semibold">*</span></span>
                                                 </label>
-                                            <input
-                                                type="datetime-local"
-                                                value={postForm.endDate}
-                                                onChange={e => setPostForm(prev => ({ ...prev, endDate: e.target.value }))}
-                                                min={postForm.startDate || nowLocal}
-                                                    className="w-full rounded-xl border-2 border-gray-200 px-4 py-3.5 text-gray-900 focus:border-[#800020] focus:ring-2 focus:ring-[#800020]/20 transition-all duration-200 bg-white/50 focus:bg-white shadow-sm"
-                                                required
-                                            />
+                                    <input
+                                        type="datetime-local"
+                                        value={postForm.endDate}
+                                        onChange={e => setPostForm(prev => ({ ...prev, endDate: e.target.value }))}
+                                        min={postForm.startDate || nowLocal}
+                                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 focus:border-[#800020] focus:ring-1 focus:ring-[#800020]/20 transition-all duration-200 bg-white"
+                                        required
+                                    />
                                                 <p className="text-xs text-gray-500 flex items-center space-x-1">
                                                     <svg className="w-3 h-3 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2377,7 +2374,7 @@ const EventManagement = () => {
                                     </div>
 
                                     {/* Submit Buttons */}
-                                    <div className="flex justify-end gap-4 pt-6 border-t-2 border-[#d4af37]/20 sticky bottom-0 bg-white pb-2">
+                                    <div className="flex justify-center items-center gap-4 pt-8 mt-8 border-t border-gray-200 sticky bottom-0 bg-white pb-4 px-4">
                                         <button 
                                             type="button" 
                                             onClick={() => {
@@ -2395,16 +2392,16 @@ const EventManagement = () => {
                                                     setRecurrenceMonthday('')
                                                 }, 200)
                                             }}
-                                            className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
+                                            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
                                         >
                                             Cancel
                                         </button>
                                         <button 
                                             type="submit" 
-                                            className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#800020] to-[#a0002a] text-white font-bold shadow-lg transition-all duration-200 hover:from-[#a0002a] hover:to-[#800020] hover:shadow-xl hover:-translate-y-0.5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020] focus-visible:ring-offset-2 flex items-center space-x-2 border-2 border-[#d4af37]/30"
+                                            className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#9c0000] text-white font-semibold shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020]/50 focus-visible:ring-offset-2 flex items-center space-x-2"
                                         >
-                                            <svg className="w-5 h-5 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                             <span>Post Event</span>
                                         </button>

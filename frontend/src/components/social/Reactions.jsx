@@ -19,6 +19,9 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
   const [userReaction, setUserReaction] = useState(null);
   const pickerRef = useRef(null);
   const buttonRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const isLongPressRef = useRef(false);
+  const touchStartTimeRef = useRef(0);
 
   // Process reactions data - handle both formats (arrays or counts)
   useEffect(() => {
@@ -82,11 +85,35 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
       }
     };
 
+    const handleTouchOutside = (event) => {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setShowPicker(false);
+      }
+    };
+
     if (showPicker) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleTouchOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleTouchOutside);
+      };
     }
   }, [showPicker]);
+
+  // Cleanup long press timer on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleReaction = async (reactionType) => {
     // If clicking the same reaction, remove it
@@ -194,14 +221,52 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
             }
           }, 200);
         }}
-        onClick={(e) => {
+        onTouchStart={(e) => {
+          touchStartTimeRef.current = Date.now();
+          isLongPressRef.current = false;
+          
+          longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            setShowPicker(true);
+            // Haptic feedback on mobile devices
+            if (navigator.vibrate) {
+              navigator.vibrate(50);
+            }
+          }, 500); // 500ms for long press
+        }}
+        onTouchEnd={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          // Quick reaction: if no reaction, add like; if has reaction, show picker
-          if (!userReaction) {
-            handleReaction('like');
-          } else {
-            setShowPicker(true);
+          clearTimeout(longPressTimerRef.current);
+          
+          if (!isLongPressRef.current) {
+            // Quick tap - toggle like or remove reaction
+            if (!userReaction) {
+              handleReaction('like');
+            } else {
+              // If already reacted, toggle it off
+              handleReaction(userReaction);
+            }
+          }
+          isLongPressRef.current = false;
+        }}
+        onTouchCancel={(e) => {
+          clearTimeout(longPressTimerRef.current);
+          isLongPressRef.current = false;
+        }}
+        onClick={(e) => {
+          // Desktop behavior only (ignore on touch devices)
+          if (!('ontouchstart' in window)) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Quick click: if no reaction, add like; if has reaction, toggle it off
+            if (!userReaction) {
+              handleReaction('like');
+            } else {
+              // If already reacted with the displayed reaction, toggle it off
+              handleReaction(userReaction);
+            }
           }
         }}
       >
