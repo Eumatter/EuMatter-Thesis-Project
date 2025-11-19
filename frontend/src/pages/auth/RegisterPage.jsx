@@ -91,15 +91,19 @@ const RegisterPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Scroll to terms section when returning from terms page on step 6
+    // Scroll to top of Review Information section when entering step 6
     useEffect(() => {
         if (currentStep === 6) {
             // Small delay to ensure DOM is rendered
             const timer = setTimeout(() => {
-                const termsSection = document.getElementById('terms-section');
-                if (termsSection) {
-                    // Scroll the terms section into view within its scrollable container
-                    termsSection.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                const reviewSection = document.getElementById('review-information-section');
+                const scrollableContainer = document.querySelector('.registration-form-content.overflow-y-auto');
+                if (reviewSection && scrollableContainer) {
+                    // Scroll the review section to the top of the scrollable container
+                    reviewSection.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                } else if (scrollableContainer) {
+                    // Fallback: scroll container to top
+                    scrollableContainer.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }, 200);
             return () => clearTimeout(timer);
@@ -1323,7 +1327,7 @@ const RegisterPage = () => {
                             {currentStep === 6 && (
                                 <div className="space-y-1.5 md:space-y-2 animate-fade-in">
                                     {/* Header Section */}
-                                    <div className="text-center mb-1.5 md:mb-2">
+                                    <div id="review-information-section" className="text-center mb-1.5 md:mb-2">
                                         <div className="inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#FFD700] to-yellow-400 rounded-full mb-1 shadow-lg shadow-yellow-500/50">
                                             <FaCheckCircle className="text-[#800000] text-sm md:text-lg" />
                                         </div>
