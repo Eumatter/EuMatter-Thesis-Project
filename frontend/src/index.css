@@ -256,16 +256,42 @@ html[data-font-size="extra-large"] {
 /* Mobile menu blur effects */
 /* Smooth blur transition for header and body when mobile menu opens */
 @media (max-width: 1024px) {
-  /* Apply smooth blur transition to header */
-  header {
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  /* Apply smooth blur transition to main content */
+  /* Apply smooth blur transition to root and all content */
+  #root,
+  #root > *,
+  header,
   main,
   [role="main"],
   .main-content {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
+  /* Prevent menu overlay from being blurred - override parent blur */
+  body.mobile-menu-open .mobile-menu-overlay,
+  body.mobile-menu-open .mobile-menu-slider,
+  body.mobile-menu-open [class*="slider"],
+  body.mobile-menu-open [class*="overlay"] {
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
+  
+  /* Blur root container when mobile menu is open - this blurs everything inside */
+  body.mobile-menu-open #root.mobile-menu-blur,
+  body.mobile-menu-open #root {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
+  /* Blur app wrapper (first child of root) when mobile menu is open */
+  body.mobile-menu-open #root > *.mobile-menu-blur,
+  body.mobile-menu-open #root > * {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
   }
   
   /* Blur header when mobile menu is open - smooth transition */
@@ -274,6 +300,7 @@ html[data-font-size="extra-large"] {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
   }
   
   /* Blur main content when mobile menu is open - smooth transition */
@@ -286,32 +313,27 @@ html[data-font-size="extra-large"] {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  
-  /* Blur app wrapper content when mobile menu is open */
-  body.mobile-menu-open #root > div.mobile-menu-blur,
-  body.mobile-menu-open body > div.mobile-menu-blur {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
   }
   
   /* Ensure smooth transition when removing blur */
+  #root,
+  #root > *,
   header,
   main,
   [role="main"],
-  .main-content,
-  #root > div,
-  body > div {
+  .main-content {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
   }
 }
 
-/* General mobile menu blur class */
+/* General mobile menu blur class - works on any element */
 .mobile-menu-blur {
-  filter: blur(12px);
-  -webkit-filter: blur(12px);
-  transition: filter 0.3s ease-out, -webkit-filter 0.3s ease-out;
+  filter: blur(12px) !important;
+  -webkit-filter: blur(12px) !important;
+  transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: filter;
 }
 
 /* Maroon, White, Gold color scheme utilities */

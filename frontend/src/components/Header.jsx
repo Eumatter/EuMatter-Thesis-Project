@@ -73,61 +73,86 @@ const Header = () => {
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
-            // Add blur class to body and header when mobile menu is open
+            // Add blur class to body and all content when mobile menu is open
             if (isMobileMenuOpen) {
                 document.body.classList.add('mobile-menu-open');
-                // Blur header
+                
+                // Blur the root container - this will blur everything inside it
+                const rootElement = document.getElementById('root');
+                if (rootElement) {
+                    rootElement.classList.add('mobile-menu-blur');
+                }
+                
+                // Also blur the immediate child of root (App wrapper)
+                const appWrapper = rootElement?.firstElementChild;
+                if (appWrapper) {
+                    appWrapper.classList.add('mobile-menu-blur');
+                }
+                
+                // Blur header specifically
                 const header = document.querySelector('header');
                 if (header) {
                     header.classList.add('mobile-menu-blur');
                 }
-                // Blur main content wrapper
-                const mainContent = document.querySelector('main, [role="main"], .main-content');
-                if (mainContent) {
-                    mainContent.classList.add('mobile-menu-blur');
-                }
-                // Blur all content behind menu
-                const appContent = document.querySelector('#root > div, body > div');
-                if (appContent) {
-                    appContent.classList.add('mobile-menu-blur');
-                }
+                
+                // Blur all main content areas
+                const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
+                mainContents.forEach(content => {
+                    content.classList.add('mobile-menu-blur');
+                });
             }
         } else {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
-            // Remove blur class from body, header, and content
+            // Remove blur class from body and all content
             document.body.classList.remove('mobile-menu-open');
+            
+            const rootElement = document.getElementById('root');
+            if (rootElement) {
+                rootElement.classList.remove('mobile-menu-blur');
+            }
+            
+            const appWrapper = rootElement?.firstElementChild;
+            if (appWrapper) {
+                appWrapper.classList.remove('mobile-menu-blur');
+            }
+            
             const header = document.querySelector('header');
             if (header) {
                 header.classList.remove('mobile-menu-blur');
             }
-            const mainContent = document.querySelector('main, [role="main"], .main-content');
-            if (mainContent) {
-                mainContent.classList.remove('mobile-menu-blur');
-            }
-            const appContent = document.querySelector('#root > div, body > div');
-            if (appContent) {
-                appContent.classList.remove('mobile-menu-blur');
-            }
+            
+            const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
+            mainContents.forEach(content => {
+                content.classList.remove('mobile-menu-blur');
+            });
         }
         return () => {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
             document.body.classList.remove('mobile-menu-open');
+            
+            const rootElement = document.getElementById('root');
+            if (rootElement) {
+                rootElement.classList.remove('mobile-menu-blur');
+            }
+            
+            const appWrapper = rootElement?.firstElementChild;
+            if (appWrapper) {
+                appWrapper.classList.remove('mobile-menu-blur');
+            }
+            
             const header = document.querySelector('header');
             if (header) {
                 header.classList.remove('mobile-menu-blur');
             }
-            const mainContent = document.querySelector('main, [role="main"], .main-content');
-            if (mainContent) {
-                mainContent.classList.remove('mobile-menu-blur');
-            }
-            const appContent = document.querySelector('#root > div, body > div');
-            if (appContent) {
-                appContent.classList.remove('mobile-menu-blur');
-            }
+            
+            const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
+            mainContents.forEach(content => {
+                content.classList.remove('mobile-menu-blur');
+            });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
 
@@ -938,7 +963,7 @@ const Header = () => {
         </header>
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden fixed inset-0 z-[9998] pointer-events-none">
+                    <div className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" style={{ filter: 'none', WebkitFilter: 'none' }}>
                         {/* Backdrop overlay with full blur - spans full height from top to bottom */}
                         <div 
                             className="fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/70 backdrop-blur-xl pointer-events-auto"
@@ -951,17 +976,21 @@ const Header = () => {
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
                                 zIndex: 9998,
-                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out'
+                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                                filter: 'none',
+                                WebkitFilter: 'none'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
-                            className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto"
+                            className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
                                 zIndex: 9999,
-                                transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+                                transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                                filter: 'none',
+                                WebkitFilter: 'none'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}

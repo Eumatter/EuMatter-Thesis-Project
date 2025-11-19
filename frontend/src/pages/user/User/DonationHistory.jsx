@@ -492,10 +492,10 @@ const DonationHistory = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+            <main className="max-w-7xl mx-auto px-6 py-8">
                 {/* Page Header */}
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <button
@@ -508,10 +508,10 @@ const DonationHistory = () => {
                     
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">
+                            <h1 className="text-3xl font-bold text-black mb-2">
                                 My Donations
                             </h1>
-                            <p className="text-sm sm:text-base text-gray-600">
+                            <p className="text-gray-600">
                                 Manage your donations and view donation history
                             </p>
                         </div>
