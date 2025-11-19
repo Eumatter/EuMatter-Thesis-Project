@@ -288,7 +288,7 @@ const Reports = () => {
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold text-black mb-2">Reports & Analytics</h1>
+                            <h1 className="text-4xl font-bold text-black mb-2">Reports & Analytics</h1>
                             <p className="text-gray-600">Generate utilization and financial reports for campaign management.</p>
                         </div>
                         {/* Back to Dashboard removed per CRD UX */}

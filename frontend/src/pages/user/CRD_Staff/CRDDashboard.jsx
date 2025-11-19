@@ -546,7 +546,7 @@ const CRDDashboard = () => {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
+                            <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>
                         </div>
                         <button 
                             onClick={() => navigate('/user/profile')}

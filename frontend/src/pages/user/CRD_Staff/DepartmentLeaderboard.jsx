@@ -200,7 +200,7 @@ const DepartmentLeaderboard = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
                             <h1 className="text-4xl font-bold text-gray-900 mb-2">Leaderboards</h1>
-                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
+                            <p className="text-gray-600 text-lg">Recognizing top-performing departments and their contributions</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">

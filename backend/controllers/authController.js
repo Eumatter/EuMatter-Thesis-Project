@@ -47,7 +47,7 @@ const validateMSEUFEmail = (email) => {
     const emailLower = email.toLowerCase();
     
     // Student format: A22-34197@student.mseuf.edu.ph or T22-34197@student.mseuf.edu.ph
-    const studentPattern = /^([A-Za-Z]\d{2}-\d{5})@student\.mseuf\.edu\.ph$/i;
+    const studentPattern = /^([A-Za-z]\d{2}-\d{5})@student\.mseuf\.edu\.ph$/i;
     const studentMatch = email.match(studentPattern);
     if (studentMatch) {
         // Extract ID from student email (e.g., A22-34197)

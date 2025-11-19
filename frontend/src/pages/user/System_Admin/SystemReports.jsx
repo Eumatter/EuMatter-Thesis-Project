@@ -500,7 +500,7 @@ const SystemReports = () => {
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
                                 <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
-                                <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
+                                <p className="text-gray-600 text-lg">Monitor and track all system activities and audit logs</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
