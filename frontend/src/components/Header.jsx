@@ -32,7 +32,14 @@ import {
     FaEye,
     FaTools,
     FaClock,
-    FaChevronRight
+    FaChevronRight,
+    FaSyncAlt,
+    FaTimesCircle,
+    FaUserCheck,
+    FaCreditCard,
+    FaExclamationCircle,
+    FaComment,
+    FaThumbsUp
 } from 'react-icons/fa';
 
 const Header = () => {
@@ -82,52 +89,61 @@ const Header = () => {
                     // Get header first to exclude it from blur
                     const header = document.querySelector('header');
                     
-                    // Blur all main content areas and sections (excluding header)
-                    const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article');
-                    mainContents.forEach(content => {
-                        // Skip menu overlay elements and header
-                        if (!content.closest('.mobile-menu-overlay') && 
-                            !content.closest('header') &&
-                            content !== header &&
-                            !content.classList.contains('mobile-menu-overlay') &&
-                            !content.classList.contains('mobile-menu-slider')) {
-                            content.classList.add('mobile-menu-blur');
-                            
-                            // Blur ALL nested divs inside main content (not just direct children)
-                            const allDivs = content.querySelectorAll('div');
-                            allDivs.forEach(div => {
-                                if (!div.closest('header') && 
-                                    !div.closest('.mobile-menu-overlay') &&
-                                    !div.classList.contains('mobile-menu-overlay') &&
-                                    !div.classList.contains('mobile-menu-slider')) {
-                                    div.classList.add('mobile-menu-blur');
-                                }
-                            });
-                        }
-                    });
-                    
-                    // Also blur the root wrapper div that contains everything (but not header or menu)
+                    // Find root element and blur all children except header
                     const rootElement = document.getElementById('root');
                     if (rootElement) {
-                        const rootChildren = rootElement.children;
-                        Array.from(rootChildren).forEach(child => {
-                            if (child.tagName !== 'HEADER' && 
+                        // Get all direct children of root (App wrapper, etc.)
+                        const rootChildren = Array.from(rootElement.children);
+                        rootChildren.forEach(child => {
+                            // Skip header and menu overlay
+                            if (child !== header && 
+                                child.tagName !== 'HEADER' &&
                                 !child.classList.contains('mobile-menu-overlay') &&
                                 !child.classList.contains('mobile-menu-slider')) {
-                                // Blur the child and all its descendants except header and menu
+                                // Blur the child wrapper
+                                child.classList.add('mobile-menu-blur');
+                                
+                                // Blur all descendants inside this wrapper (except header)
                                 const allDescendants = child.querySelectorAll('*');
                                 allDescendants.forEach(desc => {
-                                    if (desc.tagName !== 'HEADER' && 
+                                    // Skip if it's part of header or menu
+                                    if (desc !== header &&
+                                        desc.tagName !== 'HEADER' &&
                                         !desc.closest('header') &&
                                         !desc.closest('.mobile-menu-overlay') &&
-                                        !desc.classList.contains('mobile-menu-overlay') &&
-                                        !desc.classList.contains('mobile-menu-slider')) {
+                                        !desc.closest('.mobile-menu-slider')) {
                                         desc.classList.add('mobile-menu-blur');
                                     }
                                 });
                             }
                         });
                     }
+                    
+                    // Blur all main elements (dashboard pages have these)
+                    const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
+                    mainElements.forEach(mainEl => {
+                        if (!mainEl.closest('header') && !mainEl.closest('.mobile-menu-overlay')) {
+                            mainEl.classList.add('mobile-menu-blur');
+                            
+                            // Also blur all content inside main
+                            const mainContent = mainEl.querySelectorAll('*');
+                            mainContent.forEach(content => {
+                                if (!content.closest('header') && !content.closest('.mobile-menu-overlay')) {
+                                    content.classList.add('mobile-menu-blur');
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Blur page wrapper containers (div.min-h-screen is common for page wrappers)
+                    const pageContainers = document.querySelectorAll('div.min-h-screen, div.min-h-full');
+                    pageContainers.forEach(container => {
+                        if (!container.closest('header') && 
+                            !container.closest('.mobile-menu-overlay') &&
+                            container !== header) {
+                            container.classList.add('mobile-menu-blur');
+                        }
+                    });
                 });
             }
         } else {
@@ -137,10 +153,14 @@ const Header = () => {
             // Remove blur class from body and all content
             document.body.classList.remove('mobile-menu-open');
             
-            // Remove blur from all elements with mobile-menu-blur class
+            // Remove blur from all elements with mobile-menu-blur class (header shouldn't have it, but just in case)
+            const headerEl = document.querySelector('header');
             const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
             allBlurredElements.forEach(element => {
-                element.classList.remove('mobile-menu-blur');
+                // Double check it's not header before removing
+                if (element !== headerEl && element.tagName !== 'HEADER' && !element.closest('header')) {
+                    element.classList.remove('mobile-menu-blur');
+                }
             });
         }
         return () => {
@@ -150,9 +170,13 @@ const Header = () => {
             document.body.classList.remove('mobile-menu-open');
             
             // Remove blur from all elements with mobile-menu-blur class
+            const header = document.querySelector('header');
             const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
             allBlurredElements.forEach(element => {
-                element.classList.remove('mobile-menu-blur');
+                // Double check it's not header before removing
+                if (element !== header && element.tagName !== 'HEADER' && !element.closest('header')) {
+                    element.classList.remove('mobile-menu-blur');
+                }
             });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
@@ -484,7 +508,7 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300 ${isMobileMenuOpen ? 'mobile-menu-blur' : ''}`}>
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
@@ -627,8 +651,44 @@ const Header = () => {
 											};
 											
 											const notificationType = n.payload?.type || 'system';
-											const icon = getNotificationIcon(notificationType);
-											const colorClass = getNotificationColorClass(notificationType);
+											
+											// Get filled icon component based on notification type
+											const getNotificationIconComponent = (type) => {
+												switch (type) {
+													case 'event_created':
+														return <FaCalendarAlt className="w-5 h-5" />;
+													case 'event_updated':
+														return <FaSyncAlt className="w-5 h-5" />;
+													case 'event_cancelled':
+														return <FaTimesCircle className="w-5 h-5" />;
+													case 'event_reminder':
+														return <FaClock className="w-5 h-5" />;
+													case 'volunteer_invitation':
+														return <FaUsers className="w-5 h-5" />;
+													case 'volunteer_approved':
+														return <FaCheckCircle className="w-5 h-5" />;
+													case 'volunteer_registered':
+														return <FaUserCheck className="w-5 h-5" />;
+													case 'volunteer_invitation_accepted':
+														return <FaCheckCircle className="w-5 h-5" />;
+													case 'donation_received':
+														return <FaHandHoldingHeart className="w-5 h-5" />;
+													case 'donation_success':
+														return <FaCreditCard className="w-5 h-5" />;
+													case 'feedback_deadline':
+														return <FaExclamationCircle className="w-5 h-5" />;
+													case 'attendance_recorded':
+														return <FaCheckCircle className="w-5 h-5" />;
+													case 'comment_added':
+														return <FaComment className="w-5 h-5" />;
+													case 'reaction_added':
+														return <FaThumbsUp className="w-5 h-5" />;
+													default:
+														return <FaBell className="w-5 h-5" />;
+												}
+											};
+											
+											const IconComponent = getNotificationIconComponent(notificationType);
 											
 											return (
 												<div 
@@ -641,9 +701,9 @@ const Header = () => {
 													}`}
 												>
 													<div className="flex items-start gap-3">
-														{/* Icon */}
-														<div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white shadow-md text-lg`}>
-															{icon}
+														{/* Icon - No background, maroon filled icon */}
+														<div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-[#800000]">
+															{IconComponent}
 														</div>
 														
 														{/* Content */}

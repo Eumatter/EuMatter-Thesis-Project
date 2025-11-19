@@ -293,49 +293,55 @@ html[data-font-size="extra-large"] {
     -webkit-filter: none !important;
   }
   
-  /* Blur ALL elements with mobile-menu-blur class when mobile menu is open - comprehensive selector */
-  body.mobile-menu-open .mobile-menu-blur,
+  /* Blur ALL elements with mobile-menu-blur class when mobile menu is open - but NOT header */
+  body.mobile-menu-open .mobile-menu-blur:not(header):not(header *),
   body.mobile-menu-open main.mobile-menu-blur,
   body.mobile-menu-open [role="main"].mobile-menu-blur,
   body.mobile-menu-open .main-content.mobile-menu-blur,
   body.mobile-menu-open section.mobile-menu-blur:not(header section),
   body.mobile-menu-open article.mobile-menu-blur:not(header article),
-  body.mobile-menu-open div.mobile-menu-blur:not(header div):not(.mobile-menu-overlay):not(.mobile-menu-slider),
-  body.mobile-menu-open span.mobile-menu-blur:not(header span),
-  body.mobile-menu-open p.mobile-menu-blur:not(header p),
-  body.mobile-menu-open h1.mobile-menu-blur:not(header h1),
-  body.mobile-menu-open h2.mobile-menu-blur:not(header h2),
-  body.mobile-menu-open h3.mobile-menu-blur:not(header h3),
-  body.mobile-menu-open h4.mobile-menu-blur:not(header h4),
-  body.mobile-menu-open h5.mobile-menu-blur:not(header h5),
-  body.mobile-menu-open h6.mobile-menu-blur:not(header h6),
-  body.mobile-menu-open ul.mobile-menu-blur:not(header ul),
-  body.mobile-menu-open ol.mobile-menu-blur:not(header ol),
-  body.mobile-menu-open li.mobile-menu-blur:not(header li),
-  body.mobile-menu-open img.mobile-menu-blur:not(header img),
-  body.mobile-menu-open button.mobile-menu-blur:not(header button),
-  body.mobile-menu-open a.mobile-menu-blur:not(header a) {
+  body.mobile-menu-open div.mobile-menu-blur:not(header div):not(header):not(.mobile-menu-overlay):not(.mobile-menu-slider) {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
   
-  /* Blur all nested content inside main elements with blur class */
-  body.mobile-menu-open main.mobile-menu-blur *,
-  body.mobile-menu-open [role="main"].mobile-menu-blur *,
-  body.mobile-menu-open .main-content.mobile-menu-blur * {
+  /* Blur all nested content inside blurred main elements */
+  body.mobile-menu-open main.mobile-menu-blur *:not(header *),
+  body.mobile-menu-open [role="main"].mobile-menu-blur *:not(header *),
+  body.mobile-menu-open .main-content.mobile-menu-blur *:not(header *),
+  body.mobile-menu-open section.mobile-menu-blur *:not(header *),
+  body.mobile-menu-open article.mobile-menu-blur *:not(header *),
+  body.mobile-menu-open div.mobile-menu-blur *:not(header *):not(.mobile-menu-overlay *):not(.mobile-menu-slider *) {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
   
-  /* Ensure header is always clear */
+  /* Blur root children (App wrapper, etc.) but NOT header - highest specificity */
+  body.mobile-menu-open #root > .mobile-menu-blur:not(header),
+  body.mobile-menu-open #root > .mobile-menu-blur *:not(header *):not(.mobile-menu-overlay):not(.mobile-menu-overlay *):not(.mobile-menu-slider):not(.mobile-menu-slider *) {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
+  /* Ensure header is ALWAYS clear - highest priority, must come after blur rules */
   body.mobile-menu-open header,
-  body.mobile-menu-open header * {
+  body.mobile-menu-open header *,
+  body.mobile-menu-open #root.mobile-menu-blur header,
+  body.mobile-menu-open #root.mobile-menu-blur header *,
+  header,
+  header *,
+  header.mobile-menu-blur,
+  header.mobile-menu-blur * {
     filter: none !important;
     -webkit-filter: none !important;
+    transition: none !important;
+    will-change: auto !important;
   }
   
   /* Ensure smooth transition when removing blur - applies to all elements */

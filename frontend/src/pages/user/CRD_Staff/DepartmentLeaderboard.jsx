@@ -195,12 +195,12 @@ const DepartmentLeaderboard = () => {
                     </button>
                 </div>
 
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                {/* Page Header */}
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Leaderboards</h1>
-                            <p className="text-gray-600 text-lg">Recognizing top-performing departments and their contributions</p>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">Leaderboards</h1>
+                            <p className="text-sm sm:text-base text-gray-600">Recognizing top-performing departments and their contributions</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">

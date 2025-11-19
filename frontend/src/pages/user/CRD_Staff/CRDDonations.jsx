@@ -406,65 +406,55 @@ const CRDDonations = () => {
                     </button>
                 </div>
 
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donations</h1>
-                            <p className="text-gray-600 text-lg">Manage and track all donation types across your organization</p>
-                        </div>
-                    </div>
+                {/* Page Header */}
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">Donations</h1>
+                    <p className="text-sm sm:text-base text-gray-600">Manage and track all donation types across your organization</p>
                 </div>
                 
                 {/* Tabs */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 mb-6 overflow-hidden">
-                    <div className="grid grid-cols-3 sm:flex sm:flex-wrap">
+                <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
+                    <div className="grid grid-cols-3">
                         <button
                             onClick={() => setActiveTab('wallet')}
-                            className={`px-4 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
+                            className={`px-4 py-4 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold transition-all duration-300 relative flex flex-col items-center justify-center gap-2 ${
                                 activeTab === 'wallet'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
+                                    ? 'text-[#800000] bg-gradient-to-br from-[#800000]/5 to-[#900000]/5'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
                             }`}
                         >
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                                <FaWallet className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'wallet' ? 'scale-110' : ''}`} />
-                                <span className="hidden sm:inline">Wallet</span>
-                            </div>
+                            <FaWallet className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'wallet' ? 'scale-110 text-[#800000]' : ''}`} />
+                            <span className="hidden sm:inline">Wallet</span>
                             {activeTab === 'wallet' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
                             )}
                         </button>
                         <button
                             onClick={() => setActiveTab('cashcheque')}
-                            className={`px-4 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
+                            className={`px-4 py-4 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold transition-all duration-300 relative flex flex-col items-center justify-center gap-2 ${
                                 activeTab === 'cashcheque'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
+                                    ? 'text-[#800000] bg-gradient-to-br from-[#800000]/5 to-[#900000]/5'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
                             }`}
                         >
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                                <FaMoneyBillWave className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'cashcheque' ? 'scale-110' : ''}`} />
-                                <span className="hidden sm:inline">Cash/Cheque</span>
-                            </div>
+                            <FaMoneyBillWave className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'cashcheque' ? 'scale-110 text-[#800000]' : ''}`} />
+                            <span className="hidden sm:inline">Cash/Cheque</span>
                             {activeTab === 'cashcheque' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
                             )}
                         </button>
                         <button
                             onClick={() => setActiveTab('inkind')}
-                            className={`px-4 py-4 sm:px-8 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
+                            className={`px-4 py-4 sm:px-6 sm:py-5 text-sm sm:text-base font-semibold transition-all duration-300 relative flex flex-col items-center justify-center gap-2 ${
                                 activeTab === 'inkind'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
+                                    ? 'text-[#800000] bg-gradient-to-br from-[#800000]/5 to-[#900000]/5'
+                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
                             }`}
                         >
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3">
-                                <FaBoxOpen className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'inkind' ? 'scale-110' : ''}`} />
-                                <span className="hidden sm:inline">In-Kind</span>
-                            </div>
+                            <FaBoxOpen className={`text-2xl sm:text-xl transition-transform duration-200 ${activeTab === 'inkind' ? 'scale-110 text-[#800000]' : ''}`} />
+                            <span className="hidden sm:inline">In-Kind</span>
                             {activeTab === 'inkind' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
                             )}
                         </button>
                     </div>
@@ -472,7 +462,7 @@ const CRDDonations = () => {
                 
                 {/* Filters */}
                 {(activeTab === 'wallet' || activeTab === 'inkind') && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-5 sm:p-6 mb-6">
+                    <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
                         <div className="flex flex-col sm:flex-row gap-4">
                             <div className="flex-1">
                                 <div className="relative">

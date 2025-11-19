@@ -537,82 +537,80 @@ const CRDDashboard = () => {
     ].filter(item => item.value > 0) // Only show segments with data
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: THEME_COLORS.whiteBg }}>
+        <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-                    <div>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                        <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>
-                    </div>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                {/* Page Header */}
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">Dashboard</h1>
+                    <p className="text-sm sm:text-base text-gray-600">Overview of operations, events, donations, and volunteer activities</p>
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5">
-                    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaClock className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaClock className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.pendingEvents}</p>
-                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Pending Reviews</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">{stats.pendingEvents}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending Reviews</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaCheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaCheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.approvedEvents}</p>
-                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Approved Events</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">{stats.approvedEvents}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Approved Events</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaMoneyBillWave className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
-                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Total Donations</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Donations</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaUserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.activeVolunteers}</p>
-                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Active Volunteers</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">{stats.activeVolunteers}</p>
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Active Volunteers</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main Content Grid - Aligned Heights */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 mb-4 sm:mb-5">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
                     {/* Left Column - Donations Chart */}
                     <div className="lg:col-span-7">
-                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border hover:shadow-md transition-all duration-200 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
-                                <div className="flex items-center space-x-2 sm:space-x-2.5">
-                                    <div className="flex items-center justify-center">
-                                        <FaHandHoldingHeart className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                        <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                                     </div>
                                     <div>
-                                        <h3 className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>Donations</h3>
-                                        <p className="text-[10px] sm:text-xs text-gray-600">
+                                        <h3 className="text-base sm:text-lg font-bold text-[#800000]">Donations</h3>
+                                        <p className="text-xs sm:text-sm text-gray-600">
                                             {donationFilter === 'weekly' ? 'Weekly donation trends' :
                                              donationFilter === 'monthly' ? 'Monthly donation trends' :
                                              'Yearly donation trends'}
@@ -621,7 +619,7 @@ const CRDDashboard = () => {
                                 </div>
                                 
                                 {/* Filter Buttons */}
-                                <div className="flex items-center space-x-1 rounded-lg p-1 bg-gray-50">
+                                <div className="flex items-center gap-1 rounded-lg p-1 bg-gray-50">
                                     <button
                                         onClick={() => {
                                             setDonationFilter('weekly')
@@ -809,15 +807,15 @@ const CRDDashboard = () => {
 
                     {/* Right Column - Users Chart - Same height as Donations */}
                     <div className="lg:col-span-5">
-                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border hover:shadow-md transition-all duration-200 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
-                                <div className="flex items-center space-x-2 sm:space-x-2.5">
-                                    <div className="flex items-center justify-center flex-shrink-0">
-                                        <FaUsers className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                        <FaUsers className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                                     </div>
                                     <div className="min-w-0">
-                                        <h3 className="text-base sm:text-lg lg:text-xl font-bold truncate" style={{ color: THEME_COLORS.maroon }}>Users</h3>
-                                        <p className="text-[10px] sm:text-xs truncate text-gray-600">User distribution</p>
+                                        <h3 className="text-base sm:text-lg font-bold truncate text-[#800000]">Users</h3>
+                                        <p className="text-xs sm:text-sm truncate text-gray-600">User distribution</p>
                                     </div>
                                 </div>
                                 
@@ -1122,15 +1120,15 @@ const CRDDashboard = () => {
                         </div>
 
                         {/* Quick Actions Card */}
-                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-5 border hover:shadow-xl transition-all duration-300" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <h4 className="text-sm sm:text-base font-bold mb-3 flex items-center">
-                                <span className="w-1 h-3 sm:h-4 rounded-full mr-2" style={{ backgroundColor: THEME_COLORS.maroon }}></span>
-                                <span style={{ color: THEME_COLORS.maroon }}>Quick Actions</span>
-                            </h4>
-                            <div className="space-y-2">
+                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-all duration-300">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-1 h-4 sm:h-5 rounded-full bg-[#800000]"></div>
+                                <h4 className="text-base sm:text-lg font-bold text-[#800000]">Quick Actions</h4>
+                            </div>
+                            <div className="space-y-2.5">
                                 <button
                                     onClick={() => handleQuickAction('review-events')}
-                                    className="w-full h-9 sm:h-10 flex items-center justify-center space-x-2 text-xs sm:text-sm font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 relative overflow-hidden"
+                                    className="w-full h-10 sm:h-11 flex items-center justify-center gap-2 text-sm sm:text-base font-semibold rounded-lg border-2 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
                                     style={{ 
                                         backgroundColor: THEME_COLORS.white,
                                         borderColor: THEME_COLORS.maroon,

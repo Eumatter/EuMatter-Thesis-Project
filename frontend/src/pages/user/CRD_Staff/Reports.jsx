@@ -479,69 +479,65 @@ const Reports = () => {
             <Header />
             
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Reports & Analytics</h1>
-                            <p className="text-gray-600 text-base sm:text-lg">Live analytics and demographics for events, donations, volunteers, and users</p>
-                        </div>
-                    </div>
+                {/* Page Header */}
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">Reports & Analytics</h1>
+                    <p className="text-sm sm:text-base text-gray-600">Live analytics and demographics for events, donations, volunteers, and users</p>
                 </div>
                 
                 {/* Key Metrics Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalEvents}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">{totalEvents}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Donations</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaUsers className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Volunteers</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalVolunteers.size}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">{totalVolunteers.size}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 hover:-translate-y-1">
                         <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-[#800000]/10 to-[#900000]/10">
+                                <FaUser className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Users</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalUsers}</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">{totalUsers}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-md border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
                     <div className="flex flex-wrap border-b border-gray-200 overflow-x-auto">
                         {[
                             { id: 'overview', label: 'Overview', icon: FaChartLine },
@@ -562,7 +558,7 @@ const Reports = () => {
                                             : 'text-gray-600 hover:text-[#800020] hover:bg-gray-50'
                                     }`}
                                 >
-                                    <Icon className="w-4 h-4 flex-shrink-0" />
+                                    <Icon className={`w-4 h-4 flex-shrink-0 ${activeTab === tab.id ? 'text-white' : 'text-[#800000]'}`} />
                                     <span>{tab.label}</span>
                                 </button>
                             )

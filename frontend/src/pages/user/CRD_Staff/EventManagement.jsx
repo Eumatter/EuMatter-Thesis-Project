@@ -506,39 +506,39 @@ const EventManagement = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                {/* Page Header */}
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Event Management</h1>
-                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">Event Management</h1>
+                            <p className="text-sm sm:text-base text-gray-600">Review and manage event proposals from departments</p>
                         </div>
-                        <div className="flex items-center space-x-4">
-                        <Button
-                            onClick={() => setShowCreateModal(true)}
-                            className="bg-red-900 hover:bg-red-800 text-white flex items-center space-x-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span>Create Event</span>
-                        </Button>
-                        {/* Back to Dashboard removed per CRD UX */}
+                        <div className="flex items-center">
+                            <Button
+                                onClick={() => setShowCreateModal(true)}
+                                className="bg-[#800000] hover:bg-[#900000] text-white flex items-center space-x-2 px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="text-sm sm:text-base">Create Event</span>
+                            </Button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Statistics Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                {/* Statistics Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm font-medium">Total Events</p>
-                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
+                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">
                                         {stats.total}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center flex-shrink-0 ml-3">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="iconGradientTotal" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -555,15 +555,15 @@ const EventManagement = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm font-medium">Pending Review</p>
-                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Pending Review</p>
+                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">
                                         {stats.pending}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center flex-shrink-0 ml-3">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -582,15 +582,15 @@ const EventManagement = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm font-medium">Approved</p>
-                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Approved</p>
+                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">
                                         {stats.approved}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center flex-shrink-0 ml-3">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientApproved" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -606,15 +606,15 @@ const EventManagement = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
+                        <div className="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                             <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-gray-600 text-sm font-medium">Declined</p>
-                                    <p className="text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Declined</p>
+                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#800000]">
                                         {stats.declined}
                                     </p>
                                 </div>
-                                <div className="flex items-center justify-center">
+                                <div className="flex items-center justify-center flex-shrink-0 ml-3">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientDeclined" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -632,8 +632,8 @@ const EventManagement = () => {
                 </div>
 
                 {/* Advanced Controls */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 mb-6 sm:mb-8">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
                         {/* Search Bar */}
                         <div className="flex-1 max-w-md">
                             <div className="relative">
@@ -716,7 +716,7 @@ const EventManagement = () => {
                     <div className="flex flex-wrap gap-2 mb-4">
                         <button
                             onClick={() => setFilter('all')}
-                            className="flex items-center space-x-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-200"
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-lg cursor-pointer transition-all duration-200 font-medium text-sm"
                             style={{ 
                                 backgroundColor: filter === 'all' ? 'transparent' : '#ffffff',
                                 backgroundImage: filter === 'all' ? 'linear-gradient(to bottom right, #800020, #9c0000)' : 'none',
