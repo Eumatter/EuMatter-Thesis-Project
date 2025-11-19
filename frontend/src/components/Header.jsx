@@ -75,31 +75,49 @@ const Header = () => {
             document.body.style.width = '100%';
             // Add blur class to body and all content when mobile menu is open
             if (isMobileMenuOpen) {
-                document.body.classList.add('mobile-menu-open');
-                
-                // Blur the root container - this will blur everything inside it
-                const rootElement = document.getElementById('root');
-                if (rootElement) {
-                    rootElement.classList.add('mobile-menu-blur');
-                }
-                
-                // Also blur the immediate child of root (App wrapper)
-                const appWrapper = rootElement?.firstElementChild;
-                if (appWrapper) {
-                    appWrapper.classList.add('mobile-menu-blur');
-                }
-                
-                // Blur header specifically
-                const header = document.querySelector('header');
-                if (header) {
-                    header.classList.add('mobile-menu-blur');
-                }
-                
-                // Blur all main content areas
-                const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
-                mainContents.forEach(content => {
-                    content.classList.add('mobile-menu-blur');
-                });
+                // Use setTimeout to ensure DOM is ready
+                setTimeout(() => {
+                    document.body.classList.add('mobile-menu-open');
+                    
+                    // Blur the root container - this will blur everything inside it
+                    const rootElement = document.getElementById('root');
+                    if (rootElement) {
+                        rootElement.classList.add('mobile-menu-blur');
+                    }
+                    
+                    // Also blur all direct children of root (App wrapper, etc.)
+                    if (rootElement) {
+                        Array.from(rootElement.children).forEach(child => {
+                            child.classList.add('mobile-menu-blur');
+                        });
+                    }
+                    
+                    // Blur header specifically
+                    const header = document.querySelector('header');
+                    if (header) {
+                        header.classList.add('mobile-menu-blur');
+                    }
+                    
+                    // Blur all main content areas and sections
+                    const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
+                    mainContents.forEach(content => {
+                        // Skip menu overlay elements
+                        if (!content.closest('.mobile-menu-overlay') && 
+                            !content.classList.contains('mobile-menu-overlay') &&
+                            !content.classList.contains('mobile-menu-slider')) {
+                            content.classList.add('mobile-menu-blur');
+                        }
+                    });
+                    
+                    // Also blur body's direct children divs
+                    Array.from(document.body.children).forEach(child => {
+                        if (child.id !== 'root' && 
+                            !child.classList.contains('mobile-menu-overlay') &&
+                            !child.classList.contains('mobile-menu-slider')) {
+                            child.classList.add('mobile-menu-blur');
+                        }
+                    });
+                }, 0);
             }
         } else {
             document.body.style.overflow = 'unset';
@@ -111,11 +129,9 @@ const Header = () => {
             const rootElement = document.getElementById('root');
             if (rootElement) {
                 rootElement.classList.remove('mobile-menu-blur');
-            }
-            
-            const appWrapper = rootElement?.firstElementChild;
-            if (appWrapper) {
-                appWrapper.classList.remove('mobile-menu-blur');
+                Array.from(rootElement.children).forEach(child => {
+                    child.classList.remove('mobile-menu-blur');
+                });
             }
             
             const header = document.querySelector('header');
@@ -123,9 +139,14 @@ const Header = () => {
                 header.classList.remove('mobile-menu-blur');
             }
             
-            const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
+            const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
             mainContents.forEach(content => {
                 content.classList.remove('mobile-menu-blur');
+            });
+            
+            // Remove blur from body's direct children
+            Array.from(document.body.children).forEach(child => {
+                child.classList.remove('mobile-menu-blur');
             });
         }
         return () => {
@@ -137,11 +158,9 @@ const Header = () => {
             const rootElement = document.getElementById('root');
             if (rootElement) {
                 rootElement.classList.remove('mobile-menu-blur');
-            }
-            
-            const appWrapper = rootElement?.firstElementChild;
-            if (appWrapper) {
-                appWrapper.classList.remove('mobile-menu-blur');
+                Array.from(rootElement.children).forEach(child => {
+                    child.classList.remove('mobile-menu-blur');
+                });
             }
             
             const header = document.querySelector('header');
@@ -149,9 +168,13 @@ const Header = () => {
                 header.classList.remove('mobile-menu-blur');
             }
             
-            const mainContents = document.querySelectorAll('main, [role="main"], .main-content');
+            const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article, div[class*="container"], div[class*="wrapper"]');
             mainContents.forEach(content => {
                 content.classList.remove('mobile-menu-blur');
+            });
+            
+            Array.from(document.body.children).forEach(child => {
+                child.classList.remove('mobile-menu-blur');
             });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
@@ -970,8 +993,8 @@ const Header = () => {
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
                                 animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(24px)',
-                                WebkitBackdropFilter: 'blur(24px)',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
