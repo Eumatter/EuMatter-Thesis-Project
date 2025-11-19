@@ -1009,23 +1009,24 @@ const CRDDonations = () => {
             {/* Details Modal - Higher z-index than header (z-[100]) */}
             {showModal && selectedDonation && (
                 <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 md:pt-28 pb-8 backdrop-blur-md bg-white/30 animate-modal-in"
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-black/20 animate-modal-in"
                     onClick={() => setShowModal(false)}
                     style={{ 
                         zIndex: 200
                     }}
                 >
                     <div 
-                        className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-200/50 animate-slide-down flex flex-col"
+                        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-gray-200/50 animate-slide-down flex flex-col mx-auto my-auto"
                         onClick={(e) => e.stopPropagation()}
                         style={{ 
                             zIndex: 201,
-                            maxHeight: 'calc(100vh - 6rem)'
+                            maxHeight: '90vh',
+                            maxWidth: 'calc(100vw - 1.5rem)'
                         }}
                     >
-                        <div className="flex-shrink-0 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white p-5 sm:p-6 rounded-t-2xl">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl sm:text-2xl font-bold">Donation Details</h2>
+                        <div className="flex-shrink-0 bg-gradient-to-r from-[#800000] to-[#9c0000] text-white p-4 sm:p-5 md:p-6 rounded-t-2xl">
+                            <div className="flex items-center justify-between gap-3">
+                                <h2 className="text-lg sm:text-xl md:text-2xl font-bold">Donation Details</h2>
                                 <button
                                     onClick={() => setShowModal(false)}
                                     className="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 flex-shrink-0"
@@ -1035,9 +1036,9 @@ const CRDDonations = () => {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 sm:space-y-6">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-5 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
                             {/* Donor Information Card */}
-                            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Donor Information</h3>
                                 <div className="space-y-3">
                                     <div>
@@ -1052,7 +1053,7 @@ const CRDDonations = () => {
                             </div>
 
                             {/* Donation Information Card */}
-                            <div className="bg-gradient-to-br from-red-50/50 to-white rounded-xl p-5 border border-red-100 shadow-sm">
+                            <div className="bg-gradient-to-br from-red-50/50 to-white rounded-xl p-4 sm:p-5 border border-red-100 shadow-sm">
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Donation Information</h3>
                                 {activeTab === 'wallet' && (
                                     <div className="space-y-4">
@@ -1130,7 +1131,7 @@ const CRDDonations = () => {
                             </div>
 
                             {/* Additional Information Card */}
-                            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
                                 <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Additional Information</h3>
                                 <div className="space-y-3">
                                     <div>

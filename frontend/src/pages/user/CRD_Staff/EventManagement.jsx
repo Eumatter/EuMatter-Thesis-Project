@@ -519,7 +519,7 @@ const EventManagement = () => {
                                         {stats.total}
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-br from-[#800020]/10 to-[#9c0000]/10 rounded-xl p-3 border border-[#800020]/20 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="flex items-center justify-center">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="iconGradientTotal" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -544,7 +544,7 @@ const EventManagement = () => {
                                         {stats.pending}
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="flex items-center justify-center">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientPending" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -552,8 +552,9 @@ const EventManagement = () => {
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientPending)" fill="none" strokeWidth="2" />
-                                        <path d="M12 6v6l4 2" stroke="url(#gradientPending)" fill="none" strokeWidth="2.5" strokeLinecap="round" />
+                                        <circle cx="12" cy="12" r="10" fill="url(#gradientPending)" />
+                                        <circle cx="12" cy="12" r="1.5" fill="white" />
+                                        <path d="M12 6 L12 12 L16 14 L12 12 Z" fill="white" />
                                     </svg>
                                 </div>
                             </div>
@@ -567,7 +568,7 @@ const EventManagement = () => {
                                         {stats.approved}
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-3 border border-green-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="flex items-center justify-center">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientApproved" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -575,9 +576,8 @@ const EventManagement = () => {
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <circle cx="12" cy="12" r="10" fill="url(#gradientApproved)" opacity="0.1" />
-                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientApproved)" fill="none" strokeWidth="2" />
-                                        <path d="M9 12l2 2 4-4" stroke="url(#gradientApproved)" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        <circle cx="12" cy="12" r="10" fill="url(#gradientApproved)" />
+                                        <path d="M9 12 L11 14 L15 10 L13 10 L11 12 Z" fill="white" />
                                     </svg>
                                 </div>
                             </div>
@@ -591,7 +591,7 @@ const EventManagement = () => {
                                         {stats.declined}
                                     </p>
                                 </div>
-                                <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-3 border border-red-200/50 shadow-sm transition-all duration-300 hover:shadow-md" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div className="flex items-center justify-center">
                                     <svg className="w-7 h-7 transition-transform duration-300 hover:scale-110" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <defs>
                                             <linearGradient id="gradientDeclined" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -599,9 +599,8 @@ const EventManagement = () => {
                                                 <stop offset="100%" stopColor="#9c0000" />
                                             </linearGradient>
                                         </defs>
-                                        <circle cx="12" cy="12" r="10" fill="url(#gradientDeclined)" opacity="0.1" />
-                                        <circle cx="12" cy="12" r="10" stroke="url(#gradientDeclined)" fill="none" strokeWidth="2" />
-                                        <path d="M15 9l-6 6M9 9l6 6" stroke="url(#gradientDeclined)" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                        <circle cx="12" cy="12" r="10" fill="url(#gradientDeclined)" />
+                                        <path d="M9 9 L15 15 M15 9 L9 15" stroke="white" strokeWidth="2" strokeLinecap="round" />
                                     </svg>
                                 </div>
                             </div>

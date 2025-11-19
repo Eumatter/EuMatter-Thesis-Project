@@ -218,7 +218,7 @@ const DepartmentLeaderboard = () => {
                                         backgroundClip: 'text'
                                     } : {}}
                                 >
-                                    Podium View
+                                    Podium
                                 </button>
                                 <button
                                     onClick={() => setViewMode('table')}
@@ -234,7 +234,7 @@ const DepartmentLeaderboard = () => {
                                         backgroundClip: 'text'
                                     } : {}}
                                 >
-                                    Table View
+                                    Table
                                 </button>
                             </div>
                             <select

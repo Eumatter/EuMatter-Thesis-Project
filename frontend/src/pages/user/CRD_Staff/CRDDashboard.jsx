@@ -574,7 +574,7 @@ const CRDDashboard = () => {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5">
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                            <div className="flex items-center justify-center flex-shrink-0">
                                 <FaClock className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -586,7 +586,7 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                            <div className="flex items-center justify-center flex-shrink-0">
                                 <FaCheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -598,7 +598,7 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                            <div className="flex items-center justify-center flex-shrink-0">
                                 <FaMoneyBillWave className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -610,7 +610,7 @@ const CRDDashboard = () => {
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
                         <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                            <div className="flex items-center justify-center flex-shrink-0">
                                 <FaUserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -628,7 +628,7 @@ const CRDDashboard = () => {
                         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border hover:shadow-md transition-all duration-200 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
                                 <div className="flex items-center space-x-2 sm:space-x-2.5">
-                                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                    <div className="flex items-center justify-center">
                                         <FaHandHoldingHeart className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div>
@@ -833,7 +833,7 @@ const CRDDashboard = () => {
                         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border hover:shadow-md transition-all duration-200 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
                                 <div className="flex items-center space-x-2 sm:space-x-2.5">
-                                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                    <div className="flex items-center justify-center flex-shrink-0">
                                         <FaUsers className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div className="min-w-0">
@@ -1032,7 +1032,7 @@ const CRDDashboard = () => {
                         {/* Calendar Card */}
                         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 border hover:shadow-md transition-all duration-200" style={{ borderColor: THEME_COLORS.maroonBg }}>
                             <div className="flex items-center space-x-2 sm:space-x-2.5 mb-3 sm:mb-4">
-                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                <div className="flex items-center justify-center">
                                     <FaCalendarAlt className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                 </div>
                                 <h3 className="text-base sm:text-lg font-bold" style={{ color: THEME_COLORS.maroon }}>Calendar</h3>
@@ -1298,7 +1298,7 @@ const CRDDashboard = () => {
                             {/* Header - Fixed */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
                                 <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md" style={{ backgroundColor: THEME_COLORS.white, border: `2px solid ${THEME_COLORS.maroon}` }}>
+                                    <div className="flex items-center justify-center">
                                         <FaListAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div>
