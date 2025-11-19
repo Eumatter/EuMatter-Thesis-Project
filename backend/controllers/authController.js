@@ -435,8 +435,34 @@ export const login = async (req, res) => {
         // This allows both "A22-34197@student.mseuf.edu.ph" and "a22-34197@student.mseuf.edu.ph" to work
         // But matches the stored format (uppercase first letter for students)
         const normalizedEmail = normalizeEmail(email);
+        console.log(`[Login] Original email: ${email}, Normalized: ${normalizedEmail}`);
 
-        const user = await userModel.findOne({ email: normalizedEmail });
+        // Try exact match first (with normalized email)
+        let user = await userModel.findOne({ email: normalizedEmail });
+        
+        // If not found, try case-insensitive search as fallback (in case email was stored with different casing)
+        if (!user) {
+            console.log(`[Login] Exact match not found, trying case-insensitive search for: ${normalizedEmail}`);
+            // Escape special regex characters in email
+            const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            user = await userModel.findOne({ 
+                email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
+            });
+            
+            if (user) {
+                console.log(`[Login] User found with case-insensitive search. Stored email: ${user.email}, Normalized: ${normalizedEmail}`);
+                // Update the email in database to normalized version for consistency
+                if (user.email !== normalizedEmail) {
+                    console.log(`[Login] Updating email in database from "${user.email}" to "${normalizedEmail}" for consistency`);
+                    user.email = normalizedEmail;
+                    await user.save();
+                }
+            } else {
+                console.log(`[Login] User not found for email: ${normalizedEmail} (tried both exact and case-insensitive)`);
+            }
+        } else {
+            console.log(`[Login] User found: ${user.email}, Role: ${user.role}, Password hash length: ${user.password?.length || 0}`);
+        }
         const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
         
@@ -453,6 +479,27 @@ export const login = async (req, res) => {
                 responseStatus: 401,
                 success: false,
                 errorMessage: 'User not found'
+            }).catch(err => console.error('Failed to log audit:', err));
+            return res.json({ success: false, message: "Invalid email or password" });
+        }
+
+        // Verify user has a password hash
+        if (!user.password || user.password.length < 20) {
+            console.error(`User ${user._id} (${user.email}) has invalid password hash`);
+            createAuditLog({
+                userId: user._id,
+                userEmail: user.email,
+                userRole: user.role,
+                actionType: 'LOGIN_FAILURE',
+                resourceType: 'user',
+                resourceId: user._id,
+                ipAddress: clientIp,
+                userAgent: userAgent,
+                requestMethod: req.method,
+                requestEndpoint: req.path,
+                responseStatus: 401,
+                success: false,
+                errorMessage: 'Invalid password hash in database'
             }).catch(err => console.error('Failed to log audit:', err));
             return res.json({ success: false, message: "Invalid email or password" });
         }

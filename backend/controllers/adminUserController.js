@@ -105,6 +105,7 @@ export const createUser = async (req, res) => {
 
         // Normalize email to match login normalization (uppercase first letter for MSEUF students, lowercase for others)
         const normalizedEmail = normalizeEmail(email);
+        console.log(`[Admin Create User] Original email: ${email}, Normalized: ${normalizedEmail}`);
 
         // Check if user already exists (use normalized email)
         const existingUser = await userModel.findOne({ email: normalizedEmail });
@@ -112,21 +113,87 @@ export const createUser = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User with this email already exists' });
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // Validate and map role - userModel only accepts specific enum values
+        const validRoles = ['User', 'System Administrator', 'CRD Staff', 'Department/Organization', 'Auditor'];
+        let finalRole = role;
+        let mseufCategory = '';
+        let outsiderCategory = '';
+        
+        // Map legacy role names to valid enum values
+        if (role === 'student' || role === 'faculty') {
+            finalRole = 'User';
+            mseufCategory = role === 'student' ? 'Student' : 'Faculty';
+        } else if (role === 'alumni') {
+            finalRole = 'User';
+            outsiderCategory = 'Alumni';
+        } else if (!validRoles.includes(role)) {
+            return res.status(400).json({ success: false, message: `Invalid role. Valid roles are: ${validRoles.join(', ')}` });
+        }
+
+        // Hash password with proper error handling
+        let hashedPassword;
+        try {
+            if (!password || password.length === 0) {
+                return res.status(400).json({ success: false, message: 'Password is required' });
+            }
+            hashedPassword = await bcrypt.hash(password, 10);
+            // Verify hash was created (should be ~60 characters for bcrypt)
+            if (!hashedPassword || hashedPassword.length < 50) {
+                throw new Error('Password hash appears invalid');
+            }
+        } catch (hashError) {
+            console.error('Error hashing password:', hashError);
+            return res.status(500).json({ success: false, message: 'Failed to process password' });
+        }
 
         // Create new user (use normalized email)
         const newUser = new userModel({
             name: `${firstName} ${lastName}`.trim(),
             email: normalizedEmail,
             password: hashedPassword,
-            role,
+            role: finalRole,
             isAccountVerified: true, // Auto-verify admin-created accounts
+            ...(mseufCategory ? { mseufCategory } : {}),
+            ...(outsiderCategory ? { outsiderCategory } : {}),
             ...(role === 'faculty' || role === 'student' ? { department } : {}),
             ...(role === 'Department/Organization' ? { department: department || organization } : {})
         });
 
-        await newUser.save();
+        // Save user with error handling
+        try {
+            await newUser.save();
+        } catch (saveError) {
+            console.error('Error saving user:', saveError);
+            // Check if it's a validation error
+            if (saveError.name === 'ValidationError') {
+                const errors = Object.values(saveError.errors).map(err => err.message).join(', ');
+                return res.status(400).json({ success: false, message: `Validation error: ${errors}` });
+            }
+            return res.status(500).json({ success: false, message: 'Failed to create user', error: saveError.message });
+        }
+
+        // Verify user was saved correctly by fetching it back
+        const savedUser = await userModel.findById(newUser._id);
+        if (!savedUser) {
+            return res.status(500).json({ success: false, message: 'User was not saved correctly' });
+        }
+
+        // Verify email was saved with normalized version
+        if (savedUser.email !== normalizedEmail) {
+            console.error(`[Admin Create User] Email mismatch! Expected: ${normalizedEmail}, Stored: ${savedUser.email}`);
+            // Fix it by updating the email
+            savedUser.email = normalizedEmail;
+            await savedUser.save();
+            console.log(`[Admin Create User] Fixed email in database: ${savedUser.email}`);
+        }
+
+        // Verify password was saved (should be a hash, not plain text)
+        if (!savedUser.password || savedUser.password.length < 20) {
+            console.error(`[Admin Create User] Password hash invalid for user ${savedUser._id}. Hash length: ${savedUser.password?.length || 0}`);
+            return res.status(500).json({ success: false, message: 'Password was not saved correctly' });
+        }
+        
+        console.log(`[Admin Create User] User created successfully: ${savedUser.email}, Role: ${savedUser.role}, Password hash length: ${savedUser.password.length}`);
 
         // Log user creation - don't await, fire and forget
         const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
