@@ -1,6 +1,6 @@
 # 📋 Project Review  
 **Title:** EuMatter - Community Event Management System  
-**Last Updated:** November 2025  
+**Last Updated:** November 2025
 **Review Date:** November 2025
 
 ---
@@ -12,24 +12,28 @@
 - **Database:** MongoDB with Mongoose ODM v8.18.1
 - **Authentication:** JWT with httpOnly cookies (7-day expiry), secure/sameSite config by env
 - **Role System:** 5 defined roles; enforced by modular middleware (`userAuth`, `roleAuth`)
-- **Payment Integration:** PayMongo API v1 (GCash, PayMaya, Cards, Bank Transfers)
-- **File Uploads:** Multer v2.0.2, document/image handling
-- **Email Services:** Nodemailer for OTP/notifications
+- **Payment Integration:** PayMongo API v1 (GCash, PayMaya, Cards, Bank Transfers, QRPh, Billease)
+- **File Uploads:** Multer v2.0.2, document/image handling (stored as base64)
+- **Email Services:** Nodemailer for OTP/notifications with connection verification
 - **Security:** Express-rate-limit v7.5.1 (multi-tier, OTP-specific)
-- **API Structure:** Modular route/controllers for users, donations, events, volunteers; webhook support
+- **API Structure:** Modular route/controllers for users, donations, events, volunteers, wallets, audit logs, feedback, push notifications, Facebook integration; webhook support
 - **Error Handling:** Central error middleware, Multer/file errors, environment-based responses
+- **Scheduled Tasks:** Reminder scheduler, maintenance scheduler, feedback scheduler, QR code scheduler
+- **Additional Features:** Audit logging system, department wallet management, push notifications, Facebook integration, in-kind donations, volunteer attendance tracking
 
 ### **Frontend (React / Vite)**
 - **Framework:** React 19.1.1 + Vite v7.1.2
-- **Routing:** React Router DOM v7.8.2, with nested/protected routes
+- **Routing:** React Router DOM v7.8.2, with nested/protected routes (no lazy loading)
 - **State:** Context API global state; role-aware dashboard redirection
 - **Styling:** TailwindCSS v4.1.13
 - **UI:** FontAwesome, Framer Motion, modern reusable components
-- **Notifications:** Toastify for all interactions
+- **Notifications:** Toastify for all interactions, push notification support
 - **Forms:** Controlled, with loading state + client-side required validation
 - **Component Structure:** Pages for each major role and function; context/provider in `AppContext.jsx`
 - **Payment UI:** Modular donation form, payment processing feedback, receipt PDF download
 - **Guarding:** Granular protected routes (`ProtectedRoute.jsx`) - auto role redirects; context re-checks
+- **Additional Features:** PWA support, maintenance mode, QR code scanning, social interactions (comments, reactions), rich text editor, audit log viewing
+- **Dependencies:** DOMPurify installed but not consistently used, React Query (@tanstack/react-query) available
 
 ---
 
@@ -77,28 +81,31 @@
 - OTP model/controller alignment; robust verify/reset flows (+ error feedback)
 - Central, environment-based cookie setup
 - Multer/file upload error routes tested and integrated
-- Full CORS allowlist fallback for localhost/dev
+- Full CORS allowlist fallback for localhost/dev (including Vercel preview domains)
 - Universal express.urlencoded body parsing added
 - Env DB connection observability (events, error tracking)
 - Auth middleware always populates req.user
 - Rate limiting tiers per route - granular config
-- Enhanced mailer config/error handling; robust OTP flow
+- Enhanced mailer config/error handling; robust OTP flow with connection verification
 - Route guards and redirect logic (frontend: auto role dashboard fallback)
 - Resolved critical dependency issues (express-rate-limit, multer)
-- Donation/payment integration: dev fallback, card sources, improved error handling
-- Database: index on `paymongoReferenceId`; preparation for further indexing
+- Donation/payment integration: dev fallback, card sources, improved error handling, cash donation support
+- Database: indexes on `paymongoReferenceId`, `auditLogModel` (multiple compound + text indexes), `departmentWalletModel`, `subscriptionModel`, `pushSubscriptionModel`, `volunteerAttendanceModel`
 - UI: Quick Actions & Stats for each dashboard; improved async feedback; loading spinners everywhere
+- New features: Audit logging system, department wallet management, push notifications, Facebook integration, maintenance mode scheduler, feedback scheduler, QR code scheduler
+- Pagination implemented in: `adminUserController.getUsers()`, `inKindDonationController.getAllInKindDonations()`, `auditLogController.getAuditLogs()`, `notificationController.listMyNotifications()` (with pagination flag)
 
 ---
 
 ## 🚨 Areas for Improvement
 
 ### **Security & DevOps**
-- **Env var validation at boot** (currently missing; risk of runtime errors)
-  - No validation for required env vars (MONGO_URI, JWT_SECRET, PAYMONGO_SECRET_KEY, etc.)
+- **Env var validation at boot** (partial implementation; risk of runtime errors)
+  - Server.js checks and warns for `PAYMONGO_SECRET_KEY`, `BACKEND_URL`, `FRONTEND_URL` (lines 205-213) but only warns, doesn't fail fast
+  - No validation for required env vars (MONGO_URI, JWT_SECRET, etc.)
   - Server may start but fail at runtime when accessing missing env vars
   - PayMongo config throws errors but only when used, not at startup
-  - Only PORT is validated (line 190-194 in server.js), other critical vars are not checked
+  - Email service verification exists but is non-blocking (setImmediate with timeout)
 - **Helmet.js** headers not yet implemented for extra protection
   - Missing security headers (X-Content-Type-Options, X-Frame-Options, CSP, etc.)
   - No protection against XSS, clickjacking, MIME sniffing
@@ -113,10 +120,12 @@
   - DOMPurify is installed in frontend but not consistently used
 - **Webhook security**
   - PayMongo webhook endpoint (`/api/donations/webhook`) lacks signature verification
+  - TODO comment exists in code (line 1414-1420 in donationController.js) indicating planned implementation
   - Webhook endpoint is public without authentication/verification
   - No rate limiting on webhook endpoint
   - Risk of fake webhook calls modifying donation status
   - PayMongo provides webhook signature headers that should be verified
+  - Audit logging exists for webhook events but doesn't prevent unauthorized access
 - **API key management/rotation** (manual in .env; automate + audit trail recommended)
 - **Mixed authentication middleware**
   - Both `auth.js` (Bearer token) and `userAuth.js` (cookie) exist
@@ -135,30 +144,48 @@
 
 ### **Performance & Scaling**
 - **Database Indexing**
-  - Only `paymongoReferenceId`, `notifications.userId`, `pushSubscriptionModel` (userId, endpoint), `volunteerAttendanceModel` (eventId, userId, date), and `subscriptionModel` (userId, scope, targetId) are indexed
-  - Missing indexes on frequently queried fields:
-    - `userModel`: email (unique but no explicit index), role, createdAt, department
+  - **Existing indexes:**
+    - `donationModel`: `paymongoReferenceId`
+    - `notificationModel`: `userId` (implicit via schema)
+    - `pushSubscriptionModel`: `userId + isActive`, `endpoint`
+    - `volunteerAttendanceModel`: `eventId + userId + date`, `event + volunteer + date`, `qrCode`
+    - `subscriptionModel`: `userId + scope + targetId` (unique compound)
+    - `departmentWalletModel`: `userId`, `isActive`
+    - `auditLogModel`: `timestamp + priority`, `category + timestamp`, `userId + timestamp`, `actionType + timestamp`, `success + timestamp`, text index on `actionType + userEmail + resourceType + errorMessage`
+  - **Missing indexes on frequently queried fields:**
+    - `userModel`: email (unique constraint but no explicit index), role, createdAt, department
     - `eventModel`: createdBy, status, startDate, endDate, createdAt, eventCategory
     - `donationModel`: user, event, status, createdAt, paymentMethod, recipientType, department
-    - `volunteerAttendanceModel`: userId (for user history queries)
-  - No compound indexes for common query patterns (e.g., status + createdAt, createdBy + status)
-  - No text indexes for search functionality
+    - `volunteerAttendanceModel`: userId (for user history queries - only has compound indexes)
+  - **Missing compound indexes for common query patterns:**
+    - `eventModel`: `createdBy + status`, `status + createdAt`, `eventCategory + status`
+    - `donationModel`: `user + status`, `event + status`, `status + createdAt`, `recipientType + department`
+    - `userModel`: `role + department`, `role + createdAt`
 - **Query optimization** (large list endpoints, e.g., users, events)
-  - `getEvents()` in eventController fetches ALL events without pagination (line 129)
-  - `getUserEvents()` fetches ALL user events without pagination (line 148)
-  - `getMyDonations()` fetches all donations for a user without pagination
+  - `getEvents()` in eventController fetches ALL events without pagination
+  - `getUserEvents()` fetches ALL user events without pagination
+  - `getMyDonations()` fetches all donations for a user without pagination (filters out pending but no pagination)
   - Multiple populate operations without limit could be slow
-  - Only `adminUserController.getUsers()` and `inKindDonationController` implement pagination
-  - `notificationController` has pagination but limited to 100 items max
+  - **Pagination implemented in:**
+    - `adminUserController.getUsers()` - full pagination with page, limit, search, role filter
+    - `inKindDonationController.getAllInKindDonations()` - full pagination
+    - `auditLogController.getAuditLogs()` - full pagination with filtering
+    - `notificationController.listMyNotifications()` - pagination with skip/limit (max 100 items), optional paginated flag
+  - **Still missing pagination:**
+    - `eventController.getEvents()` - fetches all events
+    - `eventController.getUserEvents()` - fetches all user events
+    - `donationController.getMyDonations()` - fetches all user donations
+    - Other list endpoints may also lack pagination
 - **No connection pooling** (DB, mail, etc) or caching layer for high-traffic
   - MongoDB connection uses default pooling (no explicit config)
   - No Redis or in-memory caching for frequently accessed data
   - No query result caching
   - No connection pool size configuration
-- **No pagination** for list endpoints (risk: large data, slow loads)
-  - Events, donations, volunteers, notifications all lack pagination (except notifications which has basic pagination)
-  - Risk of memory issues and slow response times as data grows
-  - Frontend may struggle with large datasets
+- **Pagination partially implemented** (risk: large data, slow loads on some endpoints)
+  - Pagination exists for: users (admin), in-kind donations, audit logs, notifications
+  - Still missing pagination for: events list, user events, user donations, volunteers list
+  - Risk of memory issues and slow response times as data grows on unpaginated endpoints
+  - Frontend may struggle with large datasets from unpaginated endpoints
 - **Inefficient data storage**
   - Images stored as base64 strings in database (eventModel.image, proposalDocument)
   - User profile images also stored as base64
@@ -168,11 +195,12 @@
   - No image compression or optimization
 
 ### **Frontend Performance**
-- **No lazy loading** - all routes imported directly in `App.jsx`
+- **No lazy loading** - all routes imported directly in `App.jsx` (confirmed: no `React.lazy()` usage)
   - All 30+ page components loaded on initial bundle
   - Large initial bundle size, slower first load
   - Should use `React.lazy()` and `Suspense` for route-based code splitting
   - No code splitting implemented despite Vite support
+  - React Query (@tanstack/react-query) is installed but may not be fully utilized for caching
 - **Minimal use of React.memo** - potential unnecessary re-renders
   - Some components use `useMemo` and `useCallback` (UserDashboard, DepartmentDashboard, CommentModal)
   - List components (events, donations, users) not memoized
@@ -207,13 +235,14 @@
   - ESLint configured for frontend only
   - Backend code has no linting rules
   - Inconsistent code style and potential bugs
-- **No error/health monitoring or logs** (just console.log)
+- **Limited error/health monitoring** (console.log only)
   - All logging via `console.log/error`
   - No structured logging (Winston, Pino, Bunyan)
   - No log levels, rotation, or persistence
   - No error tracking service (Sentry, Rollbar)
-  - No health check endpoint (`/health`, `/status`)
+  - No health check endpoint (`/health`, `/status`) - confirmed not found
   - No metrics or performance monitoring
+  - Audit logging system exists for user actions but not for system health
 
 ---
 
@@ -221,10 +250,10 @@
 
 ### **Backend**
 - **Controllers are still large** (e.g., authController, donationController)
-  - `donationController.js`: 1650+ lines, handles multiple payment flows, webhooks, receipts
-  - `eventController.js`: 820+ lines, multiple responsibilities (CRUD, analytics, volunteers)
+  - `donationController.js`: 1900+ lines, handles multiple payment flows, webhooks, receipts, cash donations
+  - `eventController.js`: 900+ lines, multiple responsibilities (CRUD, analytics, volunteers, feedback, QR codes)
   - `authController.js`: 672+ lines, handles registration, login, OTP, password reset
-  - Should be split into smaller, focused modules (e.g., paymentService, receiptService)
+  - Should be split into smaller, focused modules (e.g., paymentService, receiptService, webhookService)
 - **Error handling logic is partially repetitive** and could be DRYed out
   - Similar try-catch blocks across controllers
   - Inconsistent error response formats (some use `success: false`, others don't)
@@ -240,8 +269,9 @@
   - User input directly used in queries and responses
   - DOMPurify available in frontend but not used consistently
   - No sanitization for comments, descriptions, event titles
-- **No compound indexes** or DB-level constraints beyond what's required
-  - Missing indexes for common query combinations
+- **Compound indexes partially implemented**
+  - Good compound indexes exist in `auditLogModel` and `volunteerAttendanceModel`
+  - Missing compound indexes for common query patterns in `eventModel`, `donationModel`, `userModel`
   - No unique constraints beyond email
   - No partial indexes for filtered queries
 - **Inconsistent response formats**
@@ -279,8 +309,9 @@
 
 ### **Critical (Before Production)**
 1. **Environment variable validation**
+   - Enhance existing warnings in `server.js` to fail fast for critical vars
    - Create `config/envValidator.js` to check all required vars at startup
-   - Fail fast with clear error messages
+   - Fail fast with clear error messages for MONGO_URI, JWT_SECRET, etc.
    - Document required vs optional variables
 
 2. **Webhook security**
@@ -295,14 +326,15 @@
    - Sanitize user input (especially for regex queries)
 
 4. **Database indexes**
-   - Add indexes: `userModel.email`, `userModel.role`, `eventModel.createdBy`, `eventModel.status`, `donationModel.user`, `donationModel.status`
-   - Create compound indexes for common queries
+   - Add indexes: `userModel.email` (explicit), `userModel.role`, `userModel.department`, `eventModel.createdBy`, `eventModel.status`, `eventModel.eventCategory`, `donationModel.user`, `donationModel.event`, `donationModel.status`, `volunteerAttendanceModel.userId`
+   - Create compound indexes: `eventModel` (createdBy + status, status + createdAt), `donationModel` (user + status, event + status, status + createdAt), `userModel` (role + department)
    - Monitor slow queries and add indexes as needed
 
 5. **Pagination for list endpoints**
-   - Implement pagination in `getEvents()`, `getUserEvents()`, `getMyDonations()`
-   - Add query params: `page`, `limit`, `sort`
+   - Implement pagination in `eventController.getEvents()`, `eventController.getUserEvents()`, `donationController.getMyDonations()`
+   - Add query params: `page`, `limit`, `sort` (follow pattern from `adminUserController.getUsers()`)
    - Return metadata: `total`, `totalPages`, `currentPage`
+   - Review other list endpoints for pagination needs
 
 ### **High Priority**
 6. **Security headers (Helmet.js)**
@@ -393,33 +425,38 @@
 ## 🎯 Overall Assessment
 
 ### **Status:**
-A well-architected, modular, and modern MERN-stack system with feature-completeness for community event management, donations (with robust payments), and multi-role operations. The codebase demonstrates good separation of concerns, modern React patterns, and comprehensive payment integration.
+A well-architected, modular, and modern MERN-stack system with feature-completeness for community event management, donations (with robust payments), and multi-role operations. The codebase demonstrates good separation of concerns, modern React patterns, and comprehensive payment integration. Recent additions include audit logging, wallet management, push notifications, Facebook integration, and various schedulers for automated tasks.
 
 ### **Strengths:**
 - ✅ Clean modular architecture (routes, controllers, models)
-- ✅ Comprehensive payment integration (PayMongo)
+- ✅ Comprehensive payment integration (PayMongo with multiple payment methods)
 - ✅ Role-based access control (backend + frontend)
 - ✅ Modern React with Context API
 - ✅ PWA support configured
 - ✅ Rate limiting implemented
 - ✅ Secure cookie handling
+- ✅ Audit logging system for tracking user actions
+- ✅ Department wallet management for multi-wallet support
+- ✅ Scheduled tasks (reminders, maintenance, feedback, QR codes)
+- ✅ Pagination implemented in several key endpoints
+- ✅ Good database indexing in audit logs and some models
 
 ### **Critical Issues:**
-- ⚠️ **Security**: Missing webhook verification, no input sanitization, no env validation
-- ⚠️ **Performance**: No pagination, missing DB indexes, inefficient image storage
-- ⚠️ **Reliability**: No error boundaries, no health checks, no structured logging
+- ⚠️ **Security**: Missing webhook signature verification (TODO in code), no input sanitization, partial env validation (warnings only)
+- ⚠️ **Performance**: Missing pagination on events/donations endpoints, missing DB indexes on core models (user, event, donation), inefficient base64 image storage
+- ⚠️ **Reliability**: No error boundaries in frontend, no health check endpoint, no structured logging (console.log only)
 
 ### **Deployment Recommendation:**
 **NOT READY for production** without addressing critical security and performance issues.
 
 **Minimum requirements before production:**
-1. Environment variable validation at startup
-2. PayMongo webhook signature verification
+1. Environment variable validation at startup (fail fast for critical vars)
+2. PayMongo webhook signature verification (TODO exists in code)
 3. Input validation and sanitization middleware
-4. Database indexes on frequently queried fields
-5. Pagination for all list endpoints
+4. Database indexes on frequently queried fields (user, event, donation models)
+5. Pagination for remaining list endpoints (events, user events, user donations)
 6. Security headers (Helmet.js)
-7. Health check endpoint
+7. Health check endpoint (`/api/health`)
 8. Error boundaries in frontend
 
 **Estimated effort:** 2-3 weeks for critical fixes, 1-2 months for comprehensive improvements.
