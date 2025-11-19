@@ -75,8 +75,8 @@ const Header = () => {
             document.body.style.width = '100%';
             // Add blur class to body and all content when mobile menu is open
             if (isMobileMenuOpen) {
-                // Use setTimeout to ensure DOM is ready
-                setTimeout(() => {
+                // Use requestAnimationFrame to ensure DOM is ready and apply blur smoothly
+                requestAnimationFrame(() => {
                     document.body.classList.add('mobile-menu-open');
                     
                     // Get header first to exclude it from blur
@@ -93,9 +93,9 @@ const Header = () => {
                             !content.classList.contains('mobile-menu-slider')) {
                             content.classList.add('mobile-menu-blur');
                             
-                            // Also blur all direct children divs inside main content
-                            const childDivs = content.querySelectorAll(':scope > div');
-                            childDivs.forEach(div => {
+                            // Blur ALL nested divs inside main content (not just direct children)
+                            const allDivs = content.querySelectorAll('div');
+                            allDivs.forEach(div => {
                                 if (!div.closest('header') && 
                                     !div.closest('.mobile-menu-overlay') &&
                                     !div.classList.contains('mobile-menu-overlay') &&
@@ -106,20 +106,29 @@ const Header = () => {
                         }
                     });
                     
-                    // Blur containers and wrappers that are not inside header
-                    const containers = document.querySelectorAll('div[class*="container"], div[class*="wrapper"], div[class*="grid"], div[class*="flex"]');
-                    containers.forEach(container => {
-                        // Skip if it's inside header or menu overlay
-                        if (!container.closest('header') && 
-                            !container.closest('.mobile-menu-overlay') &&
-                            !container.closest('main') &&
-                            container !== header &&
-                            !container.classList.contains('mobile-menu-overlay') &&
-                            !container.classList.contains('mobile-menu-slider')) {
-                            container.classList.add('mobile-menu-blur');
-                        }
-                    });
-                }, 0);
+                    // Also blur the root wrapper div that contains everything (but not header or menu)
+                    const rootElement = document.getElementById('root');
+                    if (rootElement) {
+                        const rootChildren = rootElement.children;
+                        Array.from(rootChildren).forEach(child => {
+                            if (child.tagName !== 'HEADER' && 
+                                !child.classList.contains('mobile-menu-overlay') &&
+                                !child.classList.contains('mobile-menu-slider')) {
+                                // Blur the child and all its descendants except header and menu
+                                const allDescendants = child.querySelectorAll('*');
+                                allDescendants.forEach(desc => {
+                                    if (desc.tagName !== 'HEADER' && 
+                                        !desc.closest('header') &&
+                                        !desc.closest('.mobile-menu-overlay') &&
+                                        !desc.classList.contains('mobile-menu-overlay') &&
+                                        !desc.classList.contains('mobile-menu-slider')) {
+                                        desc.classList.add('mobile-menu-blur');
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
             }
         } else {
             document.body.style.overflow = 'unset';
@@ -128,23 +137,10 @@ const Header = () => {
             // Remove blur class from body and all content
             document.body.classList.remove('mobile-menu-open');
             
-            // Remove blur from main content
-            const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article');
-            mainContents.forEach(content => {
-                content.classList.remove('mobile-menu-blur');
-                // Also remove from child divs
-                const childDivs = content.querySelectorAll(':scope > div');
-                childDivs.forEach(div => {
-                    div.classList.remove('mobile-menu-blur');
-                });
-            });
-            
-            // Remove blur from containers and wrappers
-            const containers = document.querySelectorAll('div.mobile-menu-blur, div[class*="container"].mobile-menu-blur, div[class*="wrapper"].mobile-menu-blur, div[class*="grid"].mobile-menu-blur, div[class*="flex"].mobile-menu-blur');
-            containers.forEach(container => {
-                if (!container.closest('header') && !container.closest('.mobile-menu-overlay')) {
-                    container.classList.remove('mobile-menu-blur');
-                }
+            // Remove blur from all elements with mobile-menu-blur class
+            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
+            allBlurredElements.forEach(element => {
+                element.classList.remove('mobile-menu-blur');
             });
         }
         return () => {
@@ -153,23 +149,10 @@ const Header = () => {
             document.body.style.width = 'unset';
             document.body.classList.remove('mobile-menu-open');
             
-            // Remove blur from main content
-            const mainContents = document.querySelectorAll('main, [role="main"], .main-content, section, article');
-            mainContents.forEach(content => {
-                content.classList.remove('mobile-menu-blur');
-                // Also remove from child divs
-                const childDivs = content.querySelectorAll(':scope > div');
-                childDivs.forEach(div => {
-                    div.classList.remove('mobile-menu-blur');
-                });
-            });
-            
-            // Remove blur from containers and wrappers
-            const containers = document.querySelectorAll('div.mobile-menu-blur, div[class*="container"].mobile-menu-blur, div[class*="wrapper"].mobile-menu-blur, div[class*="grid"].mobile-menu-blur, div[class*="flex"].mobile-menu-blur');
-            containers.forEach(container => {
-                if (!container.closest('header') && !container.closest('.mobile-menu-overlay')) {
-                    container.classList.remove('mobile-menu-blur');
-                }
+            // Remove blur from all elements with mobile-menu-blur class
+            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
+            allBlurredElements.forEach(element => {
+                element.classList.remove('mobile-menu-blur');
             });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
@@ -1008,7 +991,10 @@ const Header = () => {
                                 zIndex: 9999,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
-                                WebkitFilter: 'none'
+                                WebkitFilter: 'none',
+                                height: '100vh',
+                                minHeight: '100vh',
+                                maxHeight: '100vh'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
@@ -1028,8 +1014,15 @@ const Header = () => {
                                 </button>
                             </div>
 
-                            {/* Scrollable menu content with improved styling */}
-                            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white">
+                            {/* Scrollable menu content with improved styling - full height */}
+                            <div 
+                                className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white"
+                                style={{
+                                    height: 'calc(100vh - 80px)',
+                                    maxHeight: 'calc(100vh - 80px)',
+                                    WebkitOverflowScrolling: 'touch'
+                                }}
+                            >
                                 {/* Primary links for logged out users */}
                                 {!isLoggedIn && (
                                     <div className="py-3 px-3">

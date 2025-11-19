@@ -257,20 +257,20 @@ html[data-font-size="extra-large"] {
 /* Smooth blur transition for main content when mobile menu opens */
 /* Header should remain clear and not blurred */
 @media (max-width: 1024px) {
-  /* Apply smooth blur transition to main content only (not header) */
+  /* Apply smooth blur transition to all elements (not header) */
+  *:not(header):not(header *):not(.mobile-menu-overlay):not(.mobile-menu-slider):not(.mobile-menu-overlay *):not(.mobile-menu-slider *) {
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Specific transition for main content elements */
   main,
   [role="main"],
   .main-content,
   section,
   article,
-  main > div,
-  main > div > div,
-  [role="main"] > div,
-  [role="main"] > div > div,
-  div[class*="container"],
-  div[class*="wrapper"],
-  div[class*="grid"],
-  div[class*="flex"] {
+  main *,
+  [role="main"] *,
+  .main-content * {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -293,37 +293,38 @@ html[data-font-size="extra-large"] {
     -webkit-filter: none !important;
   }
   
-  /* Blur main content when mobile menu is open - smooth transition */
+  /* Blur ALL elements with mobile-menu-blur class when mobile menu is open - comprehensive selector */
+  body.mobile-menu-open .mobile-menu-blur,
   body.mobile-menu-open main.mobile-menu-blur,
   body.mobile-menu-open [role="main"].mobile-menu-blur,
-  body.mobile-menu-open .main-content.mobile-menu-blur {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
-  }
-  
-  /* Blur all divs inside main content when mobile menu is open */
-  body.mobile-menu-open main.mobile-menu-blur > div,
-  body.mobile-menu-open main.mobile-menu-blur > div > div,
-  body.mobile-menu-open [role="main"].mobile-menu-blur > div,
-  body.mobile-menu-open [role="main"].mobile-menu-blur > div > div,
-  body.mobile-menu-open .main-content.mobile-menu-blur > div,
-  body.mobile-menu-open .main-content.mobile-menu-blur > div > div {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
-  }
-  
-  /* Blur sections, articles, containers, and wrappers when mobile menu is open (but not header) */
+  body.mobile-menu-open .main-content.mobile-menu-blur,
   body.mobile-menu-open section.mobile-menu-blur:not(header section),
   body.mobile-menu-open article.mobile-menu-blur:not(header article),
   body.mobile-menu-open div.mobile-menu-blur:not(header div):not(.mobile-menu-overlay):not(.mobile-menu-slider),
-  body.mobile-menu-open div[class*="container"].mobile-menu-blur:not(header div),
-  body.mobile-menu-open div[class*="wrapper"].mobile-menu-blur:not(header div),
-  body.mobile-menu-open div[class*="grid"].mobile-menu-blur:not(header div),
-  body.mobile-menu-open div[class*="flex"].mobile-menu-blur:not(header div) {
+  body.mobile-menu-open span.mobile-menu-blur:not(header span),
+  body.mobile-menu-open p.mobile-menu-blur:not(header p),
+  body.mobile-menu-open h1.mobile-menu-blur:not(header h1),
+  body.mobile-menu-open h2.mobile-menu-blur:not(header h2),
+  body.mobile-menu-open h3.mobile-menu-blur:not(header h3),
+  body.mobile-menu-open h4.mobile-menu-blur:not(header h4),
+  body.mobile-menu-open h5.mobile-menu-blur:not(header h5),
+  body.mobile-menu-open h6.mobile-menu-blur:not(header h6),
+  body.mobile-menu-open ul.mobile-menu-blur:not(header ul),
+  body.mobile-menu-open ol.mobile-menu-blur:not(header ol),
+  body.mobile-menu-open li.mobile-menu-blur:not(header li),
+  body.mobile-menu-open img.mobile-menu-blur:not(header img),
+  body.mobile-menu-open button.mobile-menu-blur:not(header button),
+  body.mobile-menu-open a.mobile-menu-blur:not(header a) {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
+  /* Blur all nested content inside main elements with blur class */
+  body.mobile-menu-open main.mobile-menu-blur *,
+  body.mobile-menu-open [role="main"].mobile-menu-blur *,
+  body.mobile-menu-open .main-content.mobile-menu-blur * {
     filter: blur(12px) !important;
     -webkit-filter: blur(12px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -337,22 +338,9 @@ html[data-font-size="extra-large"] {
     -webkit-filter: none !important;
   }
   
-  /* Ensure smooth transition when removing blur */
-  main,
-  [role="main"],
-  .main-content,
-  section,
-  article,
-  main > div,
-  main > div > div,
-  [role="main"] > div,
-  [role="main"] > div > div,
-  div[class*="container"],
-  div[class*="wrapper"],
-  div[class*="grid"],
-  div[class*="flex"] {
+  /* Ensure smooth transition when removing blur - applies to all elements */
+  *:not(header):not(header *):not(.mobile-menu-overlay):not(.mobile-menu-slider):not(.mobile-menu-overlay *):not(.mobile-menu-slider *) {
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
   }
 }
 
