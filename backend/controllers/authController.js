@@ -17,6 +17,25 @@ const cookieOptions = {
     maxAge: 7 * 24 * 60 * 60 * 1000
 }
 
+// Helper function to normalize email - uppercase first letter for MSEUF student emails, lowercase for others
+const normalizeEmail = (email) => {
+    if (!email) return email;
+    
+    const trimmedEmail = email.trim();
+    
+    // Check if it's a MSEUF Student email (format: [Letter][2 digits]-[5 digits]@student.mseuf.edu.ph)
+    const studentEmailPattern = /^([a-zA-Z])(\d{2}-\d{5}@student\.mseuf\.edu\.ph)$/i;
+    const studentEmailMatch = trimmedEmail.match(studentEmailPattern);
+    
+    if (studentEmailMatch) {
+        // Uppercase first letter, lowercase the rest for MSEUF student emails
+        return studentEmailMatch[1].toUpperCase() + studentEmailMatch[2].toLowerCase();
+    }
+    
+    // Lowercase all other emails
+    return trimmedEmail.toLowerCase();
+};
+
 // Helper function to validate MSEUF email and extract ID
 const validateMSEUFEmail = (email) => {
     // MSEUF email patterns:
@@ -72,7 +91,12 @@ export const register = async (req, res) => {
             return res.json({ success: false, message: "Name, email, password, and user type are required" });
         }
 
-        // Validate MSEUF email if user is MSEUF
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        // This allows both "A22-34197@student.mseuf.edu.ph" and "a22-34197@student.mseuf.edu.ph" to be treated as the same user
+        // But stored format will always be "A22-34197@student.mseuf.edu.ph" (uppercase first letter for students)
+        const normalizedEmail = normalizeEmail(email);
+
+        // Validate MSEUF email if user is MSEUF (use original email for validation to preserve case in mseufId)
         if (userType === "MSEUF") {
             const emailValidation = validateMSEUFEmail(email);
             if (!emailValidation.isValid) {
@@ -84,14 +108,14 @@ export const register = async (req, res) => {
             
             // Additional validation: Students must use @student.mseuf.edu.ph, Faculty/Staff must use @mseuf.edu.ph
             if (mseufCategory === "Student") {
-                if (!email.toLowerCase().includes('@student.mseuf.edu.ph')) {
+                if (!normalizedEmail.includes('@student.mseuf.edu.ph')) {
                     return res.json({ 
                         success: false, 
                         message: "Students must use @student.mseuf.edu.ph email format (e.g., A22-34197@student.mseuf.edu.ph or T22-34197@student.mseuf.edu.ph)" 
                     });
                 }
             } else if (mseufCategory === "Faculty" || mseufCategory === "Staff") {
-                if (email.toLowerCase().includes('@student.mseuf.edu.ph')) {
+                if (normalizedEmail.includes('@student.mseuf.edu.ph')) {
                     return res.json({ 
                         success: false, 
                         message: "Faculty/Staff must use @mseuf.edu.ph email format (e.g., juan.delacruz@mseuf.edu.ph), not @student.mseuf.edu.ph" 
@@ -120,8 +144,8 @@ export const register = async (req, res) => {
             }
         }
 
-        // Check if user already exists
-        const existingUser = await userModel.findOne({ email });
+        // Check if user already exists (use normalized email for case-insensitive check)
+        const existingUser = await userModel.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.json({ success: false, message: "User with this email already exists" });
         }
@@ -141,10 +165,10 @@ export const register = async (req, res) => {
         const userRole = role || "User";
         const needsVerification = rolesRequiringVerification.includes(userRole);
 
-        // Create user
+        // Create user (use normalized email for storage)
         const userData = {
             name,
-            email,
+            email: normalizedEmail,
             password: hashedPassword,
             role: userRole,
             birthday: birthday ? new Date(birthday) : null,
@@ -407,7 +431,12 @@ export const login = async (req, res) => {
             return res.json({ success: false, message: "All fields are required" });
         }
 
-        const user = await userModel.findOne({ email });
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        // This allows both "A22-34197@student.mseuf.edu.ph" and "a22-34197@student.mseuf.edu.ph" to work
+        // But matches the stored format (uppercase first letter for students)
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await userModel.findOne({ email: normalizedEmail });
         const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
         
@@ -464,12 +493,12 @@ export const login = async (req, res) => {
                 await user.save();
 
                 // Log OTP generation during login
-                const emailType = email.includes('@student.mseuf.edu.ph') 
+                const emailType = normalizedEmail.includes('@student.mseuf.edu.ph') 
                     ? 'MSEUF Student' 
-                    : email.includes('@mseuf.edu.ph') 
+                    : normalizedEmail.includes('@mseuf.edu.ph') 
                         ? 'MSEUF Faculty/Staff' 
                         : 'Guest';
-                console.log(`📧 OTP generated during login for ${email}`);
+                console.log(`📧 OTP generated during login for ${normalizedEmail}`);
                 console.log(`   Email Type: ${emailType}`);
                 console.log(`   OTP Code: ${otp} (DO NOT LOG IN PRODUCTION - FOR DEBUGGING ONLY)`);
                 console.log(`   Expires at: ${new Date(user.verifyOtpExpireAt).toISOString()}`);
@@ -478,7 +507,7 @@ export const login = async (req, res) => {
                 // Send verification OTP email
                 const mailOptions = {
                     from: process.env.SENDER_EMAIL || 'noreply@eumatter.com',
-                    to: email,
+                    to: normalizedEmail,
                     subject: "EuMatter - Verify Your Email Address",
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -497,16 +526,16 @@ export const login = async (req, res) => {
                 
                 // Send email with retry (fire and forget - don't block login response)
                 // OTP is already saved, so user can still verify even if email fails
-                console.log(`📤 Starting email send for login OTP to ${email}...`);
+                console.log(`📤 Starting email send for login OTP to ${normalizedEmail}...`);
                 sendEmailWithRetry(mailOptions, 5, 3000) // Increased to 5 retries (6 total attempts)
                     .then(result => {
-                        console.log(`✅ Verification OTP email sent during login to ${email}`);
+                        console.log(`✅ Verification OTP email sent during login to ${normalizedEmail}`);
                         console.log(`   MessageId: ${result.messageId || 'N/A'}`);
                         console.log(`   OTP Code: ${otp} (saved in database)`);
                         console.log(`   ✅ Email delivery confirmed - user can check inbox`);
                     })
                     .catch(error => {
-                        console.error(`❌ Failed to send verification OTP email during login to ${email} after all retry attempts`);
+                        console.error(`❌ Failed to send verification OTP email during login to ${normalizedEmail} after all retry attempts`);
                         console.error(`   Error: ${error.message}`);
                         console.error(`   Error code: ${error.code || 'N/A'}`);
                         console.error(`   OTP Code: ${otp} (saved in database)`);
@@ -619,7 +648,9 @@ export const sendVerifyOtp = async (req, res) => {
         if (userId) {
             user = await userModel.findById(userId);
         } else if (email) {
-            user = await userModel.findOne({ email });
+            // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+            const normalizedEmail = normalizeEmail(email);
+            user = await userModel.findOne({ email: normalizedEmail });
         } else {
             return res.json({ success: false, message: "Email or userId is required" });
         }
@@ -839,8 +870,8 @@ export const verifyEmail = async (req, res) => {
     try {
         let { email, otp } = req.body;
         
-        // Normalize inputs - trim whitespace, convert to lowercase email
-        email = email?.trim().toLowerCase();
+        // Normalize inputs - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        email = normalizeEmail(email);
         otp = otp?.trim().replace(/\s/g, ''); // Remove all whitespace from OTP
         
         if (!email || !otp) {
@@ -852,7 +883,7 @@ export const verifyEmail = async (req, res) => {
             return res.json({ success: false, message: "OTP must be exactly 6 digits. Please check and try again." });
         }
 
-        const user = await userModel.findOne({ email: email.toLowerCase() });
+        const user = await userModel.findOne({ email });
         if (!user) {
             return res.json({ success: false, message: "User not found. Please check your email address." });
         }
@@ -1172,14 +1203,14 @@ export const checkOtpStatus = async (req, res) => {
     try {
         let { email } = req.body;
         
-        // Normalize email
-        email = email?.trim().toLowerCase();
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        email = normalizeEmail(email);
         
         if (!email) {
             return res.json({ success: false, message: "Email is required" });
         }
 
-        const user = await userModel.findOne({ email: email.toLowerCase() });
+        const user = await userModel.findOne({ email });
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1233,7 +1264,10 @@ export const sendResetOtp = async (req, res) => {
             return res.json({ success: false, message: "Email is required" });
         }
 
-        const user = await userModel.findOne({ email });
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await userModel.findOne({ email: normalizedEmail });
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1246,7 +1280,7 @@ export const sendResetOtp = async (req, res) => {
         // Send password reset OTP email with modern format matching EuMatter style
         const mailOptions = {
             from: process.env.SENDER_EMAIL,
-            to: email,
+            to: normalizedEmail,
             subject: "EuMatter - Password Reset Verification Code",
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
@@ -1357,7 +1391,10 @@ export const verifyResetOtp = async (req, res) => {
             return res.json({ success: false, message: "Email and OTP are required" });
         }
 
-        const user = await userModel.findOne({ email });
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await userModel.findOne({ email: normalizedEmail });
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1446,7 +1483,10 @@ export const resetPassword = async (req, res) => {
             return res.json({ success: false, message: "All fields required" });
         }
 
-        const user = await userModel.findOne({ email });
+        // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
+        const normalizedEmail = normalizeEmail(email);
+
+        const user = await userModel.findOne({ email: normalizedEmail });
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }

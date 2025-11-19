@@ -545,12 +545,8 @@ const CRDDashboard = () => {
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5 lg:mb-6 border" style={{ borderColor: THEME_COLORS.maroonBg }}>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div>
-                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1" style={{ color: THEME_COLORS.maroon }}>
-                                CRD Operations Dashboard
-                            </h1>
-                            <p className="text-xs sm:text-sm text-gray-600">
-                                Welcome back, {userData?.name || 'CRD Staff'}! Manage campaigns, reviews, and reports.
-                            </p>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
                         </div>
                         <button 
                             onClick={() => navigate('/user/profile')}

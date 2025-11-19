@@ -783,8 +783,8 @@ const RegisterPage = () => {
                                     </div>
                                     
                                     {errors.userType && (
-                                        <div className="mt-2 p-3 bg-red-500/20 border border-red-400/50 rounded-lg animate-shake">
-                                            <p className="text-red-200 text-xs flex items-center">
+                                        <div className="mt-2 p-3 bg-amber-500/20 border border-amber-400/50 rounded-lg animate-shake">
+                                            <p className="text-[#FFD700] text-xs flex items-center">
                                                 <FaCheckCircle className="mr-2" />
                                                 {errors.userType}
                                             </p>
@@ -811,7 +811,7 @@ const RegisterPage = () => {
                                                 value={formData.firstName}
                                                 onChange={(e) => handleChange('firstName', e.target.value)}
                                             />
-                                            {errors.firstName && <p className="text-red-200 text-xs mt-0.5">{errors.firstName}</p>}
+                                            {errors.firstName && <p className="text-[#FFD700] text-xs mt-0.5">{errors.firstName}</p>}
                                 </div>
                                         <div>
                                             <label className="block text-[10px] md:text-xs font-medium text-white mb-1">Last Name *</label>
@@ -822,7 +822,7 @@ const RegisterPage = () => {
                                                 value={formData.lastName}
                                                 onChange={(e) => handleChange('lastName', e.target.value)}
                                             />
-                                            {errors.lastName && <p className="text-red-200 text-xs mt-0.5">{errors.lastName}</p>}
+                                            {errors.lastName && <p className="text-[#FFD700] text-xs mt-0.5">{errors.lastName}</p>}
                                 </div>
                             </div>
                                     
@@ -838,7 +838,7 @@ const RegisterPage = () => {
                                             value={formData.email}
                                             onChange={(e) => handleChange('email', e.target.value)}
                                         />
-                                        {errors.email && <p className="text-red-200 text-xs mt-0.5">{errors.email}</p>}
+                                        {errors.email && <p className="text-[#FFD700] text-xs mt-0.5">{errors.email}</p>}
                                         {formData.userType === 'MSEUF' && formData.mseufCategory === 'Student' && (
                                             <p className="text-yellow-200 text-[10px] mt-0.5">
                                                 Students: A22-34197@student.mseuf.edu.ph or T22-34197@student.mseuf.edu.ph
@@ -868,7 +868,7 @@ const RegisterPage = () => {
                                             value={formData.password}
                                             onChange={(e) => handleChange('password', e.target.value)}
                                         />
-                                        {errors.password && <p className="text-red-200 text-xs mt-0.5">{errors.password}</p>}
+                                        {errors.password && <p className="text-[#FFD700] text-xs mt-0.5">{errors.password}</p>}
                             </div>
                                     
                                     <div>
@@ -880,7 +880,7 @@ const RegisterPage = () => {
                                             value={formData.confirmPassword}
                                             onChange={(e) => handleChange('confirmPassword', e.target.value)}
                                         />
-                                        {errors.confirmPassword && <p className="text-red-200 text-xs mt-0.5">{errors.confirmPassword}</p>}
+                                        {errors.confirmPassword && <p className="text-[#FFD700] text-xs mt-0.5">{errors.confirmPassword}</p>}
                             </div>
                                 </div>
                             )}
@@ -905,7 +905,7 @@ const RegisterPage = () => {
                                             value={formData.birthday}
                                             onChange={(e) => handleChange('birthday', e.target.value)}
                                         />
-                                        {errors.birthday && <p className="text-red-200 text-xs mt-0.5">{errors.birthday}</p>}
+                                        {errors.birthday && <p className="text-[#FFD700] text-xs mt-0.5">{errors.birthday}</p>}
                                     </div>
                                     
                                     <div>
@@ -924,7 +924,7 @@ const RegisterPage = () => {
                                             <option value="Other">Other</option>
                                             <option value="Prefer not to say">Prefer not to say</option>
                                         </select>
-                                        {errors.gender && <p className="text-red-200 text-xs mt-0.5">{errors.gender}</p>}
+                                        {errors.gender && <p className="text-[#FFD700] text-xs mt-0.5">{errors.gender}</p>}
                                     </div>
                                     
                                     <div>
@@ -939,7 +939,7 @@ const RegisterPage = () => {
                                             value={formData.address}
                                             onChange={(e) => handleChange('address', e.target.value)}
                                         />
-                                        {errors.address && <p className="text-red-200 text-xs mt-0.5">{errors.address}</p>}
+                                        {errors.address && <p className="text-[#FFD700] text-xs mt-0.5">{errors.address}</p>}
                                     </div>
                                     
                                     <div>
@@ -954,7 +954,7 @@ const RegisterPage = () => {
                                             value={formData.contact}
                                             onChange={(e) => handleChange('contact', e.target.value)}
                                         />
-                                        {errors.contact && <p className="text-red-200 text-xs mt-0.5">{errors.contact}</p>}
+                                        {errors.contact && <p className="text-[#FFD700] text-xs mt-0.5">{errors.contact}</p>}
                                     </div>
                                 </div>
                             )}
@@ -1039,8 +1039,8 @@ const RegisterPage = () => {
                                             </div>
                                             
                                             {errors.mseufCategory && (
-                                                <div className="mt-2 p-3 bg-red-500/20 border border-red-400/50 rounded-lg animate-shake">
-                                                    <p className="text-red-200 text-xs flex items-center">
+                                                <div className="mt-2 p-3 bg-amber-500/20 border border-amber-400/50 rounded-lg animate-shake">
+                                                    <p className="text-[#FFD700] text-xs flex items-center">
                                                         <FaCheckCircle className="mr-2" />
                                                         {errors.mseufCategory}
                                                     </p>
@@ -1121,8 +1121,8 @@ const RegisterPage = () => {
                                             </div>
                                             
                                             {errors.outsiderCategory && (
-                                                <div className="mt-2 p-3 bg-red-500/20 border border-red-400/50 rounded-lg animate-shake">
-                                                    <p className="text-red-200 text-xs flex items-center">
+                                                <div className="mt-2 p-3 bg-amber-500/20 border border-amber-400/50 rounded-lg animate-shake">
+                                                    <p className="text-[#FFD700] text-xs flex items-center">
                                                         <FaCheckCircle className="mr-2" />
                                                         {errors.outsiderCategory}
                                                     </p>
@@ -1173,7 +1173,7 @@ const RegisterPage = () => {
                                                     <option value="5th Year">5th Year</option>
                                                     <option value="Graduate">Graduate</option>
                                                 </select>
-                                                {errors.studentYear && <p className="text-red-200 text-xs mt-0.5">{errors.studentYear}</p>}
+                                                {errors.studentYear && <p className="text-[#FFD700] text-xs mt-0.5">{errors.studentYear}</p>}
                                             </div>
                                             
                                             <div>
@@ -1191,7 +1191,7 @@ const RegisterPage = () => {
                                                         <option key={dept} value={dept}>{dept}</option>
                                                     ))}
                                                 </select>
-                                                {errors.department && <p className="text-red-200 text-xs mt-0.5">{errors.department}</p>}
+                                                {errors.department && <p className="text-[#FFD700] text-xs mt-0.5">{errors.department}</p>}
                                             </div>
                                             
                                             <div>
@@ -1207,7 +1207,7 @@ const RegisterPage = () => {
                                                         <option key={course} value={course}>{course}</option>
                                                     ))}
                                                 </select>
-                                                {errors.course && <p className="text-red-200 text-xs mt-0.5">{errors.course}</p>}
+                                                {errors.course && <p className="text-[#FFD700] text-xs mt-0.5">{errors.course}</p>}
                                                 {!formData.department && (
                                                     <p className="text-yellow-200 text-[10px] mt-0.5">Please select a department first</p>
                                                 )}
@@ -1229,7 +1229,7 @@ const RegisterPage = () => {
                                                     <option key={dept} value={dept}>{dept}</option>
                                                 ))}
                                             </select>
-                                            {errors.department && <p className="text-red-200 text-xs mt-0.5">{errors.department}</p>}
+                                            {errors.department && <p className="text-[#FFD700] text-xs mt-0.5">{errors.department}</p>}
                                             <p className="text-yellow-200 text-[10px] mt-1">
                                                 {formData.mseufCategory === 'Faculty' 
                                                     ? 'Select your teaching department (optional)' 
@@ -1508,8 +1508,8 @@ const RegisterPage = () => {
                                             </div>
                                         </div>
                                         {errors.acceptedTerms && (
-                                            <div className="ml-8 mt-2 p-2 bg-red-500/20 border border-red-400/50 rounded-lg animate-shake">
-                                                <p className="text-red-200 text-xs flex items-center">
+                                            <div className="ml-8 mt-2 p-2 bg-amber-500/20 border border-amber-400/50 rounded-lg animate-shake">
+                                                <p className="text-[#FFD700] text-xs flex items-center">
                                                     <FaCheckCircle className="mr-2" />
                                                     {errors.acceptedTerms}
                                                 </p>

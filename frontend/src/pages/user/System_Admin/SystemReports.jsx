@@ -499,8 +499,8 @@ const SystemReports = () => {
                     <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 sm:mb-8">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black mb-2">System Audit Logs</h1>
-                                <p className="text-sm sm:text-base text-gray-600">Monitor and track all system activities and events.</p>
+                                <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
+                                <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button

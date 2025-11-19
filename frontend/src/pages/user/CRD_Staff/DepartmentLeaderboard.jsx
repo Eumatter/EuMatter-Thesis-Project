@@ -196,15 +196,11 @@ const DepartmentLeaderboard = () => {
                 </div>
 
                 {/* Header Section */}
-                <div className="mb-6 sm:mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                                Department Leaderboard
-                            </h1>
-                            <p className="text-sm sm:text-base text-gray-600">
-                                Recognizing top-performing departments and their contributions
-                            </p>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Leaderboards</h1>
+                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
@@ -212,9 +208,15 @@ const DepartmentLeaderboard = () => {
                                     onClick={() => setViewMode('podium')}
                                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                                         viewMode === 'podium'
-                                            ? 'bg-white text-indigo-600 shadow-sm'
+                                            ? 'bg-white shadow-sm'
                                             : 'text-gray-600 hover:text-gray-900'
                                     }`}
+                                    style={viewMode === 'podium' ? {
+                                        backgroundImage: 'linear-gradient(to right, #800020, #9c0000)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text'
+                                    } : {}}
                                 >
                                     Podium View
                                 </button>
@@ -222,9 +224,15 @@ const DepartmentLeaderboard = () => {
                                     onClick={() => setViewMode('table')}
                                     className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                                         viewMode === 'table'
-                                            ? 'bg-white text-indigo-600 shadow-sm'
+                                            ? 'bg-white shadow-sm'
                                             : 'text-gray-600 hover:text-gray-900'
                                     }`}
+                                    style={viewMode === 'table' ? {
+                                        backgroundImage: 'linear-gradient(to right, #800020, #9c0000)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text'
+                                    } : {}}
                                 >
                                     Table View
                                 </button>

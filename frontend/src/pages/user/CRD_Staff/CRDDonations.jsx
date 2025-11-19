@@ -387,12 +387,8 @@ const CRDDonations = () => {
                     
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                         <div>
-                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-2 bg-gradient-to-r from-[#800000] to-[#9c0000] bg-clip-text text-transparent">
-                                Donations Management
-                            </h1>
-                            <p className="text-base sm:text-lg text-gray-600">
-                                Manage and track all donation types across your organization
-                            </p>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Donations</h1>
+                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
                         </div>
                     </div>
                 </div>
