@@ -52,19 +52,39 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
   const { data: reactionData, isLoading } = useQuery({
     queryKey,
     queryFn: async () => {
-      // Try to get reactions from event endpoint if available
+      // Try to get reactions from dedicated reactions endpoint first
       try {
-        const { data } = await api.get(`/api/events/${eventId}`);
+        const { data } = await api.get(`/api/events/${eventId}/reactions`);
         if (data && data.reactions) {
           return {
             reactions: typeof data.reactions === 'object' && !Array.isArray(data.reactions)
-              ? data.reactions
+              ? (() => {
+                  // Remove 'total' and 'userReaction' from counts
+                  const { total, userReaction, ...counts } = data.reactions;
+                  return counts;
+                })()
               : { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
-            userReaction: data.userReaction || null,
+            userReaction: data.reactions.userReaction || null,
           };
         }
       } catch (error) {
-        // Endpoint might not exist, that's okay
+        // Reactions endpoint might not exist, try event endpoint
+        try {
+          const { data } = await api.get(`/api/events/${eventId}`);
+          if (data && data.reactions) {
+            return {
+              reactions: typeof data.reactions === 'object' && !Array.isArray(data.reactions)
+                ? (() => {
+                    const { total, userReaction, ...counts } = data.reactions;
+                    return counts;
+                  })()
+                : { like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0 },
+              userReaction: data.userReaction || data.reactions?.userReaction || null,
+            };
+          }
+        } catch (eventError) {
+          // Both endpoints failed, that's okay
+        }
       }
       
       // Return default state if no data available
@@ -73,11 +93,11 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
         userReaction: null,
       };
     },
-    enabled: !!eventId, // Only run if eventId is provided
+    enabled: !!eventId && !normalizedInitialData, // Only run if eventId is provided and no initial data
     initialData: normalizedInitialData, // Use normalized initial data
     staleTime: 30000, // Cache for 30 seconds
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    // Don't refetch if we have initial data and it's fresh
+    // Don't refetch if we have initial data
     refetchOnMount: !normalizedInitialData,
     refetchOnWindowFocus: false,
   });
@@ -91,22 +111,84 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
       
       // If clicking the same reaction, DELETE it
       if (currentUserReaction === reactionType) {
-        const { data } = await api.delete(`/api/events/${eventId}/react`);
-        return { operation: 'DELETE', reactionType: null, data };
+        try {
+          const { data } = await api.delete(`/api/events/${eventId}/react`);
+          // DELETE response: { message, reactions: { like, love, ... } } - no userReaction
+          return { 
+            operation: 'DELETE', 
+            reactionType: null, 
+            data: {
+              ...data,
+              reactions: {
+                ...data.reactions,
+                userReaction: null // Explicitly set to null after deletion
+              }
+            }
+          };
+        } catch (error) {
+          // Handle different error cases gracefully
+          const errorStatus = error.response?.status;
+          
+          // If DELETE fails with 400 (no reaction to remove), that's okay - user already removed it
+          // If DELETE fails with 404 (event not found), that's also okay - optimistic update already handled it
+          if (errorStatus === 400 || errorStatus === 404) {
+            // Return success with current state (reaction already removed optimistically)
+            const currentData = queryClient.getQueryData(queryKey);
+            return { 
+              operation: 'DELETE', 
+              reactionType: null, 
+              data: {
+                reactions: currentData?.reactions || {
+                  like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0,
+                  userReaction: null
+                }
+              }
+            };
+          }
+          
+          // For 500 errors, log but don't fail completely - optimistic update already happened
+          if (errorStatus === 500) {
+            console.warn('Server error during reaction deletion, but optimistic update succeeded');
+            // Return success with optimistic state
+            const currentData = queryClient.getQueryData(queryKey);
+            return { 
+              operation: 'DELETE', 
+              reactionType: null, 
+              data: {
+                reactions: currentData?.reactions || {
+                  like: 0, love: 0, haha: 0, wow: 0, sad: 0, angry: 0,
+                  userReaction: null
+                }
+              }
+            };
+          }
+          
+          throw error; // Re-throw other errors (401, etc.)
+        }
       }
       
-      // If changing reaction, UPDATE it (POST handles both INSERT and UPDATE)
-      // The backend should handle the logic of whether to INSERT or UPDATE
-      const { data } = await api.post(`/api/events/${eventId}/react`, { reactionType });
-      
-      // Determine operation for logging/debugging
-      const operation = currentUserReaction ? 'UPDATE' : 'INSERT';
-      return { 
-        operation, 
-        reactionType, 
-        previousReaction: currentUserReaction || null, 
-        data 
-      };
+      // If changing reaction or adding new, use POST (handles both INSERT and UPDATE)
+      try {
+        const { data } = await api.post(`/api/events/${eventId}/react`, { reactionType });
+        
+        // POST response: { message, reactions: { like, love, ..., userReaction } }
+        // Determine operation for logging/debugging
+        const operation = currentUserReaction ? 'UPDATE' : 'INSERT';
+        return { 
+          operation, 
+          reactionType, 
+          previousReaction: currentUserReaction || null, 
+          data 
+        };
+      } catch (error) {
+        // For POST errors, let onError handle rollback
+        // Only handle 400 specially (invalid reaction type)
+        if (error.response?.status === 400) {
+          // Invalid reaction type - rollback will happen in onError
+          throw new Error(error.response?.data?.message || 'Invalid reaction type');
+        }
+        throw error; // Re-throw to trigger onError rollback
+      }
     },
     
     // Optimistic update - update UI immediately before API call
@@ -169,7 +251,22 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
       }
       
       console.error('Error reacting to event:', error);
-      // You can add toast notification here if needed
+      
+      // Handle specific error cases
+      const errorStatus = error.response?.status;
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update reaction';
+      
+      // Don't show error for 400 (bad request) - might be expected (e.g., no reaction to remove)
+      if (errorStatus !== 400 && errorStatus !== 401) {
+        // Only log, don't show toast to avoid spam
+        console.warn('Reaction error:', errorMessage);
+      }
+      
+      // Handle 401 (unauthorized) - user needs to login
+      if (errorStatus === 401) {
+        console.warn('User not authenticated for reactions');
+        // Could redirect to login if needed
+      }
     },
 
     // On success, optionally refetch to ensure consistency
@@ -177,13 +274,31 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
       // Optionally invalidate and refetch to ensure server state is synced
       // queryClient.invalidateQueries({ queryKey });
       
-      // Or update with server response if it's different
+      // Update cache with server response to ensure consistency
       if (result?.data?.reactions) {
-        queryClient.setQueryData(queryKey, (old) => ({
-          ...old,
-          reactions: result.data.reactions,
-          userReaction: result.data.userReaction || null,
-        }));
+        queryClient.setQueryData(queryKey, (old) => {
+          const serverReactions = result.data.reactions;
+          
+          // Handle DELETE response (no userReaction) vs POST response (has userReaction)
+          let userReaction = null;
+          if (result.operation === 'DELETE') {
+            userReaction = null; // DELETE always sets userReaction to null
+          } else {
+            // POST response includes userReaction in reactions object
+            userReaction = serverReactions.userReaction !== undefined 
+              ? serverReactions.userReaction 
+              : result.reactionType;
+          }
+          
+          // Remove 'total' and 'userReaction' from reactions counts if present
+          const { total, userReaction: _, ...reactionCounts } = serverReactions;
+          
+          return {
+            ...old,
+            reactions: reactionCounts,
+            userReaction: userReaction,
+          };
+        });
       }
     },
 
