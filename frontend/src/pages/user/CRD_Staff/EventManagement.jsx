@@ -629,7 +629,6 @@ const EventManagement = () => {
                             </div>
                         </div>
                     </div>
-                </div>
 
                 {/* Advanced Controls */}
                 <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 border border-gray-200 mb-6 sm:mb-8">
@@ -1560,7 +1559,7 @@ const EventManagement = () => {
                 )}
 
                 {/* Pagination */}
-                {totalPages > 1 && (
+                {!isLoading && totalPages > 1 && (
                     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-gray-600">
