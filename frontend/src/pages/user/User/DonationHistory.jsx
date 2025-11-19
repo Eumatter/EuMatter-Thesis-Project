@@ -1070,12 +1070,12 @@ const DonationHistory = () => {
                                 </div>
 
                                 {/* Info Banner */}
-                                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
                                     <div className="flex items-start">
-                                        <FaInfoCircle className="text-blue-500 text-xl mr-3 mt-0.5 flex-shrink-0" />
+                                        <FaInfoCircle className="text-red-500 text-xl mr-3 mt-0.5 flex-shrink-0" />
                                         <div>
-                                            <h3 className="font-semibold text-blue-900 mb-1">How It Works</h3>
-                                            <p className="text-sm text-blue-800">
+                                            <h3 className="font-semibold text-red-900 mb-1">How It Works</h3>
+                                            <p className="text-sm text-red-800">
                                                 Fill out the form below with details about your donation. Our CRD staff will review your request and contact you to coordinate pickup/delivery.
                                             </p>
                                         </div>
