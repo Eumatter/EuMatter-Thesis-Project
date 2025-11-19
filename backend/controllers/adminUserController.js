@@ -3,6 +3,26 @@ import bcrypt from "bcryptjs";
 import departmentWalletModel from "../models/departmentWalletModel.js";
 import { createAuditLog } from "./auditLogController.js";
 
+// Helper function to normalize email - uppercase first letter for MSEUF student emails, lowercase for others
+// This must match the normalization used in authController.js for login to work correctly
+const normalizeEmail = (email) => {
+    if (!email) return email;
+    
+    const trimmedEmail = email.trim();
+    
+    // Check if it's a MSEUF Student email (format: [Letter][2 digits]-[5 digits]@student.mseuf.edu.ph)
+    const studentEmailPattern = /^([a-zA-Z])(\d{2}-\d{5}@student\.mseuf\.edu\.ph)$/i;
+    const studentEmailMatch = trimmedEmail.match(studentEmailPattern);
+    
+    if (studentEmailMatch) {
+        // Uppercase first letter, lowercase the rest for MSEUF student emails
+        return studentEmailMatch[1].toUpperCase() + studentEmailMatch[2].toLowerCase();
+    }
+    
+    // Lowercase all other emails
+    return trimmedEmail.toLowerCase();
+};
+
 /**
  * Get all users with filtering and pagination (Admin only)
  */
@@ -83,8 +103,11 @@ export const createUser = async (req, res) => {
             paymongoWebhookSecret
         } = req.body;
 
-        // Check if user already exists
-        const existingUser = await userModel.findOne({ email });
+        // Normalize email to match login normalization (uppercase first letter for MSEUF students, lowercase for others)
+        const normalizedEmail = normalizeEmail(email);
+
+        // Check if user already exists (use normalized email)
+        const existingUser = await userModel.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(400).json({ success: false, message: 'User with this email already exists' });
         }
@@ -92,10 +115,10 @@ export const createUser = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user
+        // Create new user (use normalized email)
         const newUser = new userModel({
             name: `${firstName} ${lastName}`.trim(),
-            email,
+            email: normalizedEmail,
             password: hashedPassword,
             role,
             isAccountVerified: true, // Auto-verify admin-created accounts
