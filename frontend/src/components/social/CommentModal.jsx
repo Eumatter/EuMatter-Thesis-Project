@@ -5,12 +5,14 @@ import { toast } from 'react-toastify';
 import LoadingSpinner from '../LoadingSpinner';
 
 // Memoized CommentItem component
-const CommentItem = React.memo(({ comment, currentUser, onDelete, onEdit }) => {
+const CommentItem = React.memo(({ comment, currentUser, onDelete, onEdit, recentlyEditedComments, setRecentlyEditedComments }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.text);
     const [showMenu, setShowMenu] = useState(false);
+    const [showEdited, setShowEdited] = useState(false);
     const editInputRef = useRef(null);
     const menuRef = useRef(null);
+    const editTimeoutRef = useRef(null);
 
     useEffect(() => {
         if (isEditing && editInputRef.current) {
@@ -18,6 +20,39 @@ const CommentItem = React.memo(({ comment, currentUser, onDelete, onEdit }) => {
             editInputRef.current.select();
         }
     }, [isEditing]);
+
+    // Check if this comment was recently edited
+    useEffect(() => {
+        const wasRecentlyEdited = recentlyEditedComments?.includes(comment._id);
+        
+        // Clear any existing timeout
+        if (editTimeoutRef.current) {
+            clearTimeout(editTimeoutRef.current);
+            editTimeoutRef.current = null;
+        }
+        
+        if (wasRecentlyEdited) {
+            setShowEdited(true);
+            
+            // Hide "edited" after 10 seconds
+            editTimeoutRef.current = setTimeout(() => {
+                setShowEdited(false);
+                // Remove from recently edited list
+                if (setRecentlyEditedComments) {
+                    setRecentlyEditedComments((prev) => prev.filter(id => id !== comment._id));
+                }
+            }, 10000);
+        } else {
+            setShowEdited(false);
+        }
+        
+        return () => {
+            if (editTimeoutRef.current) {
+                clearTimeout(editTimeoutRef.current);
+                editTimeoutRef.current = null;
+            }
+        };
+    }, [comment._id, recentlyEditedComments, setRecentlyEditedComments]);
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -42,6 +77,15 @@ const CommentItem = React.memo(({ comment, currentUser, onDelete, onEdit }) => {
             const success = await onEdit(comment._id, editText);
             if (success) {
                 setIsEditing(false);
+                // Add to recently edited comments list (this will trigger useEffect to show "edited")
+                if (setRecentlyEditedComments) {
+                    setRecentlyEditedComments((prev) => {
+                        if (!prev.includes(comment._id)) {
+                            return [...prev, comment._id];
+                        }
+                        return prev;
+                    });
+                }
             }
         } else {
             setIsEditing(false);
@@ -177,8 +221,8 @@ const CommentItem = React.memo(({ comment, currentUser, onDelete, onEdit }) => {
                                 <span className="text-xs text-gray-500">
                                     {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                                 </span>
-                                {comment.updatedAt && comment.updatedAt !== comment.createdAt && (
-                                    <span className="text-xs text-gray-400 italic">(edited)</span>
+                                {showEdited && (
+                                    <span className="text-xs text-gray-400 italic animate-fade-in">(edited)</span>
                                 )}
                             </div>
                         </>
@@ -204,6 +248,7 @@ const CommentModal = ({
     const [newComment, setNewComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [recentlyEditedComments, setRecentlyEditedComments] = useState([]);
     const commentInputRef = useRef(null);
     const modalContentRef = useRef(null);
     const commentsEndRef = useRef(null);
@@ -237,6 +282,8 @@ const CommentModal = ({
             }, 300);
         } else {
             setNewComment('');
+            // Clear recently edited comments when modal closes
+            setRecentlyEditedComments([]);
         }
     }, [isOpen]);
 
@@ -402,6 +449,8 @@ const CommentModal = ({
                                     currentUser={currentUser}
                                     onDelete={handleDelete}
                                     onEdit={handleEdit}
+                                    recentlyEditedComments={recentlyEditedComments}
+                                    setRecentlyEditedComments={setRecentlyEditedComments}
                                 />
                             ))}
                             <div ref={commentsEndRef} />

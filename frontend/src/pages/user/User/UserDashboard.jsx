@@ -9,7 +9,6 @@ import api from '../../../utils/api';
 import { notifyError, notifySuccess } from '../../../utils/notify';
 import Reactions from '../../../components/social/Reactions';
 import CommentModal from '../../../components/social/CommentModal';
-import ShareButton from '../../../components/social/ShareButton';
 import { Tooltip } from 'react-tooltip';
 import { FaStar } from 'react-icons/fa';
 
@@ -782,7 +781,7 @@ const UserDashboard = () => {
                                             {/* Social Interactions */}
                                             <div className="mt-3 pt-3 border-t border-gray-100">
                                                 {/* Reactions */}
-                                                <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-4 sm:gap-6 flex-wrap mb-2">
                                                     <Reactions 
                                                         eventId={event._id} 
                                                         initialReactions={event.reactions || {}} 
@@ -796,9 +795,8 @@ const UserDashboard = () => {
                                                         <svg className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                                         </svg>
-                                                        <span className="group-hover:underline">{eventComments.length || 0} {eventComments.length === 1 ? 'Comment' : 'Comments'}</span>
+                                                        <span className="group-hover:underline whitespace-nowrap">{eventComments.length || 0} {eventComments.length === 1 ? 'Comment' : 'Comments'}</span>
                                                     </button>
-                                                    <ShareButton event={event} />
                                                 </div>
 
                                                 {/* Action Buttons - Show based on event status */}

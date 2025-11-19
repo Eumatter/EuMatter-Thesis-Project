@@ -719,19 +719,19 @@ const EventManagement = () => {
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <button
                                 onClick={() => setShowProposalModal(true)}
-                                className="inline-flex items-center justify-center bg-red-900 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:bg-red-800 transition-colors duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
                             >
                                 Propose Event
                             </button>
                             <button
                                 onClick={() => setShowPostModal(true)}
-                                className="inline-flex items-center justify-center bg-white text-red-900 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-red-300 hover:bg-red-50 transition-colors duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
                             >
                                 Post Event
                             </button>
                             <button
                                 onClick={() => setShowCalendar(true)}
-                                className="inline-flex items-center justify-center bg-white text-gray-800 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
                             >
                                 Calendar
                             </button>
