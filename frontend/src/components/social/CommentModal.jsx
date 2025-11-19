@@ -302,11 +302,17 @@ const CommentModal = ({
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
         } else {
             document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
         }
         return () => {
             document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
         };
     }, [isOpen]);
 
@@ -386,7 +392,7 @@ const CommentModal = ({
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/70 backdrop-blur-xl animate-fade-in"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     onClose();
@@ -395,7 +401,7 @@ const CommentModal = ({
         >
             <div 
                 ref={modalContentRef}
-                className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-in"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] flex flex-col animate-scale-in mx-auto my-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

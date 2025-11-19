@@ -345,6 +345,25 @@ const EventManagement = () => {
             .catch(() => {})
     }, [backendUrl])
 
+    // Prevent body scroll when modals are open
+    React.useEffect(() => {
+        const anyModalOpen = showPostModal || showEditModal || showDeleteModal || showProposalModal || showAttendanceModal;
+        if (anyModalOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        };
+    }, [showPostModal, showEditModal, showDeleteModal, showProposalModal, showAttendanceModal]);
+
     // Load Facebook configuration from localStorage
     React.useEffect(() => {
         const fbConfig = localStorage.getItem('facebookConfig')
@@ -742,7 +761,7 @@ const EventManagement = () => {
                 {/* Event Proposal Modal */}
                 {showProposalModal && (
                     <div 
-                        className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-modal-in"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] p-3 sm:p-4 md:p-6 animate-modal-in"
                         style={{ marginTop: 0 }}
                         onClick={(e) => {
                             if (e.target === e.currentTarget) {
@@ -750,7 +769,7 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden border-2 border-gray-200 animate-modal-in relative">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden border-2 border-gray-200 animate-modal-in relative mx-auto my-auto">
                             {/* Enhanced Header with Maroon/Gold Theme */}
                             <div className="sticky top-0 bg-gradient-to-r from-[#800020] via-[#a0002a] to-[#800020] text-white px-8 py-6 z-10 shadow-xl border-b-2 border-[#d4af37]/30">
                                 <div className="flex items-center justify-between">
@@ -1677,7 +1696,7 @@ const EventManagement = () => {
                 {/* Post Event Modal */}
                 {showPostModal && (
                     <div 
-                        className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-modal-in"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[9999] p-3 sm:p-4 md:p-6 animate-modal-in"
                         style={{ marginTop: 0 }}
                         onClick={(e) => {
                             if (e.target === e.currentTarget) {
@@ -1685,7 +1704,7 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden border-2 border-gray-200 animate-modal-in relative">
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden border-2 border-gray-200 animate-modal-in relative mx-auto my-auto">
                             {/* Enhanced Header with Maroon/Gold Theme */}
                             <div className="sticky top-0 bg-gradient-to-r from-[#800020] via-[#a0002a] to-[#800020] text-white px-8 py-6 z-10 shadow-xl border-b-2 border-[#d4af37]/30">
                                 <div className="flex items-center justify-between">
@@ -2415,14 +2434,14 @@ const EventManagement = () => {
                 {/* Edit Event Modal */}
                 {showEditModal && (
                     <div 
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-3 sm:p-4 md:p-6"
                         onClick={(e) => {
                             if (e.target === e.currentTarget) {
                                 setShowEditModal(false)
                             }
                         }}
                     >
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border border-gray-100 mx-auto my-auto">
                             <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-gray-200 px-8 py-6 rounded-t-2xl">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
@@ -2623,14 +2642,14 @@ const EventManagement = () => {
                 {/* Delete Confirmation Modal */}
                 {showDeleteModal && (
                     <div 
-                        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-3 sm:p-4 md:p-6"
                         onClick={(e) => {
                             if (e.target === e.currentTarget) {
                                 setShowDeleteModal(false)
                             }
                         }}
                     >
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-gray-100 mx-auto my-auto">
                             <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">

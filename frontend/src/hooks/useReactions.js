@@ -250,22 +250,38 @@ export const useReactions = (eventId, currentUserId, initialData = null) => {
         queryClient.setQueryData(queryKey, context.previousData);
       }
       
-      console.error('Error reacting to event:', error);
-      
       // Handle specific error cases
       const errorStatus = error.response?.status;
       const errorMessage = error.response?.data?.message || error.message || 'Failed to update reaction';
       
-      // Don't show error for 400 (bad request) - might be expected (e.g., no reaction to remove)
-      if (errorStatus !== 400 && errorStatus !== 401) {
-        // Only log, don't show toast to avoid spam
-        console.warn('Reaction error:', errorMessage);
+      // Silently handle expected errors
+      if (errorStatus === 400) {
+        // Bad request (e.g., invalid reaction type, no reaction to remove)
+        // This is expected in some cases, don't log as error
+        return;
       }
       
-      // Handle 401 (unauthorized) - user needs to login
       if (errorStatus === 401) {
+        // Unauthorized - user needs to login
         console.warn('User not authenticated for reactions');
         // Could redirect to login if needed
+        return;
+      }
+      
+      // For 500 errors, log but don't spam console
+      // The optimistic update already happened, so UI is responsive
+      if (errorStatus === 500) {
+        // Server error - log once but don't spam
+        if (!error._logged) {
+          console.warn('Server error updating reaction (500). UI remains responsive due to optimistic update.');
+          error._logged = true;
+        }
+        return;
+      }
+      
+      // For other errors, log quietly
+      if (errorStatus !== 404) {
+        console.warn('Reaction error:', errorMessage, `(Status: ${errorStatus})`);
       }
     },
 

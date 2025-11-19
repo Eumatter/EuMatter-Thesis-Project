@@ -60,6 +60,24 @@ const CRDDonations = () => {
     const [selectedDonation, setSelectedDonation] = useState(null)
     const [showModal, setShowModal] = useState(false)
     
+    // Prevent body scroll when modals are open
+    useEffect(() => {
+        if (verificationModal.open || showModal) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        };
+    }, [verificationModal.open, showModal]);
+    
     useEffect(() => {
         if (activeTab === 'wallet') {
             fetchWalletDonations()
@@ -925,14 +943,14 @@ const CRDDonations = () => {
             {/* Cash Verification Modal */}
             {verificationModal.open && verificationModal.donation && (
                 <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 md:pt-28 pb-8 backdrop-blur-md bg-white/30 animate-modal-in"
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/70 backdrop-blur-xl animate-modal-in"
                     onClick={() => setVerificationModal({ open: false, donation: null })}
                     style={{ zIndex: 200 }}
                 >
                     <div 
-                        className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200/50 animate-slide-down flex flex-col"
+                        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200/50 animate-slide-down flex flex-col mx-auto my-auto"
                         onClick={(e) => e.stopPropagation()}
-                        style={{ zIndex: 201, maxHeight: 'calc(100vh - 6rem)' }}
+                        style={{ zIndex: 201, maxHeight: '90vh', maxWidth: 'calc(100vw - 1.5rem)' }}
                     >
                         <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-5 sm:p-6 rounded-t-2xl">
                             <div className="flex items-center justify-between">
@@ -1009,7 +1027,7 @@ const CRDDonations = () => {
             {/* Details Modal - Higher z-index than header (z-[100]) */}
             {showModal && selectedDonation && (
                 <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 md:p-6 backdrop-blur-md bg-black/20 animate-modal-in"
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/70 backdrop-blur-xl animate-modal-in"
                     onClick={() => setShowModal(false)}
                     style={{ 
                         zIndex: 200

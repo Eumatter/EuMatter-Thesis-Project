@@ -70,6 +70,25 @@ const EventManagement = () => {
         declined: 0
     })
 
+    // Prevent body scroll when any modal is open
+    useEffect(() => {
+        const anyModalOpen = showModal || showReviewModal || showEventDetailsModal || showCreateModal || showStatusModal || showDeleteModal;
+        if (anyModalOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        };
+    }, [showModal, showReviewModal, showEventDetailsModal, showCreateModal, showStatusModal, showDeleteModal]);
+
     useEffect(() => {
         fetchEvents()
     }, [])
@@ -1709,8 +1728,8 @@ const EventManagement = () => {
             )}
             {/* Event Details Modal */}
             {showEventDetailsModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8" onClick={closeEventDetailsModal} style={{ zIndex: 200 }}>
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[calc(100vh-6rem)] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-xl z-[200] flex items-center justify-center p-3 sm:p-4 md:p-6" onClick={closeEventDetailsModal} style={{ zIndex: 200 }}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col mx-auto my-auto" onClick={e => e.stopPropagation()}>
                         {/* Header */}
                         <div className="bg-gradient-to-r from-red-900 to-red-800 p-6 text-white">
                             <div className="flex justify-between items-start">
@@ -2163,7 +2182,7 @@ const EventManagement = () => {
             {/* Create Event Modal */}
             {showCreateModal && (
                 <div 
-                    className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[200] p-4 pt-20 sm:pt-24 md:pt-28 pb-8"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-[200] p-3 sm:p-4 md:p-6"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setShowCreateModal(false)
@@ -2171,7 +2190,7 @@ const EventManagement = () => {
                     }}
                     style={{ zIndex: 200 }}
                 >
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-6rem)] overflow-hidden border border-gray-200 flex flex-col">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden border border-gray-200 flex flex-col mx-auto my-auto">
                         <div className="p-8 overflow-y-auto flex-1">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
@@ -2341,8 +2360,8 @@ const EventManagement = () => {
 
             {/* Update Status Modal */}
             {showStatusModal && statusEvent && (
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[calc(100vh-6rem)] border border-gray-200 overflow-hidden">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 md:p-6 z-[200]" style={{ zIndex: 200 }}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border border-gray-200 overflow-hidden mx-auto my-auto">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <h3 className="text-2xl font-bold text-gray-900">Update Event Status</h3>
@@ -2407,8 +2426,8 @@ const EventManagement = () => {
             )}
             {/* Review Details Modal - Enhanced for better workflow */}
             {showReviewModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-md flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }} onClick={closeReviewDetailsModal}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 md:p-6 z-[200]" style={{ zIndex: 200 }} onClick={closeReviewDetailsModal}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border border-gray-200 mx-auto my-auto" onClick={(e) => e.stopPropagation()}>
                         <div className="p-6 sm:p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
@@ -2626,8 +2645,8 @@ const EventManagement = () => {
 
             {/* Delete Event Confirmation Modal (Temporary Feature) */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }}>
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center p-3 sm:p-4 md:p-6 z-[200]" style={{ zIndex: 200 }}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] sm:max-h-[85vh] border border-gray-200 overflow-hidden mx-auto my-auto">
                         <div className="p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-2xl font-bold text-gray-900">Delete Event</h3>

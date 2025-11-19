@@ -28,6 +28,24 @@ const FacebookSettingsModal = ({ isOpen, onClose, backendUrl, onConfigSaved }) =
         }
     }, [isOpen]);
 
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        };
+    }, [isOpen]);
+
     const handleVerifyToken = async () => {
         if (!pageAccessToken) {
             toast.error('Please enter a Facebook Page Access Token');
@@ -111,14 +129,14 @@ const FacebookSettingsModal = ({ isOpen, onClose, backendUrl, onConfigSaved }) =
 
     return (
         <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 animate-fade-in"
             onClick={(e) => {
                 if (e.target === e.currentTarget) {
                     onClose();
                 }
             }}
         >
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100 animate-scale-in">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto border border-gray-100 animate-scale-in mx-auto my-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-5 rounded-t-2xl">
                     <div className="flex items-center justify-between">

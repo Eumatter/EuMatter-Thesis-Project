@@ -1,4 +1,4 @@
-import React, { useState, useContext, Fragment } from 'react';
+import React, { useState, useContext, Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon, UserCircleIcon, EnvelopeIcon, LockClosedIcon, AcademicCapIcon, BuildingOffice2Icon, UserGroupIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
@@ -21,6 +21,24 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
         paymongoWebhookSecret: ''
     });
     const [isLoading, setIsLoading] = useState(false);
+
+    // Prevent body scroll when modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        } else {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.position = 'unset';
+            document.body.style.width = 'unset';
+        };
+    }, [isOpen]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -112,11 +130,11 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" />
+                    <div className="fixed inset-0 bg-black/70 backdrop-blur-xl transition-opacity" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 z-10 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 text-center">
+                    <div className="flex min-h-full items-center justify-center p-3 sm:p-4 md:p-6 text-center">
                         <Transition.Child
                             as={Fragment}
                             enter="ease-out duration-300"
@@ -126,7 +144,7 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                         >
-                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-4 sm:p-6 text-left align-middle shadow-xl transition-all mx-auto my-auto">
                                 {/* Header */}
                                 <div className="flex items-center justify-between">
                                     <Dialog.Title

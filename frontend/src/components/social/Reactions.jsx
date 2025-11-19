@@ -95,13 +95,12 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
     setTimeout(() => setAnimatingReaction(null), 600);
 
     // Use React Query mutation - handles optimistic updates and rollback automatically
+    // React Query will handle all the API calls and error handling
     react({ reactionType });
 
-    // Call the parent handler for backward compatibility (if provided)
-    if (onReact) {
-      const newReaction = userReaction === reactionType ? null : reactionType;
-      await onReact(eventId, newReaction || reactionType);
-    }
+    // Note: We don't call onReact anymore since React Query handles everything
+    // The onReact prop is kept for backward compatibility but won't be called
+    // to avoid duplicate API calls and error messages
   };
 
   // Calculate total reactions

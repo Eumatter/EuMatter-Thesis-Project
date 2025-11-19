@@ -611,18 +611,35 @@ const UserDashboard = () => {
                                     <p className="text-xs text-gray-500 truncate">{userData?.email || ''}</p>
                                 </div>
                             </div>
-                             {/* Statistics Cards - 3 Column on Mobile, Single Column on Desktop */}
-                             <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-0 mt-4 sm:mt-5">
-                                 {/* Events Joined */}
-                                 <div className="flex flex-col items-center justify-center bg-red-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-red-50">
-                                     <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Events Joined</span>
+                             {/* Statistics Cards - 2 Column on Mobile, Single Column on Desktop */}
+                             <div className="space-y-3 sm:space-y-4 lg:space-y-2 mt-4 sm:mt-5">
+                                 {/* Events Joined and Hours - 2 Column on Mobile */}
+                                 <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 sm:gap-4 lg:gap-2">
+                                     {/* Events Joined */}
+                                     <div className="flex flex-col items-center justify-center bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg shadow-md">
+                                         <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
+                                             <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
+                                                 <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                             </div>
+                                             <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Events Joined</span>
+                                        </div>
+                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-white mt-2 lg:mt-0">
+                                            {eventsJoined}
+                                        </span>
                                     </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
-                                        {eventsJoined}
-                                    </span>
-                                </div>
+                                     {/* Hours Volunteered */}
+                                     <div className="flex flex-col items-center justify-center bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg shadow-md">
+                                         <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
+                                             <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
+                                                 <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                             </div>
+                                             <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Total Hours</span>
+                                        </div>
+                                         <span className="text-xl sm:text-2xl lg:text-lg font-bold text-white mt-2 lg:mt-0">
+                                            {hoursDisplay}
+                                        </span>
+                                    </div>
+                                 </div>
                                  {/* Pending Feedback - Only show if there are pending feedbacks */}
                                  {Array.isArray(pendingFeedback) && pendingFeedback.length > 0 && (
                                  <button 
@@ -636,55 +653,54 @@ const UserDashboard = () => {
                                              navigate('/user/volunteer-history')
                                          }
                                      }}
-                                     className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50 hover:bg-yellow-100 cursor-pointer w-full"
+                                     className="flex flex-col items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl p-4 sm:p-5 lg:flex-row lg:justify-between transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg shadow-md cursor-pointer w-full"
                                  >
-                                     <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Pending Feedback</span>
+                                     <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-3">
+                                         <div className="bg-white/20 rounded-full p-2 lg:p-1.5">
+                                             <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                         </div>
+                                         <span className="text-xs sm:text-sm lg:text-sm text-white font-medium text-center lg:text-left">Pending Feedback</span>
                                     </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
+                                     <span className="text-xl sm:text-2xl lg:text-lg font-bold text-white mt-2 lg:mt-0">
                                         {pendingFeedbackCount}
                                     </span>
                                 </button>
                                  )}
-                                 {/* Hours Volunteered */}
-                                 <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-green-50">
-                                     <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Hours</span>
-                                    </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
-                                        {hoursDisplay}
-                                    </span>
-                                </div>
                             </div>
                         </div>
 
-                        {/* Quick Links - 2 Column on Mobile, Single Column on Desktop */}
+                        {/* Quick Actions - 3 Column on Mobile, Single Column on Desktop */}
                         <div className="bg-white rounded-xl shadow-md p-4 sm:p-5 transition-all duration-300 hover:shadow-lg">
-                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-2 lg:space-y-2">
+                            <h3 className="text-sm font-semibold text-gray-700 mb-3 lg:mb-2">Quick Actions</h3>
+                            <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-2">
                                 <button 
                                     onClick={() => handleDonate()}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Donate</span>
-                                    </button>
+                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Donate</span>
+                                </button>
                                 <button 
                                     onClick={() => navigate('/user/events')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Browse Events</span>
-                                    </button>
+                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Browse Events</span>
+                                </button>
                                 <button
                                     onClick={() => navigate('/user/volunteer-history')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-2 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-xl bg-white border-2 border-[#800000] hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] active:scale-95 transition-all duration-200 touch-manipulation group"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1 4v-4m0 4h3M9 12h.01M12 6.25A6.25 6.25 0 115.75 12.5m6.25-6.25a6.25 6.25 0 016.25 6.25H12" />
-                                    </svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Volunteer Hours</span>
+                                    <div className="bg-[#800000] rounded-full p-2 lg:p-1.5 group-hover:bg-white transition-colors duration-200">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-white group-hover:text-[#800000] flex-shrink-0 transition-colors duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-[10px] sm:text-xs lg:text-sm text-[#800000] font-semibold group-hover:text-white transition-colors duration-200 text-center lg:text-left">Volunteer Hours</span>
                                 </button>
                             </div>
                         </div>
