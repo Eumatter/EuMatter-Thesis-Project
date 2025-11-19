@@ -387,21 +387,28 @@ const Reports = () => {
         return trends
     }
     
-    // Chart colors
+    // Chart colors - Maroon and white theme
     const COLORS = {
         maroon: '#800020',
         maroonLight: '#9c0000',
-        gold: '#D4AF37',
-        goldLight: '#E5C866',
-        blue: '#3B82F6',
-        green: '#10B981',
-        purple: '#8B5CF6',
-        orange: '#F59E0B',
-        pink: '#EC4899',
-        teal: '#14B8A6'
+        maroonDark: '#660018',
+        maroonLighter: '#b30024',
+        white: '#FFFFFF',
+        gray: '#F3F4F6',
+        grayDark: '#6B7280'
     }
     
-    const PIE_COLORS = [COLORS.maroon, COLORS.gold, COLORS.blue, COLORS.green, COLORS.purple, COLORS.orange, COLORS.pink, COLORS.teal]
+    // Maroon gradient colors for charts
+    const PIE_COLORS = [
+        COLORS.maroon,
+        COLORS.maroonLight,
+        COLORS.maroonDark,
+        COLORS.maroonLighter,
+        '#a3001e',
+        '#8d001a',
+        '#730016',
+        '#c40028'
+    ]
     
     // Custom tooltip
     const CustomTooltip = ({ active, payload, label }) => {
@@ -470,71 +477,71 @@ const Reports = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
-                            <p className="text-gray-600 text-lg">Live analytics and demographics for events, donations, volunteers, and users</p>
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Reports</h1>
+                            <p className="text-gray-600 text-base sm:text-lg">Live analytics and demographics for events, donations, volunteers, and users</p>
                         </div>
                     </div>
                 </div>
                 
                 {/* Key Metrics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg p-6 border border-blue-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-blue-600 mb-1">Total Events</p>
-                                <p className="text-3xl font-bold text-blue-900">{totalEvents}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
+                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalEvents}</p>
                             </div>
-                            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                                <FaCalendarAlt className="w-6 h-6 text-white" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-lg p-6 border border-green-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-green-600 mb-1">Total Donations</p>
-                                <p className="text-3xl font-bold text-green-900">₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                            </div>
-                            <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                                <FaHandHoldingHeart className="w-6 h-6 text-white" />
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-lg p-6 border border-purple-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-purple-600 mb-1">Total Volunteers</p>
-                                <p className="text-3xl font-bold text-purple-900">{totalVolunteers.size}</p>
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Donations</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
-                            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                                <FaUsers className="w-6 h-6 text-white" />
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-lg p-6 border border-orange-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-orange-600 mb-1">Total Users</p>
-                                <p className="text-3xl font-bold text-orange-900">{totalUsers}</p>
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Volunteers</p>
+                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalVolunteers.size}</p>
                             </div>
-                            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                                <FaUser className="w-6 h-6 text-white" />
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Users</p>
+                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalUsers}</p>
+                            </div>
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
-                    <div className="flex flex-wrap border-b border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
+                    <div className="flex flex-wrap border-b border-gray-200 overflow-x-auto">
                         {[
                             { id: 'overview', label: 'Overview', icon: FaChartLine },
                             { id: 'events', label: 'Events', icon: FaCalendarAlt },
@@ -548,13 +555,13 @@ const Reports = () => {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-6 py-4 font-medium transition-all duration-200 ${
+                                    className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                                         activeTab === tab.id
                                             ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white border-b-2 border-[#800020]'
                                             : 'text-gray-600 hover:text-[#800020] hover:bg-gray-50'
                                     }`}
                                 >
-                                    <Icon className="w-4 h-4" />
+                                    <Icon className="w-4 h-4 flex-shrink-0" />
                                     <span>{tab.label}</span>
                                 </button>
                             )
@@ -562,16 +569,16 @@ const Reports = () => {
                     </div>
                     
                     {/* Tab Content */}
-                    <div className="p-8">
+                    <div className="p-4 sm:p-6 lg:p-8">
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Analytics Overview</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Analytics Overview</h2>
                                 
                                 {/* Monthly Trends Chart */}
-                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
-                                    <ResponsiveContainer width="100%" height={300}>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
                                         <AreaChart data={monthlyTrends}>
                                             <defs>
                                                 <linearGradient id="colorEvents" x1="0" y1="0" x2="0" y2="1">
@@ -579,12 +586,12 @@ const Reports = () => {
                                                     <stop offset="95%" stopColor={COLORS.maroon} stopOpacity={0.1}/>
                                                 </linearGradient>
                                                 <linearGradient id="colorDonations" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={COLORS.gold} stopOpacity={0.8}/>
-                                                    <stop offset="95%" stopColor={COLORS.gold} stopOpacity={0.1}/>
+                                                    <stop offset="5%" stopColor={COLORS.maroonLight} stopOpacity={0.8}/>
+                                                    <stop offset="95%" stopColor={COLORS.maroonLight} stopOpacity={0.1}/>
                                                 </linearGradient>
                                                 <linearGradient id="colorVolunteers" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={COLORS.blue} stopOpacity={0.8}/>
-                                                    <stop offset="95%" stopColor={COLORS.blue} stopOpacity={0.1}/>
+                                                    <stop offset="5%" stopColor={COLORS.maroonDark} stopOpacity={0.8}/>
+                                                    <stop offset="95%" stopColor={COLORS.maroonDark} stopOpacity={0.1}/>
                                                 </linearGradient>
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -593,17 +600,17 @@ const Reports = () => {
                                             <Tooltip content={<CustomTooltip />} />
                                             <Legend />
                                             <Area type="monotone" dataKey="events" stackId="1" stroke={COLORS.maroon} fill="url(#colorEvents)" name="Events" />
-                                            <Area type="monotone" dataKey="volunteers" stackId="2" stroke={COLORS.blue} fill="url(#colorVolunteers)" name="Volunteers" />
-                                            <Line type="monotone" dataKey="donations" stroke={COLORS.gold} strokeWidth={3} name="Donations (₱)" />
+                                            <Area type="monotone" dataKey="volunteers" stackId="2" stroke={COLORS.maroonDark} fill="url(#colorVolunteers)" name="Volunteers" />
+                                            <Line type="monotone" dataKey="donations" stroke={COLORS.maroonLight} strokeWidth={3} name="Donations (₱)" />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
                                 
                                 {/* Quick Stats Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
-                                        <ResponsiveContainer width="100%" height={200}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
+                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
                                             <PieChart>
                                                 <Pie
                                                     data={eventDemographics}
@@ -624,9 +631,9 @@ const Reports = () => {
                                         </ResponsiveContainer>
                                     </div>
                                     
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
-                                        <ResponsiveContainer width="100%" height={200}>
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
+                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
                                             <PieChart>
                                                 <Pie
                                                     data={donationDemographics.counts}
@@ -647,9 +654,9 @@ const Reports = () => {
                                         </ResponsiveContainer>
                                     </div>
                                     
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
-                                        <ResponsiveContainer width="100%" height={200}>
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
+                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
                                             <PieChart>
                                                 <Pie
                                                     data={donorDemographics.counts}
@@ -675,62 +682,37 @@ const Reports = () => {
                         
                         {/* Events Tab */}
                         {activeTab === 'events' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Event Analytics</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Analytics</h2>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Status Distribution</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={eventDemographics}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                                                    outerRadius={100}
-                                                    fill="#8884d8"
-                                                    dataKey="value"
-                                                >
-                                                    {eventDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                    
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Events by Status</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <BarChart data={eventDemographics} layout="vertical">
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis type="number" stroke="#6b7280" />
-                                                <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
-                                                <Tooltip content={<CustomTooltip />} />
-                                                <Bar dataKey="value" fill={COLORS.maroon} radius={[0, 8, 8, 0]}>
-                                                    {eventDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Events by Status</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                        <BarChart data={eventDemographics} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis type="number" stroke="#6b7280" />
+                                            <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[0, 8, 8, 0]}>
+                                                {eventDemographics.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
                                 
-                                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Statistics</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Event Statistics</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                                         {eventDemographics.map((stat, index) => (
-                                            <div key={index} className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
-                                                <p className="text-2xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                                            <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+                                                <p className="text-xl sm:text-2xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
                                                     {stat.value}
                                                 </p>
-                                                <p className="text-sm text-gray-600 mt-1">{stat.name}</p>
-                            </div>
-                        ))}
+                                                <p className="text-xs sm:text-sm text-gray-600 mt-1">{stat.name}</p>
+                                            </div>
+                                        ))}
                     </div>
                 </div>
             </div>
@@ -738,145 +720,94 @@ const Reports = () => {
                         
                         {/* Donations Tab */}
                         {activeTab === 'donations' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Donation Analytics</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donation Analytics</h2>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Donation Methods (Count)</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={donationDemographics.counts}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                                                    outerRadius={100}
-                                                    fill="#8884d8"
-                                                    dataKey="value"
-                                                >
-                                                    {donationDemographics.counts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                            </div>
-                                    
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Donation Methods (Amount)</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <BarChart data={donationDemographics.amounts}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis dataKey="name" stroke="#6b7280" />
-                                                <YAxis stroke="#6b7280" />
-                                                <Tooltip content={<CustomTooltip />} />
-                                                <Bar dataKey="value" fill={COLORS.gold} radius={[8, 8, 0, 0]}>
-                                                    {donationDemographics.amounts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                        </div>
-                    </div>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Methods (Amount)</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                        <BarChart data={donationDemographics.amounts.filter(d => d.name !== 'in-kind')}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" stroke="#6b7280" />
+                                            <YAxis stroke="#6b7280" />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[8, 8, 0, 0]}>
+                                                {donationDemographics.amounts.filter(d => d.name !== 'in-kind').map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
 
-                                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Donation Method Statistics</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        {donationDemographics.counts.map((method, index) => {
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Method Statistics</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                        {donationDemographics.counts.filter(m => m.name !== 'in-kind').map((method, index) => {
                                             const amountData = donationDemographics.amounts.find(m => m.name === method.name)
                                             return (
-                                                <div key={index} className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+                                                <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                     <div className="flex items-center justify-center mb-2">
-                                                        {method.name === 'wallet' && <FaWallet className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {method.name === 'cash' && <FaMoneyBillWave className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {method.name === 'cheque' && <FaCreditCard className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {method.name === 'in-kind' && <FaBoxOpen className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                            </div>
-                                                    <p className="text-xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                                                        {method.name === 'wallet' && <FaWallet className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {method.name === 'cash' && <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {method.name === 'cheque' && <FaCreditCard className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    </div>
+                                                    <p className="text-lg sm:text-xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                                         {method.value}
                                                     </p>
-                                                    <p className="text-xs text-gray-600 mt-1">{method.name}</p>
+                                                    <p className="text-xs text-gray-600 mt-1 capitalize">{method.name}</p>
                                                     {amountData && (
-                                                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                                                        <p className="text-xs sm:text-sm font-semibold text-gray-900 mt-1">
                                                             ₱{amountData.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </p>
                                                     )}
-                            </div>
+                                                </div>
                                             )
                                         })}
-                        </div>
-                    </div>
+                                    </div>
+                                </div>
                             </div>
                         )}
                         
                         {/* Volunteers Tab */}
                         {activeTab === 'volunteers' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Volunteer Analytics</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Volunteer Analytics</h2>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Volunteer Demographics</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={volunteerDemographics}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                                                    outerRadius={100}
-                                                    fill="#8884d8"
-                                                    dataKey="value"
-                                                >
-                                                    {volunteerDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                            </div>
-                                    
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Volunteers by Category</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <BarChart data={volunteerDemographics}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis dataKey="name" stroke="#6b7280" />
-                                                <YAxis stroke="#6b7280" />
-                                                <Tooltip content={<CustomTooltip />} />
-                                                <Bar dataKey="value" fill={COLORS.purple} radius={[8, 8, 0, 0]}>
-                                                    {volunteerDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                    </div>
-                </div>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Volunteers by Category</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                        <BarChart data={volunteerDemographics}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" stroke="#6b7280" />
+                                            <YAxis stroke="#6b7280" />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[8, 8, 0, 0]}>
+                                                {volunteerDemographics.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
 
-                                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Volunteer Statistics</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Volunteer Statistics</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                                         {volunteerDemographics.map((stat, index) => (
-                                            <div key={index} className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+                                            <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                 <div className="flex items-center justify-center mb-2">
-                                                    {stat.name === 'Student' && <FaUserGraduate className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                    {stat.name === 'Alumni' && <FaUniversity className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                    {stat.name === 'Faculty' && <FaUserTie className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                    {stat.name === 'Staff' && <FaUserTie className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                    {stat.name === 'Guest' && <FaUser className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
+                                                    {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    {stat.name === 'Staff' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
                                                 </div>
-                                                <p className="text-2xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                                                <p className="text-xl sm:text-2xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                                     {stat.value}
                                                 </p>
-                                                <p className="text-sm text-gray-600 mt-1">{stat.name}</p>
-                                </div>
+                                                <p className="text-xs sm:text-sm text-gray-600 mt-1">{stat.name}</p>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
@@ -885,138 +816,88 @@ const Reports = () => {
                         
                         {/* Users Tab */}
                         {activeTab === 'users' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">User Demographics</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>User Demographics</h2>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">User Distribution</h3>
-                                        <ResponsiveContainer width="100%" height={350}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={userDemographics}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                                                    outerRadius={120}
-                                                    fill="#8884d8"
-                                                    dataKey="value"
-                                                >
-                                                    {userDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    </div>
-                                    
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Users by Category</h3>
-                                        <ResponsiveContainer width="100%" height={350}>
-                                            <BarChart data={userDemographics} layout="vertical">
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis type="number" stroke="#6b7280" />
-                                                <YAxis dataKey="name" type="category" stroke="#6b7280" width={120} />
-                                                <Tooltip content={<CustomTooltip />} />
-                                                <Bar dataKey="value" fill={COLORS.orange} radius={[0, 8, 8, 0]}>
-                                                    {userDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                                    </div>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Users by Category</h3>
+                                    <ResponsiveContainer width="100%" height={300} minHeight={300}>
+                                        <BarChart data={userDemographics.filter(u => u.name !== 'CRD Staff' && u.name !== 'System Administrator')} layout="vertical">
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis type="number" stroke="#6b7280" />
+                                            <YAxis dataKey="name" type="category" stroke="#6b7280" width={100} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[0, 8, 8, 0]}>
+                                                {userDemographics.filter(u => u.name !== 'CRD Staff' && u.name !== 'System Administrator').map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
                                 </div>
                                 
-                                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">User Statistics</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-                                        {userDemographics.map((stat, index) => (
-                                            <div key={index} className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
-                                                <p className="text-2xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">User Statistics</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+                                        {userDemographics.filter(u => u.name !== 'CRD Staff' && u.name !== 'System Administrator').map((stat, index) => (
+                                            <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+                                                <p className="text-xl sm:text-2xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                                     {stat.value}
                                                 </p>
                                                 <p className="text-xs text-gray-600 mt-1">{stat.name}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
                         )}
                         
                         {/* Donor Demographics Tab */}
                         {activeTab === 'donors' && (
-                            <div className="space-y-8">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-6">Donor Demographics</h2>
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donor Demographics</h2>
                                 
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Donors by Category (Count)</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={donorDemographics.counts}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(1)}%)`}
-                                                    outerRadius={100}
-                                                    fill="#8884d8"
-                                                    dataKey="value"
-                                                >
-                                                    {donorDemographics.counts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                        </div>
-                                    
-                                    <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Donation Amount by Category</h3>
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <BarChart data={donorDemographics.amounts}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis dataKey="name" stroke="#6b7280" />
-                                                <YAxis stroke="#6b7280" />
-                                                <Tooltip content={<CustomTooltip />} />
-                                                <Bar dataKey="value" fill={COLORS.gold} radius={[8, 8, 0, 0]}>
-                                                    {donorDemographics.amounts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
-                    </div>
-                </div>
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Amount by Category</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                        <BarChart data={donorDemographics.amounts}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" stroke="#6b7280" />
+                                            <YAxis stroke="#6b7280" />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[8, 8, 0, 0]}>
+                                                {donorDemographics.amounts.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
 
-                                <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Donor Statistics</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donor Statistics</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                                         {donorDemographics.counts.map((stat, index) => {
                                             const amountData = donorDemographics.amounts.find(d => d.name === stat.name)
                                             return (
-                                                <div key={index} className="text-center p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
+                                                <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                     <div className="flex items-center justify-center mb-2">
-                                                        {stat.name === 'Student' && <FaUserGraduate className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {stat.name === 'Alumni' && <FaUniversity className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {stat.name === 'Faculty' && <FaUserTie className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {stat.name === 'Staff' && <FaUserTie className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                                                        {stat.name === 'Guest' && <FaUser className="w-6 h-6" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }} />}
-                        </div>
-                                                    <p className="text-xl font-bold" style={{ color: PIE_COLORS[index % PIE_COLORS.length] }}>
+                                                        {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {stat.name === 'Staff' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    </div>
+                                                    <p className="text-lg sm:text-xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                                         {stat.value}
                                                     </p>
                                                     <p className="text-xs text-gray-600 mt-1">{stat.name} Donors</p>
                                                     {amountData && (
-                                                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                                                        <p className="text-xs sm:text-sm font-semibold text-gray-900 mt-1">
                                                             ₱{amountData.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </p>
-                            )}
-                        </div>
+                                                    )}
+                                                </div>
                                             )
                                         })}
                                     </div>

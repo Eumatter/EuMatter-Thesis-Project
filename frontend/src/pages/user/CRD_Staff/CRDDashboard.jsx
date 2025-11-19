@@ -543,30 +543,9 @@ const CRDDashboard = () => {
             <main className="max-w-7xl mx-auto px-6 py-8">
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                            <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>
-                        </div>
-                        <button 
-                            onClick={() => navigate('/user/profile')}
-                            className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded-lg border transition-all whitespace-nowrap hover:shadow-sm"
-                            style={{ 
-                                borderColor: THEME_COLORS.maroon, 
-                                color: THEME_COLORS.maroon,
-                                backgroundColor: 'transparent'
-                            }}
-                            onMouseEnter={(e) => {
-                                e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                e.target.style.color = THEME_COLORS.white;
-                            }}
-                            onMouseLeave={(e) => {
-                                e.target.style.backgroundColor = 'transparent';
-                                e.target.style.color = THEME_COLORS.maroon;
-                            }}
-                        >
-                            Profile Settings
-                        </button>
+                    <div>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
+                        <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>
                     </div>
                 </div>
 

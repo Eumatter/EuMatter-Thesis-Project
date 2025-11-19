@@ -553,8 +553,11 @@ const EventManagement = () => {
                                             </linearGradient>
                                         </defs>
                                         <circle cx="12" cy="12" r="10" fill="url(#gradientPending)" />
+                                        {/* Clock hands - Hour hand pointing to 10, minute hand pointing to 2 */}
+                                        <line x1="12" y1="12" x2="12" y2="8" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                                        <line x1="12" y1="12" x2="15" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                                        {/* Center dot */}
                                         <circle cx="12" cy="12" r="1.5" fill="white" />
-                                        <path d="M12 6 L12 12 L16 14 L12 12 Z" fill="white" />
                                     </svg>
                                 </div>
                             </div>
@@ -577,7 +580,8 @@ const EventManagement = () => {
                                             </linearGradient>
                                         </defs>
                                         <circle cx="12" cy="12" r="10" fill="url(#gradientApproved)" />
-                                        <path d="M9 12 L11 14 L15 10 L13 10 L11 12 Z" fill="white" />
+                                        {/* Checkmark */}
+                                        <path d="M9 12 L11 14 L15 10" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
                                     </svg>
                                 </div>
                             </div>
