@@ -96,8 +96,8 @@ const AuditLogTable = ({
     return (
         <div className="-mx-4 sm:mx-0">
             <div className="inline-block w-full align-middle">
-                <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table className="w-full divide-y divide-gray-300 bg-white">
+                <div className="overflow-hidden">
+                    <table className="w-full divide-y divide-gray-300 bg-white border-collapse border-0 outline-none" style={{ border: 'none', outline: 'none' }}>
                         <thead className="bg-gray-50">
                             <tr>
                                 <th 
