@@ -516,9 +516,9 @@ const DonationHistory = () => {
                             </p>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-2">
-                                <div className="text-xs text-gray-500">Total Donated</div>
-                                <div className="text-lg font-bold text-[#800000]">{formatCurrency(totalDonated)}</div>
+                            <div className="bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl shadow-lg border border-[#800000] px-5 py-3 sm:px-6 sm:py-4 transform hover:scale-105 transition-all duration-300">
+                                <div className="text-xs sm:text-sm text-white/90 font-medium mb-1">Total Donated</div>
+                                <div className="text-xl sm:text-2xl font-bold text-white">{formatCurrency(totalDonated)}</div>
                             </div>
                         </div>
                     </div>
@@ -526,17 +526,20 @@ const DonationHistory = () => {
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
-                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Total</div>
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</div>
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 p-4 sm:p-5 transition-all duration-300 transform hover:-translate-y-1">
+                        <div className="text-xs sm:text-sm text-gray-500 mb-1.5 font-medium">Total Donations</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.total}</div>
+                        <div className="mt-2 text-xs text-gray-400">All time</div>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
-                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Succeeded</div>
-                        <div className="text-xl sm:text-2xl font-bold text-green-600">{stats.succeeded}</div>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl shadow-sm hover:shadow-md border border-green-200 p-4 sm:p-5 transition-all duration-300 transform hover:-translate-y-1">
+                        <div className="text-xs sm:text-sm text-green-700 mb-1.5 font-medium">Succeeded</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-green-600">{stats.succeeded}</div>
+                        <div className="mt-2 text-xs text-green-600">Completed</div>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
-                        <div className="text-xs sm:text-sm text-gray-500 mb-1">Failed/Canceled</div>
-                        <div className="text-xl sm:text-2xl font-bold text-red-600">{stats.failed}</div>
+                    <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl shadow-sm hover:shadow-md border border-red-200 p-4 sm:p-5 transition-all duration-300 transform hover:-translate-y-1">
+                        <div className="text-xs sm:text-sm text-red-700 mb-1.5 font-medium">Failed/Canceled</div>
+                        <div className="text-2xl sm:text-3xl font-bold text-red-600">{stats.failed}</div>
+                        <div className="mt-2 text-xs text-red-600">Unsuccessful</div>
                     </div>
                 </div>
 
@@ -614,16 +617,16 @@ const DonationHistory = () => {
                         {activeTab === 'history' && (
                         <div>
                                 {/* Filters */}
-                                <div className="mb-6 space-y-4">
+                                <div className="mb-6 sm:mb-8 space-y-4">
                                     {/* Search Bar */}
                                     <div className="relative">
-                                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                        <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
                                         <input
                                             type="text"
-                                            placeholder="Search donations..."
+                                            placeholder="Search donations by name, message, or ID..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                            className="w-full pl-11 pr-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md"
                                         />
                                     </div>
 
@@ -631,10 +634,14 @@ const DonationHistory = () => {
                                     <div className="flex flex-wrap items-center gap-3">
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                            className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-200 font-medium text-sm ${
+                                                showFilters 
+                                                    ? 'bg-[#800000] text-white shadow-md' 
+                                                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-[#800000] hover:text-[#800000]'
+                                            }`}
                                         >
-                                            <FaFilter />
-                                            <span className="text-sm font-medium">Filters</span>
+                                            <FaFilter className={showFilters ? 'text-white' : 'text-gray-600'} />
+                                            <span>Filters</span>
                                         </button>
                                         
                                         {showFilters && (
@@ -642,7 +649,7 @@ const DonationHistory = () => {
                                                 <select
                                                     value={statusFilter}
                                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-sm"
+                                                    className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-sm bg-white shadow-sm hover:shadow-md transition-all"
                                                 >
                                                     <option value="all">All Status</option>
                                                     <option value="succeeded">Succeeded</option>
@@ -656,7 +663,7 @@ const DonationHistory = () => {
                                                 <select
                                                     value={paymentMethodFilter}
                                                     onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-sm"
+                                                    className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-sm bg-white shadow-sm hover:shadow-md transition-all"
                                                 >
                                                     <option value="all">All Methods</option>
                                                     <option value="gcash">GCash</option>
@@ -669,7 +676,7 @@ const DonationHistory = () => {
                                                 <select
                                                     value={dateFilter}
                                                     onChange={(e) => setDateFilter(e.target.value)}
-                                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-sm"
+                                                    className="px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-sm bg-white shadow-sm hover:shadow-md transition-all"
                                                 >
                                                     <option value="all">All Time</option>
                                                     <option value="today">Today</option>
@@ -684,77 +691,85 @@ const DonationHistory = () => {
 
                                 {/* Donations List */}
                                 {loading ? (
-                                    <div className="py-12">
+                                    <div className="py-16 sm:py-20">
                                         <LoadingSpinner size="medium" text="Loading donations..." />
                                     </div>
                                 ) : filteredDonations.length === 0 ? (
-                                    <div className="text-center py-12">
-                                        <FaHandHoldingHeart className="text-6xl text-gray-300 mx-auto mb-4" />
-                                        <p className="text-gray-500 text-lg">No donations found</p>
-                                        <p className="text-gray-400 text-sm mt-2">
+                                    <div className="text-center py-16 sm:py-20">
+                                        <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full mb-4">
+                                            <FaHandHoldingHeart className="text-4xl sm:text-5xl text-gray-300" />
+                                        </div>
+                                        <p className="text-gray-700 text-lg sm:text-xl font-semibold mb-2">No donations found</p>
+                                        <p className="text-gray-500 text-sm sm:text-base">
                                             {donations.length === 0 
-                                                ? 'You haven\'t made any donations yet' 
-                                                : 'Try adjusting your filters'}
+                                                ? 'You haven\'t made any donations yet. Start making a difference today!' 
+                                                : 'Try adjusting your filters to see more results'}
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-4">
+                                    <div className="space-y-3 sm:space-y-4">
                                         {/* Desktop Table View */}
-                                        <div className="hidden lg:block overflow-x-auto">
+                                        <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
                                             <table className="w-full">
-                                                <thead className="bg-gray-50 border-b border-gray-200">
+                                                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                                     <tr>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation Method</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Message</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Recipient</th>
-                                                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Date</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Amount</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Method</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Message</th>
+                                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Recipient</th>
+                                                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Notes</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
-                                                    {filteredDonations.map((donation) => (
-                                                        <tr key={donation._id} className="hover:bg-gray-50 transition-colors">
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                                {formatDate(donation.createdAt)}
-                                                            </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                                                {formatCurrency(donation.amount)}
+                                                <tbody className="bg-white divide-y divide-gray-100">
+                                                    {filteredDonations.map((donation, index) => (
+                                                        <tr 
+                                                            key={donation._id} 
+                                                            className="hover:bg-gradient-to-r hover:from-gray-50 hover:to-white transition-all duration-200 group"
+                                                            style={{ animationDelay: `${index * 50}ms` }}
+                                                        >
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-gray-900">{formatDate(donation.createdAt)}</div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="flex items-center space-x-2">
-                                                                    {getPaymentMethodIcon(donation.paymentMethod)}
-                                                                    <span className="text-sm text-gray-900">
+                                                                <div className="text-base font-bold text-[#800000]">{formatCurrency(donation.amount)}</div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="flex items-center space-x-2.5">
+                                                                    <div className="text-lg">{getPaymentMethodIcon(donation.paymentMethod)}</div>
+                                                                    <span className="text-sm font-medium text-gray-700">
                                                                         {getPaymentMethodLabel(donation.paymentMethod)}
                                                                     </span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(donation.status)}`}>
+                                                                <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${getStatusColor(donation.status)} shadow-sm`}>
                                                                     {getStatusIcon(donation.status)}
-                                                                    <span className="ml-2 capitalize">{donation.status}</span>
+                                                                    <span className="ml-2 capitalize">{donation.status.replace(/_/g, ' ')}</span>
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                                                                {donation.message || '-'}
+                                                            <td className="px-6 py-4">
+                                                                <div className="text-sm text-gray-600 max-w-xs truncate group-hover:max-w-none group-hover:whitespace-normal">
+                                                                    {donation.message || <span className="text-gray-400 italic">No message</span>}
+                                                                </div>
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                                                {getRecipientLabel(donation)}
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm font-medium text-gray-700">{getRecipientLabel(donation)}</div>
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                            <td className="px-6 py-4 whitespace-nowrap text-right">
                                                                 {(donation.status === 'succeeded' || donation.status === 'cash_completed') && (
-                                                                    <span className="text-green-600 text-xs font-medium">
-                                                                        ✓ Receipt sent to email
+                                                                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                                                        ✓ Receipt sent
                                                                     </span>
                                                                 )}
                                                                 {donation.status === 'cash_pending_verification' && (
-                                                                    <span className="text-yellow-600 text-xs font-medium">
-                                                                        ⏳ Pending verification
+                                                                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                                                        ⏳ Pending
                                                                     </span>
                                                                 )}
                                                                 {donation.status === 'cash_verified' && (
-                                                                    <span className="text-blue-600 text-xs font-medium">
+                                                                    <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                                                                         ✓ Verified
                                                                     </span>
                                                                 )}
@@ -766,73 +781,89 @@ const DonationHistory = () => {
                                         </div>
 
                                         {/* Mobile/Tablet Card View */}
-                                        <div className="lg:hidden space-y-4">
-                                            {filteredDonations.map((donation) => (
-                                                <div key={donation._id} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
-                                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="lg:hidden space-y-3 sm:space-y-4">
+                                            {filteredDonations.map((donation, index) => (
+                                                <div 
+                                                    key={donation._id} 
+                                                    className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 overflow-hidden"
+                                                    style={{ animationDelay: `${index * 50}ms` }}
+                                                >
+                                                    {/* Header Section */}
+                                                    <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
                                                         <div className="flex-1">
-                                                            <div className="flex items-center space-x-2 mb-2">
+                                                            <div className="flex items-center space-x-2 mb-3">
                                                                 {getStatusIcon(donation.status)}
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(donation.status)}`}>
-                                                                    {donation.status.charAt(0).toUpperCase() + donation.status.slice(1)}
+                                                                <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${getStatusColor(donation.status)} shadow-sm`}>
+                                                                    {donation.status.replace(/_/g, ' ').toUpperCase()}
                                                                 </span>
                                                             </div>
-                                                            <div className="text-2xl font-bold text-gray-900 mb-1">
+                                                            <div className="text-3xl sm:text-4xl font-bold text-[#800000] mb-2">
                                                                 {formatCurrency(donation.amount)}
                                                             </div>
-                                                            <div className="text-sm text-gray-500">
-                                                                {formatDate(donation.createdAt)}
+                                                            <div className="flex items-center space-x-2 text-sm text-gray-500">
+                                                                <FaCalendarAlt className="text-xs" />
+                                                                <span>{formatDate(donation.createdAt)}</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="flex items-center space-x-2 mb-3 text-sm text-gray-600">
-                                                        {getPaymentMethodIcon(donation.paymentMethod)}
-                                                        <span>{getPaymentMethodLabel(donation.paymentMethod)}</span>
+                                                    {/* Details Grid */}
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                                        <div className="flex items-center space-x-2.5 p-2.5 bg-gray-50 rounded-xl">
+                                                            <div className="text-lg text-gray-600">{getPaymentMethodIcon(donation.paymentMethod)}</div>
+                                                            <div>
+                                                                <div className="text-xs text-gray-500 font-medium">Method</div>
+                                                                <div className="text-sm font-semibold text-gray-700">{getPaymentMethodLabel(donation.paymentMethod)}</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="p-2.5 bg-gray-50 rounded-xl">
+                                                            <div className="text-xs text-gray-500 font-medium mb-0.5">Recipient</div>
+                                                            <div className="text-sm font-semibold text-gray-700 truncate">{getRecipientLabel(donation)}</div>
+                                                        </div>
                                                     </div>
                                                     
-                                                    <div className="text-xs text-gray-500 mb-2">
-                                                        Recipient: {getRecipientLabel(donation)}
-                                                    </div>
-                                                    
+                                                    {/* Message */}
                                                     {donation.message && (
-                                                        <div className="text-sm text-gray-600 mb-3 p-2 bg-gray-50 rounded-lg">
-                                                            {donation.message}
-                        </div>
+                                                        <div className="mb-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border-l-4 border-[#800000]">
+                                                            <div className="text-xs text-gray-500 font-medium mb-1">Message</div>
+                                                            <div className="text-sm text-gray-700 leading-relaxed">{donation.message}</div>
+                                                        </div>
                                                     )}
                                                     
+                                                    {/* Status Messages */}
                                                     {(donation.status === 'succeeded' || donation.status === 'cash_completed') && (
-                                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                                            <div className="flex items-center gap-2 text-green-700">
-                                                                <FaCheckCircle />
-                                                                <span className="text-sm font-medium">Receipt sent to your email</span>
+                                                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-xl p-4">
+                                                            <div className="flex items-center gap-2.5 text-green-700 mb-2">
+                                                                <FaCheckCircle className="text-lg flex-shrink-0" />
+                                                                <span className="text-sm font-semibold">Receipt Sent</span>
                                                             </div>
-                                                            <p className="text-xs text-gray-600 mt-2">
-                                                                Your official acknowledgment receipt has been sent to <strong>{donation.donorEmail}</strong>. Please check your email inbox.
+                                                            <p className="text-xs text-green-600 leading-relaxed">
+                                                                Your official acknowledgment receipt has been sent to <strong className="font-semibold">{donation.donorEmail}</strong>. Please check your email inbox.
                                                             </p>
                                                         </div>
                                                     )}
                                                     
                                                     {donation.status === 'cash_pending_verification' && (
-                                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                                            <div className="flex items-center gap-2 text-yellow-700">
-                                                                <FaClock />
-                                                                <span className="text-sm font-medium">Pending Verification</span>
+                                                        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 rounded-xl p-4">
+                                                            <div className="flex items-center gap-2.5 text-yellow-700 mb-2">
+                                                                <FaClock className="text-lg flex-shrink-0" />
+                                                                <span className="text-sm font-semibold">Pending Verification</span>
                                                             </div>
-                                                            <p className="text-xs text-gray-600 mt-2">
+                                                            <p className="text-xs text-yellow-600 leading-relaxed">
                                                                 Your cash donation is pending verification by the recipient. You will be notified once it's verified.
                                                             </p>
                                                         </div>
                                                     )}
                                                     
                                                     {donation.status === 'cash_verified' && (
-                                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                                            <div className="flex items-center gap-2 text-blue-700">
-                                                                <FaCheckCircle />
-                                                                <span className="text-sm font-medium">Verified</span>
+                                                        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-l-4 border-blue-500 rounded-xl p-4">
+                                                            <div className="flex items-center gap-2.5 text-blue-700 mb-2">
+                                                                <FaCheckCircle className="text-lg flex-shrink-0" />
+                                                                <span className="text-sm font-semibold">Verified</span>
                                                             </div>
-                                                            <p className="text-xs text-gray-600 mt-2">
-                                                                Your cash donation has been verified. Receipt: <strong>{donation.cashVerification?.receiptNumber || 'N/A'}</strong>
+                                                            <p className="text-xs text-blue-600 leading-relaxed">
+                                                                Your cash donation has been verified. Receipt: <strong className="font-semibold">{donation.cashVerification?.receiptNumber || 'N/A'}</strong>
                                                             </p>
                                                         </div>
                                                     )}
@@ -847,9 +878,9 @@ const DonationHistory = () => {
                         {/* Make a Donation Tab */}
                         {activeTab === 'donate' && (
                             <div className="max-w-2xl mx-auto">
-                                <div className="bg-gradient-to-r from-[#800000] to-[#9c0000] rounded-xl p-6 sm:p-8 text-white mb-6">
+                                <div className="bg-gradient-to-r from-[#800000] via-[#9c0000] to-[#800000] rounded-xl p-6 sm:p-8 text-white mb-6 shadow-lg">
                                     <h2 className="text-2xl sm:text-3xl font-bold mb-2">Make a Donation</h2>
-                                    <p className="text-red-100">
+                                    <p className="text-white">
                                         Your contribution helps us make a difference in the community
                                     </p>
                                 </div>
@@ -875,7 +906,7 @@ const DonationHistory = () => {
                                                     key={amount}
                                                     type="button"
                                                     onClick={() => setDonationForm({ ...donationForm, amount: amount.toString() })}
-                                                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                                                    className="px-4 py-2 bg-white text-[#800000] border-2 border-[#800000] rounded-lg text-sm font-medium hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] hover:text-white transition-all"
                                                 >
                                                     ₱{amount}
                                                 </button>
@@ -1009,7 +1040,7 @@ const DonationHistory = () => {
                                     <button
                                         type="submit"
                                         disabled={donating}
-                                        className="w-full bg-[#800000] text-white py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-[#9c0000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                                        className="w-full bg-white text-[#800000] border-2 border-[#800000] py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                                     >
                                         {donating ? (
                                             <>
@@ -1031,12 +1062,12 @@ const DonationHistory = () => {
                         {activeTab === 'inkind' && (
                             <div className="max-w-4xl mx-auto space-y-6">
                                 {/* Header */}
-                                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 sm:p-8 text-white">
+                                <div className="bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] rounded-xl p-6 sm:p-8 text-[#800000] shadow-lg">
                                     <div className="flex items-center space-x-3 mb-2">
-                                        <FaBoxOpen className="text-3xl" />
+                                        
                                         <h2 className="text-2xl sm:text-3xl font-bold">In-Kind Donation</h2>
                                     </div>
-                                    <p className="text-indigo-100">
+                                    <p className="text-[#800000]">
                                         Submit a request to donate physical items, goods, or services. Our CRD staff will review and coordinate with you.
                                     </p>
                                 </div>
@@ -1066,7 +1097,7 @@ const DonationHistory = () => {
                                             <select
                                                 value={inKindForm.donationType}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, donationType: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 required
                                             >
                                                 <option value="food">Food & Beverages</option>
@@ -1089,7 +1120,7 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, itemDescription: e.target.value })}
                                                 placeholder="Describe the items you wish to donate in detail..."
                                                 rows="4"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 required
                                             />
                                         </div>
@@ -1105,7 +1136,7 @@ const DonationHistory = () => {
                                                     value={inKindForm.quantity}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, quantity: e.target.value })}
                                                     placeholder="e.g., 10 boxes, 50 pieces"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 />
                                             </div>
                                             <div>
@@ -1115,7 +1146,7 @@ const DonationHistory = () => {
                                                 <select
                                                     value={inKindForm.condition}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, condition: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 >
                                                     <option value="new">New</option>
                                                     <option value="like_new">Like New</option>
@@ -1139,7 +1170,7 @@ const DonationHistory = () => {
                                                     value={inKindForm.estimatedValue}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, estimatedValue: e.target.value })}
                                                     placeholder="Optional"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 />
                                             </div>
                                             <div>
@@ -1149,7 +1180,7 @@ const DonationHistory = () => {
                                                 <select
                                                     value={inKindForm.eventId || ''}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, eventId: e.target.value || null })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 >
                                                     <option value="">General Donation</option>
                                                     {events.map((event) => (
@@ -1171,7 +1202,7 @@ const DonationHistory = () => {
                                                 value={inKindForm.donorPhone}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, donorPhone: e.target.value })}
                                                 placeholder="Your contact number"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                             />
                                         </div>
 
@@ -1183,7 +1214,7 @@ const DonationHistory = () => {
                                             <select
                                                 value={inKindForm.deliveryMethod}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, deliveryMethod: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                             >
                                                 <option value="pending">To be discussed</option>
                                                 <option value="drop_off">I will drop off</option>
@@ -1202,7 +1233,7 @@ const DonationHistory = () => {
                                                     type="date"
                                                     value={inKindForm.preferredDate}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, preferredDate: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 />
                                             </div>
                                             <div>
@@ -1214,7 +1245,7 @@ const DonationHistory = () => {
                                                     value={inKindForm.preferredTime}
                                                     onChange={(e) => setInKindForm({ ...inKindForm, preferredTime: e.target.value })}
                                                     placeholder="e.g., 9:00 AM - 5:00 PM"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                                 />
                                             </div>
                                         </div>
@@ -1229,7 +1260,7 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, address: e.target.value })}
                                                 placeholder="Enter your address..."
                                                 rows="2"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                             />
                                         </div>
 
@@ -1243,7 +1274,7 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, notes: e.target.value })}
                                                 placeholder="Any additional information or special instructions..."
                                                 rows="3"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                             />
                                         </div>
 
@@ -1257,7 +1288,7 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, message: e.target.value })}
                                                 placeholder="Leave a message with your donation..."
                                                 rows="3"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                                             />
                                         </div>
 
@@ -1265,7 +1296,7 @@ const DonationHistory = () => {
                                         <button
                                             type="submit"
                                             disabled={submittingInKind}
-                                            className="w-full bg-indigo-600 text-white py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                                            className="w-full bg-white text-[#800000] border-2 border-[#800000] py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                                         >
                                             {submittingInKind ? (
                                                 <>
@@ -1326,6 +1357,19 @@ const DonationHistory = () => {
             </main>
 
             <Footer />
+            
+            <style>{`
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(10px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
         </div>
     )
 }
