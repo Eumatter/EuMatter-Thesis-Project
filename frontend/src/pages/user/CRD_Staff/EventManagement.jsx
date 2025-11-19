@@ -1528,6 +1528,7 @@ const EventManagement = () => {
                             </div>
                         </div>
                     )
+                    )
                 ) : (
                     <div className="text-center py-16">
                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -1614,7 +1615,6 @@ const EventManagement = () => {
                             </div>
                         </div>
                     </div>
-                )}
                 )}
             </main>
 
