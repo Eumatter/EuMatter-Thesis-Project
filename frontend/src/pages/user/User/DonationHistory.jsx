@@ -877,18 +877,18 @@ const DonationHistory = () => {
 
                         {/* Make a Donation Tab */}
                         {activeTab === 'donate' && (
-                            <div className="max-w-2xl mx-auto">
-                                <div className="bg-gradient-to-r from-[#800000] via-[#9c0000] to-[#800000] rounded-xl p-6 sm:p-8 text-white mb-6 shadow-lg">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="bg-gradient-to-r from-[#800000] via-[#9c0000] to-[#800000] rounded-xl p-6 sm:p-8 text-white mb-6 shadow-lg min-h-[140px] flex flex-col justify-center">
                                     <h2 className="text-2xl sm:text-3xl font-bold mb-2">Make a Donation</h2>
-                                    <p className="text-white">
+                                    <p className="text-white text-base sm:text-lg">
                                         Your contribution helps us make a difference in the community
                                     </p>
                                 </div>
 
                                 <form onSubmit={handleDonate} className="space-y-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Donation Amount (PHP)
+                                    <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            Donation Amount (PHP) <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="number"
@@ -897,16 +897,16 @@ const DonationHistory = () => {
                                             value={donationForm.amount}
                                             onChange={(e) => setDonationForm({ ...donationForm, amount: e.target.value })}
                                             placeholder="Enter amount"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-lg"
+                                            className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-lg font-medium transition-all shadow-sm hover:shadow-md"
                                             required
                                         />
-                                        <div className="mt-2 flex flex-wrap gap-2">
+                                        <div className="mt-3 flex flex-wrap gap-2.5">
                                             {[100, 500, 1000, 5000].map((amount) => (
                                                 <button
                                                     key={amount}
                                                     type="button"
                                                     onClick={() => setDonationForm({ ...donationForm, amount: amount.toString() })}
-                                                    className="px-4 py-2 bg-white text-[#800000] border-2 border-[#800000] rounded-lg text-sm font-medium hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] hover:text-white transition-all"
+                                                    className="px-4 py-2.5 bg-white text-[#800000] border-2 border-[#800000] rounded-xl text-sm font-semibold hover:bg-gradient-to-r hover:from-[#800000] hover:via-[#9c0000] hover:to-[#800000] hover:text-white transition-all shadow-sm hover:shadow-md"
                                                 >
                                                     ₱{amount}
                                                 </button>
@@ -914,8 +914,8 @@ const DonationHistory = () => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
                                             Donate To <span className="text-red-500">*</span>
                                         </label>
                                         <select
@@ -929,7 +929,7 @@ const DonationHistory = () => {
                                                     departmentId: newRecipientType === 'department' ? donationForm.departmentId : null
                                                 })
                                             }}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                            className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-base font-medium transition-all shadow-sm hover:shadow-md"
                                         >
                                             <option value="crd">CRD (Community Relations Department)</option>
                                             <option value="department">Department/Organization</option>
@@ -938,14 +938,14 @@ const DonationHistory = () => {
                                     </div>
 
                                     {donationForm.recipientType === 'department' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Select Department <span className="text-red-500">*</span>
                                             </label>
                                             <select
                                                 value={donationForm.departmentId || ''}
                                                 onChange={(e) => setDonationForm({ ...donationForm, departmentId: e.target.value || null })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-base font-medium transition-all shadow-sm hover:shadow-md"
                                                 required={donationForm.recipientType === 'department'}
                                             >
                                                 <option value="">Select a department...</option>
@@ -955,21 +955,21 @@ const DonationHistory = () => {
                                                     </option>
                                                 ))}
                                             </select>
-                                            <p className="mt-1 text-xs text-gray-500">
+                                            <p className="mt-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-[#800000]">
                                                 Your donation will go directly to this department. CRD will be notified for transparency.
                                             </p>
                                         </div>
                                     )}
 
                                     {donationForm.recipientType === 'event' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Select Event <span className="text-red-500">*</span>
                                             </label>
                                             <select
                                                 value={donationForm.eventId || ''}
                                                 onChange={(e) => setDonationForm({ ...donationForm, eventId: e.target.value || null })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-base font-medium transition-all shadow-sm hover:shadow-md"
                                                 required={donationForm.recipientType === 'event'}
                                             >
                                                 <option value="">Select an event...</option>
@@ -982,9 +982,9 @@ const DonationHistory = () => {
                                         </div>
                                     )}
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Donation Method
+                                    <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            Donation Method <span className="text-red-500">*</span>
                                         </label>
                                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                                             {[
@@ -998,24 +998,24 @@ const DonationHistory = () => {
                                                     key={method.value}
                                                     type="button"
                                                     onClick={() => setDonationForm({ ...donationForm, paymentMethod: method.value })}
-                                                    className={`p-4 border-2 rounded-lg transition-all ${
+                                                    className={`p-4 border-2 rounded-xl transition-all shadow-sm hover:shadow-md ${
                                                         donationForm.paymentMethod === method.value
-                                                            ? 'border-[#800000] bg-red-50'
-                                                            : 'border-gray-200 hover:border-gray-300'
+                                                            ? 'border-[#800000] bg-gradient-to-br from-red-50 to-red-100 shadow-md'
+                                                            : 'border-gray-200 hover:border-[#800000] hover:bg-gray-50'
                                                     }`}
                                                 >
-                                                    <div className="text-2xl mb-2 text-gray-600">{method.icon}</div>
-                                                    <div className="text-sm font-medium text-gray-700">{method.label}</div>
+                                                    <div className={`text-2xl mb-2 ${donationForm.paymentMethod === method.value ? 'text-[#800000]' : 'text-gray-600'}`}>{method.icon}</div>
+                                                    <div className={`text-sm font-semibold ${donationForm.paymentMethod === method.value ? 'text-[#800000]' : 'text-gray-700'}`}>{method.label}</div>
                                                 </button>
                                             ))}
                                         </div>
                                         {donationForm.paymentMethod === 'cash' && (
-                                            <div className="mt-3 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
+                                            <div className="mt-4 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-4 rounded-r-xl shadow-sm">
                                                 <div className="flex items-start">
                                                     <FaInfoCircle className="text-yellow-600 text-lg mr-3 mt-0.5 flex-shrink-0" />
                                                     <div>
                                                         <h4 className="font-semibold text-yellow-900 mb-1">Cash Donation Process</h4>
-                                                        <p className="text-sm text-yellow-800">
+                                                        <p className="text-sm text-yellow-800 leading-relaxed">
                                                             Your cash donation will be submitted for verification. The recipient (CRD or Department) will verify the cash receipt and update the status. You will be notified once verified.
                                                         </p>
                                                     </div>
@@ -1024,8 +1024,8 @@ const DonationHistory = () => {
                                         )}
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <div className="bg-white border border-gray-200 rounded-xl p-5 sm:p-6 shadow-sm">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
                                             Message (Optional)
                                         </label>
                                         <textarea
@@ -1033,7 +1033,7 @@ const DonationHistory = () => {
                                             onChange={(e) => setDonationForm({ ...donationForm, message: e.target.value })}
                                             placeholder="Leave a message with your donation..."
                                             rows="4"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md resize-none"
                                         />
                                     </div>
 
@@ -1062,12 +1062,9 @@ const DonationHistory = () => {
                         {activeTab === 'inkind' && (
                             <div className="max-w-4xl mx-auto space-y-6">
                                 {/* Header */}
-                                <div className="bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] rounded-xl p-6 sm:p-8 text-[#800000] shadow-lg">
-                                    <div className="flex items-center space-x-3 mb-2">
-                                        
-                                        <h2 className="text-2xl sm:text-3xl font-bold">In-Kind Donation</h2>
-                                    </div>
-                                    <p className="text-[#800000]">
+                                <div className="bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] rounded-xl p-6 sm:p-8 text-[#800000] shadow-lg min-h-[140px] flex flex-col justify-center">
+                                    <h2 className="text-2xl sm:text-3xl font-bold mb-2">In-Kind Donation</h2>
+                                    <p className="text-[#800000] text-base sm:text-lg">
                                         Submit a request to donate physical items, goods, or services. Our CRD staff will review and coordinate with you.
                                     </p>
                                 </div>
@@ -1086,18 +1083,18 @@ const DonationHistory = () => {
                                 </div>
 
                                 {/* Submission Form */}
-                                <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6">Submit In-Kind Donation Request</h3>
+                                <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-sm">
+                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 pb-4 border-b-2 border-gray-200">Submit In-Kind Donation Request</h3>
                                     <form onSubmit={handleInKindSubmit} className="space-y-6">
                                         {/* Donation Type */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Donation Type <span className="text-red-500">*</span>
                                             </label>
                                             <select
                                                 value={inKindForm.donationType}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, donationType: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-base font-medium transition-all shadow-sm hover:shadow-md bg-white"
                                                 required
                                             >
                                                 <option value="food">Food & Beverages</option>
@@ -1111,8 +1108,8 @@ const DonationHistory = () => {
                                         </div>
 
                                         {/* Item Description */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Item Description <span className="text-red-500">*</span>
                                             </label>
                                             <textarea
@@ -1120,81 +1117,85 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, itemDescription: e.target.value })}
                                                 placeholder="Describe the items you wish to donate in detail..."
                                                 rows="4"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md resize-none bg-white"
                                                 required
                                             />
                                         </div>
 
                                         {/* Quantity and Condition */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Quantity
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={inKindForm.quantity}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, quantity: e.target.value })}
-                                                    placeholder="e.g., 10 boxes, 50 pieces"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Condition
-                                                </label>
-                                                <select
-                                                    value={inKindForm.condition}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, condition: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                >
-                                                    <option value="new">New</option>
-                                                    <option value="like_new">Like New</option>
-                                                    <option value="good">Good</option>
-                                                    <option value="fair">Fair</option>
-                                                    <option value="poor">Poor</option>
-                                                </select>
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Quantity
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={inKindForm.quantity}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, quantity: e.target.value })}
+                                                        placeholder="e.g., 10 boxes, 50 pieces"
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Condition
+                                                    </label>
+                                                    <select
+                                                        value={inKindForm.condition}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, condition: e.target.value })}
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    >
+                                                        <option value="new">New</option>
+                                                        <option value="like_new">Like New</option>
+                                                        <option value="good">Good</option>
+                                                        <option value="fair">Fair</option>
+                                                        <option value="poor">Poor</option>
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Estimated Value and Event */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Estimated Value (PHP)
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="0.01"
-                                                    value={inKindForm.estimatedValue}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, estimatedValue: e.target.value })}
-                                                    placeholder="Optional"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Related Event (Optional)
-                                                </label>
-                                                <select
-                                                    value={inKindForm.eventId || ''}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, eventId: e.target.value || null })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                >
-                                                    <option value="">General Donation</option>
-                                                    {events.map((event) => (
-                                                        <option key={event._id} value={event._id}>
-                                                            {event.title}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Estimated Value (PHP)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        step="0.01"
+                                                        value={inKindForm.estimatedValue}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, estimatedValue: e.target.value })}
+                                                        placeholder="Optional"
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Related Event (Optional)
+                                                    </label>
+                                                    <select
+                                                        value={inKindForm.eventId || ''}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, eventId: e.target.value || null })}
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    >
+                                                        <option value="">General Donation</option>
+                                                        {events.map((event) => (
+                                                            <option key={event._id} value={event._id}>
+                                                                {event.title}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Contact Information */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Phone Number
                                             </label>
                                             <input
@@ -1202,19 +1203,19 @@ const DonationHistory = () => {
                                                 value={inKindForm.donorPhone}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, donorPhone: e.target.value })}
                                                 placeholder="Your contact number"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
                                             />
                                         </div>
 
                                         {/* Delivery Method */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Delivery Method
                                             </label>
                                             <select
                                                 value={inKindForm.deliveryMethod}
                                                 onChange={(e) => setInKindForm({ ...inKindForm, deliveryMethod: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
                                             >
                                                 <option value="pending">To be discussed</option>
                                                 <option value="drop_off">I will drop off</option>
@@ -1224,35 +1225,37 @@ const DonationHistory = () => {
                                         </div>
 
                                         {/* Preferred Date and Time */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Preferred Date
-                                                </label>
-                                                <input
-                                                    type="date"
-                                                    value={inKindForm.preferredDate}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, preferredDate: e.target.value })}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Preferred Time
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={inKindForm.preferredTime}
-                                                    onChange={(e) => setInKindForm({ ...inKindForm, preferredTime: e.target.value })}
-                                                    placeholder="e.g., 9:00 AM - 5:00 PM"
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
-                                                />
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Preferred Date
+                                                    </label>
+                                                    <input
+                                                        type="date"
+                                                        value={inKindForm.preferredDate}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, preferredDate: e.target.value })}
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                                        Preferred Time
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={inKindForm.preferredTime}
+                                                        onChange={(e) => setInKindForm({ ...inKindForm, preferredTime: e.target.value })}
+                                                        placeholder="e.g., 9:00 AM - 5:00 PM"
+                                                        className="w-full px-4 py-3.5 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md bg-white"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
                                         {/* Address */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Address (if pickup/delivery needed)
                                             </label>
                                             <textarea
@@ -1260,13 +1263,13 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, address: e.target.value })}
                                                 placeholder="Enter your address..."
                                                 rows="2"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md resize-none bg-white"
                                             />
                                         </div>
 
                                         {/* Additional Notes */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Additional Notes
                                             </label>
                                             <textarea
@@ -1274,13 +1277,13 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, notes: e.target.value })}
                                                 placeholder="Any additional information or special instructions..."
                                                 rows="3"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md resize-none bg-white"
                                             />
                                         </div>
 
                                         {/* Message */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 sm:p-6">
+                                            <label className="block text-sm font-semibold text-gray-700 mb-3">
                                                 Message (Optional)
                                             </label>
                                             <textarea
@@ -1288,7 +1291,7 @@ const DonationHistory = () => {
                                                 onChange={(e) => setInKindForm({ ...inKindForm, message: e.target.value })}
                                                 placeholder="Leave a message with your donation..."
                                                 rows="3"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-all shadow-sm hover:shadow-md resize-none bg-white"
                                             />
                                         </div>
 

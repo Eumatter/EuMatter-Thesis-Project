@@ -780,14 +780,19 @@ const UserDashboard = () => {
 
                                             {/* Social Interactions */}
                                             <div className="mt-3 pt-3 border-t border-gray-100">
-                                                {/* Reactions */}
-                                                <div className="flex items-center gap-4 sm:gap-6 flex-wrap mb-2">
-                                                    <Reactions 
-                                                        eventId={event._id} 
-                                                        initialReactions={event.reactions || {}} 
-                                                        onReact={handleReact}
-                                                        currentUserId={userData?._id}
-                                                    />
+                                                {/* Reactions and Comments - Balanced Layout */}
+                                                <div className="flex items-center justify-between mb-2">
+                                                    {/* Like Button - Left Side */}
+                                                    <div className="flex items-center">
+                                                        <Reactions 
+                                                            eventId={event._id} 
+                                                            initialReactions={event.reactions || {}} 
+                                                            onReact={handleReact}
+                                                            currentUserId={userData?._id}
+                                                        />
+                                                    </div>
+                                                    
+                                                    {/* Comment Button - Right Side */}
                                                     <button 
                                                         onClick={() => handleOpenComments(event._id)}
                                                         className="flex items-center text-gray-500 hover:text-[#800000] transition-colors duration-200 text-sm font-medium cursor-pointer group"
