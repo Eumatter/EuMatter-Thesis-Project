@@ -94,15 +94,15 @@ const AuditLogTable = ({
     }
 
     return (
-        <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <div className="inline-block min-w-full align-middle">
+        <div className="-mx-4 sm:mx-0">
+            <div className="inline-block w-full align-middle">
                 <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-300 bg-white" style={{ minWidth: '1200px' }}>
+                    <table className="w-full divide-y divide-gray-300 bg-white">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[140px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[18%]"
                                     onClick={() => handleSort('timestamp')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -112,7 +112,7 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[120px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[15%]"
                                     onClick={() => handleSort('userEmail')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -122,7 +122,7 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[150px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[20%]"
                                     onClick={() => handleSort('actionType')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -132,19 +132,19 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[180px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider w-[25%]"
                                 >
                                     Category
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[100px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider w-[12%]"
                                 >
                                     Status
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors min-w-[100px]"
+                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[10%]"
                                     onClick={() => handleSort('priority')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -162,33 +162,27 @@ const AuditLogTable = ({
                                         onClick={() => toggleRow(log._id)}
                                         title={expandedRows.has(log._id) ? 'Click to hide details' : 'Click to show details'}
                                     >
-                                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-900">
-                                            <div className="font-medium">{formatDate(log.timestamp)}</div>
+                                        <td className="px-3 py-3.5 text-sm text-gray-900">
+                                            <div className="font-medium truncate" title={formatDate(log.timestamp)}>{formatDate(log.timestamp)}</div>
                                         </td>
                                         <td className="px-3 py-3.5 text-sm">
-                                            <div className="max-w-[120px]">
-                                                <div className="font-medium text-gray-900 truncate" title={log.userName || log.userEmail || 'System'}>
-                                                    {log.userName || log.userEmail || 'System'}
-                                                </div>
-                                                {log.userRole && (
-                                                    <div className="text-xs text-gray-500 truncate" title={log.userRole}>
-                                                        {log.userRole}
-                                                    </div>
-                                                )}
+                                            <div className="font-medium text-gray-900 truncate" title={log.userName || log.userEmail || 'System'}>
+                                                {log.userName || log.userEmail || 'System'}
                                             </div>
+                                            {log.userRole && (
+                                                <div className="text-xs text-gray-500 truncate" title={log.userRole}>
+                                                    {log.userRole}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-3.5 text-sm text-gray-900">
-                                            <div className="max-w-[150px]">
-                                                <div className="truncate font-medium" title={log.actionType}>
-                                                    {log.actionType || 'N/A'}
-                                                </div>
+                                            <div className="truncate font-medium" title={log.actionType}>
+                                                {log.actionType || 'N/A'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-3.5 text-sm text-gray-700">
-                                            <div className="max-w-[180px]">
-                                                <div className="truncate" title={log.category}>
-                                                    {log.category || 'N/A'}
-                                                </div>
+                                            <div className="truncate" title={log.category}>
+                                                {log.category || 'N/A'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-3.5 whitespace-nowrap">
