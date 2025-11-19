@@ -138,18 +138,6 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[120px]"
-                                >
-                                    Resource
-                                </th>
-                                <th 
-                                    scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[120px]"
-                                >
-                                    IP Address
-                                </th>
-                                <th 
-                                    scope="col"
                                     className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider min-w-[100px]"
                                 >
                                     Status
@@ -203,29 +191,6 @@ const AuditLogTable = ({
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-3 py-3.5 text-sm text-gray-700">
-                                            <div className="max-w-[120px]">
-                                                {log.resourceType ? (
-                                                    <>
-                                                        <div className="font-medium truncate" title={log.resourceType}>
-                                                            {log.resourceType}
-                                                        </div>
-                                                        {log.resourceId && (
-                                                            <div className="text-xs text-gray-500 truncate" title={log.resourceId}>
-                                                                ID: {log.resourceId.toString().substring(0, 8)}...
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                ) : (
-                                                    <span className="text-gray-400">N/A</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3.5 whitespace-nowrap text-sm text-gray-700">
-                                            <div className="font-mono text-xs" title={log.ipAddress || 'N/A'}>
-                                                {log.ipAddress || 'N/A'}
-                                            </div>
-                                        </td>
                                         <td className="px-3 py-3.5 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(log.success)}`}>
                                                 {log.success ? 'Success' : 'Failure'}
@@ -252,7 +217,7 @@ const AuditLogTable = ({
                                     </tr>
                                     {expandedRows.has(log._id) && (
                                         <tr>
-                                            <td colSpan="8" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
+                                            <td colSpan="6" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-2">Request Details</h4>
@@ -274,6 +239,21 @@ const AuditLogTable = ({
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-2">Additional Information</h4>
                                                 <div className="space-y-1 text-gray-600">
+                                                    {log.resourceType && (
+                                                        <div>
+                                                            <span className="font-medium">Resource Type:</span> {log.resourceType}
+                                                            {log.resourceId && (
+                                                                <span className="ml-2 text-xs text-gray-500" title={log.resourceId}>
+                                                                    (ID: {log.resourceId.toString().substring(0, 12)}...)
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                    {log.ipAddress && (
+                                                        <div>
+                                                            <span className="font-medium">IP Address:</span> <span className="font-mono text-xs">{log.ipAddress}</span>
+                                                        </div>
+                                                    )}
                                                     {log.userAgent && (
                                                         <div className="text-xs break-all"><span className="font-medium">User Agent:</span> {log.userAgent}</div>
                                                     )}

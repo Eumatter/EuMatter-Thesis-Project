@@ -198,6 +198,7 @@ const AppContent = () => {
                 <Route path="/crd-staff/leaderboard" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><DepartmentLeaderboard /></ProtectedRoute>} />
                 <Route path="/crd-staff/in-kind-donations" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><InKindDonations /></ProtectedRoute>} />
                 <Route path="/crd-staff/donations" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><CRDDonations /></ProtectedRoute>} />
+                <Route path="/crd-staff/profile" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><UserProfile /></ProtectedRoute>} />
 
                 {/* System Administrator Routes */}
                 <Route path="/system-admin/dashboard" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemAdminDashboard /></ProtectedRoute>} />
@@ -205,6 +206,7 @@ const AppContent = () => {
                 <Route path="/system-admin/wallets" element={<ProtectedRoute allowedRoles={['System Administrator']}><WalletManagement /></ProtectedRoute>} />
                     <Route path="/system-admin/settings" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemAdminSettings /></ProtectedRoute>} />
                 <Route path="/system-admin/reports" element={<ProtectedRoute allowedRoles={['System Administrator']}><SystemReports /></ProtectedRoute>} />
+                <Route path="/system-admin/profile" element={<ProtectedRoute allowedRoles={['System Administrator']}><UserProfile /></ProtectedRoute>} />
 
                 {/* Department Routes */}
                 <Route path="/department/wallet-status" element={<ProtectedRoute allowedRoles={['Department/Organization']}><WalletStatus /></ProtectedRoute>} />
@@ -215,6 +217,7 @@ const AppContent = () => {
                 <Route path="/department/donations" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentDonations /></ProtectedRoute>} />
                 <Route path="/department/reports" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><DepartmentReports /></ProtectedRoute>} />
                 <Route path="/department/calendar" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><CalendarPage /></ProtectedRoute>} />
+                <Route path="/department/profile" element={<ProtectedRoute allowedRoles={['Department/Organization','System Administrator']}><UserProfile /></ProtectedRoute>} />
 
                 {/* Volunteer Routes */}
                 <Route path="/volunteer/attendance/:eventId" element={<ProtectedRoute><EventAttendance /></ProtectedRoute>} />
