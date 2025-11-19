@@ -110,7 +110,7 @@ const RegisterPage = () => {
     const validateMSEUFEmail = (email) => {
         // Student format: A22-34197@student.mseuf.edu.ph or T22-34197@student.mseuf.edu.ph
         // Format: [Letter][2 digits]-[5 digits]@student.mseuf.edu.ph
-        const studentPattern = /^[A-Z]\d{2}-\d{5}@student\.mseuf\.edu\.ph$/i;
+        const studentPattern = /^[A-Za-z]\d{2}-\d{5}@student\.mseuf\.edu\.ph$/i;
         
         // Faculty format: juan.delacruz@mseuf.edu.ph
         // Format: name.name@mseuf.edu.ph (must NOT be @student.mseuf.edu.ph)
