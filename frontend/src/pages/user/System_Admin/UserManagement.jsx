@@ -344,8 +344,9 @@ const UserManagement = () => {
             return user.mseufCategory; // Student, Faculty, Staff
         }
         
-        if (user.userType === 'Outsider' && user.outsiderCategory) {
-            return user.outsiderCategory; // Alumni, External Partner, General Public
+        // All Outsider userType accounts are displayed as "Guest"
+        if (user.userType === 'Outsider') {
+            return 'Guest';
         }
         
         // If userType is empty or not set, return "User"
@@ -367,17 +368,9 @@ const UserManagement = () => {
                         return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
                 }
             }
-            if (user.userType === 'Outsider' && user.outsiderCategory) {
-                switch(user.outsiderCategory) {
-                    case 'Alumni':
-                        return <UserGroupIcon className="h-3.5 w-3.5 text-gray-500" />;
-                    case 'External Partner':
-                        return <BuildingOfficeIcon className="h-3.5 w-3.5 text-orange-500" />;
-                    case 'General Public':
-                        return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
-                    default:
-                        return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
-                }
+            // All Outsider userType accounts are displayed as "Guest"
+            if (user.userType === 'Outsider') {
+                return <UserIcon className="h-3.5 w-3.5 text-gray-500" />;
             }
             return <UserIcon className="h-3.5 w-3.5 text-gray-400" />;
         }
@@ -470,17 +463,9 @@ const UserManagement = () => {
                         return 'bg-gray-100 text-gray-800';
                 }
             }
-            if (user.userType === 'Outsider' && user.outsiderCategory) {
-                switch(user.outsiderCategory) {
-                    case 'Alumni':
-                        return 'bg-gray-100 text-gray-800';
-                    case 'External Partner':
-                        return 'bg-orange-100 text-orange-800';
-                    case 'General Public':
-                        return 'bg-gray-100 text-gray-800';
-                    default:
-                        return 'bg-gray-100 text-gray-800';
-                }
+            // All Outsider userType accounts are displayed as "Guest"
+            if (user.userType === 'Outsider') {
+                return 'bg-gray-100 text-gray-800';
             }
             return 'bg-gray-100 text-gray-800'; // Default for User without userType
         }
