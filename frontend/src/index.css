@@ -253,6 +253,67 @@ html[data-font-size="extra-large"] {
   z-index: 10000 !important;
 }
 
+/* Mobile menu blur effects */
+/* Smooth blur transition for header and body when mobile menu opens */
+@media (max-width: 1024px) {
+  /* Apply smooth blur transition to header */
+  header {
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Apply smooth blur transition to main content */
+  main,
+  [role="main"],
+  .main-content {
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Blur header when mobile menu is open - smooth transition */
+  body.mobile-menu-open header.mobile-menu-blur,
+  body.mobile-menu-open header {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Blur main content when mobile menu is open - smooth transition */
+  body.mobile-menu-open main.mobile-menu-blur,
+  body.mobile-menu-open [role="main"].mobile-menu-blur,
+  body.mobile-menu-open .main-content.mobile-menu-blur,
+  body.mobile-menu-open main,
+  body.mobile-menu-open [role="main"],
+  body.mobile-menu-open .main-content {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Blur app wrapper content when mobile menu is open */
+  body.mobile-menu-open #root > div.mobile-menu-blur,
+  body.mobile-menu-open body > div.mobile-menu-blur {
+    filter: blur(12px) !important;
+    -webkit-filter: blur(12px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  /* Ensure smooth transition when removing blur */
+  header,
+  main,
+  [role="main"],
+  .main-content,
+  #root > div,
+  body > div {
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* General mobile menu blur class */
+.mobile-menu-blur {
+  filter: blur(12px);
+  -webkit-filter: blur(12px);
+  transition: filter 0.3s ease-out, -webkit-filter 0.3s ease-out;
+}
+
 /* Maroon, White, Gold color scheme utilities */
 .bg-maroon {
   background-color: #800020;

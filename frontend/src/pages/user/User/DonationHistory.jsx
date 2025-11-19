@@ -497,7 +497,7 @@ const DonationHistory = () => {
             
             <main className="pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 {/* Page Header */}
-                <div className="mb-6 sm:mb-8">
+                <div className="bg-white rounded-xl shadow-md p-6 mb-8">
                     <button
                         onClick={() => navigate('/user/dashboard')}
                         className="flex items-center space-x-2 text-gray-600 hover:text-[#800000] transition-colors mb-4 lg:hidden"
@@ -508,7 +508,7 @@ const DonationHistory = () => {
                     
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2">
                                 My Donations
                             </h1>
                             <p className="text-sm sm:text-base text-gray-600">

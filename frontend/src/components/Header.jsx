@@ -67,21 +67,67 @@ const Header = () => {
         };
     }, []);
 
-    // Prevent body scroll when mobile menu or dropdown is open
+    // Prevent body scroll and apply blur when mobile menu or dropdown is open
     useEffect(() => {
         if (isMobileMenuOpen || isDropdownOpen) {
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
+            // Add blur class to body and header when mobile menu is open
+            if (isMobileMenuOpen) {
+                document.body.classList.add('mobile-menu-open');
+                // Blur header
+                const header = document.querySelector('header');
+                if (header) {
+                    header.classList.add('mobile-menu-blur');
+                }
+                // Blur main content wrapper
+                const mainContent = document.querySelector('main, [role="main"], .main-content');
+                if (mainContent) {
+                    mainContent.classList.add('mobile-menu-blur');
+                }
+                // Blur all content behind menu
+                const appContent = document.querySelector('#root > div, body > div');
+                if (appContent) {
+                    appContent.classList.add('mobile-menu-blur');
+                }
+            }
         } else {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
+            // Remove blur class from body, header, and content
+            document.body.classList.remove('mobile-menu-open');
+            const header = document.querySelector('header');
+            if (header) {
+                header.classList.remove('mobile-menu-blur');
+            }
+            const mainContent = document.querySelector('main, [role="main"], .main-content');
+            if (mainContent) {
+                mainContent.classList.remove('mobile-menu-blur');
+            }
+            const appContent = document.querySelector('#root > div, body > div');
+            if (appContent) {
+                appContent.classList.remove('mobile-menu-blur');
+            }
         }
         return () => {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
+            document.body.classList.remove('mobile-menu-open');
+            const header = document.querySelector('header');
+            if (header) {
+                header.classList.remove('mobile-menu-blur');
+            }
+            const mainContent = document.querySelector('main, [role="main"], .main-content');
+            if (mainContent) {
+                mainContent.classList.remove('mobile-menu-blur');
+            }
+            const appContent = document.querySelector('#root > div, body > div');
+            if (appContent) {
+                appContent.classList.remove('mobile-menu-blur');
+            }
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
 
@@ -412,7 +458,7 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible`}>
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300 ${isMobileMenuOpen ? 'mobile-menu-blur' : ''}`}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
@@ -635,12 +681,8 @@ const Header = () => {
                                         {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
                                     </div>
                                 )}
-                                {/* Dropdown arrow - Only show on desktop (lg and above) */}
-                                <FaChevronRight 
-                                    className={`hidden lg:block w-4 text-gray-600 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-90' : ''}`}
-                                />
                             </button>
-                            {/* Desktop Dropdown - Keep for desktop screens only */}
+                            {/* Desktop Dropdown - Keep for desktop screens only - Only Calendar, Account Settings, System Settings, and Logout */}
                             {isDropdownOpen && (
                                 <div className="hidden lg:block absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120]">
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
@@ -656,115 +698,36 @@ const Header = () => {
                                                 <div>
                                                     <div className="text-sm font-semibold text-gray-900 leading-5">{userData.name}</div>
                                                     <div className="text-xs text-gray-600">{userData.email}</div>
+                                                    <div className="text-xs text-[#800000] font-medium mt-0.5">{userData.role}</div>
                                                 </div>
                                             </div>
                                         </button>
                                     </div>
                                     <div className="py-2">
-                                        {/* Desktop Navigation Links */}
-                                        <div>
-                                            {isUser && (
-                                                <>
-                                                    <button onClick={() => { navigate(getDashboardRoute(userData.role)); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaTachometerAlt className="w-4 h-4" />
-                                                        Dashboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/user/events'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendarAlt className="w-4 h-4" />
-                                                        Events
-                                                    </button>
-                                                    <button onClick={() => { navigate('/user/donations'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaHandHoldingHeart className="w-4 h-4" />
-                                                        Donations
-                                                    </button>
-                                                    <button onClick={() => { navigate('/user/calendar'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendar className="w-4 h-4" />
-                                                        Calendar
-                                                    </button>
-                                                    <div className="my-2 h-px bg-gray-100" />
-                                                </>
-                                            )}
-                                            {isDept && (
-                                                <>
-                                                    <button onClick={() => { navigate('/department/dashboard'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaTachometerAlt className="w-4 h-4" />
-                                                        Dashboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/department/events'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendarAlt className="w-4 h-4" />
-                                                        Events
-                                                    </button>
-                                                    <button onClick={() => { navigate('/department/calendar'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendar className="w-4 h-4" />
-                                                        Calendar
-                                                    </button>
-                                                    <button onClick={() => { navigate('/department/donations'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaHandHoldingHeart className="w-4 h-4" />
-                                                        Donations
-                                                    </button>
-                                                    <button onClick={() => { navigate('/department/reports'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaChartLine className="w-4 h-4" />
-                                                        Reports
-                                                    </button>
-                                                    <div className="my-2 h-px bg-gray-100" />
-                                                </>
-                                            )}
-                                            {isCRD && (
-                                                <>
-                                                    <button onClick={() => { navigate('/crd-staff/dashboard'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaTachometerAlt className="w-4 h-4" />
-                                                        Dashboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/crd-staff/events'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendarAlt className="w-4 h-4" />
-                                                        Events
-                                                    </button>
-                                                    <button onClick={() => { navigate('/crd-staff/calendar'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCalendar className="w-4 h-4" />
-                                                        Calendar
-                                                    </button>
-                                                    <button onClick={() => { navigate('/crd-staff/reports'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaChartLine className="w-4 h-4" />
-                                                        Reports
-                                                    </button>
-                                                    <button onClick={() => { navigate('/crd-staff/leaderboard'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaTrophy className="w-4 h-4" />
-                                                        Leaderboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/crd-staff/donations'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaBoxOpen className="w-4 h-4" />
-                                                        Donations
-                                                    </button>
-                                                    <div className="my-2 h-px bg-gray-100" />
-                                                </>
-                                            )}
-                                            {userData.role && userData.role.toLowerCase().includes('system admin') && (
-                                                <>
-                                                    <button onClick={() => { navigate('/system-admin/dashboard'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaTachometerAlt className="w-4 h-4" />
-                                                        Dashboard
-                                                    </button>
-                                                    <button onClick={() => { navigate('/system-admin/users'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaUsers className="w-4 h-4" />
-                                                        User Management
-                                                    </button>
-                                                    <button onClick={() => { navigate('/system-admin/settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaCogs className="w-4 h-4" />
-                                                        System Settings
-                                                    </button>
-                                                    <button onClick={() => { navigate('/system-admin/reports'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                        <FaChartLine className="w-4 h-4" />
-                                                        System Reports
-                                                    </button>
-                                                    <div className="my-2 h-px bg-gray-100" />
-                                                </>
-                                            )}
-                                        </div>
-                                        {/* Account Section */}
+                                        {/* Desktop: Only Calendar, Account Settings, System Settings, and Logout */}
+                                        {/* Calendar */}
+                                        <button 
+                                            onClick={() => { 
+                                                const calendarRoute = isUser ? '/user/calendar' : 
+                                                                   isDept ? '/department/calendar' : 
+                                                                   isCRD ? '/crd-staff/calendar' : 
+                                                                   '/system-admin/dashboard';
+                                                navigate(calendarRoute); 
+                                                setIsDropdownOpen(false); 
+                                            }} 
+                                            className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                                        >
+                                            <FaCalendar className="w-4 h-4" />
+                                            Calendar
+                                        </button>
+                                        <div className="my-2 h-px bg-gray-100" />
+                                        
+                                        {/* Account Settings */}
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
                                             <FaCog className="w-4 h-4" />
                                             Account Settings
                                         </button>
+                                        
                                         {/* System Settings - Show for all users EXCEPT System Admin */}
                                         {userData.role && !userData.role.toLowerCase().includes('system admin') && (
                                             <button onClick={() => { navigate('/system-settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
@@ -772,6 +735,7 @@ const Header = () => {
                                                 System Settings
                                             </button>
                                         )}
+                                        
                                         {/* Only show verify account button for Users who are not verified */}
                                         {userData.role === 'User' && !userData.isAccountVerified && (
                                             <button onClick={() => { navigate('/email-verify'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2">
@@ -779,7 +743,10 @@ const Header = () => {
                                                 Verify Account
                                             </button>
                                         )}
+                                        
                                         <div className="my-2 h-px bg-gray-100" />
+                                        
+                                        {/* Logout */}
                                         <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2">
                                             <FaSignOutAlt className="w-4 h-4" />
                                             Logout
@@ -833,7 +800,8 @@ const Header = () => {
                                                 )}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-base font-extrabold tracking-tight truncate">{userData.name}</div>
-                                                    <div className="text-xs opacity-95 font-semibold mt-0.5">{userData.role}</div>
+                                                    <div className="text-xs opacity-95 font-semibold mt-0.5 truncate">{userData.role}</div>
+                                                    <div className="text-[10px] opacity-80 font-medium mt-0.5 truncate">{userData.email}</div>
                                                 </div>
                                             </div>
                                             <button
@@ -976,21 +944,24 @@ const Header = () => {
                             className="fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/70 backdrop-blur-xl pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
-                                animation: 'fadeIn 0.25s ease-out',
-                                backdropFilter: 'blur(24px)',
-                                WebkitBackdropFilter: 'blur(24px)',
+                                animation: 'fadeIn 0.3s ease-out',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
                                 height: '100vh',
                                 minHeight: '100vh',
-                                maxHeight: '100vh'
+                                maxHeight: '100vh',
+                                zIndex: 9998,
+                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
                             className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto"
                             style={{
-                                animation: 'slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                                animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
-                                zIndex: 9999
+                                zIndex: 9999,
+                                transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
