@@ -20,7 +20,6 @@ import {
     FaCalendarAlt,
     FaInfoCircle,
     FaFilePdf,
-    FaArrowLeft,
     FaCheck
 } from 'react-icons/fa'
 
@@ -498,30 +497,14 @@ const DonationHistory = () => {
             <main className="max-w-7xl mx-auto px-6 py-8">
                 {/* Page Header */}
                 <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <button
-                        onClick={() => navigate('/user/dashboard')}
-                        className="flex items-center space-x-2 text-gray-600 hover:text-[#800000] transition-colors mb-4 lg:hidden"
-                    >
-                        <FaArrowLeft className="text-sm" />
-                        <span className="text-sm font-medium">Back to Dashboard</span>
-                    </button>
-                    
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-black mb-2">
-                                My Donations
-                            </h1>
-                            <p className="text-gray-600">
-                                Manage your donations and view donation history
-                            </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <div className="bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl shadow-lg border border-[#800000] px-5 py-3 sm:px-6 sm:py-4 transform hover:scale-105 transition-all duration-300">
-                                <div className="text-xs sm:text-sm text-white/90 font-medium mb-1">Total Donated</div>
-                                <div className="text-xl sm:text-2xl font-bold text-white">{formatCurrency(totalDonated)}</div>
-                            </div>
-                        </div>
-                    </div>
+                    <h1 className="text-3xl font-bold text-black mb-2">My Donations</h1>
+                    <p className="text-gray-600">Manage your donations and view donation history.</p>
+                </div>
+
+                {/* Total Donated Card */}
+                <div className="bg-gradient-to-br from-[#800000] to-[#9c0000] rounded-xl shadow-md border border-[#800000] p-6 mb-8">
+                    <div className="text-sm text-white/90 font-medium mb-1">Total Donated</div>
+                    <div className="text-3xl font-bold text-white">{formatCurrency(totalDonated)}</div>
                 </div>
 
                 {/* Stats Cards */}

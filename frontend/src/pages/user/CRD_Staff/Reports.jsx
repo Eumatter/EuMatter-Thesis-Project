@@ -43,7 +43,7 @@ import {
 
 const Reports = () => {
     const navigate = useNavigate()
-    const { backendUrl } = useContext(AppContent)
+    const { backendUrl, userData } = useContext(AppContent)
     const [activeTab, setActiveTab] = useState('overview')
     const [isLoading, setIsLoading] = useState(true)
     
@@ -84,53 +84,50 @@ const Reports = () => {
             
             // Fetch users (for demographics) - try multiple endpoints
             let usersData = []
-            try {
-                // Try admin endpoint first
-                const adminResponse = await axios.get(backendUrl + 'api/admin/users?limit=10000')
-                if (adminResponse.data?.success && adminResponse.data?.users) {
-                    usersData = adminResponse.data.users
-                }
-            } catch (error) {
-                console.log('Admin users endpoint not accessible, trying alternative...')
+            const isSystemAdmin = userData?.role?.toLowerCase().includes('system administrator')
+            
+            if (isSystemAdmin) {
+                // Only try admin endpoint if user is System Administrator
                 try {
-                    // Try regular users endpoint
-                    const usersResponse = await axios.get(backendUrl + 'api/users?limit=10000')
-                    if (usersResponse.data?.success && usersResponse.data?.users) {
-                        usersData = usersResponse.data.users
-                    } else if (Array.isArray(usersResponse.data)) {
-                        usersData = usersResponse.data
+                    const adminResponse = await axios.get(backendUrl + 'api/admin/users?limit=10000')
+                    if (adminResponse.data?.success && adminResponse.data?.users) {
+                        usersData = adminResponse.data.users
                     }
-                } catch (altError) {
-                    console.log('Users endpoint not accessible, calculating from available data...')
-                    // Extract unique users from donations and events
-                    const uniqueUsers = new Map()
-                    
-                    // From donations
-                    donationsData.forEach(donation => {
-                        if (donation.user && donation.user._id) {
-                            const userId = donation.user._id.toString()
-                            if (!uniqueUsers.has(userId)) {
-                                uniqueUsers.set(userId, donation.user)
-                            }
-                        }
-                    })
-                    
-                    // From events (volunteers)
-                    eventsData.forEach(event => {
-                        if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
-                            event.volunteerRegistrations.forEach(reg => {
-                                if (reg.user && reg.user._id) {
-                                    const userId = reg.user._id.toString()
-                                    if (!uniqueUsers.has(userId)) {
-                                        uniqueUsers.set(userId, reg.user)
-                                    }
-                                }
-                            })
-                        }
-                    })
-                    
-                    usersData = Array.from(uniqueUsers.values())
+                } catch (error) {
+                    // Fall through to alternative methods
                 }
+            }
+            
+            // If we don't have users data yet, extract from donations and events
+            if (usersData.length === 0) {
+                // Extract unique users from donations and events
+                const uniqueUsers = new Map()
+                
+                // From donations
+                donationsData.forEach(donation => {
+                    if (donation.user && donation.user._id) {
+                        const userId = donation.user._id.toString()
+                        if (!uniqueUsers.has(userId)) {
+                            uniqueUsers.set(userId, donation.user)
+                        }
+                    }
+                })
+                
+                // From events (volunteers)
+                eventsData.forEach(event => {
+                    if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                        event.volunteerRegistrations.forEach(reg => {
+                            if (reg.user && reg.user._id) {
+                                const userId = reg.user._id.toString()
+                                if (!uniqueUsers.has(userId)) {
+                                    uniqueUsers.set(userId, reg.user)
+                                }
+                            }
+                        })
+                    }
+                })
+                
+                usersData = Array.from(uniqueUsers.values())
             }
             setUsers(usersData)
         } catch (error) {

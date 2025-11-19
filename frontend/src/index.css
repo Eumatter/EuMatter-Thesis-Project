@@ -279,8 +279,8 @@ html[data-font-size="extra-large"] {
   /* Blur root container when mobile menu is open - this blurs everything inside */
   body.mobile-menu-open #root.mobile-menu-blur,
   body.mobile-menu-open #root {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
+    filter: blur(16px) !important;
+    -webkit-filter: blur(16px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -288,8 +288,8 @@ html[data-font-size="extra-large"] {
   /* Blur app wrapper (first child of root) when mobile menu is open */
   body.mobile-menu-open #root > *.mobile-menu-blur,
   body.mobile-menu-open #root > * {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
+    filter: blur(16px) !important;
+    -webkit-filter: blur(16px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -297,8 +297,8 @@ html[data-font-size="extra-large"] {
   /* Blur header when mobile menu is open - smooth transition */
   body.mobile-menu-open header.mobile-menu-blur,
   body.mobile-menu-open header {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
+    filter: blur(16px) !important;
+    -webkit-filter: blur(16px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -310,8 +310,16 @@ html[data-font-size="extra-large"] {
   body.mobile-menu-open main,
   body.mobile-menu-open [role="main"],
   body.mobile-menu-open .main-content {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
+    filter: blur(16px) !important;
+    -webkit-filter: blur(16px) !important;
+    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: filter;
+  }
+  
+  /* Blur all direct children of body when mobile menu is open */
+  body.mobile-menu-open > * {
+    filter: blur(16px) !important;
+    -webkit-filter: blur(16px) !important;
     transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     will-change: filter;
   }
@@ -330,8 +338,8 @@ html[data-font-size="extra-large"] {
 
 /* General mobile menu blur class - works on any element */
 .mobile-menu-blur {
-  filter: blur(12px) !important;
-  -webkit-filter: blur(12px) !important;
+  filter: blur(16px) !important;
+  -webkit-filter: blur(16px) !important;
   transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   will-change: filter;
 }

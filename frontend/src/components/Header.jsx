@@ -970,8 +970,8 @@ const Header = () => {
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
                                 animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
