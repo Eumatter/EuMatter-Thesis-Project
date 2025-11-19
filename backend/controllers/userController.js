@@ -54,7 +54,13 @@ export const getUserData = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
     try {
-        const { userId, name, email, password } = req.body;
+        // Get userId from authenticated user (self-service endpoint)
+        const userId = req.user?._id;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Unauthorized" });
+        }
+
+        const { name, email, password, contact, address } = req.body;
 
         const user = await userModel.findById(userId);
         if (!user) {
@@ -64,11 +70,15 @@ export const updateUser = async (req, res) => {
         // Capture previous values for audit log
         const previousValues = {
             name: user.name,
-            email: user.email
+            email: user.email,
+            contact: user.contact || '',
+            address: user.address || ''
         };
 
         if (name) user.name = name;
         if (email) user.email = email;
+        if (contact !== undefined) user.contact = contact || '';
+        if (address !== undefined) user.address = address || '';
 
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -81,8 +91,17 @@ export const updateUser = async (req, res) => {
         const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
         
+        const newValues = {
+            name: user.name,
+            email: user.email
+        };
+        
+        // Include contact and address in audit log if they exist
+        if (user.contact !== undefined) newValues.contact = user.contact;
+        if (user.address !== undefined) newValues.address = user.address;
+        
         createAuditLog({
-            userId: req.user?._id || userId,
+            userId: userId,
             userEmail: req.user?.email || user.email,
             userRole: req.user?.role || user.role,
             actionType: 'USER_PROFILE_UPDATED',
@@ -95,10 +114,7 @@ export const updateUser = async (req, res) => {
             responseStatus: 200,
             success: true,
             previousValues: previousValues,
-            newValues: {
-                name: user.name,
-                email: user.email
-            }
+            newValues: newValues
         }).catch(err => console.error('Failed to log audit:', err));
 
         res.json({ success: true, message: "User updated successfully" });

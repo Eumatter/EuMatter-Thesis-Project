@@ -15,7 +15,9 @@ const UserProfile = () => {
     const [isEditing, setIsEditing] = useState(false)
     const [formData, setFormData] = useState({
         name: '',
-        email: ''
+        email: '',
+        contact: '',
+        address: ''
     })
     const [passwordChangeData, setPasswordChangeData] = useState({
         otp: '',
@@ -40,7 +42,9 @@ const UserProfile = () => {
         if (userData) {
             setFormData({
                 name: userData.name || '',
-                email: userData.email || ''
+                email: userData.email || '',
+                contact: userData.contact || '',
+                address: userData.address || ''
             })
             setProfileImage(userData.profileImage || '')
         }
@@ -101,17 +105,27 @@ const UserProfile = () => {
         setIsLoading(true)
         try {
             axios.defaults.withCredentials = true
-            const { data } = await axios.put(backendUrl + 'api/user/profile', {
+            const updateData = {
                 name: formData.name,
                 email: formData.email
-            })
+            }
+            
+            // Include contact and address for Department/Organization users
+            if (userData?.role === 'Department/Organization') {
+                updateData.contact = formData.contact || ''
+                updateData.address = formData.address || ''
+            }
+            
+            const { data } = await axios.put(backendUrl + 'api/user/profile', updateData)
             
             if (data.success) {
                 toast.success('Profile updated successfully!')
                 setUserData(prev => ({
                     ...prev,
                     name: formData.name,
-                    email: formData.email
+                    email: formData.email,
+                    contact: formData.contact,
+                    address: formData.address
                 }))
                 setIsEditing(false)
             } else {
@@ -566,7 +580,7 @@ const UserProfile = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
-                                            Full Name
+                                            {userData?.role === 'Department/Organization' ? 'Department Name' : 'Full Name'}
                                         </label>
                                         <input
                                             id="name"
@@ -575,6 +589,7 @@ const UserProfile = () => {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            placeholder={userData?.role === 'Department/Organization' ? 'Enter department name' : 'Enter full name'}
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                         />
                                     </div>
@@ -589,10 +604,47 @@ const UserProfile = () => {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            placeholder="Enter email address"
                                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
+
+                                {/* Additional fields for Department/Organization */}
+                                {userData?.role === 'Department/Organization' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="contact" className="block text-sm font-medium text-black mb-2">
+                                                Contact Number
+                                            </label>
+                                            <input
+                                                id="contact"
+                                                name="contact"
+                                                type="text"
+                                                value={formData.contact}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                placeholder="Enter contact number"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="address" className="block text-sm font-medium text-black mb-2">
+                                                Address
+                                            </label>
+                                            <input
+                                                id="address"
+                                                name="address"
+                                                type="text"
+                                                value={formData.address}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                placeholder="Enter address"
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
 
                                 {isEditing && (
                                     <div className="flex justify-end">
