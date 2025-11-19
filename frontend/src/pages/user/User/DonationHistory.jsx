@@ -79,7 +79,7 @@ const DonationHistory = () => {
     const fetchDepartments = async () => {
         try {
             axios.defaults.withCredentials = true
-            const { data } = await axios.get(`${backendUrl}api/users/departments`)
+            const { data } = await axios.get(`${backendUrl}api/user/departments`)
             if (data.success) {
                 setDepartments(data.departments || [])
             }

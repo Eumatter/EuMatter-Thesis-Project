@@ -971,14 +971,17 @@ const Header = () => {
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
                     <div className="lg:hidden fixed inset-0 z-[9998] pointer-events-none">
-                        {/* Backdrop overlay with full blur */}
+                        {/* Backdrop overlay with full blur - spans full height from top to bottom */}
                         <div 
-                            className="fixed inset-0 bg-black/70 backdrop-blur-xl pointer-events-auto"
+                            className="fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/70 backdrop-blur-xl pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
                                 animation: 'fadeIn 0.25s ease-out',
                                 backdropFilter: 'blur(24px)',
-                                WebkitBackdropFilter: 'blur(24px)'
+                                WebkitBackdropFilter: 'blur(24px)',
+                                height: '100vh',
+                                minHeight: '100vh',
+                                maxHeight: '100vh'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}

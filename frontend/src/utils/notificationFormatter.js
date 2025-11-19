@@ -110,50 +110,36 @@ export function formatNotificationPayload(payload) {
 }
 
 /**
- * Get notification icon based on type
+ * Get notification icon type name for React Icons
+ * Returns the icon name that should be imported from react-icons/fa
  */
-export function getNotificationIcon(type) {
+export function getNotificationIconType(type) {
     const iconMap = {
-        'event_created': '📅',
-        'event_updated': '🔄',
-        'event_cancelled': '❌',
-        'event_reminder': '⏰',
-        'volunteer_invitation': '👥',
-        'volunteer_approved': '✅',
-        'volunteer_registered': '📝',
-        'volunteer_invitation_accepted': '🎉',
-        'donation_received': '💰',
-        'donation_success': '💳',
-        'feedback_deadline': '⚠️',
-        'attendance_recorded': '✅',
-        'comment_added': '💬',
-        'reaction_added': '👍',
+        'event_created': 'FaCalendarAlt',
+        'event_updated': 'FaSyncAlt',
+        'event_cancelled': 'FaTimesCircle',
+        'event_reminder': 'FaClock',
+        'volunteer_invitation': 'FaUsers',
+        'volunteer_approved': 'FaCheckCircle',
+        'volunteer_registered': 'FaUserCheck',
+        'volunteer_invitation_accepted': 'FaCheckCircle',
+        'donation_received': 'FaHandHoldingHeart',
+        'donation_success': 'FaCreditCard',
+        'feedback_deadline': 'FaExclamationCircle',
+        'attendance_recorded': 'FaCheckCircle',
+        'comment_added': 'FaComment',
+        'reaction_added': 'FaThumbsUp',
     };
     
-    return iconMap[type] || '🔔';
+    return iconMap[type] || 'FaBell';
 }
 
 /**
  * Get notification color class based on type
+ * All icons use maroon color for consistency
  */
 export function getNotificationColorClass(type) {
-    const colorMap = {
-        'event_created': 'from-[#800000] to-[#900000]',
-        'event_updated': 'from-[#D4AF37] to-[#C9A227]', // Gold
-        'event_cancelled': 'from-red-500 to-red-600',
-        'event_reminder': 'from-[#D4AF37] to-[#C9A227]', // Gold
-        'volunteer_invitation': 'from-[#800000] to-[#900000]',
-        'volunteer_approved': 'from-green-500 to-green-600',
-        'volunteer_registered': 'from-blue-500 to-blue-600',
-        'volunteer_invitation_accepted': 'from-[#D4AF37] to-[#C9A227]', // Gold
-        'donation_received': 'from-[#D4AF37] to-[#C9A227]', // Gold
-        'donation_success': 'from-green-500 to-green-600',
-        'feedback_deadline': 'from-orange-500 to-orange-600',
-        'attendance_recorded': 'from-green-500 to-green-600',
-        'comment_added': 'from-blue-500 to-blue-600',
-        'reaction_added': 'from-purple-500 to-purple-600',
-    };
-    
-    return colorMap[type] || 'from-[#800000] to-[#900000]';
+    // All notifications use maroon gradient for consistency
+    return 'from-[#800000] to-[#900000]';
 }
 

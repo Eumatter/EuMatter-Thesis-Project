@@ -109,7 +109,8 @@ export async function subscribeToPushNotifications() {
         const subscribeUrl = backendUrl.endsWith('/') 
             ? `${backendUrl}api/push/subscribe` 
             : `${backendUrl}/api/push/subscribe`;
-        await axios.post(
+        
+        const response = await axios.post(
             subscribeUrl,
             subscriptionData,
             {
@@ -124,18 +125,31 @@ export async function subscribeToPushNotifications() {
             }
         );
 
+        // Check if subscription was successful
+        if (response.status === 200 && response.data?.success) {
+            return { success: true, subscription, message: response.data.message || 'Successfully subscribed to push notifications' };
+        } else if (response.status === 404 || response.status === 503) {
+            return { success: false, message: 'Push notifications are not configured on the server' };
+        }
+
         return { success: true, subscription };
     } catch (error) {
-        // Silently handle errors - push notifications are optional
-        // Don't log or throw errors for unavailable service
+        // Handle errors appropriately
         const status = error.response?.status;
         const isServiceUnavailable = status === 404 || status === 503;
-        if (!isServiceUnavailable) {
-            // Only log actual errors, not service unavailability
+        
+        if (isServiceUnavailable) {
+            // Service not configured - return informative message
+            return { success: false, message: 'Push notifications are not configured on the server' };
+        } else if (error.message === 'Push notifications are not supported in this browser') {
+            return { success: false, message: 'Push notifications are not supported in this browser' };
+        } else if (error.message === 'User not authenticated') {
+            return { success: false, message: 'Please log in to enable push notifications' };
+        } else {
+            // Log actual errors for debugging
             console.error('Error subscribing to push notifications:', error);
+            return { success: false, message: error.response?.data?.message || error.message || 'Failed to subscribe to push notifications' };
         }
-        // Return failure result instead of throwing
-        return { success: false, message: error.message || 'Push notifications not available' };
     }
 }
 

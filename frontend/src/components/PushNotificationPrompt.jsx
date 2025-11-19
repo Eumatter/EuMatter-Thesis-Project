@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { XMarkIcon, BellIcon } from '@heroicons/react/24/solid';
+import { toast } from 'react-toastify';
 import {
     isPushNotificationSupported,
     getPushNotificationPermission,
@@ -69,31 +70,29 @@ const PushNotificationPrompt = () => {
                     if (result && result.success) {
                         setShow(false);
                         localStorage.setItem('pushNotificationPromptDismissed', 'true');
-                        // Show success message
-                        window.dispatchEvent(new CustomEvent('toast', {
-                            detail: { message: 'Push notifications enabled!', type: 'success' }
-                        }));
+                        toast.success('Push notifications enabled! You will now receive real-time notifications.');
                     } else {
-                        // Service not configured - silently hide prompt
+                        // Service not configured - show informative message
+                        if (result && result.message && result.message.includes('not configured')) {
+                            toast.info('Push notifications are not configured on the server. This feature may not be available yet.');
+                        } else {
+                            toast.error('Failed to enable push notifications. Please try again.');
+                        }
                         setShow(false);
                         localStorage.setItem('pushNotificationPromptDismissed', 'true');
                     }
                 } catch (error) {
-                    // Silently handle errors - don't show error messages for unavailable service
+                    console.error('Error subscribing to push notifications:', error);
+                    toast.error('Failed to enable push notifications. Please try again.');
                     setShow(false);
                     localStorage.setItem('pushNotificationPromptDismissed', 'true');
                 }
             } else if (newPermission === 'denied') {
-                // Show error message
-                window.dispatchEvent(new CustomEvent('toast', {
-                    detail: { message: 'Push notifications were blocked. Please enable them in your browser settings.', type: 'error' }
-                }));
+                toast.error('Push notifications were blocked. Please enable them in your browser settings to receive notifications.');
             }
         } catch (error) {
             console.error('Error enabling push notifications:', error);
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: { message: 'Failed to enable push notifications. Please try again.', type: 'error' }
-            }));
+            toast.error('Failed to enable push notifications. Please try again.');
         } finally {
             setIsLoading(false);
         }

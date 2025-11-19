@@ -28,7 +28,7 @@ const NotificationPreferences = () => {
         try {
             const token = localStorage.getItem('token');
             const backendUrl = getBackendUrl();
-            const response = await axios.get(`${backendUrl}/api/push/preferences`, {
+            const response = await axios.get(`${backendUrl}api/push/preferences`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setPreferences(response.data.preferences);
@@ -45,10 +45,17 @@ const NotificationPreferences = () => {
         setPushSupported(supported);
 
         if (supported) {
-            const permission = await getPushNotificationPermission();
-            setPushPermission(permission);
-            const subscribed = await isSubscribedToPush();
-            setIsSubscribed(subscribed);
+            try {
+                const permission = await getPushNotificationPermission();
+                setPushPermission(permission);
+                const subscribed = await isSubscribedToPush();
+                setIsSubscribed(subscribed);
+            } catch (error) {
+                console.error('Error checking push status:', error);
+                // Set default values on error
+                setPushPermission('default');
+                setIsSubscribed(false);
+            }
         }
     };
 
@@ -58,7 +65,7 @@ const NotificationPreferences = () => {
             const token = localStorage.getItem('token');
             const backendUrl = getBackendUrl();
             await axios.put(
-                `${backendUrl}/api/push/preferences`,
+                `${backendUrl}api/push/preferences`,
                 preferences,
                 {
                     headers: { Authorization: `Bearer ${token}` }
@@ -76,19 +83,45 @@ const NotificationPreferences = () => {
     const handlePushToggle = async () => {
         if (!isSubscribed) {
             try {
-                await subscribeToPushNotifications();
-                setIsSubscribed(true);
-                setPushPermission('granted');
-                toast.success('Push notifications enabled!');
+                // Request permission first if not granted
+                if (pushPermission !== 'granted') {
+                    const { requestPushNotificationPermission } = await import('../../utils/pushNotificationService.js');
+                    const newPermission = await requestPushNotificationPermission();
+                    
+                    if (newPermission !== 'granted') {
+                        toast.error('Push notification permission is required. Please allow notifications in your browser settings.');
+                        return;
+                    }
+                    
+                    setPushPermission('granted');
+                }
+                
+                const result = await subscribeToPushNotifications();
+                
+                if (result && result.success) {
+                    setIsSubscribed(true);
+                    setPushPermission('granted');
+                    toast.success('Push notifications enabled! You will now receive real-time notifications.');
+                    // Reload preferences to sync state
+                    await loadPreferences();
+                } else {
+                    if (result && result.message && result.message.includes('not configured')) {
+                        toast.info('Push notifications are not configured on the server. This feature may not be available yet.');
+                    } else {
+                        toast.error('Failed to enable push notifications. Please try again.');
+                    }
+                }
             } catch (error) {
                 console.error('Error enabling push:', error);
-                toast.error('Failed to enable push notifications');
+                toast.error('Failed to enable push notifications. Please try again.');
             }
         } else {
             try {
                 await unsubscribeFromPushNotifications();
                 setIsSubscribed(false);
                 toast.success('Push notifications disabled!');
+                // Reload preferences to sync state
+                await loadPreferences();
             } catch (error) {
                 console.error('Error disabling push:', error);
                 toast.error('Failed to disable push notifications');

@@ -7,7 +7,7 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { AppContent } from '../../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { formatNotificationPayload, getNotificationIcon as getNotificationIconFromUtil, getNotificationColorClass } from '../../utils/notificationFormatter.js';
+import { getNotificationIconType } from '../../utils/notificationFormatter.js';
 import { 
     FaBell, 
     FaCheck, 
@@ -15,16 +15,20 @@ import {
     FaTrash, 
     FaFilter,
     FaTimes,
-    FaEye,
     FaCalendarAlt,
     FaHandHoldingHeart,
     FaUsers,
-    FaFileAlt,
     FaExclamationCircle,
-    FaInfoCircle,
     FaCheckDouble,
     FaChevronRight,
-    FaArrowLeft
+    FaArrowLeft,
+    FaSyncAlt,
+    FaTimesCircle,
+    FaClock,
+    FaUserCheck,
+    FaCreditCard,
+    FaComment,
+    FaThumbsUp
 } from 'react-icons/fa';
 
 const Notifications = () => {
@@ -168,14 +172,28 @@ const Notifications = () => {
 
     const getNotificationIcon = (notification) => {
         const notificationType = notification.payload?.type || 'system';
-        const icon = getNotificationIconFromUtil(notificationType);
-        return <span className="text-2xl">{icon}</span>;
+        const iconTypeName = getNotificationIconType(notificationType);
+        
+        const iconMap = {
+            'FaCalendarAlt': FaCalendarAlt,
+            'FaSyncAlt': FaSyncAlt,
+            'FaTimesCircle': FaTimesCircle,
+            'FaClock': FaClock,
+            'FaUsers': FaUsers,
+            'FaCheckCircle': FaCheckCircle,
+            'FaUserCheck': FaUserCheck,
+            'FaHandHoldingHeart': FaHandHoldingHeart,
+            'FaCreditCard': FaCreditCard,
+            'FaExclamationCircle': FaExclamationCircle,
+            'FaComment': FaComment,
+            'FaThumbsUp': FaThumbsUp,
+            'FaBell': FaBell,
+        };
+        
+        const IconComponent = iconMap[iconTypeName] || FaBell;
+        return <IconComponent className="w-5 h-5 text-[#800000]" />;
     };
 
-    const getNotificationColor = (notification) => {
-        const notificationType = notification.payload?.type || 'system';
-        return getNotificationColorClass(notificationType);
-    };
 
     const formatTimeAgo = (dateString) => {
         if (!dateString) return '';
@@ -203,105 +221,96 @@ const Notifications = () => {
     };
 
     return (
-        <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-gray-50 to-white">
+        <div className="min-h-screen w-full overflow-x-hidden bg-white">
             <Header />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-8 sm:py-12">
+            <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
                 {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.5 }}
                     className="mb-8"
                 >
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => navigate(-1)}
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                            >
-                                <FaArrowLeft className="w-5 h-5 text-gray-700" />
-                            </button>
-                            <div>
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#800000] mb-2">
-                                    Notifications
-                                </h1>
-                                <p className="text-gray-600">
-                                    Stay updated with all your activities and interactions
-                                </p>
-                            </div>
+                    <div className="flex items-center gap-4 mb-8">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            aria-label="Go back"
+                        >
+                            <FaArrowLeft className="w-5 h-5 text-[#800000]" />
+                        </button>
+                        <div>
+                            <h1 className="text-3xl sm:text-4xl font-bold text-[#800000] mb-1">
+                                Notifications
+                            </h1>
+                            <p className="text-gray-500 text-sm">
+                                Stay updated with all your activities
+                            </p>
                         </div>
                     </div>
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10 hover:border-[#800000]/20 transition-all duration-300"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className="bg-white rounded-lg p-5 border border-gray-200"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Total</p>
-                                    <p className="text-3xl font-bold text-[#800000]">{stats.total}</p>
+                                    <p className="text-xs font-medium text-gray-500 mb-1">Total</p>
+                                    <p className="text-2xl font-bold text-[#800000]">{stats.total}</p>
                                 </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl flex items-center justify-center shadow-md">
-                                    <FaBell className="w-7 h-7 text-white" />
-                                </div>
+                                <FaBell className="w-6 h-6 text-[#800000]" />
                             </div>
                         </motion.div>
 
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#D4AF37]/20 hover:border-[#D4AF37]/30 transition-all duration-300"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            className="bg-white rounded-lg p-5 border border-gray-200"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Unread</p>
-                                    <p className="text-3xl font-bold text-[#D4AF37]">{stats.unread}</p>
+                                    <p className="text-xs font-medium text-gray-500 mb-1">Unread</p>
+                                    <p className="text-2xl font-bold text-[#800000]">{stats.unread}</p>
                                 </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-[#D4AF37] to-[#C9A227] rounded-xl flex items-center justify-center shadow-md">
-                                    <FaExclamationCircle className="w-7 h-7 text-white" />
-                                </div>
+                                <FaExclamationCircle className="w-6 h-6 text-[#800000]" />
                             </div>
                         </motion.div>
 
                         <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-gray-200 hover:border-gray-300 transition-all duration-300"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="bg-white rounded-lg p-5 border border-gray-200"
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Read</p>
-                                    <p className="text-3xl font-bold text-gray-700">{stats.total - stats.unread}</p>
+                                    <p className="text-xs font-medium text-gray-500 mb-1">Read</p>
+                                    <p className="text-2xl font-bold text-[#800000]">{stats.total - stats.unread}</p>
                                 </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-md">
-                                    <FaCheckDouble className="w-7 h-7 text-white" />
-                                </div>
+                                <FaCheckDouble className="w-6 h-6 text-[#800000]" />
                             </div>
                         </motion.div>
                     </div>
 
                     {/* Filter and Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white rounded-lg p-4 border border-gray-200 mb-6">
                         <div className="flex items-center gap-3 flex-wrap">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#900000] rounded-lg flex items-center justify-center">
-                                <FaFilter className="text-white w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-bold text-gray-700">Filter:</span>
+                            <FaFilter className="w-4 h-4 text-[#800000]" />
+                            <span className="text-sm font-medium text-gray-700">Filter:</span>
                             {['all', 'unread', 'read'].map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
-                                    className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                                         filter === f
-                                            ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white shadow-lg transform scale-105'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
+                                            ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                 >
                                     {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -311,7 +320,7 @@ const Notifications = () => {
                         <button
                             onClick={handleMarkAllRead}
                             disabled={stats.unread === 0}
-                            className="px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 disabled:hover:shadow-md"
+                            className="px-4 py-2 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 hover:shadow-md"
                         >
                             <FaCheckDouble />
                             Mark All Read
@@ -328,13 +337,11 @@ const Notifications = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-20 bg-white rounded-xl shadow-lg border border-gray-100"
+                        className="text-center py-16 bg-white rounded-lg border border-gray-200"
                     >
-                        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <FaBell className="w-12 h-12 text-gray-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No notifications</h3>
-                        <p className="text-gray-600">
+                        <FaBell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-[#800000] mb-2">No notifications</h3>
+                        <p className="text-sm text-gray-500">
                             {filter === 'all' 
                                 ? "You're all caught up! No notifications yet."
                                 : filter === 'unread'
@@ -343,33 +350,33 @@ const Notifications = () => {
                         </p>
                     </motion.div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <AnimatePresence>
                             {filteredNotifications.map((notification, index) => (
                                 <motion.div
                                     key={notification.id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                                    transition={{ duration: 0.2, delay: index * 0.02 }}
                                     onClick={() => handleNotificationClick(notification)}
-                                    className={`group relative bg-white rounded-xl p-5 shadow-lg border-2 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                                    className={`group relative bg-white rounded-lg p-4 border cursor-pointer transition-all duration-200 hover:shadow-md ${
                                         notification.unread 
-                                            ? 'border-[#800000]/40 bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent' 
-                                            : 'border-gray-200'
+                                            ? 'border-[#800000]/30 border-l-4 border-l-[#800000]' 
+                                            : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                 >
                                     <div className="flex items-start gap-4">
-                                        {/* Icon */}
-                                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${getNotificationColor(notification)} flex items-center justify-center text-white shadow-lg`}>
+                                        {/* Icon - No background */}
+                                        <div className="flex-shrink-0 mt-1">
                                             {getNotificationIcon(notification)}
                                         </div>
 
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2 mb-1">
-                                                <h3 className={`font-bold text-base ${
-                                                    notification.unread ? 'text-gray-900' : 'text-gray-700'
+                                                <h3 className={`font-semibold text-base ${
+                                                    notification.unread ? 'text-[#800000]' : 'text-gray-700'
                                                 }`}>
                                                     {notification.title || 'Notification'}
                                                 </h3>
@@ -381,7 +388,7 @@ const Notifications = () => {
                                                 {notification.message || 'No message'}
                                             </p>
                                             <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">
+                                                <span className="text-xs text-gray-400">
                                                     {formatTimeAgo(notification.createdAt)}
                                                 </span>
                                                 {notification.payload?.eventId && (
@@ -394,11 +401,11 @@ const Notifications = () => {
                                         </div>
 
                                         {/* Actions */}
-                                        <div className="flex-shrink-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex-shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             {notification.unread && (
                                                 <button
                                                     onClick={(e) => handleMarkAsRead(notification.id, e)}
-                                                    className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-gray-100 text-[#800000] transition-colors"
                                                     title="Mark as read"
                                                 >
                                                     <FaCheck className="w-4 h-4" />
@@ -406,7 +413,7 @@ const Notifications = () => {
                                             )}
                                             <button
                                                 onClick={(e) => handleDelete(notification.id, e)}
-                                                className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+                                                className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
                                                 title="Delete"
                                             >
                                                 <FaTrash className="w-4 h-4" />
@@ -431,44 +438,46 @@ const Notifications = () => {
                         onClick={() => setShowDetailModal(false)}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
+                            initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+                            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
                         >
-                            <div className={`p-6 bg-gradient-to-br ${getNotificationColor(selectedNotification)} text-white shadow-lg`}>
-                                <div className="flex items-start justify-between mb-4">
+                            {/* Modal Header - White background with maroon text */}
+                            <div className="bg-white p-6 border-b border-gray-200">
+                                <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
+                                        <div className="flex-shrink-0">
                                             {getNotificationIcon(selectedNotification)}
                                         </div>
                                         <div>
-                                            <h2 className="text-2xl font-bold mb-1">
+                                            <h2 className="text-xl font-bold text-[#800000] mb-1">
                                                 {selectedNotification.title || 'Notification'}
                                             </h2>
-                                            <p className="text-white/90 text-sm">
+                                            <p className="text-sm text-gray-500">
                                                 {formatTimeAgo(selectedNotification.createdAt)}
                                             </p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => setShowDetailModal(false)}
-                                        className="p-2 rounded-lg hover:bg-white/20 transition-colors"
+                                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
+                                        aria-label="Close"
                                     >
                                         <FaTimes className="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-                                <div className="mb-6">
-                                    <p className="text-gray-900 leading-relaxed text-base">
-                                        {selectedNotification.message || 'No message content'}
-                                    </p>
-                                </div>
+                            {/* Modal Content */}
+                            <div className="p-6 overflow-y-auto flex-1">
+                                <p className="text-gray-700 leading-relaxed text-base mb-6">
+                                    {selectedNotification.message || 'No message content'}
+                                </p>
 
-                                <div className="flex gap-3 pt-4 border-t">
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
                                     {selectedNotification.payload?.type === 'volunteer_invitation' && selectedNotification.payload?.eventId && (
                                         <button
                                             onClick={async () => {
@@ -482,26 +491,25 @@ const Notifications = () => {
                                                     toast.success(response.data.message || 'Invitation accepted successfully');
                                                     handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
                                                     setShowDetailModal(false);
-                                                    fetchNotifications(); // Refresh notifications
-                                                    // Navigate to event details
+                                                    fetchNotifications();
                                                     navigate(`/user/events/${selectedNotification.payload.eventId}`);
                                                 } catch (error) {
                                                     console.error('Error accepting invitation:', error);
                                                     toast.error(error.response?.data?.message || 'Failed to accept invitation');
                                                 }
                                             }}
-                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                                            className="flex-1 min-w-[150px] px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                                         >
-                                            <FaCheckCircle />
+                                            <FaCheckCircle className="w-4 h-4" />
                                             Accept Invitation
                                         </button>
                                     )}
                                     {selectedNotification.payload?.eventId && selectedNotification.payload?.type !== 'volunteer_invitation' && (
                                         <button
                                             onClick={() => handleNavigateFromPayload(selectedNotification.payload)}
-                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                                            className="flex-1 min-w-[150px] px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
                                         >
-                                            <FaCalendarAlt />
+                                            <FaCalendarAlt className="w-4 h-4" />
                                             View Event
                                         </button>
                                     )}
@@ -511,9 +519,9 @@ const Notifications = () => {
                                                 handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
                                                 setShowDetailModal(false);
                                             }}
-                                            className="px-5 py-3 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                                            className="px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-medium hover:shadow-md transition-all duration-200 flex items-center gap-2"
                                         >
-                                            <FaCheck />
+                                            <FaCheck className="w-4 h-4" />
                                             Mark as Read
                                         </button>
                                     )}
@@ -522,9 +530,9 @@ const Notifications = () => {
                                             handleDelete(selectedNotification.id, { stopPropagation: () => {} });
                                             setShowDetailModal(false);
                                         }}
-                                        className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
+                                        className="px-5 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 flex items-center gap-2"
                                     >
-                                        <FaTrash />
+                                        <FaTrash className="w-4 h-4" />
                                         Delete
                                     </button>
                                 </div>
