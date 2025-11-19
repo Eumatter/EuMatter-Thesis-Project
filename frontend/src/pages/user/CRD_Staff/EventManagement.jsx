@@ -1615,6 +1615,7 @@ const EventManagement = () => {
                         </div>
                     </div>
                 )}
+                )}
             </main>
 
             {/* Review Modal */}
