@@ -212,9 +212,9 @@ export const createEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
     try {
         const events = await eventModel.find()
-            .populate("createdBy", "name email profileImage")
-            .populate("volunteers", "name email profileImage department course role")
-            .populate("volunteerRegistrations.user", "name email profileImage department course role")
+            .populate("createdBy", "name email profileImage role")
+            .populate("volunteers", "name email profileImage department course role userType mseufCategory outsiderCategory")
+            .populate("volunteerRegistrations.user", "name email profileImage department course role userType mseufCategory outsiderCategory")
             .populate("comments.user", "name email profileImage")
             .populate("reviewedBy", "name email profileImage")
             .sort({ createdAt: -1 }); // Sort by newest first
@@ -224,7 +224,7 @@ export const getEvents = async (req, res) => {
         const eventsWithDonations = await Promise.all(events.map(async (event) => {
             const eventObj = event.toObject();
             const donations = await donationModel.find({ event: event._id, status: "succeeded" })
-                .populate("user", "name email profileImage department")
+                .populate("user", "name email profileImage department userType mseufCategory outsiderCategory role")
                 .sort({ createdAt: -1 })
                 .limit(100); // Limit to avoid performance issues
             
@@ -264,9 +264,9 @@ export const getUserEvents = async (req, res) => {
         }
 
         const events = await eventModel.find({ createdBy: userId })
-            .populate("createdBy", "name email profileImage")
-            .populate("volunteers", "name email profileImage department course role")
-            .populate("volunteerRegistrations.user", "name email profileImage department course role")
+            .populate("createdBy", "name email profileImage role")
+            .populate("volunteers", "name email profileImage department course role userType mseufCategory outsiderCategory")
+            .populate("volunteerRegistrations.user", "name email profileImage department course role userType mseufCategory outsiderCategory")
             .populate("comments.user", "name email profileImage")
             .populate("reviewedBy", "name email profileImage")
             .sort({ createdAt: -1 }); // Sort by newest first
@@ -276,7 +276,7 @@ export const getUserEvents = async (req, res) => {
         const eventsWithDonations = await Promise.all(events.map(async (event) => {
             const eventObj = event.toObject();
             const donations = await donationModel.find({ event: event._id, status: "succeeded" })
-                .populate("user", "name email profileImage department")
+                .populate("user", "name email profileImage department userType mseufCategory outsiderCategory role")
                 .sort({ createdAt: -1 })
                 .limit(100);
             
@@ -311,9 +311,9 @@ export const getUserEvents = async (req, res) => {
 export const getEventById = async (req, res) => {
     try {
         const event = await eventModel.findById(req.params.id)
-            .populate("createdBy", "name email profileImage")
-            .populate("volunteers", "name email profileImage department course role")
-            .populate("volunteerRegistrations.user", "name email profileImage department course role")
+            .populate("createdBy", "name email profileImage role")
+            .populate("volunteers", "name email profileImage department course role userType mseufCategory outsiderCategory")
+            .populate("volunteerRegistrations.user", "name email profileImage department course role userType mseufCategory outsiderCategory")
             .populate("comments.user", "name email profileImage")
             .populate("reviewedBy", "name email profileImage");
         if (!event) {
@@ -323,8 +323,8 @@ export const getEventById = async (req, res) => {
         // Fetch donations from donationModel
         const donationModel = (await import("../models/donationModel.js")).default;
         const donations = await donationModel.find({ event: req.params.id, status: "succeeded" })
-            .populate("user", "name email profileImage department")
-            .sort({ createdAt: -1 });
+                .populate("user", "name email profileImage department userType mseufCategory outsiderCategory role")
+                .sort({ createdAt: -1 });
         
         // Convert donations to event format
         const eventObj = event.toObject();
