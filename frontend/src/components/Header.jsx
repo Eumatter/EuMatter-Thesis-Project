@@ -1075,7 +1075,7 @@ const Header = () => {
 
                             {/* Scrollable menu content with improved styling - full height */}
                             <div 
-                                className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/30 to-white"
+                                className="flex-1 overflow-y-auto overflow-x-hidden bg-white"
                                 style={{
                                     height: 'calc(100vh - 80px)',
                                     maxHeight: 'calc(100vh - 80px)',
@@ -1102,9 +1102,10 @@ const Header = () => {
                                     </div>
                                 )}
 
-                                {/* Role-aware navigation for logged in users */}
+                                {/* Primary links for logged in users - Same structure as logged out users */}
                                 {isLoggedIn && (
                                     <div className="py-3 px-3">
+                                        {/* Primary Navigation Links - Role-based */}
                                         {isUser && (
                                             <>
                                                 <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
@@ -1144,12 +1145,11 @@ const Header = () => {
                                             </>
                                         )}
 
-                                        {/* Account section - Enhanced styling */}
-                                        <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
-                                            <div className="px-3 py-1 mb-3">
-                                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account</span>
+                                        {/* Account section - Separated like logged out users structure */}
+                                        <div className="border-t-2 border-gray-200/80 my-4 pt-4 mx-2">
+                                            <div className="px-3 py-2 mb-3">
+                                                <span className="text-xs font-extrabold text-gray-600 uppercase tracking-widest">Account</span>
                                             </div>
-                                            <MobileNavLink to={getProfileRoute()} icon={<FaUser />}>Profile</MobileNavLink>
                                             <MobileNavLink to={getProfileRoute()} icon={<FaCog />}>Account Settings</MobileNavLink>
                                             {userData.role && !userData.role.toLowerCase().includes('system admin') && (
                                                 <MobileNavLink to="/system-settings" icon={<FaSlidersH />}>System Settings</MobileNavLink>
@@ -1159,17 +1159,17 @@ const Header = () => {
                                             )}
                                         </div>
 
-                                        {/* Logout - Enhanced styling */}
-                                        <div className="border-t-2 border-gray-200 my-3 pt-3 mx-2">
+                                        {/* Logout Button - Enhanced styling */}
+                                        <div className="border-t-2 border-gray-200/80 my-4 pt-4 mx-2">
                                             <button 
                                                 onClick={() => {
                                                     handleLogout();
                                                     setIsMobileMenuOpen(false);
                                                 }} 
-                                                className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation bg-gradient-to-r from-red-50 to-red-50/50 text-red-700 hover:from-red-100 hover:to-red-100/50 active:from-red-200 active:to-red-200/50 border-2 border-red-200 hover:border-red-300 font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] group"
+                                                className="w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation bg-gradient-to-r from-red-50 via-red-50/80 to-red-50/50 text-red-700 hover:from-red-100 hover:via-red-100/80 hover:to-red-100/50 active:from-red-200 active:via-red-200/80 active:to-red-200/50 border-2 border-red-200 hover:border-red-300 active:border-red-400 font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] group"
                                             >
                                                 <FaSignOutAlt className="text-xl flex-shrink-0 group-hover:rotate-12 transition-transform duration-300" />
-                                                <span className="text-base font-semibold flex-1 text-left">Logout</span>
+                                                <span className="text-base font-bold flex-1 text-left">Logout</span>
                                             </button>
                                         </div>
                                     </div>

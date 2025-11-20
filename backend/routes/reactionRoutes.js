@@ -77,15 +77,19 @@ router.post('/:eventId/react', userAuth, async (req, res) => {
 
         await event.save();
         
+        // Reload event to ensure we have the latest data
+        const updatedEvent = await Event.findById(eventId);
+        
         // Get updated reaction counts
         const reactionCounts = {};
         ALLOWED_REACTIONS.forEach(type => {
-            reactionCounts[type] = Array.isArray(event.reactions[type]) ? event.reactions[type].length : 0;
+            reactionCounts[type] = Array.isArray(updatedEvent.reactions[type]) ? updatedEvent.reactions[type].length : 0;
         });
         reactionCounts.total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
         reactionCounts.userReaction = reactionType;
 
         res.json({
+            success: true,
             message: 'Reaction updated successfully',
             reactions: reactionCounts
         });
@@ -169,6 +173,7 @@ router.delete('/:eventId/react', userAuth, async (req, res) => {
             reactionCounts.total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
             
             return res.json({
+                success: true,
                 message: 'No reaction to remove (already removed)',
                 reactions: reactionCounts
             });
@@ -176,14 +181,18 @@ router.delete('/:eventId/react', userAuth, async (req, res) => {
 
         await event.save();
         
+        // Reload event to ensure we have the latest data
+        const updatedEvent = await Event.findById(eventId);
+        
         // Get updated reaction counts
         const reactionCounts = {};
         ALLOWED_REACTIONS.forEach(type => {
-            reactionCounts[type] = Array.isArray(event.reactions[type]) ? event.reactions[type].length : 0;
+            reactionCounts[type] = Array.isArray(updatedEvent.reactions[type]) ? updatedEvent.reactions[type].length : 0;
         });
         reactionCounts.total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
 
         res.json({
+            success: true,
             message: 'Reaction removed successfully',
             reactions: reactionCounts
         });
@@ -267,7 +276,10 @@ router.get('/:eventId/reactions', async (req, res) => {
             }
         }
 
-        res.json({ reactions: reactionCounts });
+        res.json({ 
+            success: true,
+            reactions: reactionCounts 
+        });
     } catch (error) {
         console.error('Error getting reactions:', error);
         

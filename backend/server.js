@@ -96,23 +96,22 @@ app.use(cors({
             return callback(null, true);
         }
 
-        // Additional check for any vercel.app domain
+        // Additional check for any vercel.app domain (always allow in production too)
         if (normalizedOrigin.includes('vercel.app')) {
-            if (process.env.NODE_ENV !== 'production') {
-                console.log(`CORS: Allowing Vercel domain: ${origin}`);
-            }
+            console.log(`CORS: Allowing Vercel domain: ${origin}`);
             return callback(null, true);
         }
 
-        // Log and allow in development, block in production
+        // Log and allow in development, block in production (except Vercel)
         if (process.env.NODE_ENV !== 'production') {
             console.warn(`CORS: Unknown origin (allowing in dev): ${origin} (normalized: ${normalizedOrigin})`);
             console.warn(`CORS: Allowed origins:`, allowedOrigins);
             return callback(null, true);
         }
         
-        // In production, block unknown origins
-        console.warn(`CORS: Blocked origin: ${origin}`);
+        // In production, block unknown origins (but Vercel is already handled above)
+        console.error(`CORS: Blocked origin: ${origin}`);
+        console.error(`CORS: Allowed origins:`, allowedOrigins);
         return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -178,6 +177,14 @@ app.use((err, req, res, next) => {
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
             res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie');
+        } else {
+            // Even if not in allowed list, if it's a vercel.app domain, allow it
+            if (normalizedOrigin.includes('vercel.app')) {
+                res.setHeader('Access-Control-Allow-Origin', origin);
+                res.setHeader('Access-Control-Allow-Credentials', 'true');
+                res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+                res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie');
+            }
         }
     }
 

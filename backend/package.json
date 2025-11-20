@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "add-sample-events": "node scripts/addSampleEvents.js"
   },
   "author": "Buenaobra",
   "license": "ISC",
