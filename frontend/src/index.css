@@ -293,6 +293,35 @@ html[data-font-size="extra-large"] {
     -webkit-filter: none !important;
   }
   
+  /* Ensure slider menu and ALL its children are NEVER blurred - highest priority */
+  body.mobile-menu-open .mobile-menu-slider,
+  body.mobile-menu-open .mobile-menu-slider *,
+  body.mobile-menu-open .mobile-menu-slider *::before,
+  body.mobile-menu-open .mobile-menu-slider *::after,
+  .mobile-menu-slider,
+  .mobile-menu-slider *,
+  .mobile-menu-slider *::before,
+  .mobile-menu-slider *::after,
+  body.mobile-menu-open [class*="mobile-menu-slider"],
+  body.mobile-menu-open [class*="mobile-menu-slider"] *,
+  body.mobile-menu-open .mobile-menu-blur.mobile-menu-slider,
+  body.mobile-menu-open .mobile-menu-blur.mobile-menu-slider *,
+  body.mobile-menu-open [data-no-blur="true"],
+  body.mobile-menu-open [data-no-blur="true"] *,
+  [data-no-blur="true"],
+  [data-no-blur="true"] * {
+    filter: none !important;
+    -webkit-filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Ensure overlay container itself is not blurred (only backdrop div inside it blurs) */
+  body.mobile-menu-open .mobile-menu-overlay {
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
+  
   /* Exclude hero section and slider from blur - Home page hero section should never be blurred */
   body.mobile-menu-open section:first-of-type,
   body.mobile-menu-open section:first-of-type *,

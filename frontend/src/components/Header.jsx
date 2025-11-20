@@ -90,34 +90,43 @@ const Header = () => {
                     const header = document.querySelector('header');
                     // Get hero section (first section) to exclude it from blur
                     const heroSection = document.querySelector('section:first-of-type');
+                    // Get mobile menu slider to exclude it from blur
+                    const mobileMenuSlider = document.querySelector('.mobile-menu-slider');
+                    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
                     
-                    // Find root element and blur all children except header and hero section
+                    // Find root element and blur all children except header, hero section, and menu
                     const rootElement = document.getElementById('root');
                     if (rootElement) {
                         // Get all direct children of root (App wrapper, etc.)
                         const rootChildren = Array.from(rootElement.children);
                         rootChildren.forEach(child => {
-                            // Skip header, hero section, and menu overlay
+                            // Skip header, hero section, menu overlay, and slider
                             if (child !== header && 
                                 child !== heroSection &&
+                                child !== mobileMenuOverlay &&
+                                child !== mobileMenuSlider &&
                                 child.tagName !== 'HEADER' &&
                                 !child.classList.contains('mobile-menu-overlay') &&
                                 !child.classList.contains('mobile-menu-slider')) {
                                 // Blur the child wrapper
                                 child.classList.add('mobile-menu-blur');
                                 
-                                // Blur all descendants inside this wrapper (except header and hero section)
+                                // Blur all descendants inside this wrapper (except header, hero section, and menu)
                                 const allDescendants = child.querySelectorAll('*');
                                 allDescendants.forEach(desc => {
                                     // Skip if it's part of header, hero section, or menu
                                     if (desc !== header &&
                                         desc !== heroSection &&
+                                        desc !== mobileMenuSlider &&
+                                        desc !== mobileMenuOverlay &&
                                         desc.tagName !== 'HEADER' &&
                                         !desc.closest('header') &&
                                         !desc.closest('section:first-of-type') &&
                                         !desc.closest('.mobile-menu-overlay') &&
                                         !desc.closest('.mobile-menu-slider') &&
-                                        !heroSection?.contains(desc)) {
+                                        !heroSection?.contains(desc) &&
+                                        !mobileMenuSlider?.contains(desc) &&
+                                        !mobileMenuOverlay?.contains(desc)) {
                                         desc.classList.add('mobile-menu-blur');
                                     }
                                 });
@@ -129,17 +138,26 @@ const Header = () => {
                     const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
                     const firstSection = document.querySelector('section:first-of-type'); // Hero section
                     mainElements.forEach(mainEl => {
-                        if (!mainEl.closest('header') && !mainEl.closest('.mobile-menu-overlay')) {
+                        if (!mainEl.closest('header') && 
+                            !mainEl.closest('.mobile-menu-overlay') &&
+                            !mainEl.closest('.mobile-menu-slider') &&
+                            mainEl !== mobileMenuSlider &&
+                            mainEl !== mobileMenuOverlay) {
                             mainEl.classList.add('mobile-menu-blur');
                             
-                            // Also blur all content inside main, but exclude hero section
+                            // Also blur all content inside main, but exclude hero section and menu
                             const mainContent = mainEl.querySelectorAll('*');
                             mainContent.forEach(content => {
                                 if (!content.closest('header') && 
                                     !content.closest('.mobile-menu-overlay') &&
+                                    !content.closest('.mobile-menu-slider') &&
                                     !content.closest('section:first-of-type') &&
                                     content !== firstSection &&
-                                    !firstSection?.contains(content)) {
+                                    content !== mobileMenuSlider &&
+                                    content !== mobileMenuOverlay &&
+                                    !firstSection?.contains(content) &&
+                                    !mobileMenuSlider?.contains(content) &&
+                                    !mobileMenuOverlay?.contains(content)) {
                                     content.classList.add('mobile-menu-blur');
                                 }
                             });
@@ -151,10 +169,15 @@ const Header = () => {
                     pageContainers.forEach(container => {
                         if (!container.closest('header') && 
                             !container.closest('.mobile-menu-overlay') &&
+                            !container.closest('.mobile-menu-slider') &&
                             !container.closest('section:first-of-type') &&
                             container !== header &&
                             container !== heroSection &&
-                            !heroSection?.contains(container)) {
+                            container !== mobileMenuSlider &&
+                            container !== mobileMenuOverlay &&
+                            !heroSection?.contains(container) &&
+                            !mobileMenuSlider?.contains(container) &&
+                            !mobileMenuOverlay?.contains(container)) {
                             container.classList.add('mobile-menu-blur');
                         }
                     });
@@ -1065,6 +1088,7 @@ const Header = () => {
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
                             className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
+                            data-no-blur="true"
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
@@ -1072,6 +1096,8 @@ const Header = () => {
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
                                 WebkitFilter: 'none',
+                                backdropFilter: 'none',
+                                WebkitBackdropFilter: 'none',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh'
