@@ -349,7 +349,14 @@ const sendDonationNotifications = async (donation) => {
   try {
     // Populate donation with event and department details for receipt generation
     const donationWithEvent = await donationModel.findById(donation._id)
-      .populate('event', 'title createdBy')
+      .populate({
+        path: 'event',
+        select: 'title createdBy',
+        populate: {
+          path: 'createdBy',
+          select: 'name'
+        }
+      })
       .populate('department', 'name email role')
       .lean();
     if (!donationWithEvent) {
@@ -485,9 +492,16 @@ const sendDonationNotifications = async (donation) => {
     // In-app notifications for CRD staff - Money Entered CRD
     const staffIds = crdStaff.map(staff => staff._id);
     if (staffIds.length > 0) {
+      // Determine notification title based on donation type
+      const isEventDonation = donationWithEvent.event && donationWithEvent.event.createdBy;
+      const recipientName = isEventDonation 
+        ? donationWithEvent.event.createdBy.name 
+        : 'CRD';
+      const notificationTitle = `Donation Received by ${recipientName}`;
+
       await notifyUsers({
         userIds: staffIds,
-        title: "Money Entered CRD - Donation Received",
+        title: notificationTitle,
         message: `₱${donationWithEvent.amount.toLocaleString()} donation from ${donationWithEvent.donorName}${donationWithEvent.event ? ` for "${eventTitle}"` : ''} has been successfully transferred and entered into CRD. Receipt sent to your email for transparency.`,
         payload: {
           donationId: donationWithEvent._id,
