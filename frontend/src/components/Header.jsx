@@ -313,12 +313,17 @@ const Header = () => {
                     setIsBellOpen(false);
                     setIsDropdownOpen(false); // Close dropdown menu when navigating
                 }}
-                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group mb-3 px-4
+                className={`w-full flex items-center space-x-4 p-4 rounded-xl transition-all duration-300 touch-manipulation relative group mb-3
                     ${isActive 
                         ? 'bg-gradient-to-r from-[#800000] to-[#9c0000] text-white shadow-xl shadow-[#800000]/40 scale-[1.01] ring-2 ring-[#800000]/20' 
-                        : 'bg-white/80 text-gray-800 hover:bg-gradient-to-r hover:from-[#800000]/10 hover:to-[#800000]/5 active:bg-[#800000]/20 border border-gray-200/50 hover:border-[#800000]/40 hover:shadow-lg active:shadow-xl'
+                        : 'bg-white text-gray-900 hover:bg-gradient-to-r hover:from-[#800000]/10 hover:to-[#800000]/5 active:bg-[#800000]/20 border-2 border-gray-200 hover:border-[#800000]/50 hover:shadow-lg active:shadow-xl'
                     }
                     font-semibold ${className}`}
+                style={{
+                    minHeight: '56px',
+                    display: 'flex',
+                    alignItems: 'center'
+                }}
             >
                 <span className={`text-2xl flex-shrink-0 transition-all duration-300 ${isActive ? 'text-white scale-110' : 'text-[#800000] group-hover:scale-110 group-hover:rotate-3'}`}>
                     {icon}
@@ -1038,10 +1043,10 @@ const Header = () => {
                                 boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
                                 zIndex: 100001,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                                filter: 'none',
-                                WebkitFilter: 'none',
-                                backdropFilter: 'none',
-                                WebkitBackdropFilter: 'none',
+                                filter: 'none !important',
+                                WebkitFilter: 'none !important',
+                                backdropFilter: 'none !important',
+                                WebkitBackdropFilter: 'none !important',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
@@ -1052,8 +1057,11 @@ const Header = () => {
                                 overflow: 'hidden',
                                 transform: 'translateX(0)',
                                 willChange: 'transform',
-                                contain: 'layout style paint',
-                                isolation: 'isolate'
+                                backgroundColor: '#ffffff',
+                                visibility: 'visible',
+                                opacity: 1,
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
@@ -1079,16 +1087,25 @@ const Header = () => {
                                 style={{
                                     height: 'calc(100vh - 80px)',
                                     maxHeight: 'calc(100vh - 80px)',
-                                    WebkitOverflowScrolling: 'touch'
+                                    WebkitOverflowScrolling: 'touch',
+                                    position: 'relative',
+                                    zIndex: 1,
+                                    backgroundColor: '#ffffff',
+                                    visibility: 'visible',
+                                    opacity: 1,
+                                    filter: 'none !important',
+                                    WebkitFilter: 'none !important'
                                 }}
                             >
                                 {/* Primary links for logged out users */}
                                 {!isLoggedIn && (
                                     <div className="py-3 px-3">
-                                        <MobileNavLink to="/" icon={<FaHome />}>Home</MobileNavLink>
-                                        <MobileNavLink to="/program" icon={<FaBookOpen />}>Program</MobileNavLink>
-                                        <MobileNavLink to="/nstp" icon={<FaClipboardList />}>NSTP</MobileNavLink>
-                                        <MobileNavLink to="/about" icon={<FaInfoCircle />}>About</MobileNavLink>
+                                        <div className="space-y-0">
+                                            <MobileNavLink to="/" icon={<FaHome />}>Home</MobileNavLink>
+                                            <MobileNavLink to="/program" icon={<FaBookOpen />}>Program</MobileNavLink>
+                                            <MobileNavLink to="/nstp" icon={<FaClipboardList />}>NSTP</MobileNavLink>
+                                            <MobileNavLink to="/about" icon={<FaInfoCircle />}>About</MobileNavLink>
+                                        </div>
                                         <div className="px-3 py-4 mt-3">
                                             <Button
                                                 onClick={() => { navigate('/login'); setIsMobileMenuOpen(false); }}
@@ -1103,46 +1120,46 @@ const Header = () => {
                                 )}
 
                                 {/* Primary links for logged in users - Same structure as logged out users */}
-                                {isLoggedIn && (
+                                {isLoggedIn && userData && (
                                     <div className="py-3 px-3">
                                         {/* Primary Navigation Links - Role-based */}
                                         {isUser && (
-                                            <>
+                                            <div className="space-y-0">
                                                 <MobileNavLink to={getDashboardRoute(userData.role)} icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
                                                 <MobileNavLink to="/user/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
                                                 <MobileNavLink to="/user/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
                                                 <MobileNavLink to="/user/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
-                                            </>
+                                            </div>
                                         )}
 
                                         {isDept && (
-                                            <>
+                                            <div className="space-y-0">
                                                 <MobileNavLink to="/department/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
                                                 <MobileNavLink to="/department/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
                                                 <MobileNavLink to="/department/donations" icon={<FaHandHoldingHeart />}>Donations</MobileNavLink>
                                                 <MobileNavLink to="/department/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
                                                 <MobileNavLink to="/department/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
-                                            </>
+                                            </div>
                                         )}
 
                                         {isCRD && (
-                                            <>
+                                            <div className="space-y-0">
                                                 <MobileNavLink to="/crd-staff/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
                                                 <MobileNavLink to="/crd-staff/events" icon={<FaCalendarAlt />}>Events</MobileNavLink>
                                                 <MobileNavLink to="/crd-staff/reports" icon={<FaChartLine />}>Reports</MobileNavLink>
                                                 <MobileNavLink to="/crd-staff/leaderboard" icon={<FaTrophy />}>Leaderboard</MobileNavLink>
                                                 <MobileNavLink to="/crd-staff/donations" icon={<FaBoxOpen />}>Donations</MobileNavLink>
                                                 <MobileNavLink to="/crd-staff/calendar" icon={<FaCalendar />}>Calendar</MobileNavLink>
-                                            </>
+                                            </div>
                                         )}
 
                                         {userData?.role && userData.role.toLowerCase().includes('system admin') && (
-                                            <>
+                                            <div className="space-y-0">
                                                 <MobileNavLink to="/system-admin/dashboard" icon={<FaTachometerAlt />}>Dashboard</MobileNavLink>
                                                 <MobileNavLink to="/system-admin/users" icon={<FaUsers />}>User Management</MobileNavLink>
                                                 <MobileNavLink to="/system-admin/settings" icon={<FaCogs />}>System Settings</MobileNavLink>
                                                 <MobileNavLink to="/system-admin/reports" icon={<FaChartLine />}>System Reports</MobileNavLink>
-                                            </>
+                                            </div>
                                         )}
 
                                         {/* Account section - Separated like logged out users structure */}
