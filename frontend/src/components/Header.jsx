@@ -88,30 +88,36 @@ const Header = () => {
                     
                     // Get header first to exclude it from blur
                     const header = document.querySelector('header');
+                    // Get hero section (first section) to exclude it from blur
+                    const heroSection = document.querySelector('section:first-of-type');
                     
-                    // Find root element and blur all children except header
+                    // Find root element and blur all children except header and hero section
                     const rootElement = document.getElementById('root');
                     if (rootElement) {
                         // Get all direct children of root (App wrapper, etc.)
                         const rootChildren = Array.from(rootElement.children);
                         rootChildren.forEach(child => {
-                            // Skip header and menu overlay
+                            // Skip header, hero section, and menu overlay
                             if (child !== header && 
+                                child !== heroSection &&
                                 child.tagName !== 'HEADER' &&
                                 !child.classList.contains('mobile-menu-overlay') &&
                                 !child.classList.contains('mobile-menu-slider')) {
                                 // Blur the child wrapper
                                 child.classList.add('mobile-menu-blur');
                                 
-                                // Blur all descendants inside this wrapper (except header)
+                                // Blur all descendants inside this wrapper (except header and hero section)
                                 const allDescendants = child.querySelectorAll('*');
                                 allDescendants.forEach(desc => {
-                                    // Skip if it's part of header or menu
+                                    // Skip if it's part of header, hero section, or menu
                                     if (desc !== header &&
+                                        desc !== heroSection &&
                                         desc.tagName !== 'HEADER' &&
                                         !desc.closest('header') &&
+                                        !desc.closest('section:first-of-type') &&
                                         !desc.closest('.mobile-menu-overlay') &&
-                                        !desc.closest('.mobile-menu-slider')) {
+                                        !desc.closest('.mobile-menu-slider') &&
+                                        !heroSection?.contains(desc)) {
                                         desc.classList.add('mobile-menu-blur');
                                     }
                                 });
@@ -121,14 +127,19 @@ const Header = () => {
                     
                     // Blur all main elements (dashboard pages have these)
                     const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
+                    const firstSection = document.querySelector('section:first-of-type'); // Hero section
                     mainElements.forEach(mainEl => {
                         if (!mainEl.closest('header') && !mainEl.closest('.mobile-menu-overlay')) {
                             mainEl.classList.add('mobile-menu-blur');
                             
-                            // Also blur all content inside main
+                            // Also blur all content inside main, but exclude hero section
                             const mainContent = mainEl.querySelectorAll('*');
                             mainContent.forEach(content => {
-                                if (!content.closest('header') && !content.closest('.mobile-menu-overlay')) {
+                                if (!content.closest('header') && 
+                                    !content.closest('.mobile-menu-overlay') &&
+                                    !content.closest('section:first-of-type') &&
+                                    content !== firstSection &&
+                                    !firstSection?.contains(content)) {
                                     content.classList.add('mobile-menu-blur');
                                 }
                             });
@@ -140,7 +151,10 @@ const Header = () => {
                     pageContainers.forEach(container => {
                         if (!container.closest('header') && 
                             !container.closest('.mobile-menu-overlay') &&
-                            container !== header) {
+                            !container.closest('section:first-of-type') &&
+                            container !== header &&
+                            container !== heroSection &&
+                            !heroSection?.contains(container)) {
                             container.classList.add('mobile-menu-blur');
                         }
                     });
@@ -508,7 +522,7 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`}>
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[10000] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`} style={{ filter: 'none !important', WebkitFilter: 'none !important' }}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
@@ -1025,21 +1039,27 @@ const Header = () => {
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
                     <div className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" style={{ filter: 'none', WebkitFilter: 'none' }}>
-                        {/* Backdrop overlay with full blur - spans full height from top to bottom */}
+                        {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
                         <div 
-                            className="fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/70 backdrop-blur-xl pointer-events-auto"
+                            className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
                                 animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
+                                width: '100vw',
                                 zIndex: 9998,
                                 transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
                                 filter: 'none',
-                                WebkitFilter: 'none'
+                                WebkitFilter: 'none',
+                                // Ensure it covers everything including behind header
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
@@ -1047,7 +1067,7 @@ const Header = () => {
                             className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                                boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
+                                boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
                                 zIndex: 9999,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
