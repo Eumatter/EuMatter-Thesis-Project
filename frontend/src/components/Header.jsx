@@ -388,15 +388,7 @@ const Header = () => {
                     opacity: 1;
                 }
             }
-            /* Ensure profile slider is above everything */
-            .profile-slider-container {
-                position: fixed !important;
-                z-index: 99999 !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-            }
+            /* Ensure profile slider menu is above everything - highest z-index */
             .profile-slider-menu {
                 position: fixed !important;
                 z-index: 100000 !important;
@@ -405,6 +397,8 @@ const Header = () => {
                 bottom: 0 !important;
                 height: 100vh !important;
                 max-height: 100vh !important;
+                contain: layout style paint !important;
+                isolation: isolate !important;
             }
         `}</style>
         {/* Maintenance Mode Banner for System Admin and CRD Staff */}
@@ -788,28 +782,57 @@ const Header = () => {
 
                             {/* Mobile Slider Menu for User Dropdown - Slides from right */}
                             {isDropdownOpen && (
-                                <div 
-                                    className="lg:hidden profile-slider-container pointer-events-none"
-                                    style={{ zIndex: 99999 }}
-                                >
-                                    {/* Backdrop overlay with full blur */}
+                                <>
+                                    {/* Backdrop overlay with full blur and darkening - covers everything behind slider, stays on screen */}
                                     <div 
-                                        className="fixed inset-0 bg-black/70 backdrop-blur-xl pointer-events-auto"
+                                        className="lg:hidden fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
                                         onClick={() => setIsDropdownOpen(false)}
                                         style={{
                                             animation: 'fadeIn 0.3s ease-out',
-                                            zIndex: 99999,
                                             backdropFilter: 'blur(24px)',
-                                            WebkitBackdropFilter: 'blur(24px)'
+                                            WebkitBackdropFilter: 'blur(24px)',
+                                            height: '100vh',
+                                            minHeight: '100vh',
+                                            maxHeight: '100vh',
+                                            width: '100vw',
+                                            zIndex: 99998,
+                                            transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                                            filter: 'none',
+                                            WebkitFilter: 'none',
+                                            position: 'fixed',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            overflow: 'hidden',
+                                            contain: 'layout style paint'
                                         }}
                                     />
-                                    {/* Slider menu from right - Full height */}
+                                    {/* Slider menu from right - Full height - IN FRONT OF EVERYTHING */}
                                     <div 
-                                        className="profile-slider-menu w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto"
+                                        className="lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto profile-slider-menu"
+                                        data-no-blur="true"
                                         style={{
                                             animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                             boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
-                                            transform: 'translateX(0)'
+                                            zIndex: 100000,
+                                            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                                            filter: 'none',
+                                            WebkitFilter: 'none',
+                                            backdropFilter: 'none',
+                                            WebkitBackdropFilter: 'none',
+                                            height: '100vh',
+                                            minHeight: '100vh',
+                                            maxHeight: '100vh',
+                                            position: 'fixed',
+                                            top: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            overflow: 'hidden',
+                                            transform: 'translateX(0)',
+                                            willChange: 'transform',
+                                            contain: 'layout style paint',
+                                            isolation: 'isolate'
                                         }}
                                     >
                                         {/* Enhanced Header with close button */}
@@ -924,7 +947,7 @@ const Header = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                         </div>
                     </div>
