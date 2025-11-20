@@ -163,17 +163,17 @@ const Home = () => {
             <Header />
 
             {/* Hero Section - Improved with better balance */}
-            <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-16 sm:py-20 md:py-24">
-                {/* Background Image with better positioning */}
+            <section className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-16 sm:py-20 md:py-24 -mt-14 sm:-mt-16 md:-mt-20 lg:-mt-20">
+                {/* Background Image with better positioning - extends behind header */}
                 <div 
-                    className="absolute inset-0 bg-cover bg-no-repeat"
+                    className="absolute -top-14 sm:-top-16 md:-top-20 lg:-top-20 left-0 right-0 bottom-0 bg-cover bg-no-repeat"
                     style={{ 
                         backgroundImage: `url(${heroImage})`,
                         backgroundPosition: 'center 35%',
                         backgroundSize: 'cover'
                     }}
                 ></div>
-                <div className="absolute inset-0 bg-gradient-to-br from-[#800000]/75 via-[#800000]/70 to-[#800000]/80"></div>
+                <div className="absolute -top-14 sm:-top-16 md:-top-20 lg:-top-20 left-0 right-0 bottom-0 bg-gradient-to-br from-[#800000]/75 via-[#800000]/70 to-[#800000]/80"></div>
                 <div className="relative z-10 w-full max-w-7xl mx-auto">
                     <motion.div
                         className="space-y-6 sm:space-y-8 md:space-y-10 text-white"

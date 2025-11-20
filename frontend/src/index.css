@@ -383,7 +383,7 @@ html[data-font-size="extra-large"] {
   
   /* Ensure mobile menu slider is above header and backdrop */
   body.mobile-menu-open .mobile-menu-slider {
-    z-index: 10001 !important;
+    z-index: 10010 !important;
   }
   
   /* Ensure hero section (first section) is ALWAYS clear - highest priority, must come after blur rules */

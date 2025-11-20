@@ -973,7 +973,7 @@ const Header = () => {
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
-                                zIndex: 10001,
+                                zIndex: 10010,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
                                 WebkitFilter: 'none',
