@@ -1,0 +1,17 @@
+{
+  "score": 100,
+  "timestamp": "2025-11-20T04:58:59.433Z",
+  "url": "http://localhost:5173",
+  "issues": {
+    "errors": 1,
+    "warnings": 0,
+    "total": 1
+  },
+  "failedAudits": [
+    {
+      "title": "Elements with visible text labels do not have matching accessible names.",
+      "description": "Visible text labels that do not match the accessible name can result in a confusing experience for screen reader users. [Learn more about accessible names](https://dequeuniversity.com/rules/axe/4.10/label-content-name-mismatch).",
+      "score": 0
+    }
+  ]
+}

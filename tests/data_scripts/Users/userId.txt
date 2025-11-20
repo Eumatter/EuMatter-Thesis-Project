@@ -1,0 +1,209 @@
+{
+  "totalUsers": 40,
+  "found": 40,
+  "notFound": 0,
+  "mappings": [
+    {
+      "email": "B24-53150@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01c8",
+      "name": "Rebecca Diaz"
+    },
+    {
+      "email": "J23-73986@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01c9",
+      "name": "Angela Silva"
+    },
+    {
+      "email": "B22-59464@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01ca",
+      "name": "Gabriela Soto"
+    },
+    {
+      "email": "G20-87773@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01cb",
+      "name": "Rafael Guerrero"
+    },
+    {
+      "email": "P24-30158@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01cc",
+      "name": "Andrea Morales"
+    },
+    {
+      "email": "M23-48532@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01cd",
+      "name": "Felipe Rivera"
+    },
+    {
+      "email": "I22-60148@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01ce",
+      "name": "Rafael Delos Santos"
+    },
+    {
+      "email": "L20-80377@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01cf",
+      "name": "Claudia Alvarez"
+    },
+    {
+      "email": "N20-98753@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d0",
+      "name": "Oscar Garcia"
+    },
+    {
+      "email": "E22-81517@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d1",
+      "name": "Monica Vargas"
+    },
+    {
+      "email": "C20-98923@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d2",
+      "name": "Elena Jimenez"
+    },
+    {
+      "email": "E25-50704@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d3",
+      "name": "Ramon Villanueva"
+    },
+    {
+      "email": "Q23-99318@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d4",
+      "name": "Diego Villanueva"
+    },
+    {
+      "email": "T20-18370@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d5",
+      "name": "Ricardo Reyes"
+    },
+    {
+      "email": "G23-52811@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d6",
+      "name": "Mariana Diaz"
+    },
+    {
+      "email": "D20-77162@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d7",
+      "name": "Juan Vargas"
+    },
+    {
+      "email": "S21-43157@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d8",
+      "name": "Rosa Paredes"
+    },
+    {
+      "email": "C24-28922@student.mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01d9",
+      "name": "Eduardo Aguilar"
+    },
+    {
+      "email": "gabriela.lopez@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01da",
+      "name": "Gabriela Lopez"
+    },
+    {
+      "email": "jose.rojas@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01db",
+      "name": "Jose Rojas"
+    },
+    {
+      "email": "enrique.garcia@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01dc",
+      "name": "Enrique Garcia"
+    },
+    {
+      "email": "gustavo.ramos@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01dd",
+      "name": "Gustavo Ramos"
+    },
+    {
+      "email": "andrea.paredes@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01de",
+      "name": "Andrea Paredes"
+    },
+    {
+      "email": "lucia.jimenez@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01df",
+      "name": "Lucia Jimenez"
+    },
+    {
+      "email": "sofia.flores@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01e0",
+      "name": "Sofia Flores"
+    },
+    {
+      "email": "laura.soto@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01e1",
+      "name": "Laura Soto"
+    },
+    {
+      "email": "alfredo.vargas@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01e2",
+      "name": "Alfredo Vargas"
+    },
+    {
+      "email": "victor.diaz@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01e3",
+      "name": "Victor Diaz"
+    },
+    {
+      "email": "diego.garcia@mseuf.edu.ph",
+      "userId": "691e2c396b87231e679d01e4",
+      "name": "Diego Garcia"
+    },
+    {
+      "email": "pedro.bautista@yahoo.com",
+      "userId": "691e2c396b87231e679d01e5",
+      "name": "Pedro Bautista"
+    },
+    {
+      "email": "victoria.rojas@yahoo.com",
+      "userId": "691e2c396b87231e679d01e6",
+      "name": "Victoria Rojas"
+    },
+    {
+      "email": "diego.villanueva@gmail.com",
+      "userId": "691e2c396b87231e679d01e7",
+      "name": "Diego Villanueva"
+    },
+    {
+      "email": "valentina.morales@yahoo.com",
+      "userId": "691e2c396b87231e679d01e8",
+      "name": "Valentina Morales"
+    },
+    {
+      "email": "enrique.bautista@gmail.com",
+      "userId": "691e2c396b87231e679d01e9",
+      "name": "Enrique Bautista"
+    },
+    {
+      "email": "isabel.castro@gmail.com",
+      "userId": "691e2c396b87231e679d01ea",
+      "name": "Isabel Castro"
+    },
+    {
+      "email": "claudia.vargas@yahoo.com",
+      "userId": "691e2c396b87231e679d01eb",
+      "name": "Claudia Vargas"
+    },
+    {
+      "email": "fernanda.paredes@hotmail.com",
+      "userId": "691e2c396b87231e679d01ec",
+      "name": "Fernanda Paredes"
+    },
+    {
+      "email": "valentina.valdez@yahoo.com",
+      "userId": "691e2c396b87231e679d01ed",
+      "name": "Valentina Valdez"
+    },
+    {
+      "email": "gustavo.fuentes@outlook.com",
+      "userId": "691e2c396b87231e679d01ee",
+      "name": "Gustavo Fuentes"
+    },
+    {
+      "email": "diego.marquez@gmail.com",
+      "userId": "691e2c396b87231e679d01ef",
+      "name": "Diego Marquez"
+    }
+  ],
+  "notFoundUsers": [],
+  "generatedAt": "2025-11-19T20:58:22.903Z"
+}
