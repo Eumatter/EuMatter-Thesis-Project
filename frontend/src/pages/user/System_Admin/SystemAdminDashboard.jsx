@@ -111,8 +111,8 @@ const SystemAdminDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Statistics Cards - 4 Columns on Mobile/Tablet */}
-                    <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                    {/* Statistics Cards - Responsive Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-6 sm:mb-8">
                         {/* Total Users Card */}
                         <div className="bg-gradient-to-br from-white to-[#800000]/5 rounded-xl shadow-md hover:shadow-xl p-3 sm:p-4 md:p-5 lg:p-6 transform transition-all duration-300 hover:scale-105 active:scale-[0.98] touch-manipulation border border-[#800000]/20">
                             <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
@@ -257,28 +257,28 @@ const SystemAdminDashboard = () => {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#800000]/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:bg-[#800000]/10 transition-all duration-500"></div>
                                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#800000]/5 rounded-full -ml-8 -mb-8 group-hover:scale-125 transition-all duration-500"></div>
                                     
-                                    <div className="relative z-10 flex items-center gap-4 flex-1">
+                                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
                                         {/* Icon Section */}
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300">
-                                            <FaUsers className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300 flex-shrink-0">
+                                            <FaUsers className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                                         </div>
                                         
                                         {/* Content Section */}
-                                        <div className="space-y-1 flex-1">
-                                            <h4 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
+                                        <div className="space-y-1 flex-1 min-w-0">
+                                            <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
                                                 User Management
                                             </h4>
                                             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                                                 Manage user accounts, roles, and permissions.
                                             </p>
                                         </div>
-                                    </div>
 
-                                    {/* Action Button */}
-                                    <div className="relative z-10">
-                                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
-                                            View Details
-                                        </button>
+                                        {/* Action Button */}
+                                        <div className="relative z-10 w-full sm:w-auto">
+                                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+                                                View Details
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
 
@@ -296,15 +296,15 @@ const SystemAdminDashboard = () => {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#800000]/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:bg-[#800000]/10 transition-all duration-500"></div>
                                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#800000]/5 rounded-full -ml-8 -mb-8 group-hover:scale-125 transition-all duration-500"></div>
                                     
-                                    <div className="relative z-10 flex items-center gap-4 flex-1">
+                                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
                                         {/* Icon Section */}
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300">
-                                            <FaCogs className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300 flex-shrink-0">
+                                            <FaCogs className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                                         </div>
                                         
                                         {/* Content Section */}
-                                        <div className="space-y-1 flex-1">
-                                            <h4 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
+                                        <div className="space-y-1 flex-1 min-w-0">
+                                            <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
                                                 System Settings
                                             </h4>
                                             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
@@ -312,13 +312,12 @@ const SystemAdminDashboard = () => {
                                             </p>
                                         </div>
 
-                                    </div>
-
-                                    {/* Action Button */}
-                                    <div className="relative z-10">
-                                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
-                                            View Details
-                                        </button>
+                                        {/* Action Button */}
+                                        <div className="relative z-10 w-full sm:w-auto">
+                                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+                                                View Details
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
 
@@ -336,15 +335,15 @@ const SystemAdminDashboard = () => {
                                     <div className="absolute top-0 right-0 w-24 h-24 bg-[#800000]/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 group-hover:bg-[#800000]/10 transition-all duration-500"></div>
                                     <div className="absolute bottom-0 left-0 w-16 h-16 bg-[#800000]/5 rounded-full -ml-8 -mb-8 group-hover:scale-125 transition-all duration-500"></div>
                                     
-                                    <div className="relative z-10 flex items-center gap-4 flex-1">
+                                    <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 flex-1">
                                         {/* Icon Section */}
-                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300">
-                                            <FaChartBar className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all duration-300 flex-shrink-0">
+                                            <FaChartBar className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                                         </div>
                                         
                                         {/* Content Section */}
-                                        <div className="space-y-1 flex-1">
-                                            <h4 className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
+                                        <div className="space-y-1 flex-1 min-w-0">
+                                            <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 group-hover:text-[#800000] transition-colors duration-200">
                                                 System Reports
                                             </h4>
                                             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
@@ -352,14 +351,13 @@ const SystemAdminDashboard = () => {
                                             </p>
                                         </div>
 
+                                        {/* Action Button */}
+                                        <div className="relative z-10 w-full sm:w-auto">
+                                            <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
+                                                View Details
+                                            </button>
+                                        </div>
                                     </div>
-
-                                    {/* Action Button */}
-                                    <div className="relative z-10">
-                                        <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#800000] to-[#EE1212] text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02]">
-                                            View Details
-                                        </button>
-                                </div>
                                 </motion.div>
                             </div>
                         </div>

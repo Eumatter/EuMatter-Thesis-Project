@@ -631,7 +631,76 @@ const UserManagement = () => {
                             </div>
                         ) : (
                             <>
-                                <div className="w-full">
+                                {/* Mobile Card View */}
+                                <div className="block md:hidden divide-y divide-gray-200">
+                                    {users.map((user) => (
+                                        <div key={user._id} className="p-4 hover:bg-gray-50 transition-colors">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                                                    <div className="flex-shrink-0 h-10 w-10">
+                                                        {user.profileImage ? (
+                                                            <img 
+                                                                className="h-10 w-10 rounded-full object-cover" 
+                                                                src={user.profileImage} 
+                                                                alt={user.name} 
+                                                            />
+                                                        ) : (
+                                                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                <UserIcon className="h-5 w-5 text-gray-400" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-1.5 mb-1">
+                                                            <div className="text-sm font-medium text-gray-900 truncate">
+                                                                {user.name || 'Unnamed User'}
+                                                            </div>
+                                                            {user.isAccountVerified && (
+                                                                <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                                </svg>
+                                                            )}
+                                                            {!user.isAccountVerified && (
+                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                    <ClockIcon className="h-3 w-3" />
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 truncate mb-2">{user.email}</p>
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeClass(user)}`}>
+                                                            {getRoleIcon(user)}
+                                                            <span className="ml-1">{getUserTypeDisplay(user)}</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleEditUser(user);
+                                                        }}
+                                                        className="inline-flex items-center px-2 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                        title="Edit user"
+                                                    >
+                                                        <PencilIcon className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDeleteUser(user._id, user.name);
+                                                        }}
+                                                        className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                        title="Delete user"
+                                                    >
+                                                        <TrashIcon className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Desktop Table View */}
+                                <div className="hidden md:block w-full overflow-x-auto">
                                     <table className="w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>

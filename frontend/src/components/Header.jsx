@@ -74,110 +74,50 @@ const Header = () => {
         };
     }, []);
 
-    // Prevent body scroll and apply blur when mobile menu or dropdown is open
+    // Prevent body scroll when mobile menu or dropdown is open
+    // NOTE: We do NOT apply blur classes to page elements anymore
+    // The blur effect is handled purely by the backdrop overlay's backdrop-filter CSS property
+    // This ensures only the backdrop blurs what's behind it, and the slider menu stays completely clear
     useEffect(() => {
         if (isMobileMenuOpen || isDropdownOpen) {
-            document.body.style.overflow = 'hidden';
+            // Store current scroll position
+            const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
             document.body.style.width = '100%';
-            // Add blur class to body and all content when mobile menu is open
-            if (isMobileMenuOpen) {
-                // Use requestAnimationFrame to ensure DOM is ready and apply blur smoothly
-                requestAnimationFrame(() => {
-                    document.body.classList.add('mobile-menu-open');
-                    
-                    // Get header first to exclude it from blur
-                    const header = document.querySelector('header');
-                    
-                    // Find root element and blur all children except header
-                    const rootElement = document.getElementById('root');
-                    if (rootElement) {
-                        // Get all direct children of root (App wrapper, etc.)
-                        const rootChildren = Array.from(rootElement.children);
-                        rootChildren.forEach(child => {
-                            // Skip header and menu overlay
-                            if (child !== header && 
-                                child.tagName !== 'HEADER' &&
-                                !child.classList.contains('mobile-menu-overlay') &&
-                                !child.classList.contains('mobile-menu-slider')) {
-                                // Blur the child wrapper
-                                child.classList.add('mobile-menu-blur');
-                                
-                                // Blur all descendants inside this wrapper (except header)
-                                const allDescendants = child.querySelectorAll('*');
-                                allDescendants.forEach(desc => {
-                                    // Skip if it's part of header or menu
-                                    if (desc !== header &&
-                                        desc.tagName !== 'HEADER' &&
-                                        !desc.closest('header') &&
-                                        !desc.closest('.mobile-menu-overlay') &&
-                                        !desc.closest('.mobile-menu-slider')) {
-                                        desc.classList.add('mobile-menu-blur');
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    
-                    // Blur all main elements (dashboard pages have these)
-                    const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
-                    mainElements.forEach(mainEl => {
-                        if (!mainEl.closest('header') && !mainEl.closest('.mobile-menu-overlay')) {
-                            mainEl.classList.add('mobile-menu-blur');
-                            
-                            // Also blur all content inside main
-                            const mainContent = mainEl.querySelectorAll('*');
-                            mainContent.forEach(content => {
-                                if (!content.closest('header') && !content.closest('.mobile-menu-overlay')) {
-                                    content.classList.add('mobile-menu-blur');
-                                }
-                            });
-                        }
-                    });
-                    
-                    // Blur page wrapper containers (div.min-h-screen is common for page wrappers)
-                    const pageContainers = document.querySelectorAll('div.min-h-screen, div.min-h-full');
-                    pageContainers.forEach(container => {
-                        if (!container.closest('header') && 
-                            !container.closest('.mobile-menu-overlay') &&
-                            container !== header) {
-                            container.classList.add('mobile-menu-blur');
-                        }
-                    });
-                });
-            }
+            document.body.style.overflow = 'hidden';
+            document.body.classList.add('mobile-menu-open');
+            
+            // Store scroll position for restoration
+            document.body.setAttribute('data-scroll-y', scrollY.toString());
         } else {
-            document.body.style.overflow = 'unset';
-            document.body.style.position = 'unset';
-            document.body.style.width = 'unset';
-            // Remove blur class from body and all content
+            // Restore scroll position
+            const scrollY = document.body.getAttribute('data-scroll-y');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
             document.body.classList.remove('mobile-menu-open');
             
-            // Remove blur from all elements with mobile-menu-blur class (header shouldn't have it, but just in case)
-            const headerEl = document.querySelector('header');
-            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
-            allBlurredElements.forEach(element => {
-                // Double check it's not header before removing
-                if (element !== headerEl && element.tagName !== 'HEADER' && !element.closest('header')) {
-                    element.classList.remove('mobile-menu-blur');
-                }
-            });
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+                document.body.removeAttribute('data-scroll-y');
+            }
         }
+        
         return () => {
-            document.body.style.overflow = 'unset';
-            document.body.style.position = 'unset';
-            document.body.style.width = 'unset';
+            // Cleanup on unmount
+            const scrollY = document.body.getAttribute('data-scroll-y');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
             document.body.classList.remove('mobile-menu-open');
             
-            // Remove blur from all elements with mobile-menu-blur class
-            const header = document.querySelector('header');
-            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
-            allBlurredElements.forEach(element => {
-                // Double check it's not header before removing
-                if (element !== header && element.tagName !== 'HEADER' && !element.closest('header')) {
-                    element.classList.remove('mobile-menu-blur');
-                }
-            });
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+                document.body.removeAttribute('data-scroll-y');
+            }
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
 
@@ -397,10 +337,10 @@ const Header = () => {
     };
 
     const BurgerIcon = ({ open }) => (
-        <div className="relative w-6 h-4">
-            <span className={`absolute left-0 top-0 block h-0.5 w-6 bg-[#800000] transition-transform duration-200 ${open ? 'translate-y-2 rotate-45' : ''}`}></span>
-            <span className={`absolute left-0 top-1/2 -translate-y-1/2 block h-0.5 w-6 bg-[#800000] transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'}`}></span>
-            <span className={`absolute left-0 bottom-0 block h-0.5 w-6 bg-[#800000] transition-transform duration-200 ${open ? '-translate-y-2 -rotate-45' : ''}`}></span>
+        <div className="relative w-6 h-5 flex flex-col justify-center items-center">
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? 'rotate-45 translate-y-0' : '-translate-y-1.5'}`}></span>
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? 'opacity-0 scale-0' : 'opacity-100 scale-100'}`}></span>
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? '-rotate-45 translate-y-0' : 'translate-y-1.5'}`}></span>
         </div>
     );
 
@@ -424,6 +364,11 @@ const Header = () => {
                     transform: translateX(0);
                     opacity: 1;
                 }
+            }
+            /* Ensure slider doesn't cause layout shifts */
+            .mobile-menu-slider {
+                contain: layout style paint;
+                transform: translateX(0);
             }
             @keyframes fadeIn {
                 from {
@@ -508,7 +453,7 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`}>
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[10000] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`} style={{ filter: 'none !important', WebkitFilter: 'none !important' }}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
@@ -1024,37 +969,68 @@ const Header = () => {
         </header>
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" style={{ filter: 'none', WebkitFilter: 'none' }}>
-                        {/* Backdrop overlay with full blur - spans full height from top to bottom */}
+                    <div 
+                        className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" 
+                        style={{ 
+                            filter: 'none', 
+                            WebkitFilter: 'none',
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '100vw',
+                            height: '100vh',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
                         <div 
-                            className="fixed top-0 left-0 right-0 bottom-0 w-full h-full min-h-screen bg-black/70 backdrop-blur-xl pointer-events-auto"
+                            className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
                             onClick={() => setIsMobileMenuOpen(false)}
                             style={{
                                 animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
                                 height: '100vh',
                                 minHeight: '100vh',
                                 maxHeight: '100vh',
+                                width: '100vw',
                                 zIndex: 9998,
                                 transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
                                 filter: 'none',
-                                WebkitFilter: 'none'
+                                WebkitFilter: 'none',
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                overflow: 'hidden'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
                             className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
+                            data-no-blur="true"
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                                boxShadow: '-4px 0 24px rgba(0, 0, 0, 0.15)',
-                                zIndex: 9999,
+                                boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
+                                zIndex: 100001,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
                                 WebkitFilter: 'none',
+                                backdropFilter: 'none',
+                                WebkitBackdropFilter: 'none',
                                 height: '100vh',
                                 minHeight: '100vh',
-                                maxHeight: '100vh'
+                                maxHeight: '100vh',
+                                position: 'fixed',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                overflow: 'hidden',
+                                transform: 'translateX(0)',
+                                willChange: 'transform'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
