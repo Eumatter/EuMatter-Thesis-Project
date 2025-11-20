@@ -124,26 +124,6 @@ app.use(cors({
     maxAge: 86400 // 24 hours
 }));
 
-// Handle preflight requests explicitly
-app.options('*', (req, res) => {
-    const origin = req.headers.origin;
-    if (origin) {
-        const normalizedOrigin = normalizeOrigin(origin);
-        const isAllowed = allowedOrigins.includes(normalizedOrigin) || 
-                         (allowVercelPreviews && normalizedOrigin.endsWith('.vercel.app')) ||
-                         normalizedOrigin.includes('vercel.app');
-        
-        if (isAllowed) {
-            res.setHeader('Access-Control-Allow-Origin', origin);
-            res.setHeader('Access-Control-Allow-Credentials', 'true');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cookie');
-            res.setHeader('Access-Control-Max-Age', '86400');
-        }
-    }
-    res.status(200).end();
-});
-
 // Health check endpoint (before other routes)
 app.get("/health", (req, res) => {
     res.status(200).json({ 
