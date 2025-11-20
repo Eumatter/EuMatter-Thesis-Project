@@ -388,7 +388,16 @@ const Header = () => {
                     opacity: 1;
                 }
             }
-            /* Ensure profile slider menu is above everything - highest z-index */
+            /* Ensure profile slider container and menu are properly positioned */
+            .profile-slider-container {
+                position: fixed !important;
+                z-index: 99999 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                pointer-events: none !important;
+            }
             .profile-slider-menu {
                 position: fixed !important;
                 z-index: 100000 !important;
@@ -399,6 +408,7 @@ const Header = () => {
                 max-height: 100vh !important;
                 contain: layout style paint !important;
                 isolation: isolate !important;
+                pointer-events: auto !important;
             }
         `}</style>
         {/* Maintenance Mode Banner for System Admin and CRD Staff */}
@@ -869,7 +879,7 @@ const Header = () => {
 
                                         {/* Scrollable menu content - Full height */}
                                         <div 
-                                            className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/50 to-white"
+                                            className="flex-1 overflow-y-auto overflow-x-hidden bg-white"
                                             style={{
                                                 height: 'calc(100vh - 80px)',
                                                 maxHeight: 'calc(100vh - 80px)',

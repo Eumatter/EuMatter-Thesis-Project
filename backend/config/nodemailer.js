@@ -109,6 +109,29 @@ const isValidEmail = (email) => {
 };
 
 /**
+ * Get the correct sender email address
+ * Priority: SENDER_EMAIL > SMTP_USER > fallback
+ * Many SMTP servers require the "from" address to match the authenticated user
+ * @returns {String} Valid sender email address
+ */
+export const getSenderEmail = () => {
+    // Priority 1: Use SENDER_EMAIL if set and valid
+    if (process.env.SENDER_EMAIL && isValidEmail(process.env.SENDER_EMAIL)) {
+        return process.env.SENDER_EMAIL;
+    }
+    
+    // Priority 2: Use SMTP_USER if it's a valid email (most SMTP servers require this)
+    if (process.env.SMTP_USER && isValidEmail(process.env.SMTP_USER)) {
+        console.warn(`⚠️ SENDER_EMAIL not set or invalid. Using SMTP_USER as sender: ${process.env.SMTP_USER}`);
+        return process.env.SMTP_USER;
+    }
+    
+    // Priority 3: Fallback (should not happen if env vars are set correctly)
+    console.error(`❌ Neither SENDER_EMAIL nor SMTP_USER is a valid email. Using fallback.`);
+    return 'noreply@eumatter.com';
+};
+
+/**
  * Send email with retry logic
  * @param {Object} mailOptions - Nodemailer mail options
  * @param {Number} maxRetries - Maximum number of retry attempts (default: 3)
@@ -123,13 +146,22 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 5, initialDel
         throw new Error(errorMsg);
     }
     
-    // Validate sender email
+    // Validate and set sender email
+    // Many SMTP servers require the "from" address to match the authenticated user
     if (!mailOptions.from) {
-        mailOptions.from = process.env.SENDER_EMAIL || 'noreply@eumatter.com';
+        mailOptions.from = getSenderEmail();
     }
     
+    // Validate the from email
     if (!isValidEmail(mailOptions.from)) {
-        throw new Error(`Invalid sender email address: ${mailOptions.from}`);
+        throw new Error(`Invalid sender email address: ${mailOptions.from}. Please set SENDER_EMAIL or ensure SMTP_USER is a valid email.`);
+    }
+    
+    // Warn if SENDER_EMAIL doesn't match SMTP_USER (some servers require them to match)
+    if (process.env.SENDER_EMAIL && process.env.SMTP_USER && 
+        process.env.SENDER_EMAIL !== process.env.SMTP_USER) {
+        console.warn(`⚠️ SENDER_EMAIL (${process.env.SENDER_EMAIL}) differs from SMTP_USER (${process.env.SMTP_USER})`);
+        console.warn(`   Some SMTP servers require these to match. If you see "Invalid from" errors, set SENDER_EMAIL=${process.env.SMTP_USER}`);
     }
     
     // Validate recipient email
@@ -235,6 +267,25 @@ export const sendEmailWithRetry = async (mailOptions, maxRetries = 5, initialDel
             }
             
             lastError = error;
+            
+            // Check for "Invalid from" error specifically
+            const isInvalidFromError = 
+                error.message?.includes('Invalid from') ||
+                error.message?.includes('invalid from') ||
+                error.response?.includes('Invalid from') ||
+                error.response?.includes('451') ||
+                (error.responseCode === 451 && error.message?.includes('from'));
+            
+            if (isInvalidFromError) {
+                console.error(`❌ Invalid "from" email address error detected.`);
+                console.error(`   Current from: ${mailOptions.from}`);
+                console.error(`   SMTP_USER: ${process.env.SMTP_USER || 'Not set'}`);
+                console.error(`   SENDER_EMAIL: ${process.env.SENDER_EMAIL || 'Not set'}`);
+                console.error(`   Solution: Set SENDER_EMAIL to match SMTP_USER, or ensure both are set correctly.`);
+                console.error(`   Many SMTP servers require the "from" address to match the authenticated user email.`);
+                // Don't retry invalid from errors - they won't succeed
+                throw new Error(`Invalid "from" email address. The "from" address (${mailOptions.from}) must match your SMTP authenticated user (${process.env.SMTP_USER || 'not set'}). Please set SENDER_EMAIL environment variable to match SMTP_USER.`);
+            }
             
             // Consider timeout errors as retryable - they might succeed on retry
             const isRetryable = 
