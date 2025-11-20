@@ -792,21 +792,10 @@ const Header = () => {
 
                             {/* Mobile Slider Menu for User Dropdown - Slides from right */}
                             {isDropdownOpen && (
-                                <div 
-                                    className="lg:hidden profile-slider-container"
-                                    style={{ 
-                                        position: 'fixed',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        zIndex: 99999,
-                                        pointerEvents: 'none'
-                                    }}
-                                >
+                                <>
                                     {/* Backdrop overlay with full blur and darkening - covers everything behind slider, stays on screen */}
                                     <div 
-                                        className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
+                                        className="lg:hidden fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
                                         onClick={() => setIsDropdownOpen(false)}
                                         style={{
                                             animation: 'fadeIn 0.3s ease-out',
@@ -831,7 +820,7 @@ const Header = () => {
                                     />
                                     {/* Slider menu from right - Full height - IN FRONT OF EVERYTHING */}
                                     <div 
-                                        className="profile-slider-menu w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto"
+                                        className="lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto profile-slider-menu"
                                         data-no-blur="true"
                                         style={{
                                             animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -890,7 +879,7 @@ const Header = () => {
 
                                         {/* Scrollable menu content - Full height */}
                                         <div 
-                                            className="flex-1 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white via-gray-50/50 to-white"
+                                            className="flex-1 overflow-y-auto overflow-x-hidden bg-white"
                                             style={{
                                                 height: 'calc(100vh - 80px)',
                                                 maxHeight: 'calc(100vh - 80px)',
@@ -968,7 +957,7 @@ const Header = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </>
                             )}
                         </div>
                     </div>
