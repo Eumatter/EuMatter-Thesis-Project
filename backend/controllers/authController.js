@@ -1,7 +1,7 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import transporter, { sendEmailWithRetry } from "../config/nodemailer.js";
+import transporter, { sendEmailWithRetry, getSenderEmail } from "../config/nodemailer.js";
 import { createAuditLog } from "./auditLogController.js";
 
 const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
@@ -1326,7 +1326,7 @@ export const sendResetOtp = async (req, res) => {
 
         // Send password reset OTP email with modern format matching EuMatter style
         const mailOptions = {
-            from: process.env.SENDER_EMAIL,
+            from: getSenderEmail(),
             to: normalizedEmail,
             subject: "EuMatter - Password Reset Verification Code",
             html: `
