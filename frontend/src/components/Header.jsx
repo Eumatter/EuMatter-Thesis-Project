@@ -388,7 +388,16 @@ const Header = () => {
                     opacity: 1;
                 }
             }
-            /* Ensure profile slider menu is above everything - highest z-index */
+            /* Ensure profile slider container and menu are properly positioned */
+            .profile-slider-container {
+                position: fixed !important;
+                z-index: 99999 !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                pointer-events: none !important;
+            }
             .profile-slider-menu {
                 position: fixed !important;
                 z-index: 100000 !important;
@@ -399,6 +408,7 @@ const Header = () => {
                 max-height: 100vh !important;
                 contain: layout style paint !important;
                 isolation: isolate !important;
+                pointer-events: auto !important;
             }
         `}</style>
         {/* Maintenance Mode Banner for System Admin and CRD Staff */}
@@ -782,10 +792,21 @@ const Header = () => {
 
                             {/* Mobile Slider Menu for User Dropdown - Slides from right */}
                             {isDropdownOpen && (
-                                <>
+                                <div 
+                                    className="lg:hidden profile-slider-container"
+                                    style={{ 
+                                        position: 'fixed',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 99999,
+                                        pointerEvents: 'none'
+                                    }}
+                                >
                                     {/* Backdrop overlay with full blur and darkening - covers everything behind slider, stays on screen */}
                                     <div 
-                                        className="lg:hidden fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
+                                        className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
                                         onClick={() => setIsDropdownOpen(false)}
                                         style={{
                                             animation: 'fadeIn 0.3s ease-out',
@@ -810,7 +831,7 @@ const Header = () => {
                                     />
                                     {/* Slider menu from right - Full height - IN FRONT OF EVERYTHING */}
                                     <div 
-                                        className="lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto profile-slider-menu"
+                                        className="profile-slider-menu w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col pointer-events-auto"
                                         data-no-blur="true"
                                         style={{
                                             animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -947,7 +968,7 @@ const Header = () => {
                                             </div>
                                         </div>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
