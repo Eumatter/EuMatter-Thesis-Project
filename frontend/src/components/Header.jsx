@@ -462,9 +462,9 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[10000] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible transition-all duration-300`} style={{ filter: 'none !important', WebkitFilter: 'none !important' }}>
-            <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
-                <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[10000] bg-white/95 shadow-md font-poppins backdrop-blur-sm transition-all duration-300`} style={{ filter: 'none !important', WebkitFilter: 'none !important', contain: 'layout style paint' }}>
+            <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4" style={{ contain: 'layout style paint' }}>
+                <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2" style={{ minHeight: 'fit-content' }}>
                     {/* Left side - Logo and App Name */}
                     <div className="flex items-center min-w-0 flex-1 gap-2 sm:gap-2.5 md:gap-3">
                         {/* Logo */}
@@ -520,17 +520,7 @@ const Header = () => {
 						)}
 
 						{/* Notifications Bell */}
-                        <div className="relative" ref={bellRef}>
-							{/* Backdrop for mobile when notifications are open */}
-							{isBellOpen && (
-								<div 
-									className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[109]"
-									onClick={() => setIsBellOpen(false)}
-									style={{
-										animation: 'fadeIn 0.2s ease-out'
-									}}
-								/>
-							)}
+                        <div className="relative" ref={bellRef} style={{ contain: 'layout style paint' }}>
 							<button
 								className="relative p-1.5 sm:p-2 md:p-2.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 onClick={() => setIsBellOpen(v => { const next = !v; if (next) setIsDropdownOpen(false); return next; })}
@@ -542,8 +532,188 @@ const Header = () => {
 									<span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-semibold min-w-[16px] sm:min-w-[18px] text-center shadow-lg">{unreadCount > 99 ? '99+' : unreadCount}</span>
 								)}
 							</button>
+							{/* Backdrop for mobile when notifications are open */}
 							{isBellOpen && (
-                                <div className="absolute right-0 lg:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-[calc(100vw-2rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border border-gray-200/80 z-[110] overflow-hidden backdrop-blur-sm"
+								<>
+									<div 
+										className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[109]"
+										onClick={() => setIsBellOpen(false)}
+										style={{
+											animation: 'fadeIn 0.2s ease-out'
+										}}
+									/>
+									{/* Mobile: Fixed positioning */}
+									<div className="lg:hidden fixed top-16 sm:top-20 right-4 left-4 w-auto max-w-sm mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200/80 z-[110] overflow-hidden backdrop-blur-sm"
+										style={{
+											animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
+											boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+											maxHeight: 'calc(100vh - 6rem)'
+										}}
+									>
+										{/* Header with View All button in top right */}
+										<div className="px-4 py-3 bg-gradient-to-r from-[#800000] via-[#900000] to-[#800000] text-white flex items-center justify-between relative shadow-lg">
+											<div className="flex items-center gap-2">
+												<div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+													<FaBell className="w-4 h-4" />
+												</div>
+												<div>
+													<span className="text-sm font-bold block">Notifications</span>
+													{unreadCount > 0 && (
+														<span className="text-xs text-white/90">
+															{unreadCount} {unreadCount === 1 ? 'new' : 'new'}
+														</span>
+													)}
+												</div>
+											</div>
+											<div className="flex items-center gap-2">
+												{unreadCount > 0 && (
+													<button 
+														className="text-xs px-2 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm" 
+														onClick={(e) => { 
+															e.stopPropagation(); 
+															markAllRead(); 
+														}}
+													>
+														Mark all read
+													</button>
+												)}
+												<button
+													onClick={(e) => {
+														e.stopPropagation();
+														navigate('/notifications');
+														setIsBellOpen(false);
+													}}
+													className="text-xs px-3 py-1.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5"
+												>
+													<FaEye className="w-3 h-3" />
+													View All
+												</button>
+											</div>
+										</div>
+										
+										{/* Notifications List */}
+										<div className="max-h-[calc(100vh-12rem)] overflow-y-auto bg-gradient-to-b from-white to-gray-50/50">
+											{isLoadingNotifications && (
+												<div className="p-8 text-center">
+													<div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#800000] border-t-transparent"></div>
+													<p className="text-sm text-gray-600 mt-3 font-medium">Loading notifications...</p>
+												</div>
+											)}
+											{!isLoadingNotifications && notifications.length === 0 && (
+												<div className="p-8 text-center">
+													<div className="w-16 h-16 bg-gradient-to-br from-[#800000]/10 to-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
+														<FaBell className="w-8 h-8 text-gray-400" />
+													</div>
+													<p className="text-sm font-semibold text-gray-700 mb-1">All caught up!</p>
+													<p className="text-xs text-gray-500">No new notifications</p>
+												</div>
+											)}
+											{!isLoadingNotifications && notifications.map((n, idx) => {
+												const formatTime = (dateString) => {
+													if (!dateString) return '';
+													const date = new Date(dateString);
+													const now = new Date();
+													const diffInSeconds = Math.floor((now - date) / 1000);
+													if (diffInSeconds < 60) return 'Just now';
+													if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+													if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+													return date.toLocaleDateString();
+												};
+												
+												const notificationType = n.payload?.type || 'system';
+												
+												// Get filled icon component based on notification type
+												const getNotificationIconComponent = (type) => {
+													switch (type) {
+														case 'event_created':
+															return <FaCalendarAlt className="w-5 h-5" />;
+														case 'event_updated':
+															return <FaSyncAlt className="w-5 h-5" />;
+														case 'event_cancelled':
+															return <FaTimesCircle className="w-5 h-5" />;
+														case 'event_reminder':
+															return <FaClock className="w-5 h-5" />;
+														case 'volunteer_invitation':
+															return <FaUsers className="w-5 h-5" />;
+														case 'volunteer_approved':
+															return <FaCheckCircle className="w-5 h-5" />;
+														case 'volunteer_registered':
+															return <FaUserCheck className="w-5 h-5" />;
+														case 'volunteer_invitation_accepted':
+															return <FaCheckCircle className="w-5 h-5" />;
+														case 'donation_received':
+															return <FaHandHoldingHeart className="w-5 h-5" />;
+														case 'donation_success':
+															return <FaCreditCard className="w-5 h-5" />;
+														case 'feedback_deadline':
+															return <FaExclamationCircle className="w-5 h-5" />;
+														case 'attendance_recorded':
+															return <FaCheckCircle className="w-5 h-5" />;
+														case 'comment_added':
+															return <FaComment className="w-5 h-5" />;
+														case 'reaction_added':
+															return <FaThumbsUp className="w-5 h-5" />;
+														default:
+															return <FaBell className="w-5 h-5" />;
+													}
+												};
+												
+												const IconComponent = getNotificationIconComponent(notificationType);
+												
+												return (
+													<div 
+														key={n.id || n._id || idx} 
+														onClick={() => handleNotificationClick(n)}
+														className={`px-4 py-3.5 border-b cursor-pointer transition-all duration-300 hover:shadow-md hover:bg-gradient-to-r hover:from-white hover:to-[#800000]/5 active:bg-gray-50 ${
+															n.unread || n.read === false 
+																? 'bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent border-[#800000]/20' 
+																: 'bg-white border-gray-100'
+														}`}
+													>
+														<div className="flex items-start gap-3">
+															{/* Icon - No background, maroon filled icon */}
+															<div className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-[#800000]">
+																{IconComponent}
+															</div>
+															
+															{/* Content */}
+															<div className="flex-1 min-w-0">
+																<div className="flex items-start justify-between gap-2 mb-1">
+																	<h4 className={`font-bold text-sm leading-tight ${
+																		n.unread || n.read === false ? 'text-gray-900' : 'text-gray-700'
+																	}`}>
+																		{n.title || 'Notification'}
+																	</h4>
+																	{(n.unread || n.read === false) && (
+																		<div className="flex-shrink-0 w-2 h-2 bg-[#800000] rounded-full mt-1.5 animate-pulse"></div>
+																	)}
+																</div>
+																<p className="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">
+																	{n.message || n.body || 'No message'}
+																</p>
+																<div className="flex items-center justify-between">
+																	<span className="text-xs text-gray-500 font-medium">
+																		{formatTime(n.createdAt)}
+																	</span>
+																	{n.payload?.eventId && (
+																		<span className="text-xs text-[#800000] font-semibold flex items-center gap-1">
+																			View
+																			<FaChevronRight className="w-2.5 h-2.5" />
+																		</span>
+																	)}
+																</div>
+															</div>
+														</div>
+													</div>
+												);
+											})}
+										</div>
+									</div>
+								</>
+							)}
+							{/* Desktop: Absolute positioning */}
+							{isBellOpen && (
+                                <div className="hidden lg:block absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200/80 z-[110] overflow-hidden backdrop-blur-sm"
 									style={{
 										animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
 										boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
@@ -712,17 +882,7 @@ const Header = () => {
 						</div>
 
                         {/* User Dropdown */}
-                        <div className="relative" ref={dropdownRef}>
-                            {/* Backdrop for mobile/tablet when dropdown is open */}
-                            {isDropdownOpen && (
-                                <div 
-                                    className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[119]"
-                                    onClick={() => setIsDropdownOpen(false)}
-                                    style={{
-                                        animation: 'fadeIn 0.2s ease-out'
-                                    }}
-                                />
-                            )}
+                        <div className="relative" ref={dropdownRef} style={{ contain: 'layout style paint' }}>
                             <button
                                 onClick={() => {
                                     const next = !isDropdownOpen;
@@ -747,14 +907,24 @@ const Header = () => {
                                     </div>
                                 )}
                             </button>
-                            {/* Dropdown - Works on both desktop and mobile */}
+                            {/* Mobile: Fixed positioning dropdown */}
                             {isDropdownOpen && (
-                                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden z-[120] max-h-[85vh] overflow-y-auto"
-									style={{
-										animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
-										boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-									}}
-								>
+                                <>
+                                    {/* Backdrop for mobile/tablet when dropdown is open */}
+                                    <div 
+                                        className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[119]"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                        style={{
+                                            animation: 'fadeIn 0.2s ease-out'
+                                        }}
+                                    />
+                                    <div className="lg:hidden fixed top-16 sm:top-20 right-4 left-4 w-auto max-w-sm mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden z-[120] backdrop-blur-sm"
+										style={{
+											animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
+											boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+											maxHeight: 'calc(100vh - 6rem)'
+										}}
+									>
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
                                             <div className="flex items-center gap-3">
@@ -977,6 +1147,83 @@ const Header = () => {
                                         
                                         {/* Logout */}
                                         <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 active:bg-red-100 flex items-center gap-2 transition-colors duration-200">
+                                            <FaSignOutAlt className="w-4 h-4" />
+                                            Logout
+                                        </button>
+                                    </div>
+                                    </div>
+                                </>
+                            )}
+                            {/* Desktop: Absolute positioning dropdown */}
+                            {isDropdownOpen && (
+                                <div className="hidden lg:block absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden z-[120] max-h-[85vh] overflow-y-auto"
+									style={{
+										animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
+										boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+									}}
+								>
+                                    <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
+                                        <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
+                                            <div className="flex items-center gap-3">
+                                                {userData?.profileImage ? (
+                                                    <img src={userData.profileImage} alt={userData.name} className="w-10 h-10 rounded-full object-cover border" />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold">
+                                                        {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <div className="text-sm font-semibold text-gray-900 leading-5">{userData.name}</div>
+                                                    <div className="text-xs text-gray-600">{userData.email}</div>
+                                                    <div className="text-xs text-[#800000] font-medium mt-0.5">{userData.role}</div>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                    <div className="py-2">
+                                        {/* Calendar - Show on all devices */}
+                                        <button 
+                                            onClick={() => { 
+                                                const calendarRoute = isUser ? '/user/calendar' : 
+                                                                   isDept ? '/department/calendar' : 
+                                                                   isCRD ? '/crd-staff/calendar' : 
+                                                                   '/system-admin/dashboard';
+                                                navigate(calendarRoute); 
+                                                setIsDropdownOpen(false); 
+                                            }} 
+                                            className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2 transition-colors duration-200"
+                                        >
+                                            <FaCalendar className="w-4 h-4 text-[#800000]" />
+                                            Calendar
+                                        </button>
+                                        <div className="my-2 h-px bg-gray-100" />
+                                        
+                                        {/* Account Settings */}
+                                        <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2 transition-colors duration-200">
+                                            <FaCog className="w-4 h-4 text-[#800000]" />
+                                            Account Settings
+                                        </button>
+                                        
+                                        {/* System Settings - Show for all users EXCEPT System Admin */}
+                                        {userData.role && !userData.role.toLowerCase().includes('system admin') && (
+                                            <button onClick={() => { navigate('/system-settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2 transition-colors duration-200">
+                                                <FaSlidersH className="w-4 h-4 text-[#800000]" />
+                                                System Settings
+                                            </button>
+                                        )}
+                                        
+                                        {/* Only show verify account button for Users who are not verified */}
+                                        {userData.role === 'User' && !userData.isAccountVerified && (
+                                            <button onClick={() => { navigate('/email-verify'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2 transition-colors duration-200">
+                                                <FaCheckCircle className="w-4 h-4" />
+                                                Verify Account
+                                            </button>
+                                        )}
+                                        
+                                        <div className="my-2 h-px bg-gray-100" />
+                                        
+                                        {/* Logout */}
+                                        <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2 transition-colors duration-200">
                                             <FaSignOutAlt className="w-4 h-4" />
                                             Logout
                                         </button>
@@ -1244,8 +1491,16 @@ const Header = () => {
                 )}
 
 
-        {/* Spacer to offset fixed header height */}
-        <div aria-hidden className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}></div>
+        {/* Spacer to offset fixed header height - prevents layout shift */}
+        <div 
+            aria-hidden="true" 
+            className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}
+            style={{ 
+                width: '100%',
+                flexShrink: 0,
+                contain: 'layout style paint'
+            }}
+        ></div>
         </>
     );
 };
