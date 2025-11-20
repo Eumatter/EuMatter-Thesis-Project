@@ -494,15 +494,15 @@ const SystemReports = () => {
                     <h1 className="ml-3 text-xl font-bold text-[#800000]">System Admin</h1>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 py-8">
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
                     {/* Header Section */}
-                    <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 md:mb-8 border border-gray-200">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
-                                <p className="text-gray-600 text-lg">Monitor and track all system activities and audit logs</p>
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">Reports</h1>
+                                <p className="text-sm sm:text-base md:text-lg text-gray-600">Monitor and track all system activities and audit logs</p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     onClick={() => setAutoRefresh(!autoRefresh)}
                                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
@@ -527,20 +527,21 @@ const SystemReports = () => {
                     </div>
 
                     {/* Filters Section */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-black">Filters</h2>
+                            <h2 className="text-base sm:text-lg font-semibold text-black">Filters</h2>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 text-xs sm:text-sm text-gray-700 hover:text-[#800000] transition-colors"
                             >
-                                <FunnelIcon className="w-5 h-5" />
-                                {showFilters ? 'Hide' : 'Show'} Filters
+                                <FunnelIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="hidden sm:inline">{showFilters ? 'Hide' : 'Show'} Filters</span>
+                                <span className="sm:hidden">{showFilters ? 'Hide' : 'Show'}</span>
                             </button>
                         </div>
 
                         {showFilters && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                 {/* Search */}
                                 <div className="lg:col-span-3">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -646,12 +647,12 @@ const SystemReports = () => {
                     </div>
 
                     {/* Main Audit Log Table */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                            <h2 className="text-lg font-semibold text-black">
-                                Audit Logs {selectedCategory && `- ${selectedCategory}`}
+                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+                        <div className="flex flex-col gap-3 sm:gap-4 mb-4">
+                            <h2 className="text-base sm:text-lg font-semibold text-black">
+                                Audit Logs {selectedCategory && <span className="text-sm font-normal text-gray-600">- {selectedCategory}</span>}
                             </h2>
-                            <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                                 {/* Page Size Selector */}
                                 <div className="flex items-center gap-2">
                                     <label htmlFor="pageSize" className="text-sm text-gray-700 whitespace-nowrap">
@@ -720,8 +721,8 @@ const SystemReports = () => {
 
                     {/* Category Filter Links */}
                     <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
-                        <h2 className="text-lg font-semibold text-black mb-4">Filter by Category</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <h2 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">Filter by Category</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                             <button
                                 onClick={() => handleCategoryFilter('all')}
                                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors text-left ${

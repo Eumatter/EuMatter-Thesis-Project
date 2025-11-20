@@ -349,7 +349,93 @@ const WalletManagement = () => {
                         </div>
                     ) : (
                         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                            <div className="overflow-x-auto">
+                            {/* Mobile Card View */}
+                            <div className="block md:hidden divide-y divide-gray-200">
+                                {filteredWallets.length === 0 ? (
+                                    <div className="p-6 text-center text-sm text-gray-500">
+                                        No wallets found matching your search criteria.
+                                    </div>
+                                ) : (
+                                    filteredWallets.map((wallet, index) => {
+                                        const uniqueKey = wallet.userId?._id || wallet.userId || wallet._id || `wallet-${index}`;
+                                        return (
+                                            <div key={uniqueKey} className="p-4 hover:bg-gray-50 transition-colors">
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <div className="text-sm font-medium text-gray-900 mb-1">
+                                                            {wallet.userId?.name || 'Unknown'}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {wallet.userId?.email || ''}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <div className="text-xs text-gray-600 mb-1">Public Key</div>
+                                                            <div className="text-xs text-gray-900 font-mono break-all">
+                                                                {wallet.hasWallet ? (wallet.publicKey || '****') : <span className="text-gray-400 italic">No wallet</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <div className="text-xs text-gray-600 mb-1">Status</div>
+                                                            <div>{getStatusBadge(wallet)}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs text-gray-600 mb-1">Last Verified</div>
+                                                            <div className="text-xs text-gray-500">
+                                                                {wallet.hasWallet ? formatDate(wallet.lastVerifiedAt) : '-'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                                                        {wallet.hasWallet ? (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleEdit(wallet)}
+                                                                    className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                                                    title="Edit Wallet"
+                                                                >
+                                                                    <FaEdit className="inline mr-1" />
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleVerify(wallet.userId?._id || wallet.userId)}
+                                                                    className="flex-1 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
+                                                                    title="Verify Credentials"
+                                                                >
+                                                                    <FaCheckCircle className="inline mr-1" />
+                                                                    Verify
+                                                                </button>
+                                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={wallet.isActive}
+                                                                        onChange={() => handleToggleClick(wallet)}
+                                                                        className="sr-only peer"
+                                                                    />
+                                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#800000]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#800000]"></div>
+                                                                </label>
+                                                            </>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => handleCreateWallet(wallet)}
+                                                                className="w-full px-3 py-1.5 text-xs font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000] flex items-center justify-center gap-1"
+                                                            >
+                                                                <FaPlus className="h-3 w-3" />
+                                                                Create Wallet
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-gray-50">
                                         <tr>

@@ -371,19 +371,19 @@ html[data-font-size="extra-large"] {
     position: relative !important;
   }
   
-  /* Ensure header appears above mobile menu backdrop */
+  /* Ensure header is below slider menu when mobile menu is open */
   body.mobile-menu-open header {
     z-index: 10000 !important;
   }
   
-  /* Ensure mobile menu backdrop is behind header */
+  /* Ensure mobile menu backdrop is behind everything */
   body.mobile-menu-open .mobile-menu-overlay {
     z-index: 9998 !important;
   }
   
-  /* Ensure mobile menu slider is above backdrop but below header */
+  /* Ensure mobile menu slider is above header and backdrop */
   body.mobile-menu-open .mobile-menu-slider {
-    z-index: 9999 !important;
+    z-index: 10001 !important;
   }
   
   /* Ensure hero section (first section) is ALWAYS clear - highest priority, must come after blur rules */
