@@ -337,40 +337,21 @@ html[data-font-size="extra-large"] {
     -webkit-filter: none !important;
   }
   
-  /* Blur ALL elements with mobile-menu-blur class when mobile menu is open - but NOT header, NOT hero section */
-  body.mobile-menu-open .mobile-menu-blur:not(header):not(header *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *),
-  body.mobile-menu-open main.mobile-menu-blur:not(:has(section:first-of-type)),
-  body.mobile-menu-open [role="main"].mobile-menu-blur:not(:has(section:first-of-type)),
-  body.mobile-menu-open .main-content.mobile-menu-blur:not(:has(section:first-of-type)),
-  body.mobile-menu-open section.mobile-menu-blur:not(header section):not(:first-of-type):not([class*="hero"]),
-  body.mobile-menu-open article.mobile-menu-blur:not(header article),
-  body.mobile-menu-open div.mobile-menu-blur:not(header div):not(header):not(.mobile-menu-overlay):not(.mobile-menu-slider):not(section:first-of-type *):not([class*="hero"] *) {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
-  }
+  /* DISABLED: We no longer apply blur classes to page elements via JavaScript */
+  /* Blur effect is now handled purely by the backdrop overlay's backdrop-filter CSS property */
+  /* This ensures only the backdrop blurs what's behind it, and page elements stay clear */
   
-  /* Blur all nested content inside blurred main elements - but NOT hero section */
-  body.mobile-menu-open main.mobile-menu-blur *:not(header *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *),
-  body.mobile-menu-open [role="main"].mobile-menu-blur *:not(header *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *),
-  body.mobile-menu-open .main-content.mobile-menu-blur *:not(header *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *),
-  body.mobile-menu-open section.mobile-menu-blur *:not(header *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *),
-  body.mobile-menu-open article.mobile-menu-blur *:not(header *),
-  body.mobile-menu-open div.mobile-menu-blur *:not(header *):not(.mobile-menu-overlay *):not(.mobile-menu-slider *):not(section:first-of-type):not(section:first-of-type *):not([class*="hero"]):not([class*="hero"] *) {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
-  }
-  
-  /* Blur root children (App wrapper, etc.) but NOT header - highest specificity */
-  body.mobile-menu-open #root > .mobile-menu-blur:not(header),
-  body.mobile-menu-open #root > .mobile-menu-blur *:not(header *):not(.mobile-menu-overlay):not(.mobile-menu-overlay *):not(.mobile-menu-slider):not(.mobile-menu-slider *) {
-    filter: blur(12px) !important;
-    -webkit-filter: blur(12px) !important;
-    transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), -webkit-filter 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    will-change: filter;
+  /* Ensure NO page elements get filter blur applied - all blur comes from backdrop overlay's backdrop-filter only */
+  /* The backdrop overlay uses backdrop-filter (not filter) which blurs what's behind it without affecting the element itself */
+  body.mobile-menu-open main,
+  body.mobile-menu-open section,
+  body.mobile-menu-open article,
+  body.mobile-menu-open div:not(.mobile-menu-overlay):not(.mobile-menu-slider):not(.mobile-menu-overlay *):not(.mobile-menu-slider *),
+  body.mobile-menu-open main *,
+  body.mobile-menu-open section *,
+  body.mobile-menu-open article * {
+    filter: none !important;
+    -webkit-filter: none !important;
   }
   
   /* Ensure header is ALWAYS clear - highest priority, must come after blur rules */

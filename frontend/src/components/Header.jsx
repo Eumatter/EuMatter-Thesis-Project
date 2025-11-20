@@ -74,147 +74,28 @@ const Header = () => {
         };
     }, []);
 
-    // Prevent body scroll and apply blur when mobile menu or dropdown is open
+    // Prevent body scroll when mobile menu or dropdown is open
+    // NOTE: We do NOT apply blur classes to page elements anymore
+    // The blur effect is handled purely by the backdrop overlay's backdrop-filter CSS property
+    // This ensures only the backdrop blurs what's behind it, and the slider menu stays completely clear
     useEffect(() => {
         if (isMobileMenuOpen || isDropdownOpen) {
             document.body.style.overflow = 'hidden';
             document.body.style.position = 'fixed';
             document.body.style.width = '100%';
-            // Add blur class to body and all content when mobile menu is open
-            if (isMobileMenuOpen) {
-                // Use requestAnimationFrame to ensure DOM is ready and apply blur smoothly
-                requestAnimationFrame(() => {
-                    document.body.classList.add('mobile-menu-open');
-                    
-                    // Get header first to exclude it from blur
-                    const header = document.querySelector('header');
-                    // Get hero section (first section) to exclude it from blur
-                    const heroSection = document.querySelector('section:first-of-type');
-                    // Get mobile menu slider to exclude it from blur
-                    const mobileMenuSlider = document.querySelector('.mobile-menu-slider');
-                    const mobileMenuOverlay = document.querySelector('.mobile-menu-overlay');
-                    
-                    // Find root element and blur all children except header, hero section, and menu
-                    const rootElement = document.getElementById('root');
-                    if (rootElement) {
-                        // Get all direct children of root (App wrapper, etc.)
-                        const rootChildren = Array.from(rootElement.children);
-                        rootChildren.forEach(child => {
-                            // Skip header, hero section, menu overlay, and slider
-                            if (child !== header && 
-                                child !== heroSection &&
-                                child !== mobileMenuOverlay &&
-                                child !== mobileMenuSlider &&
-                                child.tagName !== 'HEADER' &&
-                                !child.classList.contains('mobile-menu-overlay') &&
-                                !child.classList.contains('mobile-menu-slider')) {
-                                // Blur the child wrapper
-                                child.classList.add('mobile-menu-blur');
-                                
-                                // Blur all descendants inside this wrapper (except header, hero section, and menu)
-                                const allDescendants = child.querySelectorAll('*');
-                                allDescendants.forEach(desc => {
-                                    // Skip if it's part of header, hero section, or menu
-                                    if (desc !== header &&
-                                        desc !== heroSection &&
-                                        desc !== mobileMenuSlider &&
-                                        desc !== mobileMenuOverlay &&
-                                        desc.tagName !== 'HEADER' &&
-                                        !desc.closest('header') &&
-                                        !desc.closest('section:first-of-type') &&
-                                        !desc.closest('.mobile-menu-overlay') &&
-                                        !desc.closest('.mobile-menu-slider') &&
-                                        !heroSection?.contains(desc) &&
-                                        !mobileMenuSlider?.contains(desc) &&
-                                        !mobileMenuOverlay?.contains(desc)) {
-                                        desc.classList.add('mobile-menu-blur');
-                                    }
-                                });
-                            }
-                        });
-                    }
-                    
-                    // Blur all main elements (dashboard pages have these)
-                    const mainElements = document.querySelectorAll('main, [role="main"], .main-content');
-                    const firstSection = document.querySelector('section:first-of-type'); // Hero section
-                    mainElements.forEach(mainEl => {
-                        if (!mainEl.closest('header') && 
-                            !mainEl.closest('.mobile-menu-overlay') &&
-                            !mainEl.closest('.mobile-menu-slider') &&
-                            mainEl !== mobileMenuSlider &&
-                            mainEl !== mobileMenuOverlay) {
-                            mainEl.classList.add('mobile-menu-blur');
-                            
-                            // Also blur all content inside main, but exclude hero section and menu
-                            const mainContent = mainEl.querySelectorAll('*');
-                            mainContent.forEach(content => {
-                                if (!content.closest('header') && 
-                                    !content.closest('.mobile-menu-overlay') &&
-                                    !content.closest('.mobile-menu-slider') &&
-                                    !content.closest('section:first-of-type') &&
-                                    content !== firstSection &&
-                                    content !== mobileMenuSlider &&
-                                    content !== mobileMenuOverlay &&
-                                    !firstSection?.contains(content) &&
-                                    !mobileMenuSlider?.contains(content) &&
-                                    !mobileMenuOverlay?.contains(content)) {
-                                    content.classList.add('mobile-menu-blur');
-                                }
-                            });
-                        }
-                    });
-                    
-                    // Blur page wrapper containers (div.min-h-screen is common for page wrappers)
-                    const pageContainers = document.querySelectorAll('div.min-h-screen, div.min-h-full');
-                    pageContainers.forEach(container => {
-                        if (!container.closest('header') && 
-                            !container.closest('.mobile-menu-overlay') &&
-                            !container.closest('.mobile-menu-slider') &&
-                            !container.closest('section:first-of-type') &&
-                            container !== header &&
-                            container !== heroSection &&
-                            container !== mobileMenuSlider &&
-                            container !== mobileMenuOverlay &&
-                            !heroSection?.contains(container) &&
-                            !mobileMenuSlider?.contains(container) &&
-                            !mobileMenuOverlay?.contains(container)) {
-                            container.classList.add('mobile-menu-blur');
-                        }
-                    });
-                });
-            }
+            document.body.classList.add('mobile-menu-open');
         } else {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
-            // Remove blur class from body and all content
             document.body.classList.remove('mobile-menu-open');
-            
-            // Remove blur from all elements with mobile-menu-blur class (header shouldn't have it, but just in case)
-            const headerEl = document.querySelector('header');
-            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
-            allBlurredElements.forEach(element => {
-                // Double check it's not header before removing
-                if (element !== headerEl && element.tagName !== 'HEADER' && !element.closest('header')) {
-                    element.classList.remove('mobile-menu-blur');
-                }
-            });
         }
+        
         return () => {
             document.body.style.overflow = 'unset';
             document.body.style.position = 'unset';
             document.body.style.width = 'unset';
             document.body.classList.remove('mobile-menu-open');
-            
-            // Remove blur from all elements with mobile-menu-blur class
-            const header = document.querySelector('header');
-            const allBlurredElements = document.querySelectorAll('.mobile-menu-blur');
-            allBlurredElements.forEach(element => {
-                // Double check it's not header before removing
-                if (element !== header && element.tagName !== 'HEADER' && !element.closest('header')) {
-                    element.classList.remove('mobile-menu-blur');
-                }
-            });
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
 
