@@ -381,9 +381,11 @@ html[data-font-size="extra-large"] {
     z-index: 9998 !important;
   }
   
-  /* Ensure mobile menu slider is above header and backdrop */
-  body.mobile-menu-open .mobile-menu-slider {
-    z-index: 10010 !important;
+  /* Ensure mobile menu slider is above header and backdrop - highest priority */
+  body.mobile-menu-open .mobile-menu-slider,
+  .mobile-menu-slider {
+    z-index: 100001 !important;
+    position: fixed !important;
   }
   
   /* Ensure hero section (first section) is ALWAYS clear - highest priority, must come after blur rules */

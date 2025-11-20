@@ -315,10 +315,10 @@ const Header = () => {
     };
 
     const BurgerIcon = ({ open }) => (
-        <div className="relative w-6 h-4">
-            <span className={`absolute left-0 top-0 block h-0.5 w-6 bg-[#800000] transition-transform duration-200 ${open ? 'translate-y-2 rotate-45' : ''}`}></span>
-            <span className={`absolute left-0 top-1/2 -translate-y-1/2 block h-0.5 w-6 bg-[#800000] transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'}`}></span>
-            <span className={`absolute left-0 bottom-0 block h-0.5 w-6 bg-[#800000] transition-transform duration-200 ${open ? '-translate-y-2 -rotate-45' : ''}`}></span>
+        <div className="relative w-6 h-5 flex flex-col justify-center items-center">
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? 'rotate-45 translate-y-0' : '-translate-y-1.5'}`}></span>
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? 'opacity-0 scale-0' : 'opacity-100 scale-100'}`}></span>
+            <span className={`absolute block h-0.5 w-6 bg-[#800000] transition-all duration-300 ease-in-out ${open ? '-rotate-45 translate-y-0' : 'translate-y-1.5'}`}></span>
         </div>
     );
 
@@ -973,7 +973,7 @@ const Header = () => {
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.25)',
-                                zIndex: 10010,
+                                zIndex: 100001,
                                 transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
                                 filter: 'none',
                                 WebkitFilter: 'none',
