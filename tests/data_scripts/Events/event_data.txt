@@ -1,0 +1,1817 @@
+[
+  {
+    "title": "Community Computer Literacy Program",
+    "description": "A series of sessions designed to empower community members through education.",
+    "startDate": "2025-01-09T16:00:00.000Z",
+    "endDate": "2025-01-25T01:00:00.000Z",
+    "location": "Santa Rosa",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01dc",
+      "691e2c396b87231e679d01e9",
+      "691e2c396b87231e679d01ed",
+      "691e2c396b87231e679d01d4",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01e6",
+      "691e2c396b87231e679d01d8",
+      "691e2c396b87231e679d01e1",
+      "691e2c396b87231e679d01e3"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01ed",
+        "amount": 7892,
+        "donatedAt": "2025-01-08T15:57:29.813Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 4322,
+        "donatedAt": "2025-01-05T16:13:55.532Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 6404,
+        "donatedAt": "2025-01-03T15:22:18.073Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e0",
+        "amount": 2278,
+        "donatedAt": "2025-01-04T22:22:04.182Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ec",
+        "amount": 1407,
+        "donatedAt": "2025-01-04T23:38:57.174Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 8377,
+        "donatedAt": "2025-01-03T09:02:58.408Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 1831,
+        "donatedAt": "2025-01-09T15:53:31.522Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 3403,
+        "donatedAt": "2025-01-03T21:10:13.297Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01da",
+        "amount": 5831,
+        "donatedAt": "2025-01-08T18:39:30.917Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 8122,
+        "donatedAt": "2025-01-04T13:22:39.341Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dd",
+        "amount": 979,
+        "donatedAt": "2025-01-07T21:07:54.713Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d4",
+        "amount": 4537,
+        "donatedAt": "2025-01-03T12:39:35.596Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 3678,
+        "donatedAt": "2025-01-02T03:57:41.329Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 4838,
+        "donatedAt": "2025-01-06T03:45:48.139Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 9741,
+        "donatedAt": "2025-01-04T13:49:46.244Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 2047,
+        "donatedAt": "2025-01-02T10:12:06.311Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 876,
+        "donatedAt": "2025-01-07T09:34:33.337Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 756,
+        "donatedAt": "2025-01-06T08:58:22.795Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c8",
+        "amount": 580,
+        "donatedAt": "2025-01-06T05:23:55.119Z"
+      }
+    ],
+    "totalDonations": 77899,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 88622,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "title": "Digital Skills Training for Senior Citizens",
+    "description": "Educational workshops focusing on practical applications and real-world solutions.",
+    "startDate": "2025-01-01T08:00:00.000Z",
+    "endDate": "2025-01-04T01:00:00.000Z",
+    "location": "Paranaque",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01e8",
+      "691e2c396b87231e679d01cc",
+      "691e2c396b87231e679d01e5",
+      "691e2c396b87231e679d01cd",
+      "691e2c396b87231e679d01e7",
+      "691e2c396b87231e679d01de",
+      "691e2c396b87231e679d01dd",
+      "691e2c396b87231e679d01ee",
+      "691e2c396b87231e679d01ce",
+      "691e2c396b87231e679d01ec",
+      "691e2c396b87231e679d01da",
+      "691e2c396b87231e679d01db",
+      "691e2c396b87231e679d01d0",
+      "691e2c396b87231e679d01ea"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 540,
+        "donatedAt": "2025-01-01T06:40:18.678Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 7012,
+        "donatedAt": "2025-01-01T05:35:50.940Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 4534,
+        "donatedAt": "2025-01-01T05:39:24.039Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 2255,
+        "donatedAt": "2025-01-01T06:50:18.141Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 1082,
+        "donatedAt": "2025-01-01T01:31:22.891Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 608,
+        "donatedAt": "2025-01-01T05:39:24.304Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e5",
+        "amount": 4057,
+        "donatedAt": "2025-01-01T03:20:15.540Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e7",
+        "amount": 2257,
+        "donatedAt": "2025-01-01T03:31:01.960Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 4275,
+        "donatedAt": "2025-01-01T06:36:30.470Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01da",
+        "amount": 4640,
+        "donatedAt": "2025-01-01T01:54:53.377Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 2469,
+        "donatedAt": "2025-01-01T04:47:20.846Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e6",
+        "amount": 6274,
+        "donatedAt": "2025-01-01T02:22:39.634Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 2283,
+        "donatedAt": "2025-01-01T02:15:07.471Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01de",
+        "amount": 5132,
+        "donatedAt": "2025-01-01T01:38:02.179Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 9610,
+        "donatedAt": "2025-01-01T07:38:53.977Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 1702,
+        "donatedAt": "2025-01-01T06:54:26.877Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 4778,
+        "donatedAt": "2025-01-01T03:45:23.946Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 5977,
+        "donatedAt": "2025-01-01T01:27:42.227Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 8369,
+        "donatedAt": "2025-01-01T00:40:08.244Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 4252,
+        "donatedAt": "2025-01-01T04:20:27.903Z"
+      }
+    ],
+    "totalDonations": 82106,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 99802,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "title": "Free Coding Workshop for Youth",
+    "description": "Hands-on training programs addressing local community challenges.",
+    "startDate": "2025-01-22T16:00:00.000Z",
+    "endDate": "2025-02-07T01:00:00.000Z",
+    "location": "Lipa",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01dc",
+      "691e2c396b87231e679d01ec",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01de",
+      "691e2c396b87231e679d01eb",
+      "691e2c396b87231e679d01e7",
+      "691e2c396b87231e679d01e1",
+      "691e2c396b87231e679d01cb",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01ea",
+      "691e2c396b87231e679d01e9"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 3139,
+        "donatedAt": "2025-01-01T00:11:49.572Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 2040,
+        "donatedAt": "2025-01-01T10:34:14.594Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 8188,
+        "donatedAt": "2025-01-15T06:00:27.120Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 6100,
+        "donatedAt": "2025-01-14T03:15:50.893Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 7457,
+        "donatedAt": "2025-01-16T07:54:54.317Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 5542,
+        "donatedAt": "2025-01-16T07:37:47.780Z"
+      }
+    ],
+    "totalDonations": 32466,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 43160,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "title": "Cybersecurity Awareness Seminar",
+    "description": "Educational programs designed to bridge knowledge gaps in the community.",
+    "startDate": "2025-02-21T16:00:00.000Z",
+    "endDate": "2025-03-09T01:00:00.000Z",
+    "location": "Manila",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01ee",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01ed",
+      "691e2c396b87231e679d01ca",
+      "691e2c396b87231e679d01e2",
+      "691e2c396b87231e679d01ce",
+      "691e2c396b87231e679d01ea",
+      "691e2c396b87231e679d01e3",
+      "691e2c396b87231e679d01de",
+      "691e2c396b87231e679d01cd"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 6538,
+        "donatedAt": "2025-02-03T09:31:19.723Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 4699,
+        "donatedAt": "2025-02-13T18:28:50.076Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 1143,
+        "donatedAt": "2025-02-19T19:17:22.329Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 5322,
+        "donatedAt": "2025-02-17T05:19:07.600Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 5182,
+        "donatedAt": "2025-01-31T15:37:43.827Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e7",
+        "amount": 1419,
+        "donatedAt": "2025-01-27T14:24:30.369Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 7847,
+        "donatedAt": "2025-02-02T19:56:30.327Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 4870,
+        "donatedAt": "2025-02-02T15:04:25.233Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d8",
+        "amount": 671,
+        "donatedAt": "2025-02-05T00:12:40.398Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e6",
+        "amount": 6032,
+        "donatedAt": "2025-02-15T23:58:29.155Z"
+      }
+    ],
+    "totalDonations": 43723,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 58619,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-02-12T18:00:00.000Z",
+    "updatedAt": "2025-02-12T18:00:00.000Z"
+  },
+  {
+    "title": "Web Development Bootcamp",
+    "description": "Training sessions designed to help community members develop essential skills.",
+    "startDate": "2025-03-16T15:00:00.000Z",
+    "endDate": "2025-04-01T00:00:00.000Z",
+    "location": "Manila",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01e9",
+      "691e2c396b87231e679d01e5",
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01cb",
+      "691e2c396b87231e679d01cf",
+      "691e2c396b87231e679d01e7",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01dc"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01c8",
+        "amount": 483,
+        "donatedAt": "2025-02-24T02:10:20.590Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 1525,
+        "donatedAt": "2025-03-08T01:58:51.728Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d0",
+        "amount": 2952,
+        "donatedAt": "2025-02-21T12:35:45.360Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 2240,
+        "donatedAt": "2025-03-06T14:51:10.921Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 7987,
+        "donatedAt": "2025-03-09T18:51:15.329Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 8839,
+        "donatedAt": "2025-02-27T00:04:50.014Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 9240,
+        "donatedAt": "2025-02-14T21:37:41.225Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 7660,
+        "donatedAt": "2025-03-08T22:14:38.629Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 1143,
+        "donatedAt": "2025-03-05T03:43:59.328Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d2",
+        "amount": 3293,
+        "donatedAt": "2025-02-26T12:28:21.974Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01db",
+        "amount": 6017,
+        "donatedAt": "2025-02-16T07:37:55.963Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 6513,
+        "donatedAt": "2025-02-24T17:18:14.547Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 2830,
+        "donatedAt": "2025-02-15T00:40:44.630Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 4127,
+        "donatedAt": "2025-03-05T03:48:10.993Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 1785,
+        "donatedAt": "2025-03-10T07:37:10.558Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 5105,
+        "donatedAt": "2025-02-28T10:51:41.405Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 7316,
+        "donatedAt": "2025-02-28T18:21:47.146Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 7579,
+        "donatedAt": "2025-03-03T15:28:49.283Z"
+      }
+    ],
+    "totalDonations": 86634,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 99725,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-03-01T18:00:00.000Z",
+    "updatedAt": "2025-03-01T18:00:00.000Z"
+  },
+  {
+    "title": "Mobile App Development Training",
+    "description": "Interactive workshops combining theory and practical application.",
+    "startDate": "2025-04-10T15:00:00.000Z",
+    "endDate": "2025-04-26T00:00:00.000Z",
+    "location": "Navotas",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01d9",
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01e4",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01cd",
+      "691e2c396b87231e679d01e3",
+      "691e2c396b87231e679d01d7",
+      "691e2c396b87231e679d01d8",
+      "691e2c396b87231e679d01cf",
+      "691e2c396b87231e679d01d5",
+      "691e2c396b87231e679d01dd",
+      "691e2c396b87231e679d01ca",
+      "691e2c396b87231e679d01d1",
+      "691e2c396b87231e679d01eb"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 702,
+        "donatedAt": "2025-03-30T12:17:41.820Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 1603,
+        "donatedAt": "2025-03-23T21:23:10.045Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 5970,
+        "donatedAt": "2025-03-13T14:43:58.546Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 4170,
+        "donatedAt": "2025-03-26T07:55:33.937Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 9094,
+        "donatedAt": "2025-03-31T13:42:07.110Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e6",
+        "amount": 9932,
+        "donatedAt": "2025-04-08T19:37:57.815Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d7",
+        "amount": 7803,
+        "donatedAt": "2025-03-29T00:33:14.381Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 1567,
+        "donatedAt": "2025-03-31T12:12:42.679Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d0",
+        "amount": 6681,
+        "donatedAt": "2025-04-06T01:29:31.053Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 4569,
+        "donatedAt": "2025-03-19T19:56:08.741Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dd",
+        "amount": 9109,
+        "donatedAt": "2025-04-01T01:25:11.341Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e7",
+        "amount": 7147,
+        "donatedAt": "2025-03-30T12:43:25.466Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 6675,
+        "donatedAt": "2025-04-07T06:52:10.169Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 4480,
+        "donatedAt": "2025-03-28T23:51:05.413Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 7167,
+        "donatedAt": "2025-03-27T17:42:16.724Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 437,
+        "donatedAt": "2025-03-29T15:47:41.033Z"
+      }
+    ],
+    "totalDonations": 87106,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 99727,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-03-17T17:00:00.000Z",
+    "updatedAt": "2025-03-17T17:00:00.000Z"
+  },
+  {
+    "title": "IT Support for Local Businesses",
+    "description": "A comprehensive program aimed at improving digital literacy in the community.",
+    "startDate": "2025-04-24T15:00:00.000Z",
+    "endDate": "2025-05-10T00:00:00.000Z",
+    "location": "Tanauan",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01e5",
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01d6",
+      "691e2c396b87231e679d01e6",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01da"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01db",
+        "amount": 845,
+        "donatedAt": "2025-04-06T08:34:41.985Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 7429,
+        "donatedAt": "2025-03-29T17:15:00.468Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 6346,
+        "donatedAt": "2025-04-02T05:10:57.555Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 5715,
+        "donatedAt": "2025-03-27T21:57:55.265Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ec",
+        "amount": 1126,
+        "donatedAt": "2025-04-11T19:14:49.489Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 2172,
+        "donatedAt": "2025-04-07T02:30:17.578Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 2173,
+        "donatedAt": "2025-03-31T00:23:24.828Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 3583,
+        "donatedAt": "2025-04-01T03:24:55.677Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 5959,
+        "donatedAt": "2025-04-01T04:06:31.185Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e9",
+        "amount": 5398,
+        "donatedAt": "2025-04-02T17:09:39.098Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ed",
+        "amount": 7327,
+        "donatedAt": "2025-04-01T13:11:56.731Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 4157,
+        "donatedAt": "2025-04-02T12:30:07.737Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 5905,
+        "donatedAt": "2025-04-03T00:53:34.378Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 1659,
+        "donatedAt": "2025-04-07T22:36:32.825Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e5",
+        "amount": 4920,
+        "donatedAt": "2025-04-07T14:55:02.958Z"
+      }
+    ],
+    "totalDonations": 64714,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 84421,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-04-15T17:00:00.000Z",
+    "updatedAt": "2025-04-15T17:00:00.000Z"
+  },
+  {
+    "title": "Digital Marketing Workshop",
+    "description": "A series of sessions designed to empower community members through education.",
+    "startDate": "2025-06-16T15:00:00.000Z",
+    "endDate": "2025-07-02T00:00:00.000Z",
+    "location": "Calamba",
+    "createdBy": "68c77fc7d8714ef0c8fcb192",
+    "volunteers": [
+      "691e2c396b87231e679d01ca",
+      "691e2c396b87231e679d01d6",
+      "691e2c396b87231e679d01ce",
+      "691e2c396b87231e679d01e9",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01eb",
+      "691e2c396b87231e679d01e3"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01e5",
+        "amount": 5515,
+        "donatedAt": "2025-06-09T15:18:14.237Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 9252,
+        "donatedAt": "2025-05-21T09:37:17.101Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 5001,
+        "donatedAt": "2025-05-28T21:19:00.250Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 3652,
+        "donatedAt": "2025-06-09T02:44:49.255Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 3993,
+        "donatedAt": "2025-06-08T21:42:02.432Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e9",
+        "amount": 8793,
+        "donatedAt": "2025-06-08T16:06:03.735Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 2820,
+        "donatedAt": "2025-05-30T05:50:02.938Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d3",
+        "amount": 1626,
+        "donatedAt": "2025-06-02T23:48:39.575Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e7",
+        "amount": 6725,
+        "donatedAt": "2025-06-14T03:22:25.176Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 8667,
+        "donatedAt": "2025-05-28T09:28:02.007Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 258,
+        "donatedAt": "2025-06-07T12:45:55.225Z"
+      }
+    ],
+    "totalDonations": 56302,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 74580,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-05-27T17:00:00.000Z",
+    "updatedAt": "2025-05-27T17:00:00.000Z"
+  },
+  {
+    "title": "Community Art Exhibition",
+    "description": "Hands-on training programs addressing local community challenges.",
+    "startDate": "2025-07-19T15:00:00.000Z",
+    "endDate": "2025-08-04T00:00:00.000Z",
+    "location": "Tanauan",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01cd",
+      "691e2c396b87231e679d01e1",
+      "691e2c396b87231e679d01d7"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01dd",
+        "amount": 6255,
+        "donatedAt": "2025-06-20T01:09:19.424Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 825,
+        "donatedAt": "2025-07-03T04:18:35.437Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 8784,
+        "donatedAt": "2025-07-03T09:46:05.537Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 4267,
+        "donatedAt": "2025-07-03T17:56:58.355Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d8",
+        "amount": 8749,
+        "donatedAt": "2025-07-14T23:03:13.759Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e3",
+        "amount": 525,
+        "donatedAt": "2025-06-30T09:38:16.933Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 964,
+        "donatedAt": "2025-06-23T23:57:17.082Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d7",
+        "amount": 9532,
+        "donatedAt": "2025-06-27T03:47:12.079Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e2",
+        "amount": 9686,
+        "donatedAt": "2025-07-18T21:38:27.388Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 4125,
+        "donatedAt": "2025-07-05T12:20:36.998Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e6",
+        "amount": 1655,
+        "donatedAt": "2025-06-20T15:17:10.911Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e5",
+        "amount": 8647,
+        "donatedAt": "2025-07-12T15:02:25.512Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 7182,
+        "donatedAt": "2025-07-10T12:59:01.243Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 8004,
+        "donatedAt": "2025-07-13T12:37:02.829Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d9",
+        "amount": 2541,
+        "donatedAt": "2025-06-25T20:18:52.739Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e0",
+        "amount": 9107,
+        "donatedAt": "2025-07-13T04:36:40.312Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01db",
+        "amount": 4404,
+        "donatedAt": "2025-07-07T13:03:35.407Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 8027,
+        "donatedAt": "2025-06-28T21:18:58.209Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 5868,
+        "donatedAt": "2025-06-28T02:19:35.755Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 2758,
+        "donatedAt": "2025-06-20T02:24:13.412Z"
+      }
+    ],
+    "totalDonations": 111905,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 118195,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-07-12T17:00:00.000Z",
+    "updatedAt": "2025-07-12T17:00:00.000Z"
+  },
+  {
+    "title": "Creative Writing Workshop",
+    "description": "Community engagement activities promoting collaboration and learning.",
+    "startDate": "2025-08-15T15:00:00.000Z",
+    "endDate": "2025-08-31T00:00:00.000Z",
+    "location": "Muntinlupa",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01d6",
+      "691e2c396b87231e679d01d1",
+      "691e2c396b87231e679d01e0",
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01ea",
+      "691e2c396b87231e679d01d8",
+      "691e2c396b87231e679d01da",
+      "691e2c396b87231e679d01c9"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01ed",
+        "amount": 3651,
+        "donatedAt": "2025-07-22T17:01:11.107Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d9",
+        "amount": 9232,
+        "donatedAt": "2025-07-18T02:34:43.606Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 3328,
+        "donatedAt": "2025-07-24T02:32:56.453Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 6685,
+        "donatedAt": "2025-08-13T13:02:34.713Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 3222,
+        "donatedAt": "2025-08-06T01:34:37.741Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c8",
+        "amount": 851,
+        "donatedAt": "2025-07-27T04:12:38.033Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01de",
+        "amount": 3616,
+        "donatedAt": "2025-08-01T21:18:13.581Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01df",
+        "amount": 9287,
+        "donatedAt": "2025-08-04T15:53:17.650Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01db",
+        "amount": 1251,
+        "donatedAt": "2025-08-08T20:16:32.514Z"
+      }
+    ],
+    "totalDonations": 41123,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 58422,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-07-28T17:00:00.000Z",
+    "updatedAt": "2025-07-28T17:00:00.000Z"
+  },
+  {
+    "title": "Environmental Awareness Campaign",
+    "description": "Interactive workshops combining theory and practical application.",
+    "startDate": "2025-07-28T15:00:00.000Z",
+    "endDate": "2025-08-13T00:00:00.000Z",
+    "location": "San Pedro",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01c8",
+      "691e2c396b87231e679d01d3",
+      "691e2c396b87231e679d01cf",
+      "691e2c396b87231e679d01ea",
+      "691e2c396b87231e679d01eb"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 314,
+        "donatedAt": "2025-06-30T17:34:27.171Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 3608,
+        "donatedAt": "2025-07-24T06:57:27.786Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d4",
+        "amount": 6901,
+        "donatedAt": "2025-07-12T07:19:49.311Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 8154,
+        "donatedAt": "2025-07-17T18:55:07.257Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 2634,
+        "donatedAt": "2025-07-10T11:19:55.084Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 3582,
+        "donatedAt": "2025-07-17T01:05:24.251Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ed",
+        "amount": 9989,
+        "donatedAt": "2025-07-19T12:27:57.431Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01de",
+        "amount": 8471,
+        "donatedAt": "2025-07-22T19:35:19.323Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d8",
+        "amount": 6969,
+        "donatedAt": "2025-07-05T21:46:42.952Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 5002,
+        "donatedAt": "2025-06-30T11:11:01.596Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01db",
+        "amount": 3501,
+        "donatedAt": "2025-07-21T07:39:35.587Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 7345,
+        "donatedAt": "2025-07-21T22:56:30.768Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 1905,
+        "donatedAt": "2025-06-30T08:30:20.968Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e0",
+        "amount": 9558,
+        "donatedAt": "2025-07-06T05:32:02.860Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e5",
+        "amount": 7764,
+        "donatedAt": "2025-07-20T22:27:44.668Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c8",
+        "amount": 1148,
+        "donatedAt": "2025-07-12T22:30:29.912Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 218,
+        "donatedAt": "2025-07-23T05:21:52.417Z"
+      }
+    ],
+    "totalDonations": 87063,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 102523,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-07-15T17:00:00.000Z",
+    "updatedAt": "2025-07-15T17:00:00.000Z"
+  },
+  {
+    "title": "Mental Health Support Program",
+    "description": "Educational programs designed to bridge knowledge gaps in the community.",
+    "startDate": "2025-08-12T15:00:00.000Z",
+    "endDate": "2025-08-28T00:00:00.000Z",
+    "location": "Valenzuela",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01dc",
+      "691e2c396b87231e679d01cc",
+      "691e2c396b87231e679d01e9",
+      "691e2c396b87231e679d01de",
+      "691e2c396b87231e679d01e6"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01de",
+        "amount": 6719,
+        "donatedAt": "2025-08-03T04:36:34.858Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 2108,
+        "donatedAt": "2025-08-10T11:08:54.663Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dd",
+        "amount": 7471,
+        "donatedAt": "2025-07-22T09:17:09.175Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 8880,
+        "donatedAt": "2025-08-02T07:08:33.689Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c8",
+        "amount": 1659,
+        "donatedAt": "2025-08-06T14:53:40.208Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 7856,
+        "donatedAt": "2025-07-31T22:31:39.637Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 7306,
+        "donatedAt": "2025-07-20T07:51:03.643Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d9",
+        "amount": 9052,
+        "donatedAt": "2025-07-25T13:07:56.841Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ed",
+        "amount": 8400,
+        "donatedAt": "2025-07-22T23:32:42.964Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e2",
+        "amount": 147,
+        "donatedAt": "2025-07-30T04:13:29.534Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 4402,
+        "donatedAt": "2025-08-08T11:00:01.757Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01c9",
+        "amount": 5259,
+        "donatedAt": "2025-07-18T19:37:57.490Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d2",
+        "amount": 9239,
+        "donatedAt": "2025-07-20T07:28:05.809Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e0",
+        "amount": 3572,
+        "donatedAt": "2025-07-27T18:30:10.631Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 2069,
+        "donatedAt": "2025-07-30T04:00:40.642Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ea",
+        "amount": 7210,
+        "donatedAt": "2025-08-11T06:04:20.687Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 5927,
+        "donatedAt": "2025-08-08T20:23:06.620Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d0",
+        "amount": 7826,
+        "donatedAt": "2025-07-14T12:59:59.550Z"
+      }
+    ],
+    "totalDonations": 105102,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 112187,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-07-19T17:00:00.000Z",
+    "updatedAt": "2025-07-19T17:00:00.000Z"
+  },
+  {
+    "title": "Literacy Program for Children",
+    "description": "Educational programs designed to bridge knowledge gaps in the community.",
+    "startDate": "2025-10-13T15:00:00.000Z",
+    "endDate": "2025-10-29T00:00:00.000Z",
+    "location": "Las Pinas",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01ca",
+      "691e2c396b87231e679d01cf",
+      "691e2c396b87231e679d01e8",
+      "691e2c396b87231e679d01ed",
+      "691e2c396b87231e679d01e3",
+      "691e2c396b87231e679d01e7",
+      "691e2c396b87231e679d01cd"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01eb",
+        "amount": 9821,
+        "donatedAt": "2025-09-23T21:42:32.415Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d1",
+        "amount": 9790,
+        "donatedAt": "2025-09-22T14:18:05.584Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d2",
+        "amount": 3197,
+        "donatedAt": "2025-10-03T08:02:31.183Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 337,
+        "donatedAt": "2025-10-01T05:52:37.531Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e1",
+        "amount": 7573,
+        "donatedAt": "2025-10-09T11:10:41.152Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 2218,
+        "donatedAt": "2025-10-03T08:41:01.367Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ce",
+        "amount": 5356,
+        "donatedAt": "2025-10-04T20:53:34.669Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 275,
+        "donatedAt": "2025-10-06T21:48:50.548Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 3134,
+        "donatedAt": "2025-10-09T11:51:59.497Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 7894,
+        "donatedAt": "2025-09-16T18:16:28.376Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 260,
+        "donatedAt": "2025-09-14T03:29:45.028Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 8901,
+        "donatedAt": "2025-10-04T08:54:55.893Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 2149,
+        "donatedAt": "2025-09-16T08:57:49.865Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ee",
+        "amount": 3403,
+        "donatedAt": "2025-09-30T10:49:40.365Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d4",
+        "amount": 5304,
+        "donatedAt": "2025-09-25T09:30:15.718Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 9868,
+        "donatedAt": "2025-10-08T09:59:07.116Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 2234,
+        "donatedAt": "2025-09-20T00:43:57.116Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d3",
+        "amount": 376,
+        "donatedAt": "2025-10-12T10:20:18.428Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d0",
+        "amount": 3956,
+        "donatedAt": "2025-09-16T01:42:21.611Z"
+      }
+    ],
+    "totalDonations": 86046,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 97146,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-09-30T17:00:00.000Z",
+    "updatedAt": "2025-09-30T17:00:00.000Z"
+  },
+  {
+    "title": "Cultural Heritage Preservation",
+    "description": "A comprehensive program aimed at improving digital literacy in the community.",
+    "startDate": "2025-10-15T15:00:00.000Z",
+    "endDate": "2025-10-31T00:00:00.000Z",
+    "location": "Lipa",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01df",
+      "691e2c396b87231e679d01e4",
+      "691e2c396b87231e679d01ec",
+      "691e2c396b87231e679d01c9",
+      "691e2c396b87231e679d01e3",
+      "691e2c396b87231e679d01ea",
+      "691e2c396b87231e679d01e0",
+      "691e2c396b87231e679d01d6",
+      "691e2c396b87231e679d01e2",
+      "691e2c396b87231e679d01db",
+      "691e2c396b87231e679d01e7",
+      "691e2c396b87231e679d01d8",
+      "691e2c396b87231e679d01c8"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01dd",
+        "amount": 2508,
+        "donatedAt": "2025-10-09T10:33:03.749Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cb",
+        "amount": 4658,
+        "donatedAt": "2025-09-30T08:09:13.919Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01de",
+        "amount": 499,
+        "donatedAt": "2025-10-14T19:25:53.433Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 309,
+        "donatedAt": "2025-09-26T00:34:35.280Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cd",
+        "amount": 5378,
+        "donatedAt": "2025-09-16T11:02:48.694Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 9304,
+        "donatedAt": "2025-09-26T15:47:05.647Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d9",
+        "amount": 3798,
+        "donatedAt": "2025-09-28T17:46:59.932Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 2595,
+        "donatedAt": "2025-10-10T09:21:44.676Z"
+      }
+    ],
+    "totalDonations": 29049,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 45058,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-10-01T17:00:00.000Z",
+    "updatedAt": "2025-10-01T17:00:00.000Z"
+  },
+  {
+    "title": "Community Garden Initiative",
+    "description": "Community-focused initiatives promoting social responsibility and engagement.",
+    "startDate": "2025-10-25T15:00:00.000Z",
+    "endDate": "2025-11-10T01:00:00.000Z",
+    "location": "Calamba",
+    "createdBy": "691e22b04e0971bff7a7993f",
+    "volunteers": [
+      "691e2c396b87231e679d01e4",
+      "691e2c396b87231e679d01ec",
+      "691e2c396b87231e679d01db",
+      "691e2c396b87231e679d01d2",
+      "691e2c396b87231e679d01dc",
+      "691e2c396b87231e679d01e3",
+      "691e2c396b87231e679d01de",
+      "691e2c396b87231e679d01e5",
+      "691e2c396b87231e679d01cf",
+      "691e2c396b87231e679d01d1",
+      "691e2c396b87231e679d01e1",
+      "691e2c396b87231e679d01ed"
+    ],
+    "donations": [
+      {
+        "donor": "691e2c396b87231e679d01d8",
+        "amount": 6047,
+        "donatedAt": "2025-10-09T03:51:32.668Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cc",
+        "amount": 5663,
+        "donatedAt": "2025-10-02T04:42:21.814Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ec",
+        "amount": 3475,
+        "donatedAt": "2025-09-29T06:20:13.706Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d6",
+        "amount": 2745,
+        "donatedAt": "2025-09-27T04:49:04.089Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01dc",
+        "amount": 9474,
+        "donatedAt": "2025-10-01T05:58:40.532Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e9",
+        "amount": 1741,
+        "donatedAt": "2025-10-13T09:34:17.517Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e6",
+        "amount": 353,
+        "donatedAt": "2025-10-22T19:18:48.089Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e7",
+        "amount": 9635,
+        "donatedAt": "2025-10-21T06:30:14.534Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e4",
+        "amount": 5841,
+        "donatedAt": "2025-10-09T14:31:23.092Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ca",
+        "amount": 6153,
+        "donatedAt": "2025-09-27T18:59:20.160Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d0",
+        "amount": 905,
+        "donatedAt": "2025-10-13T16:36:52.361Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d4",
+        "amount": 5617,
+        "donatedAt": "2025-10-06T22:24:48.904Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01ef",
+        "amount": 3259,
+        "donatedAt": "2025-09-29T04:36:30.250Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01cf",
+        "amount": 3998,
+        "donatedAt": "2025-10-22T15:09:25.580Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01e8",
+        "amount": 9265,
+        "donatedAt": "2025-10-19T08:14:47.811Z"
+      },
+      {
+        "donor": "691e2c396b87231e679d01d5",
+        "amount": 6883,
+        "donatedAt": "2025-09-27T01:03:30.947Z"
+      }
+    ],
+    "totalDonations": 81054,
+    "status": "Proposed",
+    "eventCategory": "community_extension",
+    "image": "",
+    "proposalDocument": "",
+    "isOpenForDonation": true,
+    "isOpenForVolunteer": true,
+    "donationTarget": 88305,
+    "volunteerRegistrations": [],
+    "feedback": [],
+    "comments": [],
+    "reactions": {
+      "like": [],
+      "love": [],
+      "haha": [],
+      "wow": [],
+      "sad": [],
+      "angry": []
+    },
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "facebookPostId": null,
+    "facebookPostedAt": null,
+    "facebookPageId": null,
+    "createdAt": "2025-09-26T17:00:00.000Z",
+    "updatedAt": "2025-09-26T17:00:00.000Z"
+  }
+]

@@ -1,7 +1,7 @@
 # 📋 Project Review  
 **Title:** EuMatter - Community Event Management System  
-**Last Updated:** November 2025
-**Review Date:** November 2025
+**Last Updated:** December 2024
+**Review Date:** December 2024
 
 ---
 
@@ -117,20 +117,23 @@
   - No input length limits or sanitization for text fields
   - User input in regex queries (`$regex: search`) could be vulnerable to ReDoS
   - No HTML/content sanitization for user-generated content (comments, descriptions, event descriptions)
-  - DOMPurify is installed in frontend but not consistently used
+  - DOMPurify is installed in frontend but only used in `EventDetails.jsx` (not consistently across all user-generated content)
 - **Webhook security**
   - PayMongo webhook endpoint (`/api/donations/webhook`) lacks signature verification
-  - TODO comment exists in code (line 1414-1420 in donationController.js) indicating planned implementation
+  - TODO comment exists in code (lines 1422-1434 in `donationController.js`) indicating planned implementation
   - Webhook endpoint is public without authentication/verification
   - No rate limiting on webhook endpoint
   - Risk of fake webhook calls modifying donation status
   - PayMongo provides webhook signature headers that should be verified
   - Audit logging exists for webhook events but doesn't prevent unauthorized access
+  - Code references `getWebhookSecret(walletUserId)` function that doesn't exist yet
 - **API key management/rotation** (manual in .env; automate + audit trail recommended)
 - **Mixed authentication middleware**
-  - Both `auth.js` (Bearer token) and `userAuth.js` (cookie) exist
-  - `userAuth.js` is used consistently, but `auth.js` exists unused
-  - Could lead to confusion and security gaps
+  - Both `auth.js` (Bearer token from Authorization header) and `userAuth.js` (JWT from httpOnly cookies) exist
+  - `userAuth.js` is used consistently across all routes, but `auth.js` exists unused in `middleware/` directory
+  - `auth.js` exports `protect` and `admin` functions but is never imported in routes
+  - Could lead to confusion and security gaps if accidentally used
+  - Consider removing unused `auth.js` or documenting when to use each
 - **Password security**
   - Passwords hashed with bcryptjs (good)
   - No password history or complexity requirements beyond length
@@ -172,9 +175,10 @@
     - `auditLogController.getAuditLogs()` - full pagination with filtering
     - `notificationController.listMyNotifications()` - pagination with skip/limit (max 100 items), optional paginated flag
   - **Still missing pagination:**
-    - `eventController.getEvents()` - fetches all events
-    - `eventController.getUserEvents()` - fetches all user events
-    - `donationController.getMyDonations()` - fetches all user donations
+    - `eventController.getEvents()` - fetches all events with multiple populate operations
+    - `eventController.getUserEvents()` - fetches all user events with multiple populate operations
+    - `donationController.getMyDonations()` - fetches all user donations (filters pending but no pagination)
+    - `donationController.getAllDonations()` - fetches all donations for CRD/Admin without pagination
     - Other list endpoints may also lack pagination
 - **No connection pooling** (DB, mail, etc) or caching layer for high-traffic
   - MongoDB connection uses default pooling (no explicit config)
@@ -183,7 +187,8 @@
   - No connection pool size configuration
 - **Pagination partially implemented** (risk: large data, slow loads on some endpoints)
   - Pagination exists for: users (admin), in-kind donations, audit logs, notifications
-  - Still missing pagination for: events list, user events, user donations, volunteers list
+  - Still missing pagination for: events list, user events, user donations, all donations (CRD/Admin), volunteers list
+  - `getEvents()` performs expensive operations: fetches all events, then for each event fetches donations (limited to 100 per event but no overall limit)
   - Risk of memory issues and slow response times as data grows on unpaginated endpoints
   - Frontend may struggle with large datasets from unpaginated endpoints
 - **Inefficient data storage**
@@ -202,11 +207,12 @@
   - No code splitting implemented despite Vite support
   - React Query (@tanstack/react-query) is installed but may not be fully utilized for caching
 - **Minimal use of React.memo** - potential unnecessary re-renders
+  - `React.memo` only used in `CommentModal.jsx` and `CommentSection.jsx` for `CommentItem` components
   - Some components use `useMemo` and `useCallback` (UserDashboard, DepartmentDashboard, CommentModal)
   - List components (events, donations, users) not memoized
   - Dashboard components re-render on every context update
   - Some expensive computations memoized, but not consistently
-  - `CommentItem` in CommentModal is memoized, but other list items are not
+  - Most list items and card components not memoized, causing unnecessary re-renders
 - **Images not lazy-loaded/optimized** for campaign/event feeds
   - Base64 images in database loaded immediately
   - No image optimization, compression, or responsive images
@@ -217,10 +223,11 @@
   - All vendor libraries in single bundle
   - Large dependencies (recharts, framer-motion, lottie-react) loaded upfront
 - **Duplicate authentication checks**
-  - `ProtectedRoute` makes separate auth API call even when `AppContext` already checked
-  - Unnecessary network requests and loading states
-  - Should rely on context state instead of re-fetching
-  - Both `AppContext` and `ProtectedRoute` check authentication independently
+  - `ProtectedRoute` makes separate API call to `/api/auth/is-authenticated` even when `AppContext` already checked
+  - `ProtectedRoute` checks `isLoading` from context but still makes redundant API call
+  - Unnecessary network requests and loading states on every protected route access
+  - Should rely on context state (`isLoggedIn`, `userData`) instead of re-fetching
+  - Both `AppContext` and `ProtectedRoute` check authentication independently, causing double requests
 - **No error boundaries**
   - React errors will crash entire app
   - No graceful error handling for component failures
@@ -260,6 +267,7 @@
   - Some return `{ message }`, others `{ success: false, message }`
   - Should use centralized error handler and custom error classes
 - **No centralized Joi/Yup validation** (multiple field checks scattered in controllers)
+  - No validation library installed (Joi, Yup, express-validator not found in dependencies)
   - Validation logic duplicated in each controller
   - No schema definitions or reusable validators
   - Should use middleware-based validation
@@ -331,9 +339,10 @@
    - Monitor slow queries and add indexes as needed
 
 5. **Pagination for list endpoints**
-   - Implement pagination in `eventController.getEvents()`, `eventController.getUserEvents()`, `donationController.getMyDonations()`
+   - Implement pagination in `eventController.getEvents()`, `eventController.getUserEvents()`, `donationController.getMyDonations()`, `donationController.getAllDonations()`
    - Add query params: `page`, `limit`, `sort` (follow pattern from `adminUserController.getUsers()`)
    - Return metadata: `total`, `totalPages`, `currentPage`
+   - Optimize `getEvents()` to avoid fetching donations for all events (consider separate endpoint or lazy loading)
    - Review other list endpoints for pagination needs
 
 ### **High Priority**
@@ -359,8 +368,9 @@
    - Update all controllers to use consistent format
 
 10. **Fix duplicate auth checks**
-    - Refactor `ProtectedRoute` to use `AppContext` state
-    - Remove redundant API calls
+    - Refactor `ProtectedRoute` to rely on `AppContext` state (`isLoggedIn`, `userData`) instead of making separate API call
+    - Remove redundant `/api/auth/is-authenticated` call in `ProtectedRoute`
+    - Only make API call if context state is unavailable or stale
     - Add error boundary for auth failures
 
 ### **Medium Priority**
