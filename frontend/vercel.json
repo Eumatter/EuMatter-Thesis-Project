@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!zero-threat\\.html$).*)",
       "destination": "/index.html"
     }
   ]
