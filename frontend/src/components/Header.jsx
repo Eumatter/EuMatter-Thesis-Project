@@ -521,6 +521,16 @@ const Header = () => {
 
 						{/* Notifications Bell */}
                         <div className="relative" ref={bellRef}>
+							{/* Backdrop for mobile when notifications are open */}
+							{isBellOpen && (
+								<div 
+									className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[109]"
+									onClick={() => setIsBellOpen(false)}
+									style={{
+										animation: 'fadeIn 0.2s ease-out'
+									}}
+								/>
+							)}
 							<button
 								className="relative p-1.5 sm:p-2 md:p-2.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 onClick={() => setIsBellOpen(v => { const next = !v; if (next) setIsDropdownOpen(false); return next; })}
@@ -529,13 +539,18 @@ const Header = () => {
 							>
 								<FaBell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
 								{unreadCount > 0 && (
-									<span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-semibold min-w-[16px] sm:min-w-[18px] text-center">{unreadCount > 99 ? '99+' : unreadCount}</span>
+									<span className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-red-600 text-white text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded-full font-semibold min-w-[16px] sm:min-w-[18px] text-center shadow-lg">{unreadCount > 99 ? '99+' : unreadCount}</span>
 								)}
 							</button>
 							{isBellOpen && (
-                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border-2 border-[#800000]/10 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden backdrop-blur-sm">
+                                <div className="absolute right-0 lg:right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 md:w-96 max-w-[calc(100vw-2rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border border-gray-200/80 z-[110] overflow-hidden backdrop-blur-sm"
+									style={{
+										animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
+										boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+									}}
+								>
 									{/* Header with View All button in top right */}
-									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] via-[#900000] to-[#800000] text-white flex items-center justify-between relative">
+									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] via-[#900000] to-[#800000] text-white flex items-center justify-between relative shadow-lg">
 										<div className="flex items-center gap-2">
 											<div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
 												<FaBell className="w-4 h-4" />
@@ -701,15 +716,10 @@ const Header = () => {
                             {/* Backdrop for mobile/tablet when dropdown is open */}
                             {isDropdownOpen && (
                                 <div 
-                                    className="lg:hidden fixed inset-0 bg-black/50 z-[119]"
+                                    className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-sm z-[119]"
                                     onClick={() => setIsDropdownOpen(false)}
                                     style={{
-                                        position: 'fixed',
-                                        top: 0,
-                                        left: 0,
-                                        right: 0,
-                                        bottom: 0,
-                                        zIndex: 119
+                                        animation: 'fadeIn 0.2s ease-out'
                                     }}
                                 />
                             )}
@@ -729,17 +739,22 @@ const Header = () => {
                                     <img
                                         src={userData.profileImage}
                                         alt={userData.name}
-                                        className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-[#800000] flex-shrink-0"
+                                        className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full object-cover border-2 border-[#800000] flex-shrink-0 shadow-sm"
                                     />
                                 ) : (
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold border-2 border-[#800000] text-[10px] sm:text-xs md:text-sm flex-shrink-0">
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold border-2 border-[#800000] text-[10px] sm:text-xs md:text-sm flex-shrink-0 shadow-sm">
                                         {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
                                     </div>
                                 )}
                             </button>
-                            {/* Desktop Dropdown - Positioned relative to button */}
+                            {/* Dropdown - Works on both desktop and mobile */}
                             {isDropdownOpen && (
-                                <div className="hidden lg:block absolute right-0 mt-2 w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[120] max-h-[85vh] overflow-y-auto">
+                                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-72 lg:w-80 bg-white rounded-2xl shadow-2xl border border-gray-200/80 overflow-hidden z-[120] max-h-[85vh] overflow-y-auto"
+									style={{
+										animation: 'fadeIn 0.2s ease-out, slide-down 0.2s ease-out',
+										boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+									}}
+								>
                                     <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
                                         <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
                                             <div className="flex items-center gap-3">
@@ -759,6 +774,166 @@ const Header = () => {
                                         </button>
                                     </div>
                                     <div className="py-2">
+                                        {/* Navigation Links - Mobile/Tablet only (hidden on desktop) */}
+                                        <div className="lg:hidden">
+                                            {isUser && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => { navigate(getDashboardRoute(userData.role)); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaTachometerAlt className="w-4 h-4 text-[#800000]" />
+                                                        Dashboard
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/user/events'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendarAlt className="w-4 h-4 text-[#800000]" />
+                                                        Events
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/user/donations'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaHandHoldingHeart className="w-4 h-4 text-[#800000]" />
+                                                        Donations
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/user/calendar'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendar className="w-4 h-4 text-[#800000]" />
+                                                        Calendar
+                                                    </button>
+                                                    <div className="my-2 h-px bg-gray-100" />
+                                                </>
+                                            )}
+
+                                            {isDept && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => { navigate('/department/dashboard'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaTachometerAlt className="w-4 h-4 text-[#800000]" />
+                                                        Dashboard
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/department/events'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendarAlt className="w-4 h-4 text-[#800000]" />
+                                                        Events
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/department/donations'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaHandHoldingHeart className="w-4 h-4 text-[#800000]" />
+                                                        Donations
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/department/reports'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaChartLine className="w-4 h-4 text-[#800000]" />
+                                                        Reports
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/department/calendar'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendar className="w-4 h-4 text-[#800000]" />
+                                                        Calendar
+                                                    </button>
+                                                    <div className="my-2 h-px bg-gray-100" />
+                                                </>
+                                            )}
+
+                                            {isCRD && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/dashboard'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaTachometerAlt className="w-4 h-4 text-[#800000]" />
+                                                        Dashboard
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/events'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendarAlt className="w-4 h-4 text-[#800000]" />
+                                                        Events
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/reports'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaChartLine className="w-4 h-4 text-[#800000]" />
+                                                        Reports
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/leaderboard'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaTrophy className="w-4 h-4 text-[#800000]" />
+                                                        Leaderboard
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/donations'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaBoxOpen className="w-4 h-4 text-[#800000]" />
+                                                        Donations
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/crd-staff/calendar'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCalendar className="w-4 h-4 text-[#800000]" />
+                                                        Calendar
+                                                    </button>
+                                                    <div className="my-2 h-px bg-gray-100" />
+                                                </>
+                                            )}
+
+                                            {userData?.role && userData.role.toLowerCase().includes('system admin') && (
+                                                <>
+                                                    <button 
+                                                        onClick={() => { navigate('/system-admin/dashboard'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaTachometerAlt className="w-4 h-4 text-[#800000]" />
+                                                        Dashboard
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/system-admin/users'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaUsers className="w-4 h-4 text-[#800000]" />
+                                                        User Management
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/system-admin/settings'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaCogs className="w-4 h-4 text-[#800000]" />
+                                                        System Settings
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => { navigate('/system-admin/reports'); setIsDropdownOpen(false); }} 
+                                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
+                                                    >
+                                                        <FaChartLine className="w-4 h-4 text-[#800000]" />
+                                                        System Reports
+                                                    </button>
+                                                    <div className="my-2 h-px bg-gray-100" />
+                                                </>
+                                            )}
+                                        </div>
+
                                         {/* Calendar - Show on all devices */}
                                         <button 
                                             onClick={() => { 
@@ -769,30 +944,30 @@ const Header = () => {
                                                 navigate(calendarRoute); 
                                                 setIsDropdownOpen(false); 
                                             }} 
-                                            className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
+                                            className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200"
                                         >
-                                            <FaCalendar className="w-4 h-4" />
+                                            <FaCalendar className="w-4 h-4 text-[#800000]" />
                                             Calendar
                                         </button>
                                         <div className="my-2 h-px bg-gray-100" />
                                         
                                         {/* Account Settings */}
-                                        <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                            <FaCog className="w-4 h-4" />
+                                        <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200">
+                                            <FaCog className="w-4 h-4 text-[#800000]" />
                                             Account Settings
                                         </button>
                                         
                                         {/* System Settings - Show for all users EXCEPT System Admin */}
                                         {userData.role && !userData.role.toLowerCase().includes('system admin') && (
-                                            <button onClick={() => { navigate('/system-settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                                <FaSlidersH className="w-4 h-4" />
+                                            <button onClick={() => { navigate('/system-settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 transition-colors duration-200">
+                                                <FaSlidersH className="w-4 h-4 text-[#800000]" />
                                                 System Settings
                                             </button>
                                         )}
                                         
                                         {/* Only show verify account button for Users who are not verified */}
                                         {userData.role === 'User' && !userData.isAccountVerified && (
-                                            <button onClick={() => { navigate('/email-verify'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2">
+                                            <button onClick={() => { navigate('/email-verify'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-orange-700 hover:bg-orange-50 active:bg-orange-100 flex items-center gap-2 transition-colors duration-200">
                                                 <FaCheckCircle className="w-4 h-4" />
                                                 Verify Account
                                             </button>
@@ -801,7 +976,7 @@ const Header = () => {
                                         <div className="my-2 h-px bg-gray-100" />
                                         
                                         {/* Logout */}
-                                        <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2">
+                                        <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 active:bg-red-100 flex items-center gap-2 transition-colors duration-200">
                                             <FaSignOutAlt className="w-4 h-4" />
                                             Logout
                                         </button>
@@ -1068,253 +1243,6 @@ const Header = () => {
                     </>
                 )}
 
-            {/* Mobile Profile Modal Dropdown - Fixed position, independent of header */}
-            {isDropdownOpen && isLoggedIn && (
-                <div className="lg:hidden fixed inset-0 z-[100002] pointer-events-none">
-                    {/* Backdrop overlay */}
-                    <div 
-                        className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
-                        onClick={() => setIsDropdownOpen(false)}
-                        style={{
-                            animation: 'fadeIn 0.3s ease-out',
-                            backdropFilter: 'blur(24px)',
-                            WebkitBackdropFilter: 'blur(24px)',
-                            zIndex: 100001,
-                            transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
-                            filter: 'none',
-                            WebkitFilter: 'none'
-                        }}
-                    />
-                    
-                    {/* Modal dropdown - Positioned at top of screen */}
-                    <div 
-                        className="fixed top-0 left-1/2 transform -translate-x-1/2 w-[90vw] max-w-sm bg-white rounded-b-2xl shadow-2xl pointer-events-auto overflow-hidden z-[100002] max-h-[85vh] overflow-y-auto"
-                        style={{
-                            animation: 'fadeIn 0.3s ease-out, slide-down 0.3s ease-out',
-                            zIndex: 100002
-                        }}
-                    >
-                        {/* Header with user info */}
-                        <div className="px-5 py-4 bg-white/60 backdrop-blur border-b border-gray-100">
-                            <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left">
-                                <div className="flex items-center gap-3">
-                                    {userData?.profileImage ? (
-                                        <img src={userData.profileImage} alt={userData.name} className="w-10 h-10 rounded-full object-cover border" />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full bg-[#800000] text-white flex items-center justify-center font-semibold">
-                                            {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="text-sm font-semibold text-gray-900 leading-5 truncate">{userData.name}</div>
-                                        <div className="text-xs text-gray-600 truncate">{userData.email}</div>
-                                        <div className="text-xs text-[#800000] font-medium mt-0.5 truncate">{userData.role}</div>
-                                    </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsDropdownOpen(false);
-                                        }}
-                                        className="p-1.5 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors duration-200 flex-shrink-0"
-                                        aria-label="Close menu"
-                                    >
-                                        <FaTimes className="w-4 h-4 text-gray-600" />
-                                    </button>
-                                </div>
-                            </button>
-                        </div>
-
-                        {/* Content */}
-                        <div className="py-2">
-                            {/* Navigation Links - Mobile/Tablet only */}
-                            {isUser && (
-                                <>
-                                    <button 
-                                        onClick={() => { navigate(getDashboardRoute(userData.role)); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaTachometerAlt className="w-4 h-4" />
-                                        Dashboard
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/user/events'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendarAlt className="w-4 h-4" />
-                                        Events
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/user/donations'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaHandHoldingHeart className="w-4 h-4" />
-                                        Donations
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/user/calendar'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendar className="w-4 h-4" />
-                                        Calendar
-                                    </button>
-                                </>
-                            )}
-
-                            {isDept && (
-                                <>
-                                    <button 
-                                        onClick={() => { navigate('/department/dashboard'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaTachometerAlt className="w-4 h-4" />
-                                        Dashboard
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/department/events'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendarAlt className="w-4 h-4" />
-                                        Events
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/department/donations'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaHandHoldingHeart className="w-4 h-4" />
-                                        Donations
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/department/reports'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaChartLine className="w-4 h-4" />
-                                        Reports
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/department/calendar'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendar className="w-4 h-4" />
-                                        Calendar
-                                    </button>
-                                </>
-                            )}
-
-                            {isCRD && (
-                                <>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/dashboard'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaTachometerAlt className="w-4 h-4" />
-                                        Dashboard
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/events'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendarAlt className="w-4 h-4" />
-                                        Events
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/reports'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaChartLine className="w-4 h-4" />
-                                        Reports
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/leaderboard'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaTrophy className="w-4 h-4" />
-                                        Leaderboard
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/donations'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaBoxOpen className="w-4 h-4" />
-                                        Donations
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/crd-staff/calendar'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCalendar className="w-4 h-4" />
-                                        Calendar
-                                    </button>
-                                </>
-                            )}
-
-                            {userData?.role && userData.role.toLowerCase().includes('system admin') && (
-                                <>
-                                    <button 
-                                        onClick={() => { navigate('/system-admin/dashboard'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaTachometerAlt className="w-4 h-4" />
-                                        Dashboard
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/system-admin/users'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaUsers className="w-4 h-4" />
-                                        User Management
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/system-admin/settings'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaCogs className="w-4 h-4" />
-                                        System Settings
-                                    </button>
-                                    <button 
-                                        onClick={() => { navigate('/system-admin/reports'); setIsDropdownOpen(false); }} 
-                                        className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2"
-                                    >
-                                        <FaChartLine className="w-4 h-4" />
-                                        System Reports
-                                    </button>
-                                </>
-                            )}
-
-                            <div className="my-2 h-px bg-gray-100" />
-                            
-                            {/* Account Settings */}
-                            <button onClick={() => { navigate(getProfileRoute()); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                <FaCog className="w-4 h-4" />
-                                Account Settings
-                            </button>
-                            
-                            {/* System Settings - Show for all users EXCEPT System Admin */}
-                            {userData.role && !userData.role.toLowerCase().includes('system admin') && (
-                                <button onClick={() => { navigate('/system-settings'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-gray-800 hover:bg-gray-50 flex items-center gap-2">
-                                    <FaSlidersH className="w-4 h-4" />
-                                    System Settings
-                                </button>
-                            )}
-                            
-                            {/* Only show verify account button for Users who are not verified */}
-                            {userData.role === 'User' && !userData.isAccountVerified && (
-                                <button onClick={() => { navigate('/email-verify'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-2.5 text-sm text-orange-700 hover:bg-orange-50 flex items-center gap-2">
-                                    <FaCheckCircle className="w-4 h-4" />
-                                    Verify Account
-                                </button>
-                            )}
-                            
-                            <div className="my-2 h-px bg-gray-100" />
-                            
-                            {/* Logout */}
-                            <button onClick={handleLogout} className="w-full text-left px-5 py-2.5 text-sm text-red-700 hover:bg-red-50 flex items-center gap-2">
-                                <FaSignOutAlt className="w-4 h-4" />
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
         {/* Spacer to offset fixed header height */}
         <div aria-hidden className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}></div>
