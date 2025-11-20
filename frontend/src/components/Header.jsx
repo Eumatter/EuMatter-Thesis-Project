@@ -969,25 +969,36 @@ const Header = () => {
         </header>
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
-                    <div 
-                        className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" 
-                        style={{ 
-                            filter: 'none', 
-                            WebkitFilter: 'none',
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: '100vw',
-                            height: '100vh',
-                            overflow: 'hidden'
-                        }}
-                    >
-                        
-                        {/* Slider menu from right - full height from top to bottom */}
+                    <>
+                        {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
                         <div 
-                            className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
+                            className="lg:hidden fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto mobile-menu-overlay"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            style={{
+                                animation: 'fadeIn 0.3s ease-out',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
+                                height: '100vh',
+                                minHeight: '100vh',
+                                maxHeight: '100vh',
+                                width: '100vw',
+                                zIndex: 9998,
+                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                                filter: 'none',
+                                WebkitFilter: 'none',
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                overflow: 'hidden',
+                                contain: 'layout style paint'
+                            }}
+                        />
+                        
+                        {/* Slider menu from right - full height from top to bottom - IN FRONT OF EVERYTHING */}
+                        <div 
+                            className="lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
                             data-no-blur="true"
                             style={{
                                 animation: 'slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -1007,33 +1018,11 @@ const Header = () => {
                                 bottom: 0,
                                 overflow: 'hidden',
                                 transform: 'translateX(0)',
-                                willChange: 'transform'
+                                willChange: 'transform',
+                                contain: 'layout style paint',
+                                isolation: 'isolate'
                             }}
                         >
-                            {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
-                        <div 
-                            className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            style={{
-                                animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(24px)',
-                                WebkitBackdropFilter: 'blur(24px)',
-                                height: '100vh',
-                                minHeight: '100vh',
-                                maxHeight: '100vh',
-                                width: '100vw',
-                                zIndex: 9998,
-                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
-                                filter: 'none',
-                                WebkitFilter: 'none',
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                overflow: 'hidden'
-                            }}
-                        />
                             {/* Header with close button - Enhanced design */}
                             <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
                                 <div className="flex items-center gap-3">
@@ -1182,7 +1171,7 @@ const Header = () => {
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </>
                 )}
         {/* Spacer to offset fixed header height */}
         <div aria-hidden className={`${showMaintenanceBanner ? 'h-20 sm:h-24 md:h-28 lg:h-28' : 'h-14 sm:h-16 md:h-20 lg:h-20'}`}></div>
