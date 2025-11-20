@@ -30,6 +30,8 @@ const DepartmentLeaderboard = () => {
             const eventsResponse = await axios.get(backendUrl + 'api/events')
             const events = eventsResponse.data || []
             
+            console.log('Total events fetched:', events.length)
+            
             // Filter events: Only community relations/extension services events
             // and only events created by Department/Organization role users
             const filteredEvents = events.filter(event => {
@@ -38,66 +40,86 @@ const DepartmentLeaderboard = () => {
                                         event.eventCategory === 'community_extension'
                 
                 // Check if created by Department/Organization role
-                const isDepartmentRole = event.createdBy && 
-                                        (event.createdBy.role === 'Department/Organization')
+                // Handle both populated object and ObjectId cases
+                let isDepartmentRole = false
+                if (event.createdBy) {
+                    if (typeof event.createdBy === 'object' && event.createdBy.role) {
+                        isDepartmentRole = event.createdBy.role === 'Department/Organization'
+                    } else if (typeof event.createdBy === 'string') {
+                        // If createdBy is just an ID, we need to fetch the user
+                        // For now, we'll include it and filter later if needed
+                        isDepartmentRole = true // Will be filtered in the forEach loop
+                    }
+                }
                 
                 return isCommunityEvent && isDepartmentRole
             })
+            
+            console.log('Filtered events (community extension/relations):', filteredEvents.length)
+            console.log('Sample event createdBy:', filteredEvents[0]?.createdBy)
             
             // Group events by department and calculate metrics
             const departmentMap = new Map()
             
             filteredEvents.forEach(event => {
-                if (event.createdBy && event.createdBy._id) {
-                    const deptId = event.createdBy._id
-                    // Use name field (which contains department name like "Cyber Iskwela")
-                    const deptName = event.createdBy.name || 'Unknown Department'
-                    // Use email field (contact person email)
-                    const deptEmail = event.createdBy.email || ''
-                    
-                    // Only process if it's a Department/Organization role
-                    if (event.createdBy.role !== 'Department/Organization') {
-                        return // Skip non-department users
-                    }
-                    
-                    if (!departmentMap.has(deptId)) {
-                        departmentMap.set(deptId, {
-                            id: deptId,
-                            name: deptName,
-                            email: deptEmail,
-                            events: 0,
-                            volunteers: 0,
-                            donations: 0,
-                            total: 0
-                        })
-                    }
-                    
-                    const dept = departmentMap.get(deptId)
-                    
-                    // Count events (only community relations/extension services)
-                    dept.events += 1
-                    
-                    // Count volunteers from volunteerRegistrations (more accurate)
-                    if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
-                        // Count approved/accepted volunteers
-                        const approvedVolunteers = event.volunteerRegistrations.filter(
-                            reg => ['approved', 'accepted'].includes(reg.status)
-                        )
-                        dept.volunteers += approvedVolunteers.length
-                    } else if (event.volunteers && Array.isArray(event.volunteers)) {
-                        // Fallback to old volunteers array
-                        dept.volunteers += event.volunteers.length
-                    }
-                    
-                    // Calculate donations (only succeeded donations)
-                    if (event.donations && Array.isArray(event.donations)) {
-                        const eventDonations = event.donations
-                            .filter(donation => donation.status === 'succeeded')
-                            .reduce((sum, donation) => {
-                                return sum + (parseFloat(donation.amount) || 0)
-                            }, 0)
-                        dept.donations += eventDonations
-                    }
+                // Skip if createdBy is not populated or is just an ID
+                if (!event.createdBy || typeof event.createdBy === 'string') {
+                    return
+                }
+                
+                // Ensure createdBy has _id
+                const deptId = event.createdBy._id || event.createdBy
+                if (!deptId) {
+                    return
+                }
+                
+                // Only process if it's a Department/Organization role
+                if (event.createdBy.role !== 'Department/Organization') {
+                    return // Skip non-department users
+                }
+                
+                // Use name field (which contains department name like "Cyber Iskwela")
+                const deptName = event.createdBy.name || 'Unknown Department'
+                // Use email field (contact person email)
+                const deptEmail = event.createdBy.email || ''
+                
+                if (!departmentMap.has(deptId)) {
+                    departmentMap.set(deptId, {
+                        id: deptId,
+                        name: deptName,
+                        email: deptEmail,
+                        events: 0,
+                        volunteers: 0,
+                        donations: 0,
+                        total: 0
+                    })
+                }
+                
+                const dept = departmentMap.get(deptId)
+                
+                // Count events (only community relations/extension services)
+                dept.events += 1
+                
+                // Count volunteers from volunteerRegistrations (more accurate)
+                if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                    // Count approved/accepted volunteers
+                    const approvedVolunteers = event.volunteerRegistrations.filter(
+                        reg => ['approved', 'accepted'].includes(reg.status)
+                    )
+                    dept.volunteers += approvedVolunteers.length
+                } else if (event.volunteers && Array.isArray(event.volunteers)) {
+                    // Fallback to old volunteers array
+                    dept.volunteers += event.volunteers.length
+                }
+                
+                // Calculate donations (only succeeded donations)
+                if (event.donations && Array.isArray(event.donations)) {
+                    const eventDonations = event.donations
+                        .filter(donation => donation.status === 'succeeded')
+                        .reduce((sum, donation) => {
+                            return sum + (parseFloat(donation.amount) || 0)
+                        }, 0)
+                    dept.donations += eventDonations
                 }
             })
             
@@ -109,6 +131,9 @@ const DepartmentLeaderboard = () => {
             
             // Sort by total score
             departmentsArray.sort((a, b) => b.total - a.total)
+            
+            console.log('Departments found:', departmentsArray.length)
+            console.log('Department data:', departmentsArray)
             
             setDepartments(departmentsArray)
         } catch (error) {
