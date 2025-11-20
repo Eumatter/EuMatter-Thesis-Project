@@ -1817,7 +1817,7 @@ export const getAllDonations = async (req, res) => {
         
         // Get all donations for transparency - includes CRD, Department, and Event donations
         const donations = await donationModel.find({})
-            .populate('user', 'name email profileImage')
+            .populate('user', 'name email profileImage userType mseufCategory outsiderCategory role')
             .populate('event', 'title createdBy')
             .populate('department', 'name email role')
             .populate('cashVerification.verifiedBy', 'name email')

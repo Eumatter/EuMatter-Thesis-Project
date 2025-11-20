@@ -115,7 +115,7 @@ export const getAllInKindDonations = async (req, res) => {
         const skip = (parseInt(page) - 1) * parseInt(limit);
         const donations = await inKindDonationModel
             .find(query)
-            .populate("user", "name email profileImage")
+            .populate("user", "name email profileImage userType mseufCategory outsiderCategory role")
             .populate("event", "title")
             .populate("reviewedBy", "name email")
             .populate("receivedBy", "name email")
@@ -179,7 +179,7 @@ export const getInKindDonationById = async (req, res) => {
 
         const donation = await inKindDonationModel
             .findById(id)
-            .populate("user", "name email profileImage")
+            .populate("user", "name email profileImage userType mseufCategory outsiderCategory role")
             .populate("event", "title")
             .populate("reviewedBy", "name email")
             .populate("receivedBy", "name email");

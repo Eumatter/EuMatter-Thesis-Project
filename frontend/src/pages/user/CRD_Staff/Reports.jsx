@@ -63,12 +63,12 @@ const Reports = () => {
             setIsLoading(true)
             axios.defaults.withCredentials = true
             
-            // Fetch events
+            // Fetch events with populated volunteer registrations
             const eventsResponse = await axios.get(backendUrl + 'api/events')
             const eventsData = eventsResponse.data || []
             setEvents(eventsData)
             
-            // Fetch donations
+            // Fetch donations with full user data
             const donationsResponse = await axios.get(backendUrl + 'api/donations/all')
             const donationsData = donationsResponse.data?.donations || []
             setDonations(donationsData)
@@ -207,6 +207,28 @@ const Reports = () => {
         }
     }
     
+    // Helper function to categorize user
+    const categorizeUser = (user) => {
+        if (!user || typeof user !== 'object') return 'Guest'
+        
+        // Check if user has role field (for special roles)
+        if (user.role === 'CRD Staff' || user.role === 'System Administrator' || user.role === 'Department/Organization') {
+            return 'Guest' // These are not counted in donor demographics
+        }
+        
+        if (user.userType === 'MSEUF') {
+            if (user.mseufCategory === 'Student') return 'Student'
+            else if (user.mseufCategory === 'Faculty') return 'Faculty'
+            else if (user.mseufCategory === 'Staff') return 'Staff'
+        } else if (user.userType === 'Outsider') {
+            // Alumni is in outsiderCategory for Outsider userType
+            if (user.outsiderCategory === 'Alumni') return 'Alumni'
+            else return 'Guest'
+        }
+        
+        return 'Guest'
+    }
+    
     // Calculate donor demographics
     const getDonorDemographics = () => {
         const demographics = {
@@ -227,20 +249,7 @@ const Reports = () => {
         
         donations.forEach(donation => {
             const user = donation.user
-            if (!user) {
-                demographics.Guest++
-                return
-            }
-            
-            let category = 'Guest'
-            if (user.userType === 'MSEUF') {
-                if (user.mseufCategory === 'Student') category = 'Student'
-                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                else if (user.mseufCategory === 'Staff') category = 'Staff'
-            } else if (user.userType === 'Outsider') {
-                category = 'Guest'
-            }
+            const category = categorizeUser(user)
             
             demographics[category]++
             const amount = parseFloat(donation.amount) || 0
@@ -249,21 +258,8 @@ const Reports = () => {
         
         // Process in-kind donations
         inKindDonations.forEach(donation => {
-            const user = donation.donor
-            if (!user) {
-                demographics.Guest++
-                return
-            }
-            
-            let category = 'Guest'
-            if (user.userType === 'MSEUF') {
-                if (user.mseufCategory === 'Student') category = 'Student'
-                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                else if (user.mseufCategory === 'Staff') category = 'Staff'
-            } else if (user.userType === 'Outsider') {
-                category = 'Guest'
-            }
+            const user = donation.user || donation.donor // Support both field names
+            const category = categorizeUser(user)
             
             demographics[category]++
             const value = parseFloat(donation.estimatedValue) || 0
@@ -296,19 +292,8 @@ const Reports = () => {
                         volunteerUserIds.add(userId.toString())
                         
                         const user = reg.user
-                        if (user) {
-                            let category = 'Guest'
-                            if (user.userType === 'MSEUF') {
-                                if (user.mseufCategory === 'Student') category = 'Student'
-                                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                                else if (user.mseufCategory === 'Staff') category = 'Staff'
-                            } else if (user.userType === 'Outsider') {
-                                category = 'Guest'
-                            }
-                            
-                            demographics[category]++
-                        }
+                        const category = categorizeUser(user)
+                        demographics[category]++
                     }
                 })
             }
@@ -331,14 +316,19 @@ const Reports = () => {
         }
         
         users.forEach(user => {
+            if (!user || typeof user !== 'object') return
+            
             if (user.role === 'CRD Staff' || user.role === 'System Administrator' || user.role === 'Department/Organization') {
                 demographics[user.role]++
             } else if (user.userType === 'MSEUF') {
                 if (user.mseufCategory === 'Student') demographics.Student++
-                else if (user.mseufCategory === 'Alumni') demographics.Alumni++
                 else if (user.mseufCategory === 'Faculty') demographics.Faculty++
                 else if (user.mseufCategory === 'Staff') demographics.Staff++
             } else if (user.userType === 'Outsider') {
+                // Alumni is in outsiderCategory for Outsider userType
+                if (user.outsiderCategory === 'Alumni') demographics.Alumni++
+                else demographics.Guest++
+            } else {
                 demographics.Guest++
             }
         })
@@ -428,6 +418,76 @@ const Reports = () => {
             )
         }
         return null
+    }
+    
+    // Custom label function for pie charts - only show labels for slices > 5%
+    const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, value }) => {
+        if (percent < 0.05) return null // Hide labels for slices < 5%
+        
+        const RADIAN = Math.PI / 180
+        const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+        const x = cx + radius * Math.cos(-midAngle * RADIAN)
+        const y = cy + radius * Math.sin(-midAngle * RADIAN)
+        
+        return (
+            <text 
+                x={x} 
+                y={y} 
+                fill="white" 
+                textAnchor={x > cx ? 'start' : 'end'} 
+                dominantBaseline="central"
+                fontSize={12}
+                fontWeight="bold"
+                className="drop-shadow-sm"
+            >
+                {`${(percent * 100).toFixed(0)}%`}
+            </text>
+        )
+    }
+    
+    // Custom label line function for pie charts
+    const renderLabelLine = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+        if (percent < 0.05) return null // Hide label lines for slices < 5%
+        
+        const RADIAN = Math.PI / 180
+        const sin = Math.sin(-RADIAN * midAngle)
+        const cos = Math.cos(-RADIAN * midAngle)
+        const sx = cx + (outerRadius + 10) * cos
+        const sy = cy + (outerRadius + 10) * sin
+        const mx = cx + (outerRadius + 30) * cos
+        const my = cy + (outerRadius + 30) * sin
+        const ex = mx + (cos >= 0 ? 1 : -1) * 22
+        const ey = my
+        
+        return (
+            <g>
+                <path d={`M${sx},${sy}L${mx},${my}L${ex},${ey}`} stroke="#666" fill="none" strokeWidth={1} />
+            </g>
+        )
+    }
+    
+    // Custom outer label for pie charts
+    const renderOuterLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }) => {
+        if (percent < 0.05) return null // Hide labels for slices < 5%
+        
+        const RADIAN = Math.PI / 180
+        const radius = outerRadius + 20
+        const x = cx + radius * Math.cos(-midAngle * RADIAN)
+        const y = cy + radius * Math.sin(-midAngle * RADIAN)
+        
+        return (
+            <text 
+                x={x} 
+                y={y} 
+                fill="#374151" 
+                textAnchor={x > cx ? 'start' : 'end'} 
+                dominantBaseline="central"
+                fontSize={11}
+                fontWeight="500"
+            >
+                {name}
+            </text>
+        )
     }
     
     if (isLoading) {
@@ -607,69 +667,131 @@ const Reports = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
-                                                    data={eventDemographics}
+                                                    data={eventDemographics.filter(d => d.value > 0)}
                                                     cx="50%"
                                                     cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                                    labelLine={renderLabelLine}
+                                                    label={renderOuterLabel}
                                                     outerRadius={70}
+                                                    innerRadius={20}
                                                     fill="#8884d8"
                                                     dataKey="value"
+                                                    paddingAngle={2}
                                                 >
-                                                    {eventDemographics.map((entry, index) => (
+                                                    {eventDemographics.filter(d => d.value > 0).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    content={({ active, payload }) => {
+                                                        if (active && payload && payload.length) {
+                                                            const data = payload[0]
+                                                            return (
+                                                                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                                                    <p className="font-semibold text-gray-900">{data.name}</p>
+                                                                    <p className="text-sm text-gray-600">Count: {data.value}</p>
+                                                                    <p className="text-sm text-gray-600">
+                                                                        Percentage: {((data.value / eventDemographics.reduce((sum, d) => sum + d.value, 0)) * 100).toFixed(1)}%
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        return null
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
-                                                    data={donationDemographics.counts}
+                                                    data={donationDemographics.counts.filter(d => d.value > 0)}
                                                     cx="50%"
                                                     cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                                    labelLine={renderLabelLine}
+                                                    label={renderOuterLabel}
                                                     outerRadius={70}
+                                                    innerRadius={20}
                                                     fill="#8884d8"
                                                     dataKey="value"
+                                                    paddingAngle={2}
                                                 >
-                                                    {donationDemographics.counts.map((entry, index) => (
+                                                    {donationDemographics.counts.filter(d => d.value > 0).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    content={({ active, payload }) => {
+                                                        if (active && payload && payload.length) {
+                                                            const data = payload[0]
+                                                            const total = donationDemographics.counts.reduce((sum, d) => sum + d.value, 0)
+                                                            return (
+                                                                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                                                    <p className="font-semibold text-gray-900 capitalize">{data.name}</p>
+                                                                    <p className="text-sm text-gray-600">Count: {data.value}</p>
+                                                                    <p className="text-sm text-gray-600">
+                                                                        Percentage: {total > 0 ? ((data.value / total) * 100).toFixed(1) : 0}%
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        return null
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
-                                                    data={donorDemographics.counts}
+                                                    data={donorDemographics.counts.filter(d => d.value > 0)}
                                                     cx="50%"
                                                     cy="50%"
-                                                    labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                                    labelLine={renderLabelLine}
+                                                    label={renderOuterLabel}
                                                     outerRadius={70}
+                                                    innerRadius={20}
                                                     fill="#8884d8"
                                                     dataKey="value"
+                                                    paddingAngle={2}
                                                 >
-                                                    {donorDemographics.counts.map((entry, index) => (
+                                                    {donorDemographics.counts.filter(d => d.value > 0).map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    content={({ active, payload }) => {
+                                                        if (active && payload && payload.length) {
+                                                            const data = payload[0]
+                                                            const total = donorDemographics.counts.reduce((sum, d) => sum + d.value, 0)
+                                                            const amountData = donorDemographics.amounts.find(a => a.name === data.name)
+                                                            return (
+                                                                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                                                    <p className="font-semibold text-gray-900">{data.name}</p>
+                                                                    <p className="text-sm text-gray-600">Count: {data.value}</p>
+                                                                    <p className="text-sm text-gray-600">
+                                                                        Percentage: {total > 0 ? ((data.value / total) * 100).toFixed(1) : 0}%
+                                                                    </p>
+                                                                    {amountData && (
+                                                                        <p className="text-sm font-semibold text-gray-900 mt-1">
+                                                                            Amount: ₱{amountData.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            )
+                                                        }
+                                                        return null
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>

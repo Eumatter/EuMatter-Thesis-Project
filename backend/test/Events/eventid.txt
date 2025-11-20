@@ -1,0 +1,114 @@
+{
+  "totalEvents": 15,
+  "found": 15,
+  "notFound": 0,
+  "mappings": [
+    {
+      "title": "Community Computer Literacy Program",
+      "eventId": "691e3a81ab79cb7eb3f018c4",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-01-09T16:00:00.000Z",
+      "endDate": "2025-01-25T01:00:00.000Z"
+    },
+    {
+      "title": "Digital Skills Training for Senior Citizens",
+      "eventId": "691e3a81ab79cb7eb3f018d8",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-01-01T08:00:00.000Z",
+      "endDate": "2025-01-04T01:00:00.000Z"
+    },
+    {
+      "title": "Free Coding Workshop for Youth",
+      "eventId": "691e3a81ab79cb7eb3f018ed",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-01-22T16:00:00.000Z",
+      "endDate": "2025-02-07T01:00:00.000Z"
+    },
+    {
+      "title": "Cybersecurity Awareness Seminar",
+      "eventId": "691e3a81ab79cb7eb3f018f4",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-02-21T16:00:00.000Z",
+      "endDate": "2025-03-09T01:00:00.000Z"
+    },
+    {
+      "title": "Web Development Bootcamp",
+      "eventId": "691e3a81ab79cb7eb3f018ff",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-03-16T15:00:00.000Z",
+      "endDate": "2025-04-01T00:00:00.000Z"
+    },
+    {
+      "title": "Mobile App Development Training",
+      "eventId": "691e3a81ab79cb7eb3f01912",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-04-10T15:00:00.000Z",
+      "endDate": "2025-04-26T00:00:00.000Z"
+    },
+    {
+      "title": "IT Support for Local Businesses",
+      "eventId": "691e3a81ab79cb7eb3f01923",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-04-24T15:00:00.000Z",
+      "endDate": "2025-05-10T00:00:00.000Z"
+    },
+    {
+      "title": "Digital Marketing Workshop",
+      "eventId": "691e3a81ab79cb7eb3f01933",
+      "createdBy": "68c77fc7d8714ef0c8fcb192",
+      "startDate": "2025-06-16T15:00:00.000Z",
+      "endDate": "2025-07-02T00:00:00.000Z"
+    },
+    {
+      "title": "Community Art Exhibition",
+      "eventId": "691e3a81ab79cb7eb3f0193f",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-07-19T15:00:00.000Z",
+      "endDate": "2025-08-04T00:00:00.000Z"
+    },
+    {
+      "title": "Creative Writing Workshop",
+      "eventId": "691e3a81ab79cb7eb3f01954",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-08-15T15:00:00.000Z",
+      "endDate": "2025-08-31T00:00:00.000Z"
+    },
+    {
+      "title": "Environmental Awareness Campaign",
+      "eventId": "691e3a81ab79cb7eb3f0195e",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-07-28T15:00:00.000Z",
+      "endDate": "2025-08-13T00:00:00.000Z"
+    },
+    {
+      "title": "Mental Health Support Program",
+      "eventId": "691e3a81ab79cb7eb3f01970",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-08-12T15:00:00.000Z",
+      "endDate": "2025-08-28T00:00:00.000Z"
+    },
+    {
+      "title": "Literacy Program for Children",
+      "eventId": "691e3a82ab79cb7eb3f01983",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-10-13T15:00:00.000Z",
+      "endDate": "2025-10-29T00:00:00.000Z"
+    },
+    {
+      "title": "Cultural Heritage Preservation",
+      "eventId": "691e3a82ab79cb7eb3f01997",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-10-15T15:00:00.000Z",
+      "endDate": "2025-10-31T00:00:00.000Z"
+    },
+    {
+      "title": "Community Garden Initiative",
+      "eventId": "691e3a82ab79cb7eb3f019a0",
+      "createdBy": "691e22b04e0971bff7a7993f",
+      "startDate": "2025-10-25T15:00:00.000Z",
+      "endDate": "2025-11-10T01:00:00.000Z"
+    }
+  ],
+  "notFoundEvents": [],
+  "generatedAt": "2025-11-19T21:45:48.711Z"
+}
