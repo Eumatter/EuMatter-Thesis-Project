@@ -80,22 +80,44 @@ const Header = () => {
     // This ensures only the backdrop blurs what's behind it, and the slider menu stays completely clear
     useEffect(() => {
         if (isMobileMenuOpen || isDropdownOpen) {
-            document.body.style.overflow = 'hidden';
+            // Store current scroll position
+            const scrollY = window.scrollY;
             document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
             document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
             document.body.classList.add('mobile-menu-open');
+            
+            // Store scroll position for restoration
+            document.body.setAttribute('data-scroll-y', scrollY.toString());
         } else {
-            document.body.style.overflow = 'unset';
-            document.body.style.position = 'unset';
-            document.body.style.width = 'unset';
+            // Restore scroll position
+            const scrollY = document.body.getAttribute('data-scroll-y');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
             document.body.classList.remove('mobile-menu-open');
+            
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+                document.body.removeAttribute('data-scroll-y');
+            }
         }
         
         return () => {
-            document.body.style.overflow = 'unset';
-            document.body.style.position = 'unset';
-            document.body.style.width = 'unset';
+            // Cleanup on unmount
+            const scrollY = document.body.getAttribute('data-scroll-y');
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
             document.body.classList.remove('mobile-menu-open');
+            
+            if (scrollY) {
+                window.scrollTo(0, parseInt(scrollY, 10));
+                document.body.removeAttribute('data-scroll-y');
+            }
         };
     }, [isMobileMenuOpen, isDropdownOpen]);
 
@@ -342,6 +364,11 @@ const Header = () => {
                     transform: translateX(0);
                     opacity: 1;
                 }
+            }
+            /* Ensure slider doesn't cause layout shifts */
+            .mobile-menu-slider {
+                contain: layout style paint;
+                transform: translateX(0);
             }
             @keyframes fadeIn {
                 from {
@@ -942,7 +969,21 @@ const Header = () => {
         </header>
         {/* Mobile slider menu - slides in from right */}
                 {isMobileMenuOpen && (
-                    <div className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" style={{ filter: 'none', WebkitFilter: 'none' }}>
+                    <div 
+                        className="lg:hidden mobile-menu-overlay fixed inset-0 z-[9998] pointer-events-none" 
+                        style={{ 
+                            filter: 'none', 
+                            WebkitFilter: 'none',
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '100vw',
+                            height: '100vh',
+                            overflow: 'hidden'
+                        }}
+                    >
                         {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
                         <div 
                             className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
@@ -959,11 +1000,12 @@ const Header = () => {
                                 transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
                                 filter: 'none',
                                 WebkitFilter: 'none',
-                                // Ensure it covers everything including behind header
+                                position: 'fixed',
                                 top: 0,
                                 left: 0,
                                 right: 0,
-                                bottom: 0
+                                bottom: 0,
+                                overflow: 'hidden'
                             }}
                         />
                         {/* Slider menu from right - full height from top to bottom */}
@@ -981,7 +1023,14 @@ const Header = () => {
                                 WebkitBackdropFilter: 'none',
                                 height: '100vh',
                                 minHeight: '100vh',
-                                maxHeight: '100vh'
+                                maxHeight: '100vh',
+                                position: 'fixed',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                overflow: 'hidden',
+                                transform: 'translateX(0)',
+                                willChange: 'transform'
                             }}
                         >
                             {/* Header with close button - Enhanced design */}
