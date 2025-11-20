@@ -984,30 +984,7 @@ const Header = () => {
                             overflow: 'hidden'
                         }}
                     >
-                        {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
-                        <div 
-                            className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            style={{
-                                animation: 'fadeIn 0.3s ease-out',
-                                backdropFilter: 'blur(24px)',
-                                WebkitBackdropFilter: 'blur(24px)',
-                                height: '100vh',
-                                minHeight: '100vh',
-                                maxHeight: '100vh',
-                                width: '100vw',
-                                zIndex: 9998,
-                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
-                                filter: 'none',
-                                WebkitFilter: 'none',
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                overflow: 'hidden'
-                            }}
-                        />
+                        
                         {/* Slider menu from right - full height from top to bottom */}
                         <div 
                             className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl flex flex-col border-l border-gray-200 pointer-events-auto mobile-menu-slider"
@@ -1033,6 +1010,30 @@ const Header = () => {
                                 willChange: 'transform'
                             }}
                         >
+                            {/* Backdrop overlay with full blur and darkening - covers everything behind slider, but NOT header */}
+                        <div 
+                            className="fixed inset-0 w-full h-full bg-black/70 backdrop-blur-xl pointer-events-auto"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            style={{
+                                animation: 'fadeIn 0.3s ease-out',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
+                                height: '100vh',
+                                minHeight: '100vh',
+                                maxHeight: '100vh',
+                                width: '100vw',
+                                zIndex: 9998,
+                                transition: 'opacity 0.3s ease-out, backdrop-filter 0.3s ease-out',
+                                filter: 'none',
+                                WebkitFilter: 'none',
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                overflow: 'hidden'
+                            }}
+                        />
                             {/* Header with close button - Enhanced design */}
                             <div className="px-5 py-4 flex items-center justify-between border-b-2 border-[#800000]/20 bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] text-white shadow-lg">
                                 <div className="flex items-center gap-3">
