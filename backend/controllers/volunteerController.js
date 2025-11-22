@@ -1021,7 +1021,7 @@ export const recordAttendance = async (req, res) => {
             // Create or update attendanceRecord in event document
             if (!attendanceRecord) {
                 attendanceRecord = {
-                    date: today, // Keep as Date for backward compatibility
+                    date: new Date(now.getFullYear(), now.getMonth(), now.getDate()), // Keep as Date for backward compatibility
                     timeIn: now,
                     qrCode: actualQRCode,
                     isValid: true,

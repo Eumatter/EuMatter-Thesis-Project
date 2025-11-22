@@ -107,11 +107,10 @@ export async function getPendingRecords() {
         const database = await getDB();
         const transaction = database.transaction([STORE_NAME], 'readonly');
         const store = transaction.objectStore(STORE_NAME);
-        const index = store.index('synced');
         
-        // Use cursor with IDBKeyRange to properly query for false values
-        // getAll(false) doesn't work reliably across all browsers
-        const request = index.openCursor(IDBKeyRange.only(false));
+        // Use cursor without IDBKeyRange to avoid boolean key issues
+        // Filter manually for synced === false
+        const request = store.openCursor();
         
         return new Promise((resolve, reject) => {
             const records = [];
@@ -119,7 +118,10 @@ export async function getPendingRecords() {
             request.onsuccess = (event) => {
                 const cursor = event.target.result;
                 if (cursor) {
-                    records.push(cursor.value);
+                    // Filter for unsynced records
+                    if (cursor.value.synced === false) {
+                        records.push(cursor.value);
+                    }
                     cursor.continue();
                 } else {
                     // No more records, return what we found
@@ -128,30 +130,8 @@ export async function getPendingRecords() {
             };
             
             request.onerror = () => {
-                // If cursor fails, try fallback: get all and filter
-                try {
-                    const fallbackRequest = store.openCursor();
-                    const fallbackRecords = [];
-                    
-                    fallbackRequest.onsuccess = (fallbackEvent) => {
-                        const fallbackCursor = fallbackEvent.target.result;
-                        if (fallbackCursor) {
-                            if (fallbackCursor.value.synced === false) {
-                                fallbackRecords.push(fallbackCursor.value);
-                            }
-                            fallbackCursor.continue();
-                        } else {
-                            resolve(fallbackRecords);
-                        }
-                    };
-                    
-                    fallbackRequest.onerror = () => {
-                        reject(fallbackRequest.error);
-                    };
-                } catch (fallbackError) {
-                    console.error('Fallback query also failed:', fallbackError);
-                    reject(request.error || fallbackError);
-                }
+                console.error('Error opening cursor:', request.error);
+                reject(request.error);
             };
         });
     } catch (error) {
@@ -234,9 +214,10 @@ export async function deleteSyncedRecords() {
         const database = await getDB();
         const transaction = database.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
-        const index = store.index('synced');
         
-        const request = index.openCursor(IDBKeyRange.only(true));
+        // Use cursor without IDBKeyRange to avoid boolean key issues
+        // Filter manually for synced === true
+        const request = store.openCursor();
         
         return new Promise((resolve, reject) => {
             let deletedCount = 0;
@@ -244,13 +225,16 @@ export async function deleteSyncedRecords() {
             request.onsuccess = (event) => {
                 const cursor = event.target.result;
                 if (cursor) {
-                    // Only delete records synced more than 7 days ago
-                    const syncedAt = new Date(cursor.value.syncedAt);
-                    const daysAgo = (Date.now() - syncedAt.getTime()) / (1000 * 60 * 60 * 24);
-                    
-                    if (daysAgo > 7) {
-                        cursor.delete();
-                        deletedCount++;
+                    // Only process synced records
+                    if (cursor.value.synced === true) {
+                        // Only delete records synced more than 7 days ago
+                        const syncedAt = new Date(cursor.value.syncedAt);
+                        const daysAgo = (Date.now() - syncedAt.getTime()) / (1000 * 60 * 60 * 24);
+                        
+                        if (daysAgo > 7) {
+                            cursor.delete();
+                            deletedCount++;
+                        }
                     }
                     cursor.continue();
                 } else {
@@ -258,7 +242,10 @@ export async function deleteSyncedRecords() {
                 }
             };
             
-            request.onerror = () => reject(request.error);
+            request.onerror = () => {
+                console.error('Error opening cursor:', request.error);
+                reject(request.error);
+            };
         });
     } catch (error) {
         console.error('Error deleting synced records:', error);

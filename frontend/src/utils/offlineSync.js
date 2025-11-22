@@ -9,7 +9,8 @@ import {
     markAsSynced, 
     updateRecordError,
     isOnline,
-    getPendingCount
+    getPendingCount,
+    deleteSyncedRecords
 } from './offlineStorage.js';
 import { toast } from 'react-toastify';
 
