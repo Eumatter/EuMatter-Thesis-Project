@@ -92,6 +92,10 @@ const EventManagement = () => {
     const [editDocPreviewName, setEditDocPreviewName] = useState('')
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deleteEventId, setDeleteEventId] = useState(null)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
+    const [confirmMessage, setConfirmMessage] = useState('')
+    const [pendingCancelEventId, setPendingCancelEventId] = useState(null)
+    const [pendingCancelSeriesId, setPendingCancelSeriesId] = useState(null)
     const [sortBy, setSortBy] = useState('date') // 'date', 'status'
     const [sortOrder, setSortOrder] = useState('desc') // 'asc', 'desc'
     const [showCalendar, setShowCalendar] = useState(false)
@@ -594,6 +598,170 @@ const EventManagement = () => {
         }
     }
 
+    // Handle Edit Click - Opens edit modal with event data
+    const handleEditClick = (event) => {
+        setEditEventId(event._id)
+        setEditData({
+            title: event.title || '',
+            description: event.description || '',
+            location: event.location || '',
+            startDate: toInputDateTime(event.startDate),
+            endDate: toInputDateTime(event.endDate),
+            isOpenForDonation: event.isOpenForDonation || false,
+            isOpenForVolunteer: event.isOpenForVolunteer || false,
+            eventCategory: event.eventCategory || 'community_relations',
+            volunteerSettings: event.volunteerSettings || {
+                mode: 'open_for_all',
+                minAge: '',
+                maxVolunteers: '',
+                requiredSkills: [],
+                departmentRestrictionType: 'all',
+                allowedDepartments: [],
+                notes: '',
+                dailySchedule: [],
+                requireTimeTracking: true
+            }
+        })
+        setEditImageFile(null)
+        setEditDocumentFile(null)
+        setEditImagePreviewUrl(event.image ? `data:image/jpeg;base64,${event.image}` : '')
+        setEditDocPreviewName('')
+        setEditReqSkillInput('')
+        setEditAllowedDeptInput('')
+        setEditSelectedDept('')
+        setShowEditModal(true)
+    }
+
+    // Handle Post From Proposal - Opens post modal with proposal data pre-filled
+    const handlePostFromProposal = (event) => {
+        // Pre-fill the post form with proposal data
+        setPostForm({
+            title: event.title || '',
+            description: event.description || '',
+            location: event.location || '',
+            startDate: toInputDateTime(event.startDate),
+            endDate: toInputDateTime(event.endDate),
+            isOpenForDonation: event.isOpenForDonation || false,
+            isOpenForVolunteer: event.isOpenForVolunteer || false,
+            status: 'Approved',
+            eventCategory: event.eventCategory || 'community_relations',
+            volunteerSettings: event.volunteerSettings || {
+                mode: 'open_for_all',
+                minAge: '',
+                maxVolunteers: '',
+                requiredSkills: [],
+                departmentRestrictionType: 'all',
+                allowedDepartments: [],
+                notes: '',
+                dailySchedule: [],
+                requireTimeTracking: true
+            }
+        })
+        setPostImageFile(null)
+        setPostDocFile(null)
+        setPostImagePreviewUrl(event.image ? `data:image/jpeg;base64,${event.image}` : '')
+        setPostDocPreviewName('')
+        // Reset recurrence settings
+        setIsRecurring(false)
+        setRecurrenceType('none')
+        setRecurrenceCount(4)
+        setRecurrenceInterval(1)
+        setRecurrenceWeekday('')
+        setRecurrenceMonthday('')
+        setShowPostModal(true)
+    }
+
+    // Handle Clone Event - Duplicates an event by creating a new one
+    const handleCloneEvent = async (event) => {
+        try {
+            // Create a new event with the same data but new dates (default to next week)
+            const startDate = new Date(event.startDate)
+            const endDate = new Date(event.endDate)
+            const duration = endDate - startDate
+            
+            // Set to next week same day/time
+            startDate.setDate(startDate.getDate() + 7)
+            endDate.setTime(startDate.getTime() + duration)
+
+            const formData = new FormData()
+            formData.append('title', `${event.title} (Copy)`)
+            formData.append('description', event.description || '')
+            formData.append('location', event.location || '')
+            formData.append('startDate', startDate.toISOString())
+            formData.append('endDate', endDate.toISOString())
+            formData.append('isOpenForDonation', event.isOpenForDonation ? 'true' : 'false')
+            formData.append('isOpenForVolunteer', event.isOpenForVolunteer ? 'true' : 'false')
+            formData.append('eventCategory', event.eventCategory || 'community_relations')
+            
+            if (event.volunteerSettings) {
+                formData.append('volunteerSettings', JSON.stringify(event.volunteerSettings))
+            }
+
+            // If event has base64 image, we need to convert it to a blob for upload
+            if (event.image) {
+                try {
+                    const base64Response = await fetch(`data:image/jpeg;base64,${event.image}`)
+                    const blob = await base64Response.blob()
+                    const file = new File([blob], 'event-image.jpg', { type: 'image/jpeg' })
+                    formData.append('image', file)
+                } catch (err) {
+                    console.error('Error converting image:', err)
+                }
+            }
+
+            // If event has proposal document
+            if (event.proposalDocument) {
+                try {
+                    const base64Response = await fetch(`data:application/pdf;base64,${event.proposalDocument}`)
+                    const blob = await base64Response.blob()
+                    const file = new File([blob], 'proposal-document.pdf', { type: 'application/pdf' })
+                    formData.append('proposalDocument', file)
+                } catch (err) {
+                    console.error('Error converting document:', err)
+                }
+            }
+
+            const createPromise = axios.post(backendUrl + 'api/events', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
+            })
+
+            toast.promise(createPromise, {
+                pending: 'Duplicating event...',
+                success: 'Event duplicated successfully!',
+                error: 'Failed to duplicate event'
+            })
+
+            const res = await createPromise
+            if (res.data.message?.toLowerCase().includes('success')) {
+                // Refresh events list
+                const eventsRes = await axios.get(backendUrl + 'api/events/my-events', { withCredentials: true })
+                setEvents(eventsRes.data || [])
+            }
+        } catch (error) {
+            toast.error(error?.response?.data?.message || 'Failed to duplicate event')
+        }
+    }
+
+    // Handle Cancel Proposal - Deletes/cancels a proposed event
+    const handleCancelProposal = (event) => {
+        setConfirmMessage(`Are you sure you want to cancel "${event.title}"? This action cannot be undone.`)
+        setPendingCancelEventId(event._id)
+        setPendingCancelSeriesId(null)
+        setShowConfirmModal(true)
+    }
+
+    // Handle Cancel Series - Cancels all events in a series
+    const handleCancelSeries = (seriesId) => {
+        const seriesEvents = events.filter(e => e.seriesId === seriesId)
+        const eventCount = seriesEvents.length
+        
+        setConfirmMessage(`Are you sure you want to cancel all ${eventCount} event(s) in this series? This action cannot be undone.`)
+        setPendingCancelSeriesId(seriesId)
+        setPendingCancelEventId(null)
+        setShowConfirmModal(true)
+    }
+
     // Live previews for create
     React.useEffect(() => {
         if (imageFile) {
@@ -1049,14 +1217,14 @@ const EventManagement = () => {
                                                 <div className="relative">
                                     <input
                                         type="file"
-                                        accept="image/*"
-                                                        onChange={e => {
-                                                            const file = e.target.files?.[0]
-                                                            setImageFile(file || null)
-                                                        }}
-                                                        className="hidden"
-                                                        id="event-image-upload"
-                                                    />
+                                        accept="image/*,image/webp,.webp"
+                                        onChange={e => {
+                                            const file = e.target.files?.[0]
+                                            setImageFile(file || null)
+                                        }}
+                                        className="hidden"
+                                        id="event-image-upload"
+                                    />
                                                     <label
                                                         htmlFor="event-image-upload"
                                                         className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gradient-to-br from-white to-[#d4af37]/5 hover:bg-gradient-to-br hover:from-[#d4af37]/10 hover:to-[#f4d03f]/10 hover:border-[#800020] transition-all duration-200 group shadow-sm"
@@ -2094,14 +2262,14 @@ const EventManagement = () => {
                                                 <div className="relative">
                                             <input
                                                 type="file"
-                                                accept="image/*"
-                                                        onChange={e => {
-                                                            const file = e.target.files?.[0]
-                                                            setPostImageFile(file || null)
-                                                        }}
-                                                        className="hidden"
-                                                        id="post-event-image-upload"
-                                                    />
+                                                accept="image/*,image/webp,.webp"
+                                                onChange={e => {
+                                                    const file = e.target.files?.[0]
+                                                    setPostImageFile(file || null)
+                                                }}
+                                                className="hidden"
+                                                id="post-event-image-upload"
+                                            />
                                                     <label
                                                         htmlFor="post-event-image-upload"
                                                         className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gradient-to-br from-white to-[#d4af37]/5 hover:bg-gradient-to-br hover:from-[#d4af37]/10 hover:to-[#f4d03f]/10 hover:border-[#800020] transition-all duration-200 group shadow-sm"
@@ -2543,7 +2711,7 @@ const EventManagement = () => {
                                             <label className={controlLabel}>Event Image</label>
                                             <input
                                                 type="file"
-                                                accept="image/*"
+                                                accept="image/*,image/webp,.webp"
                                                 onChange={e => setEditImageFile(e.target.files[0])}
                                                 className={`${inputBase} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-red-50 file:text-red-700 hover:file:bg-red-100`}
                                             />
@@ -2666,6 +2834,121 @@ const EventManagement = () => {
                                     className="bg-red-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all duration-200 hover:bg-red-800 hover:shadow-sm active:scale-[0.98]"
                                 >
                                     Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Custom Confirmation Modal */}
+                {showConfirmModal && (
+                    <div 
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-modal-in"
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) {
+                                setShowConfirmModal(false)
+                                setPendingCancelEventId(null)
+                                setPendingCancelSeriesId(null)
+                                setConfirmMessage('')
+                            }
+                        }}
+                    >
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-scale-in">
+                            <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-red-50 to-orange-50">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shadow-sm">
+                                        <svg className="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-lg font-extrabold text-gray-900">Confirm Action</h3>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setShowConfirmModal(false)
+                                        setPendingCancelEventId(null)
+                                        setPendingCancelSeriesId(null)
+                                        setConfirmMessage('')
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors rounded-full p-2 hover:bg-white/50"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="px-6 py-6">
+                                <p className="text-gray-700 text-base leading-relaxed">{confirmMessage}</p>
+                            </div>
+                            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setShowConfirmModal(false)
+                                        setPendingCancelEventId(null)
+                                        setPendingCancelSeriesId(null)
+                                        setConfirmMessage('')
+                                    }}
+                                    className="bg-white text-gray-700 px-6 py-2.5 rounded-xl border border-gray-300 font-semibold transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98]"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={async () => {
+                                        try {
+                                            if (pendingCancelEventId) {
+                                                // Cancel single event
+                                                const deletePromise = axios.delete(backendUrl + `api/events/${pendingCancelEventId}`, { withCredentials: true })
+                                                toast.promise(deletePromise, {
+                                                    pending: 'Cancelling event...',
+                                                    success: 'Event cancelled successfully',
+                                                    error: 'Failed to cancel event'
+                                                })
+
+                                                const res = await deletePromise
+                                                if (res.data.message === 'Event deleted successfully') {
+                                                    // Refresh events list
+                                                    const eventsRes = await axios.get(backendUrl + 'api/events/my-events', { withCredentials: true })
+                                                    setEvents(eventsRes.data || [])
+                                                }
+                                            } else if (pendingCancelSeriesId) {
+                                                // Cancel series
+                                                const seriesEvents = events.filter(e => e.seriesId === pendingCancelSeriesId)
+                                                
+                                                if (seriesEvents.length === 0) {
+                                                    toast.warning('No events found in this series')
+                                                } else {
+                                                    // Delete all events in the series
+                                                    const deletePromises = seriesEvents.map(event => 
+                                                        axios.delete(backendUrl + `api/events/${event._id}`, { withCredentials: true })
+                                                    )
+
+                                                    toast.promise(Promise.all(deletePromises), {
+                                                        pending: `Cancelling ${seriesEvents.length} event(s)...`,
+                                                        success: `Successfully cancelled ${seriesEvents.length} event(s)`,
+                                                        error: 'Failed to cancel some events'
+                                                    })
+
+                                                    await Promise.all(deletePromises)
+                                                    
+                                                    // Refresh events list
+                                                    const eventsRes = await axios.get(backendUrl + 'api/events/my-events', { withCredentials: true })
+                                                    setEvents(eventsRes.data || [])
+                                                }
+                                            }
+                                        } catch (error) {
+                                            toast.error(error?.response?.data?.message || 'Failed to cancel')
+                                        } finally {
+                                            setShowConfirmModal(false)
+                                            setPendingCancelEventId(null)
+                                            setPendingCancelSeriesId(null)
+                                            setConfirmMessage('')
+                                        }
+                                    }}
+                                    className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-2.5 rounded-xl font-semibold transition-all duration-200 hover:from-red-700 hover:to-red-800 hover:shadow-md active:scale-[0.98] shadow-sm"
+                                >
+                                    Confirm
                                 </button>
                             </div>
                         </div>
