@@ -21,7 +21,8 @@ import {
     LineChart,
     Line,
     AreaChart,
-    Area
+    Area,
+    ComposedChart
 } from 'recharts'
 import {
     FaUsers,
@@ -85,7 +86,7 @@ const Reports = () => {
             // Fetch users (for demographics) - try multiple endpoints
             let usersData = []
             try {
-                // Try admin endpoint first
+                // Try admin endpoint first (System Admin only)
                 const adminResponse = await axios.get(backendUrl + 'api/admin/users?limit=10000')
                 if (adminResponse.data?.success && adminResponse.data?.users) {
                     usersData = adminResponse.data.users
@@ -93,7 +94,7 @@ const Reports = () => {
             } catch (error) {
                 console.log('Admin users endpoint not accessible, trying alternative...')
                 try {
-                    // Try regular users endpoint
+                    // Try regular users endpoint (System Admin only)
                     const usersResponse = await axios.get(backendUrl + 'api/users?limit=10000')
                     if (usersResponse.data?.success && usersResponse.data?.users) {
                         usersData = usersResponse.data.users
@@ -101,28 +102,61 @@ const Reports = () => {
                         usersData = usersResponse.data
                     }
                 } catch (altError) {
-                    console.log('Users endpoint not accessible, calculating from available data...')
+                    console.log('Users endpoint not accessible, extracting from donations and events...')
                     // Extract unique users from donations and events
+                    // Note: These may have limited fields, but we'll use what we have
                     const uniqueUsers = new Map()
                     
-                    // From donations
+                    // From donations - user data is populated but may be limited
                     donationsData.forEach(donation => {
-                        if (donation.user && donation.user._id) {
-                            const userId = donation.user._id.toString()
+                        if (donation.user) {
+                            const userId = donation.user._id?.toString() || donation.user.toString()
                             if (!uniqueUsers.has(userId)) {
-                                uniqueUsers.set(userId, donation.user)
+                                // Store user data, even if incomplete
+                                uniqueUsers.set(userId, {
+                                    _id: donation.user._id || donation.user,
+                                    name: donation.user.name,
+                                    email: donation.user.email,
+                                    profileImage: donation.user.profileImage,
+                                    department: donation.user.department,
+                                    // These fields may not be populated, will be undefined
+                                    userType: donation.user.userType,
+                                    mseufCategory: donation.user.mseufCategory,
+                                    outsiderCategory: donation.user.outsiderCategory,
+                                    role: donation.user.role || 'User'
+                                })
                             }
                         }
                     })
                     
-                    // From events (volunteers)
+                    // From events (volunteers) - user data is populated but may be limited
                     eventsData.forEach(event => {
                         if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
                             event.volunteerRegistrations.forEach(reg => {
-                                if (reg.user && reg.user._id) {
-                                    const userId = reg.user._id.toString()
+                                if (reg.user) {
+                                    const userId = reg.user._id?.toString() || reg.user.toString()
                                     if (!uniqueUsers.has(userId)) {
-                                        uniqueUsers.set(userId, reg.user)
+                                        // Store user data, even if incomplete
+                                        uniqueUsers.set(userId, {
+                                            _id: reg.user._id || reg.user,
+                                            name: reg.user.name,
+                                            email: reg.user.email,
+                                            profileImage: reg.user.profileImage,
+                                            department: reg.user.department,
+                                            course: reg.user.course,
+                                            // These fields may not be populated, will be undefined
+                                            userType: reg.user.userType,
+                                            mseufCategory: reg.user.mseufCategory,
+                                            outsiderCategory: reg.user.outsiderCategory,
+                                            role: reg.user.role || 'User'
+                                        })
+                                    } else {
+                                        // Merge additional data if available
+                                        const existing = uniqueUsers.get(userId)
+                                        if (reg.user.userType) existing.userType = reg.user.userType
+                                        if (reg.user.mseufCategory) existing.mseufCategory = reg.user.mseufCategory
+                                        if (reg.user.outsiderCategory) existing.outsiderCategory = reg.user.outsiderCategory
+                                        if (reg.user.role) existing.role = reg.user.role
                                     }
                                 }
                             })
@@ -130,6 +164,7 @@ const Reports = () => {
                     })
                     
                     usersData = Array.from(uniqueUsers.values())
+                    console.log(`Extracted ${usersData.length} unique users from donations and events`)
                 }
             }
             setUsers(usersData)
@@ -207,6 +242,38 @@ const Reports = () => {
         }
     }
     
+    // Helper function to categorize user
+    const categorizeUser = (user) => {
+        if (!user) return 'Guest'
+        
+        // Check if user has role information
+        if (user.role === 'CRD Staff' || user.role === 'System Administrator' || user.role === 'Department/Organization') {
+            return 'Guest' // These roles are not counted in donor demographics
+        }
+        
+        // Check userType and category
+        if (user.userType === 'MSEUF') {
+            if (user.mseufCategory === 'Student') return 'Student'
+            if (user.mseufCategory === 'Faculty') return 'Faculty'
+            if (user.mseufCategory === 'Staff') return 'Staff'
+            // Check outsiderCategory for Alumni (some users might have this set)
+            if (user.outsiderCategory === 'Alumni') return 'Alumni'
+        } else if (user.userType === 'Outsider') {
+            if (user.outsiderCategory === 'Alumni') return 'Alumni'
+            return 'Guest'
+        }
+        
+        // Fallback: if we have email domain, try to infer
+        if (user.email) {
+            if (user.email.includes('@mseuf.edu.ph')) {
+                // MSEUF email but no category - default to Guest or try to infer from role
+                if (user.role === 'User') return 'Guest' // Could be student, but we don't know
+            }
+        }
+        
+        return 'Guest'
+    }
+    
     // Calculate donor demographics
     const getDonorDemographics = () => {
         const demographics = {
@@ -227,43 +294,17 @@ const Reports = () => {
         
         donations.forEach(donation => {
             const user = donation.user
-            if (!user) {
-                demographics.Guest++
-                return
-            }
-            
-            let category = 'Guest'
-            if (user.userType === 'MSEUF') {
-                if (user.mseufCategory === 'Student') category = 'Student'
-                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                else if (user.mseufCategory === 'Staff') category = 'Staff'
-            } else if (user.userType === 'Outsider') {
-                category = 'Guest'
-            }
+            const category = categorizeUser(user)
             
             demographics[category]++
             const amount = parseFloat(donation.amount) || 0
             demographicsAmounts[category] += amount
         })
         
-        // Process in-kind donations
+        // Process in-kind donations (note: field is "user", not "donor")
         inKindDonations.forEach(donation => {
-            const user = donation.donor
-            if (!user) {
-                demographics.Guest++
-                return
-            }
-            
-            let category = 'Guest'
-            if (user.userType === 'MSEUF') {
-                if (user.mseufCategory === 'Student') category = 'Student'
-                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                else if (user.mseufCategory === 'Staff') category = 'Staff'
-            } else if (user.userType === 'Outsider') {
-                category = 'Guest'
-            }
+            const user = donation.user || donation.donor // Support both field names
+            const category = categorizeUser(user)
             
             demographics[category]++
             const value = parseFloat(donation.estimatedValue) || 0
@@ -296,19 +337,8 @@ const Reports = () => {
                         volunteerUserIds.add(userId.toString())
                         
                         const user = reg.user
-                        if (user) {
-                            let category = 'Guest'
-                            if (user.userType === 'MSEUF') {
-                                if (user.mseufCategory === 'Student') category = 'Student'
-                                else if (user.mseufCategory === 'Alumni') category = 'Alumni'
-                                else if (user.mseufCategory === 'Faculty') category = 'Faculty'
-                                else if (user.mseufCategory === 'Staff') category = 'Staff'
-                            } else if (user.userType === 'Outsider') {
-                                category = 'Guest'
-                            }
-                            
-                            demographics[category]++
-                        }
+                        const category = categorizeUser(user)
+                        demographics[category]++
                     }
                 })
             }
@@ -331,15 +361,17 @@ const Reports = () => {
         }
         
         users.forEach(user => {
-            if (user.role === 'CRD Staff' || user.role === 'System Administrator' || user.role === 'Department/Organization') {
-                demographics[user.role]++
-            } else if (user.userType === 'MSEUF') {
-                if (user.mseufCategory === 'Student') demographics.Student++
-                else if (user.mseufCategory === 'Alumni') demographics.Alumni++
-                else if (user.mseufCategory === 'Faculty') demographics.Faculty++
-                else if (user.mseufCategory === 'Staff') demographics.Staff++
-            } else if (user.userType === 'Outsider') {
-                demographics.Guest++
+            // Check for special roles first
+            if (user.role === 'CRD Staff') {
+                demographics['CRD Staff']++
+            } else if (user.role === 'System Administrator') {
+                demographics['System Administrator']++
+            } else if (user.role === 'Department/Organization') {
+                demographics['Department/Organization']++
+            } else {
+                // Use the categorizeUser helper for regular users
+                const category = categorizeUser(user)
+                demographics[category]++
             }
         })
         
@@ -579,16 +611,12 @@ const Reports = () => {
                                 {/* Monthly Trends Chart */}
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
-                                        <AreaChart data={monthlyTrends}>
+                                    <ResponsiveContainer width="100%" height={300} minHeight={300}>
+                                        <ComposedChart data={monthlyTrends}>
                                             <defs>
                                                 <linearGradient id="colorEvents" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor={COLORS.maroon} stopOpacity={0.8}/>
                                                     <stop offset="95%" stopColor={COLORS.maroon} stopOpacity={0.1}/>
-                                                </linearGradient>
-                                                <linearGradient id="colorDonations" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor={COLORS.maroonLight} stopOpacity={0.8}/>
-                                                    <stop offset="95%" stopColor={COLORS.maroonLight} stopOpacity={0.1}/>
                                                 </linearGradient>
                                                 <linearGradient id="colorVolunteers" x1="0" y1="0" x2="0" y2="1">
                                                     <stop offset="5%" stopColor={COLORS.maroonDark} stopOpacity={0.8}/>
@@ -597,13 +625,67 @@ const Reports = () => {
                                             </defs>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis dataKey="month" stroke="#6b7280" />
-                                            <YAxis stroke="#6b7280" />
-                                            <Tooltip content={<CustomTooltip />} />
+                                            <YAxis 
+                                                yAxisId="left" 
+                                                stroke={COLORS.maroon}
+                                                label={{ value: 'Count', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#6b7280' } }}
+                                            />
+                                            <YAxis 
+                                                yAxisId="right" 
+                                                orientation="right" 
+                                                stroke={COLORS.maroonLight}
+                                                label={{ value: 'Amount (₱)', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: '#6b7280' } }}
+                                            />
+                                            <Tooltip 
+                                                content={({ active, payload, label }) => {
+                                                    if (active && payload && payload.length) {
+                                                        return (
+                                                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                                                                <p className="font-semibold text-gray-900 mb-2">{label}</p>
+                                                                {payload.map((entry, index) => (
+                                                                    <p key={index} className="text-sm" style={{ color: entry.color }}>
+                                                                        {entry.name}: {
+                                                                            entry.name.includes('Donations') 
+                                                                                ? `₱${entry.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                                : entry.value.toLocaleString()
+                                                                        }
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )
+                                                    }
+                                                    return null
+                                                }}
+                                            />
                                             <Legend />
-                                            <Area type="monotone" dataKey="events" stackId="1" stroke={COLORS.maroon} fill="url(#colorEvents)" name="Events" />
-                                            <Area type="monotone" dataKey="volunteers" stackId="2" stroke={COLORS.maroonDark} fill="url(#colorVolunteers)" name="Volunteers" />
-                                            <Line type="monotone" dataKey="donations" stroke={COLORS.maroonLight} strokeWidth={3} name="Donations (₱)" />
-                                        </AreaChart>
+                                            <Area 
+                                                yAxisId="left"
+                                                type="monotone" 
+                                                dataKey="events" 
+                                                stroke={COLORS.maroon} 
+                                                fill="url(#colorEvents)" 
+                                                name="Events"
+                                                strokeWidth={2}
+                                            />
+                                            <Area 
+                                                yAxisId="left"
+                                                type="monotone" 
+                                                dataKey="volunteers" 
+                                                stroke={COLORS.maroonDark} 
+                                                fill="url(#colorVolunteers)" 
+                                                name="Volunteers"
+                                                strokeWidth={2}
+                                            />
+                                            <Line 
+                                                yAxisId="right"
+                                                type="monotone" 
+                                                dataKey="donations" 
+                                                stroke={COLORS.maroonLight} 
+                                                strokeWidth={3} 
+                                                name="Donations (₱)"
+                                                dot={{ fill: COLORS.maroonLight, r: 4 }}
+                                            />
+                                        </ComposedChart>
                                     </ResponsiveContainer>
                                 </div>
                                 
@@ -611,15 +693,14 @@ const Reports = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={eventDemographics}
                                                     cx="50%"
-                                                    cy="50%"
+                                                    cy="45%"
                                                     labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                                    outerRadius={70}
+                                                    outerRadius={65}
                                                     fill="#8884d8"
                                                     dataKey="value"
                                                 >
@@ -627,22 +708,42 @@ const Reports = () => {
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    formatter={(value, name, props) => {
+                                                        const total = eventDemographics.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                                                        return [`${value} (${percentage}%)`, props.payload.name]
+                                                    }}
+                                                />
+                                                <Legend 
+                                                    verticalAlign="bottom" 
+                                                    height={50}
+                                                    iconType="circle"
+                                                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                                                    formatter={(value, entry) => {
+                                                        const total = eventDemographics.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((entry.payload.value / total) * 100).toFixed(1) : 0
+                                                        return (
+                                                            <span style={{ color: '#374151', fontSize: '11px' }}>
+                                                                {value}: {percentage}%
+                                                            </span>
+                                                        )
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={donationDemographics.counts}
                                                     cx="50%"
-                                                    cy="50%"
+                                                    cy="45%"
                                                     labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                                    outerRadius={70}
+                                                    outerRadius={65}
                                                     fill="#8884d8"
                                                     dataKey="value"
                                                 >
@@ -650,22 +751,43 @@ const Reports = () => {
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    formatter={(value, name, props) => {
+                                                        const total = donationDemographics.counts.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                                                        return [`${value} (${percentage}%)`, props.payload.name]
+                                                    }}
+                                                />
+                                                <Legend 
+                                                    verticalAlign="bottom" 
+                                                    height={50}
+                                                    iconType="circle"
+                                                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                                                    formatter={(value, entry) => {
+                                                        const total = donationDemographics.counts.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((entry.payload.value / total) * 100).toFixed(1) : 0
+                                                        const displayName = value.charAt(0).toUpperCase() + value.slice(1)
+                                                        return (
+                                                            <span style={{ color: '#374151', fontSize: '11px' }}>
+                                                                {displayName}: {percentage}%
+                                                            </span>
+                                                        )
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
-                                        <ResponsiveContainer width="100%" height={180} minHeight={180}>
+                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={donorDemographics.counts}
                                                     cx="50%"
-                                                    cy="50%"
+                                                    cy="45%"
                                                     labelLine={false}
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                                    outerRadius={70}
+                                                    outerRadius={65}
                                                     fill="#8884d8"
                                                     dataKey="value"
                                                 >
@@ -673,7 +795,28 @@ const Reports = () => {
                                                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip 
+                                                    formatter={(value, name, props) => {
+                                                        const total = donorDemographics.counts.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
+                                                        return [`${value} (${percentage}%)`, props.payload.name]
+                                                    }}
+                                                />
+                                                <Legend 
+                                                    verticalAlign="bottom" 
+                                                    height={50}
+                                                    iconType="circle"
+                                                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                                                    formatter={(value, entry) => {
+                                                        const total = donorDemographics.counts.reduce((sum, e) => sum + e.value, 0)
+                                                        const percentage = total > 0 ? ((entry.payload.value / total) * 100).toFixed(1) : 0
+                                                        return (
+                                                            <span style={{ color: '#374151', fontSize: '11px' }}>
+                                                                {value}: {percentage}%
+                                                            </span>
+                                                        )
+                                                    }}
+                                                />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
