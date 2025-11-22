@@ -463,6 +463,7 @@ const EventAttendance = () => {
                 qrData = JSON.parse(qrCode)
             } catch (e) {
                 toast.error('Invalid QR code format. Please scan a valid QR code.')
+                await stopScanning()
                 return
             }
             
@@ -473,6 +474,7 @@ const EventAttendance = () => {
                 
                 if ((qrType === 'checkout' && action === 'timein') || (qrType === 'checkin' && action === 'timeout')) {
                     toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    await stopScanning()
                     return
                 }
             }
@@ -527,6 +529,7 @@ const EventAttendance = () => {
                 } catch (error) {
                     console.error('Error storing offline:', error)
                     toast.error('Failed to save attendance offline. Please try again when you have internet connection.')
+                    await stopScanning()
                     return
                 }
             }
@@ -538,11 +541,6 @@ const EventAttendance = () => {
             )
             
             toast.success(response.data.message || 'Attendance recorded successfully!')
-            
-            // Close camera modal after successful scan
-            if (scanning) {
-                await stopScanning()
-            }
             
             // Refresh attendance status
             await fetchAttendanceStatus()
@@ -570,6 +568,10 @@ const EventAttendance = () => {
                 toast.error(errorMessage)
             }
         } finally {
+            // Always close camera modal after scan attempt (success or failure)
+            if (scanning || showCameraModal) {
+                await stopScanning()
+            }
             setProcessing(false)
             lastScannedCode.current = ''
             setTimeout(() => {

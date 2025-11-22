@@ -298,11 +298,13 @@ const QRScanner = () => {
                 if (qrType !== expectedType && qrType !== 'checkin' && qrType !== 'checkout') {
                     // If QR has a type but doesn't match, show error
                     toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    await stopScanning()
                     return
                 }
                 
                 if ((qrType === 'checkout' && action === 'timein') || (qrType === 'checkin' && action === 'timeout')) {
                     toast.error(`This QR code is for ${qrType === 'checkout' ? 'Time Out' : 'Time In'}, but you're trying to record ${action === 'timein' ? 'Time In' : 'Time Out'}. Please use the correct QR code.`)
+                    await stopScanning()
                     return
                 }
             }
@@ -321,6 +323,7 @@ const QRScanner = () => {
             // Validate qrCode before sending
             if (!qrCode || qrCode.trim().length === 0) {
                 toast.error('Invalid QR code. Please scan again.')
+                await stopScanning()
                 return
             }
             
@@ -373,6 +376,7 @@ const QRScanner = () => {
                 } catch (error) {
                     console.error('Error storing offline:', error);
                     toast.error('Failed to save attendance offline. Please try again when you have internet connection.');
+                    await stopScanning();
                     return;
                 }
             }
@@ -384,11 +388,6 @@ const QRScanner = () => {
             )
             
             toast.success(response.data.message || 'Attendance recorded successfully!')
-            
-            // Close camera modal after successful scan
-            if (scanning) {
-                await stopScanning()
-            }
             
             // Update attendance status for UI
             if (finalAction === 'timein') {
@@ -449,6 +448,10 @@ const QRScanner = () => {
                 toast.error(errorMessage)
             }
         } finally {
+            // Always close camera modal after scan attempt (success or failure)
+            if (scanning || showCameraModal) {
+                await stopScanning()
+            }
             setProcessing(false)
             lastScannedCode.current = ''
             setTimeout(() => {
