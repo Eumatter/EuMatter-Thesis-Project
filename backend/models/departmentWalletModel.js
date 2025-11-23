@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { encryptWalletKey, decryptWalletKey } from "../utils/walletEncryption.js";
+import { encryptWalletKey, decryptWalletKey,maskKey  } from "../utils/walletEncryption.js";
 
 const departmentWalletSchema = new mongoose.Schema({
     userId: {
@@ -130,7 +130,6 @@ departmentWalletSchema.methods.getDecryptedKeys = function() {
 
 // Method to get masked keys for display
 departmentWalletSchema.methods.getMaskedKeys = function() {
-    const { maskKey } = require('../utils/walletEncryption.js');
     try {
         const decryptedPublic = decryptWalletKey(this.publicKey);
         return {
