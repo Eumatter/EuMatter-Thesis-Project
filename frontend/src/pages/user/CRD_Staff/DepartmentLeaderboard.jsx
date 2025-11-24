@@ -13,7 +13,6 @@ const DepartmentLeaderboard = () => {
     const { backendUrl } = useContext(AppContent)
     const [departments, setDepartments] = useState([])
     const [isLoading, setIsLoading] = useState(true)
-    const [sortBy, setSortBy] = useState('total') // 'total', 'events', 'volunteers', 'donations'
     const [filterPeriod, setFilterPeriod] = useState('all') // 'all', 'month', 'quarter', 'year'
     const [viewMode, setViewMode] = useState('podium') // 'podium' or 'table'
 
@@ -180,21 +179,10 @@ const DepartmentLeaderboard = () => {
         return 'h-16'
     }
 
-    const sortedDepartments = [...departments].sort((a, b) => {
-        switch (sortBy) {
-            case 'events':
-                return b.events - a.events
-            case 'volunteers':
-                return b.volunteers - a.volunteers
-            case 'donations':
-                return b.donations - a.donations
-            default:
-                return b.total - a.total
-        }
-    })
-
-    const topThree = sortedDepartments.slice(0, 3)
-    const rest = sortedDepartments.slice(3)
+    // Departments are already sorted by total score from fetchLeaderboardData
+    // No additional sorting needed - always sorted by total score
+    const topThree = departments.slice(0, 3)
+    const rest = departments.slice(3)
 
     if (isLoading) {
         return (
@@ -268,16 +256,6 @@ const DepartmentLeaderboard = () => {
                                     Table
                                 </button>
                             </div>
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2.5 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-white text-sm font-medium"
-                            >
-                                <option value="total">Sort by Total Score</option>
-                                <option value="events">Sort by Events</option>
-                                <option value="volunteers">Sort by Volunteers</option>
-                                <option value="donations">Sort by Donations</option>
-                            </select>
                             <select
                                 value={filterPeriod}
                                 onChange={(e) => setFilterPeriod(e.target.value)}
@@ -480,7 +458,7 @@ const DepartmentLeaderboard = () => {
                             <p className="text-xs sm:text-sm text-gray-600 mt-1">Complete ranking of all departments</p>
                         </div>
 
-                        {sortedDepartments.length > 0 ? (
+                        {departments.length > 0 ? (
                             <>
                                 {/* Desktop Table View */}
                                 <div className="hidden lg:block overflow-x-auto">
@@ -496,7 +474,7 @@ const DepartmentLeaderboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white divide-y divide-gray-100">
-                                            {sortedDepartments.map((dept, index) => {
+                                            {departments.map((dept, index) => {
                                                 const rank = index + 1
                                                 const isTopThree = rank <= 3
                                                 return (
@@ -557,7 +535,7 @@ const DepartmentLeaderboard = () => {
 
                                 {/* Mobile/Tablet Card View */}
                                 <div className="lg:hidden p-4 sm:p-6 space-y-4">
-                                    {sortedDepartments.map((dept, index) => {
+                                    {departments.map((dept, index) => {
                                         const rank = index + 1
                                         const isTopThree = rank <= 3
                                         return (
