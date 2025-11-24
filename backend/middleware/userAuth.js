@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken'
 import userModel from '../models/userModel.js'
+import { ensureDBAndExecute } from '../utils/dbHelper.js'
+import mongoose from 'mongoose'
 
 const userAuth = async (req, res, next) => {
     const {token} = req.cookies;
@@ -10,7 +12,7 @@ const userAuth = async (req, res, next) => {
         })
     }
     try {
-        const tokenDecode = jwt.verify(token,process.env.JWT_SECRET)
+        const tokenDecode = jwt.verify(token, process.env.JWT_SECRET)
         if (tokenDecode.id){
             // Ensure req.body exists
             if (!req.body) {
@@ -25,9 +27,20 @@ const userAuth = async (req, res, next) => {
             }
 
             // Attach minimal user object for downstream use (logged-in user)
-            const user = await userModel.findById(tokenDecode.id).select('-password')
+            // Use ensureDBAndExecute to prevent buffering timeout
+            const user = await ensureDBAndExecute(
+                () => userModel.findById(tokenDecode.id).select('-password').lean(),
+                { maxWaitTime: 5000, throwOnError: false }
+            );
+            
             if (user) {
                 req.user = user
+            } else if (user === null) {
+                // Database connection issue
+                return res.status(503).json({
+                    success: false,
+                    message: "Service temporarily unavailable. Please try again later."
+                })
             }
         }else{
             return res.status(401).json({
@@ -37,9 +50,27 @@ const userAuth = async (req, res, next) => {
         }
         next();
     } catch (error) {
+        // Handle JWT errors
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return res.status(401).json({
+                success: false,
+                message: "Not Authorized. Please Login"
+            })
+        }
+        
+        // Handle database errors securely
+        if (error.name === 'DatabaseConnectionError' || 
+            (error.message && error.message.includes('connection'))) {
+            return res.status(503).json({
+                success: false,
+                message: "Service temporarily unavailable. Please try again later."
+            })
+        }
+        
+        // Generic error (don't expose internal error details)
         return res.status(401).json({
             success: false,
-            message: error.message
+            message: "Not Authorized. Please Login"
         })
     }
 }

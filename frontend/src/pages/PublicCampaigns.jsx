@@ -117,10 +117,10 @@ const PublicCampaigns = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 font-poppins">
+        <div className="min-h-screen bg-gray-50 font-poppins flex flex-col">
             <Header />
 
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-10 sm:py-12">
+            <section className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-10 sm:py-12 w-full">
                 {/* Back Button */}
                 <div className="mb-6">
                     <button

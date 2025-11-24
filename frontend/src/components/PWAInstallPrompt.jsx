@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useRef } from 'react';
 
 const PWAInstallPrompt = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
+    const deferredPromptRef = useRef(null);
     const [showInstallButton, setShowInstallButton] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
@@ -51,7 +51,8 @@ const PWAInstallPrompt = () => {
             });
         }
 
-        // Always show button if browser supports service workers (even if already installed)
+        // Show button if browser supports service workers
+        // Note: Button will be enabled/disabled based on deferredPrompt availability
         setShowInstallButton(true);
 
         // Listen for the beforeinstallprompt event (Chrome, Edge, etc.)
@@ -60,6 +61,7 @@ const PWAInstallPrompt = () => {
             e.preventDefault();
             // Save the event so it can be triggered later
             setDeferredPrompt(e);
+            deferredPromptRef.current = e; // Also store in ref for immediate access
             // Show the install button when prompt is available
             setShowInstallButton(true);
             console.log('✅ beforeinstallprompt event fired - install prompt available');
@@ -92,9 +94,10 @@ const PWAInstallPrompt = () => {
         // Listen for app installed event (but don't hide button)
         window.addEventListener('appinstalled', () => {
             setDeferredPrompt(null);
+            deferredPromptRef.current = null;
             // Don't hide button - keep it visible even after installation
             setIsStandalone(true);
-            toast.success('EuMatter installed successfully! 🎉');
+            // Silent success - no toast notification
             // Clear any dismissal records
             localStorage.removeItem('pwa-install-dismissed');
         });
@@ -131,151 +134,79 @@ const PWAInstallPrompt = () => {
     }, []);
 
     const handleInstallClick = async () => {
-        // If already installed, show message but keep button visible
+        // If already installed, silently return (no alerts)
         if (isStandalone) {
-            toast.info(
-                'EuMatter is already installed! You can access it from your home screen or app drawer.',
-                { autoClose: 5000 }
-            );
             return;
         }
 
-        // iOS/Safari - Show instructions
-        if (isIOS || browserInfo.isSafari) {
-            toast.info(
-                <div className="p-2">
-                    <p className="font-semibold mb-2 text-base">Install EuMatter on iOS</p>
-                    <div className="text-sm space-y-2 text-left">
-                        <p>1. Tap the <strong>Share</strong> button <span className="text-lg">⎋</span> at the bottom of Safari</p>
-                        <p>2. Scroll down and tap <strong>"Add to Home Screen"</strong></p>
-                        <p>3. Tap <strong>"Add"</strong> in the top-right corner</p>
-                        <p className="text-xs text-gray-500 mt-2">The app will appear on your home screen</p>
-                    </div>
-                </div>,
-                { 
-                    autoClose: 15000,
-                    position: "top-center",
-                    className: "text-left"
-                }
-            );
-            return;
-        }
+        // Get the current prompt from ref (more reliable than state)
+        const currentPrompt = deferredPromptRef.current || deferredPrompt;
 
-        // Firefox - Show manual installation instructions
-        if (browserInfo.isFirefox) {
-            toast.info(
-                <div className="p-2">
-                    <p className="font-semibold mb-2 text-base">Install EuMatter in Firefox</p>
-                    <div className="text-sm space-y-2 text-left">
-                        <p><strong>Desktop:</strong></p>
-                        <p>1. Click the menu button (☰) in the top-right</p>
-                        <p>2. Click <strong>"Install"</strong> or look for the install icon in the address bar</p>
-                        <p className="mt-2"><strong>Mobile:</strong></p>
-                        <p>1. Tap the menu (☰) button</p>
-                        <p>2. Tap <strong>"Install"</strong> or <strong>"Add to Home Screen"</strong></p>
-                    </div>
-                </div>,
-                { 
-                    autoClose: 15000,
-                    position: "top-center",
-                    className: "text-left"
-                }
-            );
-            return;
-        }
-
-        // Chrome/Edge - Try to use deferred prompt, or show manual instructions
-        if (deferredPrompt) {
+        // Chrome/Edge - Automatically trigger install prompt if available
+        if (currentPrompt) {
             try {
                 setIsInstalling(true);
                 
-                // Show the install prompt
-                await deferredPrompt.prompt();
+                // Automatically show the install prompt (browser native prompt will appear)
+                await currentPrompt.prompt();
 
                 // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
+                const { outcome } = await currentPrompt.userChoice;
 
-                if (outcome === 'accepted') {
-                    toast.success('Installing EuMatter...', { autoClose: 2000 });
-                    // The appinstalled event will fire when installation completes
-                } else {
-                    toast.info('Installation cancelled. You can install later by clicking this button again.', {
-                        autoClose: 5000
-                    });
-                }
+                // Clear the deferred prompt after use
+                setDeferredPrompt(null);
+                deferredPromptRef.current = null;
+                
+                // No toast notifications - let the browser handle the flow
+                // The appinstalled event will fire when installation completes
             } catch (error) {
                 console.error('Error showing install prompt:', error);
-                // Fall through to manual instructions
-                showManualInstallInstructions();
+                // If prompt fails, clear it
+                setDeferredPrompt(null);
+                deferredPromptRef.current = null;
             } finally {
                 setIsInstalling(false);
             }
-        } else {
-            // No deferred prompt available - show manual installation instructions
-            showManualInstallInstructions();
+            return;
+        }
+
+        // If deferredPrompt is not available, wait for service worker and check again
+        if ('serviceWorker' in navigator) {
+            try {
+                setIsInstalling(true);
+                
+                // Wait for service worker to be ready
+                await navigator.serviceWorker.ready;
+                
+                // Wait a bit for beforeinstallprompt event to potentially fire
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Check again if prompt is now available (using ref)
+                const newPrompt = deferredPromptRef.current;
+                if (newPrompt) {
+                    try {
+                        await newPrompt.prompt();
+                        const { outcome } = await newPrompt.userChoice;
+                        setDeferredPrompt(null);
+                        deferredPromptRef.current = null;
+                        return;
+                    } catch (err) {
+                        console.error('Error with delayed prompt:', err);
+                    }
+                }
+                
+                // If still not available, log helpful message
+                console.log('Install prompt not available yet. The browser will show the install option in the address bar when ready.');
+            } catch (error) {
+                console.error('Error during installation attempt:', error);
+            } finally {
+                setIsInstalling(false);
+            }
         }
     };
 
-    const showManualInstallInstructions = () => {
-        if (browserInfo.isChrome || browserInfo.isEdge) {
-            // Chrome/Edge desktop
-            if (window.innerWidth > 768) {
-                toast.info(
-                    <div className="p-2">
-                        <p className="font-semibold mb-2 text-base">Install EuMatter in {browserInfo.name}</p>
-                        <div className="text-sm space-y-2 text-left">
-                            <p><strong>Option 1: Address Bar</strong></p>
-                            <p>1. Look for the install icon (⊕) in the address bar</p>
-                            <p>2. Click it and select <strong>"Install"</strong></p>
-                            <p className="mt-2"><strong>Option 2: Menu</strong></p>
-                            <p>1. Click the menu button (⋮) in the top-right</p>
-                            <p>2. Click <strong>"Install EuMatter"</strong> or <strong>"Apps"</strong> → <strong>"Install app"</strong></p>
-                        </div>
-                    </div>,
-                    { 
-                        autoClose: 15000,
-                        position: "top-center",
-                        className: "text-left"
-                    }
-                );
-            } else {
-                // Chrome/Edge mobile
-                toast.info(
-                    <div className="p-2">
-                        <p className="font-semibold mb-2 text-base">Install EuMatter on Mobile</p>
-                        <div className="text-sm space-y-2 text-left">
-                            <p>1. Tap the menu button (⋮) in the top-right</p>
-                            <p>2. Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong></p>
-                            <p>3. Tap <strong>"Install"</strong> to confirm</p>
-                            <p className="text-xs text-gray-500 mt-2">Alternatively, look for the install prompt banner at the bottom of the screen</p>
-                        </div>
-                    </div>,
-                    { 
-                        autoClose: 15000,
-                        position: "top-center",
-                        className: "text-left"
-                    }
-                );
-            }
-        } else {
-            // Generic instructions
-            toast.info(
-                <div className="p-2">
-                    <p className="font-semibold mb-2 text-base">Install EuMatter</p>
-                    <div className="text-sm space-y-1 text-left">
-                        <p>1. Look for the install icon in your browser's address bar</p>
-                        <p>2. Or use your browser's menu to find <strong>"Install"</strong> or <strong>"Add to Home Screen"</strong></p>
-                        <p>3. Follow the on-screen instructions to complete installation</p>
-                    </div>
-                </div>,
-                { 
-                    autoClose: 12000,
-                    position: "top-center",
-                    className: "text-left"
-                }
-            );
-        }
-    };
+    // Removed showManualInstallInstructions - no manual instructions shown
+    // Installation happens automatically through browser prompts
 
     // Don't show if button shouldn't be shown (but show even if already installed)
     if (!showInstallButton) {
@@ -286,9 +217,10 @@ const PWAInstallPrompt = () => {
         <div className="fixed bottom-6 right-6 z-[100] animate-pwa-slide-up">
             <button
                 onClick={handleInstallClick}
-                disabled={isInstalling}
+                disabled={isInstalling || (isStandalone && !deferredPrompt)}
                 className="group relative bg-gradient-to-bl from-[#800000] to-[#EE1212] text-white px-5 py-3.5 md:px-6 md:py-4 rounded-2xl shadow-[0_8px_24px_rgba(128,0,0,0.35),0_0_0_1px_rgba(255,255,255,0.1)] hover:shadow-[0_12px_32px_rgba(128,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.15)] hover:from-[#700000] hover:to-[#DD0000] disabled:opacity-70 disabled:cursor-not-allowed transition-all duration-300 flex items-center gap-2.5 md:gap-3 font-semibold transform hover:scale-105 active:scale-95 disabled:transform-none border border-white/20 hover:border-white/30 backdrop-blur-sm overflow-hidden"
                 aria-label="Install EuMatter app"
+                title={!deferredPrompt && !isStandalone ? "Install prompt will appear when available" : "Install EuMatter app"}
             >
                 {/* Animated background shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>

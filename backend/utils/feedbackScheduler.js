@@ -1,10 +1,21 @@
 import volunteerAttendanceModel from '../models/volunteerAttendanceModel.js'
 import eventModel from '../models/eventModel.js'
 import { notifyUsers } from './notify.js'
+import mongoose from 'mongoose'
 
 const REMINDER_WINDOW_HOURS = 6
 
+/**
+ * Check if database is connected before performing operations
+ */
+function isDBReady() {
+    return mongoose.connection.readyState === 1;
+}
+
 async function sendReminders(now) {
+    if (!isDBReady()) {
+        return; // Skip if DB not ready
+    }
     const reminderCutoff = new Date(now.getTime() + REMINDER_WINDOW_HOURS * 3600000)
     const records = await volunteerAttendanceModel.find({
         status: 'pending',
@@ -27,6 +38,9 @@ async function sendReminders(now) {
 }
 
 async function processMissedFeedback(now) {
+    if (!isDBReady()) {
+        return; // Skip if DB not ready
+    }
     const overdue = await volunteerAttendanceModel.find({
         status: 'pending',
         isValid: true,
@@ -77,10 +91,28 @@ export async function runFeedbackMaintenance() {
 }
 
 export function startFeedbackScheduler() {
-    runFeedbackMaintenance().catch(err => console.error('Initial feedback scheduler error', err))
-    setInterval(() => {
-        runFeedbackMaintenance().catch(err => console.error('Feedback scheduler error', err))
-    }, 15 * 60 * 1000) // every 15 minutes
-    console.log('✅ Feedback scheduler started')
+    // Wait for DB connection before starting
+    const checkAndStart = () => {
+        if (isDBReady()) {
+            runFeedbackMaintenance().catch(err => {
+                if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                    console.error('Initial feedback scheduler error', err.message)
+                }
+            })
+            setInterval(() => {
+                runFeedbackMaintenance().catch(err => {
+                    if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                        console.error('Feedback scheduler error', err.message)
+                    }
+                })
+            }, 15 * 60 * 1000) // every 15 minutes
+            console.log('✅ Feedback scheduler started')
+        } else {
+            // Retry after 2 seconds if DB not ready
+            setTimeout(checkAndStart, 2000);
+        }
+    };
+    
+    checkAndStart();
 }
 

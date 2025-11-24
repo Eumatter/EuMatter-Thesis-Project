@@ -1,9 +1,23 @@
 import SystemSettings from '../models/systemSettingsModel.js';
+import mongoose from 'mongoose';
+
+/**
+ * Check if database is connected before performing operations
+ */
+function isDBReady() {
+    return mongoose.connection.readyState === 1;
+}
 
 /**
  * Check and automatically disable maintenance mode if the estimated end time has passed
  */
 export async function checkMaintenanceModeExpiry() {
+    // Check if database is connected
+    if (!isDBReady()) {
+        console.warn('⚠️  Database not connected, skipping maintenance mode check');
+        return false;
+    }
+
     try {
         const settings = await SystemSettings.getSettings();
         
@@ -25,7 +39,10 @@ export async function checkMaintenanceModeExpiry() {
         
         return false;
     } catch (error) {
-        console.error('Error checking maintenance mode expiry:', error);
+        // Only log if it's not a connection error
+        if (error.name !== 'MongooseError' || !error.message.includes('buffering')) {
+            console.error('Error checking maintenance mode expiry:', error.message);
+        }
         return false;
     }
 }
@@ -35,18 +52,32 @@ export async function checkMaintenanceModeExpiry() {
  * Checks every 60 seconds if maintenance mode should be automatically disabled
  */
 export function startMaintenanceScheduler() {
-    // Run immediately on startup
-    checkMaintenanceModeExpiry().catch(err => {
-        console.error('Error in initial maintenance mode check:', err);
-    });
+    // Wait for DB connection before starting
+    const checkAndStart = () => {
+        if (isDBReady()) {
+            // Run immediately on startup
+            checkMaintenanceModeExpiry().catch(err => {
+                if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                    console.error('Error in initial maintenance mode check:', err.message);
+                }
+            });
+            
+            // Then run every 60 seconds
+            setInterval(() => {
+                checkMaintenanceModeExpiry().catch(err => {
+                    if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                        console.error('Error in maintenance mode scheduler:', err.message);
+                    }
+                });
+            }, 60000); // Check every minute
+            
+            console.log('✅ Maintenance mode scheduler started');
+        } else {
+            // Retry after 2 seconds if DB not ready
+            setTimeout(checkAndStart, 2000);
+        }
+    };
     
-    // Then run every 60 seconds
-    setInterval(() => {
-        checkMaintenanceModeExpiry().catch(err => {
-            console.error('Error in maintenance mode scheduler:', err);
-        });
-    }, 60000); // Check every minute
-    
-    console.log('✅ Maintenance mode scheduler started');
+    checkAndStart();
 }
 

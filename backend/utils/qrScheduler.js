@@ -1,11 +1,25 @@
 import eventModel from '../models/eventModel.js'
 import QRCode from 'qrcode'
 import crypto from 'crypto'
+import mongoose from 'mongoose'
+
+/**
+ * Check if database is connected before performing operations
+ */
+function isDBReady() {
+    return mongoose.connection.readyState === 1;
+}
 
 /**
  * Automatically generate evaluation QR codes 5 minutes before event end
  */
 async function generateEvaluationQRCodes(now) {
+    // Check if database is connected
+    if (!isDBReady()) {
+        console.warn('⚠️  Database not connected, skipping QR code generation');
+        return;
+    }
+
     try {
         // Find events that are ending within the next 6 minutes (5 min + 1 min buffer)
         const sixMinutesFromNow = new Date(now.getTime() + 6 * 60 * 1000)
@@ -93,21 +107,45 @@ async function generateEvaluationQRCodes(now) {
             }
         }
     } catch (error) {
-        console.error('Error in generateEvaluationQRCodes:', error)
+        // Only log if it's not a connection error
+        if (error.name !== 'MongooseError' || !error.message.includes('buffering')) {
+            console.error('Error in generateEvaluationQRCodes:', error.message)
+        }
     }
 }
 
 export async function runQRScheduler() {
+    if (!isDBReady()) {
+        return; // Skip if DB not ready
+    }
     const now = new Date()
     await generateEvaluationQRCodes(now)
 }
 
 export function startQRScheduler() {
-    runQRScheduler().catch(err => console.error('Initial QR scheduler error', err))
-    // Run every minute to catch the 5-minute window accurately
-    setInterval(() => {
-        runQRScheduler().catch(err => console.error('QR scheduler error', err))
-    }, 60 * 1000) // every 1 minute
-    console.log('✅ QR code scheduler started (auto-generates evaluation QR 5 min before event end)')
+    // Wait for DB connection before starting
+    const checkAndStart = () => {
+        if (isDBReady()) {
+            runQRScheduler().catch(err => {
+                if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                    console.error('Initial QR scheduler error', err.message)
+                }
+            })
+            // Run every minute to catch the 5-minute window accurately
+            setInterval(() => {
+                runQRScheduler().catch(err => {
+                    if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                        console.error('QR scheduler error', err.message)
+                    }
+                })
+            }, 60 * 1000) // every 1 minute
+            console.log('✅ QR code scheduler started (auto-generates evaluation QR 5 min before event end)')
+        } else {
+            // Retry after 2 seconds if DB not ready
+            setTimeout(checkAndStart, 2000);
+        }
+    };
+    
+    checkAndStart();
 }
 

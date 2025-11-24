@@ -1057,7 +1057,7 @@ const EventManagement = () => {
                                                 {event.status === 'Approved' && (
                                                     <>
                                                         <button
-                                                            onClick={() => openEventDetailsModal(event)}
+                                                            onClick={() => navigate(`/department/events/${event._id}/details`)}
                                                             className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200"
                                                             style={{
                                                                 backgroundColor: '#ffffff',
@@ -1076,7 +1076,7 @@ const EventManagement = () => {
                                                                 e.currentTarget.style.color = '#800020';
                                                                 e.currentTarget.style.borderColor = '#e5e7eb';
                                                             }}
-                                                            title="View Event"
+                                                            title="View Event Details"
                                                         >
                                                             <FaEye className="w-4 h-4" />
                                                         </button>
@@ -1303,8 +1303,8 @@ const EventManagement = () => {
                                                                 }}
                                                                 title="Accept for Review"
                                                             >
-                                                                <svg className="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#800020' }}>
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4" />
+                                                                <svg className="w-7 h-7 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#800020' }}>
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4" />
                                                                 </svg>
                                                             </button>
                                                         )}
@@ -1339,7 +1339,7 @@ const EventManagement = () => {
                                                         {event.status === 'Approved' && (
                                                             <>
                                                                 <button
-                                                                    onClick={() => openEventDetailsModal(event)}
+                                                                    onClick={() => navigate(`/department/events/${event._id}/details`)}
                                                                     className="p-2 rounded-lg bg-white hover:bg-gradient-to-br hover:from-[#800020] hover:to-[#9c0000] transition-all duration-200 relative overflow-hidden"
                                                                     style={{ 
                                                                         backgroundColor: '#ffffff',
@@ -1360,7 +1360,7 @@ const EventManagement = () => {
                                                                         const icon = e.currentTarget.querySelector('svg, .react-icons');
                                                                         if (icon) icon.style.color = '#800020';
                                                                     }}
-                                                                    title="View"
+                                                                    title="View Event Details"
                                                                 >
                                                                     <FaEye className="w-4 h-4 transition-colors duration-200" style={{ color: '#800020' }} />
                                                                 </button>
@@ -1600,7 +1600,7 @@ const EventManagement = () => {
 
             {/* Review Modal */}
             {showModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-sm flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center p-4 pt-20 sm:pt-24 md:pt-28 pb-8 z-[200]" style={{ zIndex: 200 }}>
                     <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto border border-red-200">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
@@ -2407,7 +2407,7 @@ const EventManagement = () => {
             )}
             {/* Review Details Modal - Enhanced for better workflow */}
             {showReviewModal && selectedEvent && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-md flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }} onClick={closeReviewDetailsModal}>
+                <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-[200]" style={{ zIndex: 200 }} onClick={closeReviewDetailsModal}>
                     <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200" onClick={(e) => e.stopPropagation()}>
                         <div className="p-6 sm:p-8">
                             <div className="flex items-center justify-between mb-6">

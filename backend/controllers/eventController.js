@@ -1,7 +1,11 @@
 import fs from "fs";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 import eventModel from "../models/eventModel.js";
+import userModel from "../models/userModel.js";
 import { notifyFollowersOfEvent } from "../utils/notify.js";
 import { createAuditLog } from "./auditLogController.js";
+import { waitForDBConnection } from "../config/mongoDB.js";
 
 // Helper: Convert file to Base64 string
 const fileToBase64 = (file) => {
@@ -211,47 +215,145 @@ export const createEvent = async (req, res) => {
 // Get All Events
 export const getEvents = async (req, res) => {
     try {
-        const events = await eventModel.find()
-            .populate("createdBy", "name email profileImage role userType mseufCategory")
-            .populate("volunteers", "name email profileImage department course role userType mseufCategory outsiderCategory")
-            .populate("volunteerRegistrations.user", "name email profileImage department course role userType mseufCategory outsiderCategory")
-            .populate("comments.user", "name email profileImage")
-            .populate("reviewedBy", "name email profileImage")
+        // Wait for database connection if not already connected
+        if (mongoose.connection.readyState !== 1) {
+            try {
+                await waitForDBConnection(10000); // Wait up to 10 seconds
+            } catch (error) {
+                console.error('Database connection timeout:', error);
+                return res.status(503).json({ 
+                    success: false,
+                    message: 'Database connection unavailable. Please try again later.' 
+                });
+            }
+        }
+
+        // Optional authentication check - if user is authenticated, get their role
+        // This allows CRD Staff to see proposed events even though the route doesn't require auth
+        let userRole = null;
+        if (req.user) {
+            // User is already authenticated via middleware
+            userRole = req.user.role;
+        } else {
+            // Try to get user from token if present (optional auth for routes without userAuth middleware)
+            try {
+                const token = req.cookies?.token;
+                if (token) {
+                    const tokenDecode = jwt.verify(token, process.env.JWT_SECRET);
+                    if (tokenDecode.id) {
+                        const user = await userModel.findById(tokenDecode.id).select('role').lean();
+                        if (user) {
+                            userRole = user.role;
+                        }
+                    }
+                }
+            } catch (error) {
+                // If token is invalid or missing, just continue without user role
+                // This is expected for unauthenticated users
+            }
+        }
+
+        // Check user role - only CRD Staff, System Admin, and Department/Organization should see Proposed/Pending events
+        // For unauthenticated users or regular users, only show approved events
+        const canSeeProposed = ['CRD Staff', 'System Administrator', 'Department/Organization'].includes(userRole);
+        
+        // Build query - filter out Proposed/Pending events for regular users and unauthenticated users
+        const query = canSeeProposed 
+            ? {} // Staff/Admin/Dept can see all events
+            : { status: { $nin: ['Proposed', 'Pending'] } }; // Regular users and unauthenticated users only see approved events
+        
+        const events = await eventModel.find(query)
+            .populate({
+                path: "createdBy",
+                select: "name email profileImage role userType mseufCategory",
+                strictPopulate: false
+            })
+            .populate({
+                path: "volunteers",
+                select: "name email profileImage department course role userType mseufCategory outsiderCategory",
+                strictPopulate: false
+            })
+            .populate({
+                path: "volunteerRegistrations.user",
+                select: "name email profileImage department course role userType mseufCategory outsiderCategory",
+                strictPopulate: false
+            })
+            .populate({
+                path: "comments.user",
+                select: "name email profileImage",
+                strictPopulate: false
+            })
+            .populate({
+                path: "reviewedBy",
+                select: "name email profileImage",
+                strictPopulate: false
+            })
             .sort({ createdAt: -1 }); // Sort by newest first
         
         // For each event, fetch donations from donationModel
         const donationModel = (await import("../models/donationModel.js")).default;
         const eventsWithDonations = await Promise.all(events.map(async (event) => {
-            const eventObj = event.toObject();
-            const donations = await donationModel.find({ event: event._id, status: "succeeded" })
-                .populate("user", "name email profileImage department userType mseufCategory outsiderCategory role")
-                .sort({ createdAt: -1 })
-                .limit(100); // Limit to avoid performance issues
-            
-            eventObj.donations = donations.map(d => {
-                // Ensure user object is properly populated
-                const donationObj = d.toObject ? d.toObject() : d;
-                return {
-                    _id: donationObj._id,
-                    donorName: donationObj.donorName,
-                    donorEmail: donationObj.donorEmail,
-                    amount: donationObj.amount,
-                    message: donationObj.message || "",
-                    paymentMethod: donationObj.paymentMethod,
-                    status: donationObj.status,
-                    isAnonymous: donationObj.isAnonymous,
-                    user: donationObj.user || null, // Ensure user object is included
-                    createdAt: donationObj.createdAt,
-                    donatedAt: donationObj.createdAt
-                };
-            });
-            
-            return eventObj;
+            try {
+                const eventObj = event.toObject();
+                const donations = await donationModel.find({ event: event._id, status: "succeeded" })
+                    .populate({
+                        path: "user",
+                        select: "name email profileImage department userType mseufCategory outsiderCategory role",
+                        strictPopulate: false
+                    })
+                    .sort({ createdAt: -1 })
+                    .limit(100); // Limit to avoid performance issues
+                
+                eventObj.donations = donations.map(d => {
+                    // Ensure user object is properly populated
+                    const donationObj = d.toObject ? d.toObject() : d;
+                    return {
+                        _id: donationObj._id,
+                        donorName: donationObj.donorName,
+                        donorEmail: donationObj.donorEmail,
+                        amount: donationObj.amount,
+                        message: donationObj.message || "",
+                        paymentMethod: donationObj.paymentMethod,
+                        status: donationObj.status,
+                        isAnonymous: donationObj.isAnonymous,
+                        user: donationObj.user || null, // Ensure user object is included
+                        createdAt: donationObj.createdAt,
+                        donatedAt: donationObj.createdAt
+                    };
+                });
+                
+                return eventObj;
+            } catch (err) {
+                // If there's an error processing a single event, return it without donations
+                console.error(`Error processing event ${event._id}:`, err.message);
+                const eventObj = event.toObject();
+                eventObj.donations = [];
+                return eventObj;
+            }
         }));
         
         res.status(200).json(eventsWithDonations);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching events", error: error.message });
+        console.error('Error fetching events:', error);
+        
+        // Check if it's a database connection error
+        if (error.name === 'MongoError' || error.name === 'MongooseError' || 
+            error.message.includes('connection') || error.message.includes('timeout') ||
+            mongoose.connection.readyState !== 1) {
+            console.error('Database connection error detected');
+            return res.status(503).json({ 
+                success: false,
+                message: 'Database connection unavailable. Please try again later.',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+        
+        // Other errors
+        res.status(500).json({ 
+            success: false,
+            message: "Error fetching events", 
+            error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+        });
     }
 };
 

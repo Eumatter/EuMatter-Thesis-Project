@@ -47,6 +47,10 @@ import SystemSettings from './pages/common/SystemSettings.jsx'
 import Program from './pages/Program.jsx'
 import NSTP from './pages/NSTP.jsx'
 import About from './pages/About.jsx'
+import SuccessStories from './pages/SuccessStories.jsx'
+import SafetyGuidelines from './pages/SafetyGuidelines.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
+import TermsOfService from './pages/TermsOfService.jsx'
 import Notifications from './pages/user/Notifications.jsx'
 import NotificationPreferences from './pages/user/NotificationPreferences.jsx'
 import MaintenanceMode from './pages/MaintenanceMode.jsx'
@@ -175,6 +179,10 @@ const AppContent = () => {
                 <Route path="/program" element={<Program />} />
                 <Route path="/nstp" element={<NSTP />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/success-stories" element={<SuccessStories />} />
+                <Route path="/safety-guidelines" element={<SafetyGuidelines />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/email-verify" element={<VerifyEmailPage />} />

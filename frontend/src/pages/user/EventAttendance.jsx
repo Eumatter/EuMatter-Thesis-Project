@@ -910,8 +910,8 @@ const EventAttendance = () => {
                 <Header />
                 <main className="max-w-4xl mx-auto px-6 py-12">
                     <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-                        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-20 h-20 bg-white border-2 border-[#800000] rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-10 h-10 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
@@ -946,11 +946,11 @@ const EventAttendance = () => {
                             <div className="relative z-10">
                                 <div className="flex items-start justify-between gap-4 mb-6">
                                     <div className="flex items-start gap-4 flex-1">
-                                        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                            </svg>
-                                        </div>
+                        <div className="w-14 h-14 bg-white border-2 border-[#800000] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <svg className="w-7 h-7 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </div>
                                         <div className="flex-1 min-w-0">
                                             <h2 className="text-2xl sm:text-3xl font-bold text-[#800000] mb-2">Pending Volunteer Feedback</h2>
                                             <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
@@ -1206,13 +1206,13 @@ const EventAttendance = () => {
 
                 {/* Attendance Status Card */}
                 <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#a00000] rounded-xl flex items-center justify-center">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 sm:gap-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        Attendance Status
+                        <span className="text-lg sm:text-xl">Attendance Status</span>
                     </h2>
                     
                     <div className="space-y-4">
@@ -1222,13 +1222,13 @@ const EventAttendance = () => {
                                 ? 'bg-green-50 border-green-300' 
                                 : 'bg-gray-50 border-gray-200'
                         }`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border-2 flex-shrink-0 ${
                                     attendanceStatus === 'timeout' || attendanceStatus === 'completed'
-                                        ? 'bg-green-500'
-                                        : 'bg-gray-400'
+                                        ? 'bg-white border-[#800000]'
+                                        : 'bg-white border-gray-400'
                                 }`}>
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
@@ -1256,13 +1256,13 @@ const EventAttendance = () => {
                                 ? 'bg-green-50 border-green-300'
                                 : 'bg-gray-50 border-gray-200'
                         }`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            <div className="flex items-center gap-3 sm:gap-4">
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border-2 flex-shrink-0 ${
                                     attendanceStatus === 'completed'
-                                        ? 'bg-green-500'
-                                        : 'bg-gray-400'
+                                        ? 'bg-white border-[#800000]'
+                                        : 'bg-white border-gray-400'
                                 }`}>
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
                                 </div>
@@ -1299,7 +1299,7 @@ const EventAttendance = () => {
                                 {!attendanceData?.checkOutTime && !exceptionRequest && attendanceStatus === 'timeout' && attendanceData?._id && (
                                     <button
                                         onClick={() => setShowExceptionModal(true)}
-                                        className="px-4 py-2 bg-amber-500 text-white rounded-lg font-semibold text-sm hover:bg-amber-600 transition-all duration-200"
+                                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border-2 border-[#800000] text-[#800000] rounded-lg font-semibold text-xs sm:text-sm hover:bg-[#800000] hover:text-white transition-all duration-200"
                                     >
                                         Request Exception
                                     </button>
@@ -1316,11 +1316,11 @@ const EventAttendance = () => {
 
                         {/* Hours Worked */}
                         {attendanceData?.hoursWorked && (
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-5">
+                                <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
+                                    <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                         </div>
@@ -1341,34 +1341,34 @@ const EventAttendance = () => {
                 {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
                  attendanceStatus !== 'timeout' && attendanceStatus !== 'completed' && (
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            Record Time In
+                            <span className="text-base sm:text-xl">Record Time In</span>
                         </h2>
                         
                         <div className="space-y-4">
                             {/* QR Scanner Option */}
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-6">
+                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-blue-900">Scan QR Code</h3>
-                                            <p className="text-sm text-blue-700">Use your camera to scan the QR code</p>
+                                            <h3 className="font-bold text-[#800000] text-sm sm:text-base">Scan QR Code</h3>
+                                            <p className="text-xs sm:text-sm text-gray-700">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => startScanning('timein')}
                                         disabled={processing || (scanning && activeScanner === 'timein')}
-                                        className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {scanning && activeScanner === 'timein' ? (
                                             <>
@@ -1388,16 +1388,16 @@ const EventAttendance = () => {
                             </div>
 
                             {/* Image Upload Option */}
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
+                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-bold text-green-900">Upload QR Image</h3>
-                                        <p className="text-sm text-green-700">Upload an image containing the QR code</p>
+                                        <h3 className="font-bold text-[#800000] text-sm sm:text-base">Upload QR Image</h3>
+                                        <p className="text-xs sm:text-sm text-gray-700">Upload an image containing the QR code</p>
                                     </div>
                                 </div>
                                 <input
@@ -1410,9 +1410,9 @@ const EventAttendance = () => {
                                 />
                                 <label
                                     htmlFor="timein-image-upload"
-                                    className="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                                    className="w-full bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     Upload Image
@@ -1426,34 +1426,34 @@ const EventAttendance = () => {
                 {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
                  attendanceStatus === 'timeout' && (
                     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
                             </div>
-                            Record Time Out
+                            <span className="text-base sm:text-xl">Record Time Out</span>
                         </h2>
                         
                         <div className="space-y-4">
                             {/* QR Scanner Option */}
-                            <div className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-200 rounded-xl p-4 sm:p-6">
+                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-6">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-orange-900">Scan QR Code</h3>
-                                            <p className="text-sm text-orange-700">Use your camera to scan the QR code</p>
+                                            <h3 className="font-bold text-[#800000] text-sm sm:text-base">Scan QR Code</h3>
+                                            <p className="text-xs sm:text-sm text-gray-700">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => startScanning('timeout')}
                                         disabled={processing || (scanning && activeScanner === 'timeout')}
-                                        className="w-full sm:w-auto bg-orange-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {scanning && activeScanner === 'timeout' ? (
                                             <>
@@ -1473,16 +1473,16 @@ const EventAttendance = () => {
                             </div>
 
                             {/* Image Upload Option */}
-                            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 sm:p-6">
+                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl p-4 sm:p-6">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-bold text-green-900">Upload QR Image</h3>
-                                        <p className="text-sm text-green-700">Upload an image containing the QR code</p>
+                                        <h3 className="font-bold text-[#800000] text-sm sm:text-base">Upload QR Image</h3>
+                                        <p className="text-xs sm:text-sm text-gray-700">Upload an image containing the QR code</p>
                                     </div>
                                 </div>
                                 <input
@@ -1495,9 +1495,9 @@ const EventAttendance = () => {
                                 />
                                 <label
                                     htmlFor="timeout-image-upload"
-                                    className="w-full bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                                    className="w-full bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     Upload Image
@@ -1521,7 +1521,7 @@ const EventAttendance = () => {
                                         }}
                                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                     >
-                                        <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
@@ -1556,20 +1556,20 @@ const EventAttendance = () => {
                                         {exceptionReason.length}/1000
                                     </div>
                                 </div>
-                                <div className="flex gap-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                     <button
                                         onClick={() => {
                                             setShowExceptionModal(false)
                                             setExceptionReason('')
                                         }}
-                                        className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                                        className="w-full sm:flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 text-gray-700 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-50 transition-all duration-200"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSubmitExceptionRequest}
                                         disabled={submittingException || !exceptionReason.trim()}
-                                        className="flex-1 px-6 py-3 bg-gradient-to-r from-[#800000] to-[#a00000] text-white rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                                        className="w-full sm:flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-[#800000] text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {submittingException ? (
                                             <>
@@ -1596,26 +1596,26 @@ const EventAttendance = () => {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
                             {/* Modal Header */}
-                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#a00000]">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 className="text-lg sm:text-xl font-bold text-white">
+                                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white">
                                             {activeScanner === 'timein' ? 'Scan QR Code for Time In' : 'Scan QR Code for Time Out'}
                                         </h3>
-                                        <p className="text-xs sm:text-sm text-blue-100">Position QR code within the frame</p>
+                                        <p className="text-xs sm:text-sm text-white/90">Position QR code within the frame</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={closeCameraModal}
-                                    className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-all duration-200 text-white"
+                                    className="w-10 h-10 sm:w-12 sm:h-12 bg-white hover:bg-gray-100 rounded-xl flex items-center justify-center transition-all duration-200 text-[#800000] flex-shrink-0"
                                     aria-label="Close camera"
                                 >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -1627,14 +1627,14 @@ const EventAttendance = () => {
                                 
                                 {/* Scanning Overlay */}
                                 <div className="absolute inset-0 pointer-events-none">
-                                    <div className="absolute inset-0 border-4 border-green-500 rounded-2xl animate-pulse"></div>
+                                    <div className="absolute inset-0 border-4 border-[#800000] rounded-2xl animate-pulse"></div>
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                        <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-green-400 rounded-xl"></div>
+                                        <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-[#800000] rounded-xl"></div>
                                     </div>
                                     <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2">
-                                        <div className="bg-black/70 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
+                                        <div className="bg-[#800000]/90 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
                                             <p className="text-xs sm:text-sm font-semibold flex items-center gap-2">
-                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
                                                 Scanning...
                                             </p>
                                         </div>
@@ -1666,9 +1666,9 @@ const EventAttendance = () => {
                                     </p>
                                     <button
                                         onClick={closeCameraModal}
-                                        className="w-full sm:w-auto bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all duration-200 font-semibold flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                         Stop Camera

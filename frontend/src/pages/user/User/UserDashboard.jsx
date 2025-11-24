@@ -36,7 +36,11 @@ const UserDashboard = () => {
         try {
             const { data } = await api.get('/api/events');
             if (data) {
-                setEvents(Array.isArray(data) ? data : []);
+                // Filter out Proposed events - only show Approved, Upcoming, Ongoing, or Completed events
+                const approvedEvents = Array.isArray(data) 
+                    ? data.filter(event => event.status !== 'Proposed' && event.status !== 'Pending')
+                    : [];
+                setEvents(approvedEvents);
             }
         } catch (error) {
             console.error('Error fetching events:', error);
@@ -611,8 +615,8 @@ const UserDashboard = () => {
                                     <p className="text-xs text-gray-500 truncate">{userData?.email || ''}</p>
                                 </div>
                             </div>
-                             {/* Statistics Cards - 3 Column on Mobile, Single Column on Desktop */}
-                             <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-0 mt-4 sm:mt-5">
+                             {/* Statistics Cards - 2 Column on Mobile (1 Row), Single Column on Desktop */}
+                             <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-0 mt-4 sm:mt-5">
                                  {/* Events Joined */}
                                  <div className="flex flex-col items-center justify-center bg-red-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-red-50">
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
@@ -623,34 +627,10 @@ const UserDashboard = () => {
                                         {eventsJoined}
                                     </span>
                                 </div>
-                                 {/* Pending Feedback - Only show if there are pending feedbacks */}
-                                 {Array.isArray(pendingFeedback) && pendingFeedback.length > 0 && (
-                                 <button 
-                                     onClick={() => {
-                                         // Navigate to the first pending feedback's event attendance page
-                                         const firstFeedback = pendingFeedback[0]
-                                         const eventId = firstFeedback?.event?._id || firstFeedback?.event
-                                         if (eventId) {
-                                             navigate(`/volunteer/attendance/${eventId}`)
-                                         } else {
-                                             navigate('/user/volunteer-history')
-                                         }
-                                     }}
-                                     className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-yellow-50 hover:bg-yellow-100 cursor-pointer w-full"
-                                 >
-                                     <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                         <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Pending Feedback</span>
-                                    </div>
-                                     <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
-                                        {pendingFeedbackCount}
-                                    </span>
-                                </button>
-                                 )}
                                  {/* Hours Volunteered */}
                                  <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] lg:bg-green-50">
                                      <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                         <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 sm:lg:w-5 sm:lg:h-5 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                          <span className="text-[10px] sm:text-xs lg:text-xs sm:lg:text-sm text-gray-600 text-center lg:text-left">Hours</span>
                                     </div>
                                      <span className="text-sm sm:text-base lg:text-xs sm:lg:text-sm font-semibold lg:font-semibold text-black mt-1 lg:mt-0">
@@ -660,31 +640,31 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Quick Links - 2 Column on Mobile, Single Column on Desktop */}
-                        <div className="bg-white rounded-xl shadow-md p-4 sm:p-5 transition-all duration-300 hover:shadow-lg">
-                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-2 lg:space-y-2">
+                        {/* Quick Links - 1 Row, 3 Columns for All Devices */}
+                        <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg">
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
                                 <button 
                                     onClick={() => handleDonate()}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Donate</span>
-                                    </button>
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
+                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Donate</span>
+                                </button>
                                 <button 
                                     onClick={() => navigate('/user/events')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Browse Events</span>
-                                    </button>
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Browse Events</span>
+                                </button>
                                 <button
                                     onClick={() => navigate('/user/volunteer-history')}
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 sm:lg:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1 4v-4m0 4h3M9 12h.01M12 6.25A6.25 6.25 0 115.75 12.5m6.25-6.25a6.25 6.25 0 016.25 6.25H12" />
+                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Volunteer Hours</span>
+                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Volunteer Hours</span>
                                 </button>
                             </div>
                         </div>

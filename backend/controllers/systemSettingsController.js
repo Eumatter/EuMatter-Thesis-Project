@@ -1,8 +1,17 @@
 import SystemSettings from '../models/systemSettingsModel.js';
+import mongoose from 'mongoose';
 
 // Get system settings
 export const getSystemSettings = async (req, res) => {
     try {
+        // Check if database is connected
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ 
+                success: false, 
+                message: 'Database connection unavailable. Please try again later.' 
+            });
+        }
+
         // Check if user is System Administrator
         if (req.user?.role !== 'System Administrator') {
             return res.status(403).json({ success: false, message: 'Only System Administrators can access system settings' });
@@ -15,7 +24,10 @@ export const getSystemSettings = async (req, res) => {
         const settings = await SystemSettings.getSettings();
         res.json({ success: true, settings });
     } catch (error) {
-        console.error('Error fetching system settings:', error);
+        // Only log if it's not a connection error
+        if (error.name !== 'MongooseError' || !error.message.includes('buffering')) {
+            console.error('Error fetching system settings:', error.message);
+        }
         res.status(500).json({ success: false, message: 'Failed to fetch system settings' });
     }
 };
@@ -23,6 +35,12 @@ export const getSystemSettings = async (req, res) => {
 // Get maintenance mode status (public endpoint)
 export const getMaintenanceMode = async (req, res) => {
     try {
+        // Check if database is connected
+        if (mongoose.connection.readyState !== 1) {
+            // Return default (no maintenance) if DB is not connected
+            return res.json({ success: true, maintenanceMode: false });
+        }
+
         // Check if maintenance mode should be auto-disabled
         const { checkMaintenanceModeExpiry } = await import('../utils/maintenanceScheduler.js');
         await checkMaintenanceModeExpiry();
@@ -36,7 +54,11 @@ export const getMaintenanceMode = async (req, res) => {
             allowedRoles: settings.maintenanceMode.allowedRoles || ['System Administrator', 'CRD Staff']
         });
     } catch (error) {
-        console.error('Error fetching maintenance mode:', error);
+        // Only log if it's not a connection error
+        if (error.name !== 'MongooseError' || !error.message.includes('buffering')) {
+            console.error('Error fetching maintenance mode:', error.message);
+        }
+        // Return default (no maintenance) on error
         res.json({ success: true, maintenanceMode: false });
     }
 };

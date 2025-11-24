@@ -1,15 +1,72 @@
 import React, { useContext } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AppContent } from '../context/AppContext.jsx';
 
 const Footer = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { isLoggedIn } = useContext(AppContent);
 
     const isHomePage = location.pathname === '/';
 
     // Hide on mobile for logged-in users except on Home page
     const mobileVisibilityClass = !isHomePage && isLoggedIn ? 'hidden md:block' : 'block';
+
+    // Handle navigation with scroll
+    const handleNavigation = (path, scrollToId = null) => {
+        if (location.pathname === path && scrollToId) {
+            // If already on the page, just scroll
+            setTimeout(() => {
+                const element = document.getElementById(scrollToId);
+                if (element) {
+                    // Scroll to element with offset for header
+                    const headerOffset = 80;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        } else {
+            // Navigate to the page
+            navigate(path);
+            // Scroll after navigation - wait for page to load
+            if (scrollToId) {
+                // Use multiple timeouts to ensure DOM is ready
+                setTimeout(() => {
+                    const element = document.getElementById(scrollToId);
+                    if (element) {
+                        const headerOffset = 80;
+                        const elementPosition = element.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Retry if element not found yet
+                        setTimeout(() => {
+                            const retryElement = document.getElementById(scrollToId);
+                            if (retryElement) {
+                                const headerOffset = 80;
+                                const elementPosition = retryElement.getBoundingClientRect().top;
+                                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                                
+                                window.scrollTo({
+                                    top: offsetPosition,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        }, 500);
+                    }
+                }, 100);
+            }
+        }
+    };
 
     return (
         <footer className={`w-full bg-[#800000] text-white ${mobileVisibilityClass}`}>
@@ -45,10 +102,38 @@ const Footer = () => {
                     <div>
                         <h4 className="text-lg md:text-xl font-extrabold text-[#ffd700]">Quick Links</h4>
                         <ul className="mt-3 md:mt-4 space-y-1.5 md:space-y-2 text-sm md:text-[15px]">
-                            <li><a href="#" className="hover:underline">About Us</a></li>
-                            <li><a href="#" className="hover:underline">How It Works</a></li>
-                            <li><a href="#" className="hover:underline">Success Stories</a></li>
-                            <li><a href="#" className="hover:underline">Contact</a></li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/about')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    About Us
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/program', 'how-programs-work')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    How It Works
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/success-stories')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Success Stories
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/about', 'contact-us')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Contact
+                                </button>
+                            </li>
                         </ul>
                     </div>
 
@@ -56,10 +141,38 @@ const Footer = () => {
                     <div>
                         <h4 className="text-lg md:text-xl font-extrabold text-[#ffd700]">Support</h4>
                         <ul className="mt-3 md:mt-4 space-y-1.5 md:space-y-2 text-sm md:text-[15px]">
-                            <li><a href="#" className="hover:underline">Help Center</a></li>
-                            <li><a href="#" className="hover:underline">Safety Guidelines</a></li>
-                            <li><a href="#" className="hover:underline">Terms of Service</a></li>
-                            <li><a href="#" className="hover:underline">Privacy Policy</a></li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/program', 'how-to-participate')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Help Center
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/safety-guidelines')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Safety Guidelines
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/terms-of-service')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Terms of Service
+                                </button>
+                            </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/privacy-policy')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    Privacy Policy
+                                </button>
+                            </li>
                         </ul>
                     </div>
 

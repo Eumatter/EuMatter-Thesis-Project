@@ -224,8 +224,21 @@ const VolunteerManagement = () => {
                 { withCredentials: true }
             )
             
+            // Immediately update qrStatus with the QR code from the response
+            if (response.data.success && response.data.qrCode) {
+                setQrStatus(prevStatus => ({
+                    ...prevStatus,
+                    [`${type === 'checkIn' ? 'checkIn' : 'checkOut'}QR`]: response.data.qrCode,
+                    [`has${type === 'checkIn' ? 'CheckIn' : 'CheckOut'}QR`]: true,
+                    [`${type === 'checkIn' ? 'checkIn' : 'checkOut'}Active`]: response.data.isActive !== false,
+                    generatedAt: response.data.date ? new Date().toISOString() : (prevStatus?.generatedAt || new Date().toISOString()),
+                    expiresAt: response.data.expiresAt || prevStatus?.expiresAt,
+                    hasQR: true
+                }))
+            }
+            
             toast.success(`${type === 'checkIn' ? 'Check-in' : 'Evaluation/Check-out'} QR code generated successfully`)
-            // Fetch updated QR status to get the complete status with image URLs
+            // Fetch updated QR status to get the complete status (for other metadata)
             await fetchQRStatus()
         } catch (error) {
             console.error('Error generating QR code:', error)

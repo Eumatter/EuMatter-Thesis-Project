@@ -3,7 +3,7 @@ import SystemAdminSidebar from './SystemAdminSidebar.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { AppContent } from '../../../context/AppContext.jsx';
-import { FaWallet, FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaEye, FaEyeSlash, FaEdit, FaPlus, FaSearch, FaFilter, FaKey } from 'react-icons/fa';
+import { FaWallet, FaExclamationTriangle, FaEdit, FaPlus, FaSearch, FaKey } from 'react-icons/fa';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import LoadingSpinner from '../../../components/LoadingSpinner';
@@ -18,7 +18,6 @@ const WalletManagement = () => {
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [walletToDisable, setWalletToDisable] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
     const [isUpdating, setIsUpdating] = useState(false);
     const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -44,28 +43,6 @@ const WalletManagement = () => {
             toast.error(error.response?.data?.message || 'Failed to fetch wallets');
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const handleVerify = async (userId) => {
-        if (!userId) {
-            toast.error('Invalid user ID');
-            return;
-        }
-        try {
-            const { data } = await axios.post(`${backendUrl}api/wallets/${userId}/verify`, {}, {
-                withCredentials: true
-            });
-
-            if (data.success) {
-                toast.success('Wallet credentials verified successfully');
-                fetchWallets();
-            } else {
-                toast.error(data.message || 'Verification failed');
-            }
-        } catch (error) {
-            console.error('Error verifying wallet:', error);
-            toast.error(error.response?.data?.message || 'Failed to verify wallet');
         }
     };
 
@@ -213,41 +190,8 @@ const WalletManagement = () => {
         }
     };
 
-    const getStatusBadge = (wallet) => {
-        if (!wallet.hasWallet) {
-            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500">No Wallet</span>;
-        }
-        if (!wallet.isActive) {
-            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>;
-        }
-        if (wallet.verificationStatus === 'verified') {
-            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>;
-        }
-        if (wallet.verificationStatus === 'failed') {
-            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Failed</span>;
-        }
-        if (wallet.verificationStatus === 'never') {
-            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Never Verified</span>;
-        }
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
-    };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'Never';
-        try {
-            return new Date(dateString).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return 'Invalid date';
-        }
-    };
-
-    // Filter wallets based on search term and verification status
+    // Filter wallets based on search term
     const filteredWallets = useMemo(() => {
         return wallets.filter(wallet => {
             // Search filter
@@ -255,13 +199,9 @@ const WalletManagement = () => {
                 wallet.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 wallet.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-            // Status filter
-            const matchesStatus = filterStatus === 'all' || 
-                wallet.verificationStatus === filterStatus;
-
-            return matchesSearch && matchesStatus;
+            return matchesSearch;
         });
-    }, [wallets, searchTerm, filterStatus]);
+    }, [wallets, searchTerm]);
 
     return (
         <div className="bg-gray-50 min-h-screen">
@@ -289,7 +229,7 @@ const WalletManagement = () => {
                             </div>
                         </div>
 
-                        {/* Search and Filter */}
+                        {/* Search */}
                         <div className="flex flex-col sm:flex-row gap-4 mt-4">
                             <div className="flex-1 relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -303,27 +243,9 @@ const WalletManagement = () => {
                                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm"
                                 />
                             </div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaFilter className="h-5 w-5 text-gray-400" />
-                                </div>
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="block w-full sm:w-48 pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm appearance-none bg-white"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="verified">Verified</option>
-                                    <option value="failed">Failed</option>
-                                    <option value="pending">Pending</option>
-                                </select>
-                            </div>
-                            {(searchTerm || filterStatus !== 'all') && (
+                            {searchTerm && (
                                 <button
-                                    onClick={() => {
-                                        setSearchTerm('');
-                                        setFilterStatus('all');
-                                    }}
+                                    onClick={() => setSearchTerm('')}
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
                                 >
                                     Clear
@@ -355,15 +277,13 @@ const WalletManagement = () => {
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Verified</th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {filteredWallets.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-8 text-center text-sm text-gray-500">
+                                                <td colSpan="3" className="px-6 py-8 text-center text-sm text-gray-500">
                                                     No wallets found matching your search criteria.
                                                 </td>
                                             </tr>
@@ -387,28 +307,15 @@ const WalletManagement = () => {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        {getStatusBadge(wallet)}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                        {wallet.hasWallet ? formatDate(wallet.lastVerifiedAt) : '-'}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
                                                         <div className="flex items-center gap-3">
                                                             {wallet.hasWallet ? (
                                                                 <>
                                                                     <button
                                                                         onClick={() => handleEdit(wallet)}
                                                                         className="text-blue-600 hover:text-blue-900 p-1"
-                                                                        title="Edit Wallet"
+                                                                        title="Edit Wallet (Master Key)"
                                                                     >
                                                                         <FaEdit />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleVerify(wallet.userId?._id || wallet.userId)}
-                                                                        className="text-green-600 hover:text-green-900 p-1"
-                                                                        title="Verify Credentials"
-                                                                    >
-                                                                        <FaCheckCircle />
                                                                     </button>
                                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                                         <input

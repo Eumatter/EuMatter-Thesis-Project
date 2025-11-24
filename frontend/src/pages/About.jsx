@@ -319,7 +319,7 @@ const About = () => {
                             <Button 
                                 variant="maroonOutline"
                                 onClick={() => navigate('/campaigns')}
-                                className="px-8 py-4 text-lg font-bold bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-[#800000] transition-all duration-200"
+                                className="px-8 py-4 text-lg font-bold bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:!text-[#800000] transition-all duration-200"
                             >
                                 Browse Events
                             </Button>
@@ -772,7 +772,7 @@ const About = () => {
             </section>
 
             {/* Contact Section */}
-            <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 bg-white">
+            <section id="contact-us" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 bg-white scroll-mt-20">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
@@ -805,18 +805,19 @@ const About = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: index * 0.1 }}
+                                    className="h-full"
                                 >
                                     <Component
                                         href={contact.link}
-                                        className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300"
+                                        className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 h-full flex flex-col"
                                     >
-                                        <div className="w-14 h-14 bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl flex items-center justify-center mx-auto mb-4">
+                                        <div className="w-14 h-14 bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl flex items-center justify-center mx-auto mb-4 flex-shrink-0">
                                             <IconComponent className="w-7 h-7 text-white" />
                                         </div>
-                                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2 flex-shrink-0">
                                             {contact.label}
                                         </h3>
-                                        <p className="text-sm text-gray-600">
+                                        <p className="text-sm text-gray-600 leading-relaxed">
                                             {contact.value}
                                         </p>
                                     </Component>

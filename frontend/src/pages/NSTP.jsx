@@ -707,7 +707,7 @@ const NSTP = () => {
                                 onClick={() => navigate('/register')}
                                 variant="maroonOutline"
                                 size="lg"
-                                className="px-8 py-4 text-lg font-bold bg-white/10 backdrop-blur-sm border-2 border-white text-white hover:bg-white hover:text-[#800000] active:bg-white/90 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95"
+                                className="px-8 py-3 text-base font-semibold bg-white/10 border-2 border-white text-white hover:bg-white hover:!text-[#800000] transition-all duration-200"
                             >
                                 Create Account
                             </Button>

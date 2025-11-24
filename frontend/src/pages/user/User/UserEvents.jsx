@@ -28,7 +28,11 @@ const UserEvents = () => {
             console.log('Events API response:', response)
             if (response.data) {
                 console.log('Events data:', response.data)
-                setEvents(Array.isArray(response.data) ? response.data : [])
+                // Filter out Proposed events - only show Approved, Upcoming, Ongoing, or Completed events
+                const approvedEvents = Array.isArray(response.data) 
+                    ? response.data.filter(event => event.status !== 'Proposed' && event.status !== 'Pending')
+                    : []
+                setEvents(approvedEvents)
             }
         } catch (error) {
             console.error('Error fetching events:', error)

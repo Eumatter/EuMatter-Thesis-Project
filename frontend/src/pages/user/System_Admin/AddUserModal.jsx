@@ -99,6 +99,20 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
     const currentRole = roleConfig[formData.role] || roleConfig.student;
     const RoleIcon = currentRole.icon;
 
+    // Departments - MSEUF Official List (matching RegisterPage)
+    const departments = [
+        'College of Education',
+        'College of Architecture and Fine Arts',
+        'College of Criminal Justice and Criminology',
+        'College of Engineering',
+        'College of Nursing and Allied Health Sciences',
+        'College of Arts and Sciences',
+        'College of Business and Accountancy',
+        'College of Computing and Multimedia Studies',
+        'College of Maritime Education',
+        'College of International Tourism and Hospitality Management'
+    ];
+
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -165,7 +179,13 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                                 <div className={`p-2 rounded-full mb-2 ${color.split(' ')[0]} bg-opacity-20`}>
                                                     <Icon className="h-6 w-6" />
                                                 </div>
-                                                <span className="text-xs font-medium text-gray-700">{label}</span>
+                                                {key === 'Department/Organization' ? (
+                                                    <span className="text-xs font-medium text-gray-700 text-center leading-tight">
+                                                        Department/<br />Organization
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs font-medium text-gray-700">{label}</span>
+                                                )}
                                             </button>
                                         ))}
                                     </div>
@@ -264,11 +284,11 @@ const AddUserModal = ({ isOpen, onClose, onUserAdded }) => {
                                                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-red-500 focus:border-red-500 sm:text-sm rounded-lg"
                                             >
                                                 <option value="">Select Department</option>
-                                                <option value="CCS">College of Computer Studies</option>
-                                                <option value="COE">College of Engineering</option>
-                                                <option value="CBM">College of Business and Management</option>
-                                                <option value="CAS">College of Arts and Sciences</option>
-                                                <option value="CON">College of Nursing</option>
+                                                {departments.map((dept) => (
+                                                    <option key={dept} value={dept}>
+                                                        {dept}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                     )}

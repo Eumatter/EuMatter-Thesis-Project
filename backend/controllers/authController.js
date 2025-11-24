@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import transporter, { sendEmailWithRetry } from "../config/nodemailer.js";
 import { createAuditLog } from "./auditLogController.js";
+import { ensureDBAndExecute } from "../utils/dbHelper.js";
 
 const isProd = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true'
 const cookieOptions = {
@@ -145,7 +146,19 @@ export const register = async (req, res) => {
         }
 
         // Check if user already exists (use normalized email for case-insensitive check)
-        const existingUser = await userModel.findOne({ email: normalizedEmail });
+        // Use ensureDBAndExecute to prevent buffering timeout
+        const existingUser = await ensureDBAndExecute(
+            () => userModel.findOne({ email: normalizedEmail }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (existingUser === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (existingUser) {
             return res.json({ success: false, message: "User with this email already exists" });
         }
@@ -436,9 +449,22 @@ export const login = async (req, res) => {
         // But matches the stored format (uppercase first letter for students)
         const normalizedEmail = normalizeEmail(email);
 
-        const user = await userModel.findOne({ email: normalizedEmail });
+        // Use ensureDBAndExecute to prevent buffering timeout
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email: normalizedEmail }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
         const clientIp = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'Unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
+        
+        // Handle database connection error
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
         
         if (!user) {
             // Log failed login attempt (user not found) - don't await, fire and forget
@@ -650,7 +676,17 @@ export const sendVerifyOtp = async (req, res) => {
         } else if (email) {
             // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
             const normalizedEmail = normalizeEmail(email);
-            user = await userModel.findOne({ email: normalizedEmail });
+            user = await ensureDBAndExecute(
+                () => userModel.findOne({ email: normalizedEmail }).lean(),
+                { maxWaitTime: 10000, throwOnError: false }
+            );
+            
+            if (user === null) {
+                return res.status(503).json({ 
+                    success: false, 
+                    message: "Service temporarily unavailable. Please try again later." 
+                });
+            }
         } else {
             return res.json({ success: false, message: "Email or userId is required" });
         }
@@ -883,7 +919,18 @@ export const verifyEmail = async (req, res) => {
             return res.json({ success: false, message: "OTP must be exactly 6 digits. Please check and try again." });
         }
 
-        const user = await userModel.findOne({ email });
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (!user) {
             return res.json({ success: false, message: "User not found. Please check your email address." });
         }
@@ -1210,7 +1257,18 @@ export const checkOtpStatus = async (req, res) => {
             return res.json({ success: false, message: "Email is required" });
         }
 
-        const user = await userModel.findOne({ email });
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1267,7 +1325,18 @@ export const sendResetOtp = async (req, res) => {
         // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
         const normalizedEmail = normalizeEmail(email);
 
-        const user = await userModel.findOne({ email: normalizedEmail });
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email: normalizedEmail }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1394,7 +1463,18 @@ export const verifyResetOtp = async (req, res) => {
         // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
         const normalizedEmail = normalizeEmail(email);
 
-        const user = await userModel.findOne({ email: normalizedEmail });
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email: normalizedEmail }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }
@@ -1486,7 +1566,18 @@ export const resetPassword = async (req, res) => {
         // Normalize email - for MSEUF Student emails, uppercase first letter; otherwise lowercase all
         const normalizedEmail = normalizeEmail(email);
 
-        const user = await userModel.findOne({ email: normalizedEmail });
+        const user = await ensureDBAndExecute(
+            () => userModel.findOne({ email: normalizedEmail }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (user === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
+        
         if (!user) {
             return res.json({ success: false, message: "User not found" });
         }

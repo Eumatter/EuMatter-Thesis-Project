@@ -31,11 +31,18 @@ const app = express();
 const port = process.env.PORT || 8000; // Default to 8000 if not set
 
 // Connect to DB - handle async properly to prevent server crash
-connectDB().catch((error) => {
-    console.error('❌ Failed to initialize database connection:', error);
-    console.warn('⚠️  Server will continue to start, but database operations may fail');
-    // Don't exit - let server start even if DB connection fails initially
-});
+let dbConnected = false;
+connectDB()
+    .then(() => {
+        dbConnected = true;
+        console.log('✅ Database connection successful');
+    })
+    .catch((error) => {
+        console.error('❌ Failed to initialize database connection:', error.message);
+        console.warn('⚠️  Server will continue to start, but database operations may fail');
+        console.warn('⚠️  Please check your MONGO_URI environment variable and MongoDB server status');
+        // Don't exit - let server start even if DB connection fails initially
+    });
 
 // Middleware
 app.use(express.json());

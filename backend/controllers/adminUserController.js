@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import departmentWalletModel from "../models/departmentWalletModel.js";
 import { createAuditLog } from "./auditLogController.js";
+import { ensureDBAndExecute } from "../utils/dbHelper.js";
 
 /**
  * Get all users with filtering and pagination (Admin only)
@@ -84,7 +85,18 @@ export const createUser = async (req, res) => {
         } = req.body;
 
         // Check if user already exists
-        const existingUser = await userModel.findOne({ email });
+        // Use ensureDBAndExecute to prevent buffering timeout
+        const existingUser = await ensureDBAndExecute(
+            () => userModel.findOne({ email }).lean(),
+            { maxWaitTime: 10000, throwOnError: false }
+        );
+        
+        if (existingUser === null) {
+            return res.status(503).json({ 
+                success: false, 
+                message: "Service temporarily unavailable. Please try again later." 
+            });
+        }
         if (existingUser) {
             return res.status(400).json({ success: false, message: 'User with this email already exists' });
         }

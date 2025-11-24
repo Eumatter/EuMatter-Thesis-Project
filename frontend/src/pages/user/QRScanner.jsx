@@ -47,6 +47,7 @@ const QRScanner = () => {
     const scannerRef = useRef(null)
     const html5QrCodeRef = useRef(null)
     const lastScannedCode = useRef('')
+    const isProcessingRef = useRef(false) // Ref to track processing state immediately
     const fileInputRef = useRef(null)
     const timeInFileInputRef = useRef(null)
     const timeOutFileInputRef = useRef(null)
@@ -262,14 +263,18 @@ const QRScanner = () => {
     }, [location.search, backendUrl, event?._id, processing, eventId, userData?._id, fetchAttendanceStatus])
 
     const handleQRScan = async (qrCode, action) => {
-        // Prevent duplicate scans
-        if (processing || qrCode === lastScannedCode.current) return
+        // Prevent duplicate scans - check immediately using ref
+        if (isProcessingRef.current || qrCode === lastScannedCode.current) {
+            return
+        }
         
+        // Set processing flags IMMEDIATELY to prevent duplicates
+        isProcessingRef.current = true
+        setProcessing(true)
         lastScannedCode.current = qrCode
         setScannedCode(qrCode)
-        setProcessing(true)
         
-        // Stop scanning temporarily
+        // Stop scanning IMMEDIATELY to prevent multiple scans
         if (html5QrCodeRef.current && scanning) {
             try {
                 await html5QrCodeRef.current.stop()
@@ -387,6 +392,11 @@ const QRScanner = () => {
                 { withCredentials: true }
             )
             
+            // Close camera modal immediately after successful scan
+            if (scanning || showCameraModal) {
+                await stopScanning()
+            }
+            
             toast.success(response.data.message || 'Attendance recorded successfully!')
             
             // Update attendance status for UI
@@ -429,7 +439,12 @@ const QRScanner = () => {
             console.error('Error recording attendance:', error)
             const errorMessage = error.response?.data?.message || error.message || 'Failed to record attendance'
             
-            // Provide more specific error messages
+            // Close camera modal immediately on error to prevent multiple scans
+            if (scanning || showCameraModal) {
+                await stopScanning()
+            }
+            
+            // Provide more specific error messages (only show once)
             if (error.response?.status === 400) {
                 if (errorMessage.includes('already recorded')) {
                     toast.error('You have already recorded attendance for this event')
@@ -448,15 +463,16 @@ const QRScanner = () => {
                 toast.error(errorMessage)
             }
         } finally {
-            // Always close camera modal after scan attempt (success or failure)
+            // Ensure camera is stopped and modal is closed
             if (scanning || showCameraModal) {
                 await stopScanning()
             }
+            isProcessingRef.current = false
             setProcessing(false)
-            lastScannedCode.current = ''
+            // Clear last scanned code after a delay to prevent immediate re-scans
             setTimeout(() => {
                 lastScannedCode.current = ''
-            }, 3000)
+            }, 5000) // Increased delay to prevent duplicate scans
         }
     }
     
@@ -521,7 +537,10 @@ const QRScanner = () => {
                     { facingMode: "environment" },
                     config,
                     (decodedText) => {
-                        handleQRScan(decodedText, action)
+                        // Prevent multiple simultaneous scans using ref for immediate check
+                        if (!isProcessingRef.current && decodedText !== lastScannedCode.current) {
+                            handleQRScan(decodedText, action)
+                        }
                     },
                     (errorMessage) => {
                         // Ignore scan errors (they're just scanning attempts)
@@ -542,7 +561,10 @@ const QRScanner = () => {
                             { facingMode: "user" },
                             config,
                 (decodedText) => {
-                                handleQRScan(decodedText, action)
+                                // Prevent multiple simultaneous scans using ref for immediate check
+                                if (!isProcessingRef.current && decodedText !== lastScannedCode.current) {
+                                    handleQRScan(decodedText, action)
+                                }
                 },
                 (errorMessage) => {
                                 // Ignore scan errors
@@ -559,7 +581,10 @@ const QRScanner = () => {
                                 null, // Let browser choose any available camera
                                 config,
                                 (decodedText) => {
-                                    handleQRScan(decodedText, action)
+                                    // Prevent multiple simultaneous scans using ref for immediate check
+                                    if (!isProcessingRef.current && decodedText !== lastScannedCode.current) {
+                                        handleQRScan(decodedText, action)
+                                    }
                                 },
                                 (errorMessage) => {
                                     // Ignore scan errors

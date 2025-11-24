@@ -2,12 +2,24 @@ import eventModel from '../models/eventModel.js'
 import Notification from '../models/notificationModel.js'
 import nodemailer from '../config/nodemailer.js'
 import userModel from '../models/userModel.js'
+import mongoose from 'mongoose'
 
 function toSec(ms) { return Math.floor(ms / 1000) }
+
+/**
+ * Check if database is connected before performing operations
+ */
+function isDBReady() {
+    return mongoose.connection.readyState === 1;
+}
 
 export function scheduleReminders() {
     // Run every 60s; find events starting within next 25h and create reminders at 24h/1h if not yet created
     const run = async () => {
+        // Check if database is connected
+        if (!isDBReady()) {
+            return; // Skip if DB not ready
+        }
         const now = new Date()
         const in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000)
         const events = await eventModel.find({ startDate: { $gte: now, $lte: in25h } }).lean()
@@ -46,8 +58,29 @@ export function scheduleReminders() {
             } catch (_) {}
         }
     }
-    run().catch(()=>{})
-    setInterval(() => run().catch(()=>{}), 60000)
+    
+    // Wait for DB connection before starting
+    const checkAndStart = () => {
+        if (isDBReady()) {
+            run().catch(err => {
+                if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                    console.error('Reminder scheduler error:', err.message);
+                }
+            });
+            setInterval(() => {
+                run().catch(err => {
+                    if (err.name !== 'MongooseError' || !err.message.includes('buffering')) {
+                        console.error('Reminder scheduler error:', err.message);
+                    }
+                });
+            }, 60000);
+        } else {
+            // Retry after 2 seconds if DB not ready
+            setTimeout(checkAndStart, 2000);
+        }
+    };
+    
+    checkAndStart();
 }
 
 
