@@ -173,6 +173,14 @@ const Footer = () => {
                                     Privacy Policy
                                 </button>
                             </li>
+                            <li>
+                                <button 
+                                    onClick={() => handleNavigation('/user-manual')}
+                                    className="hover:underline text-left cursor-pointer"
+                                >
+                                    User Manual
+                                </button>
+                            </li>
                         </ul>
                     </div>
 

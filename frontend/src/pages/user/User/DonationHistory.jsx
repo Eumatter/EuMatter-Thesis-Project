@@ -3,6 +3,7 @@ import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { useCache } from '../../../context/CacheContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -21,12 +22,14 @@ import {
     FaInfoCircle,
     FaFilePdf,
     FaArrowLeft,
-    FaCheck
+    FaCheck,
+    FaExclamationCircle
 } from 'react-icons/fa'
 
 const DonationHistory = () => {
     const navigate = useNavigate()
     const { backendUrl, userData } = useContext(AppContent)
+    const { cachedGet, invalidateType } = useCache()
     const [activeTab, setActiveTab] = useState('history') // 'history', 'donate', 'inkind'
     const [donations, setDonations] = useState([])
     const [filteredDonations, setFilteredDonations] = useState([])
@@ -68,24 +71,51 @@ const DonationHistory = () => {
     })
     const [submittingInKind, setSubmittingInKind] = useState(false)
     const [events, setEvents] = useState([])
+    const [inKindSettings, setInKindSettings] = useState({
+        enabled: true,
+        allowedTypes: ['food', 'clothing', 'school_supplies', 'medical_supplies', 'equipment', 'services', 'other'],
+        instructions: ''
+    })
 
     useEffect(() => {
         fetchDonations()
         fetchEvents()
         fetchInKindDonations()
         fetchDepartments()
+        fetchInKindSettings()
     }, [backendUrl])
+    
+    const fetchInKindSettings = async () => {
+        try {
+            // Fetch in-kind donation settings from public endpoint
+            // Use forceRefresh to avoid old cached endpoints
+            const data = await cachedGet('inKindDonationSettings', 'api/system-settings/in-kind-donations', { forceRefresh: true })
+            if (data?.success && data.inKindDonationSettings) {
+                setInKindSettings({
+                    enabled: data.inKindDonationSettings.enabled !== undefined 
+                        ? data.inKindDonationSettings.enabled 
+                        : true,
+                    allowedTypes: data.inKindDonationSettings.allowedTypes || inKindSettings.allowedTypes,
+                    instructions: data.inKindDonationSettings.instructions || ''
+                })
+            }
+        } catch (err) {
+            // If fetch fails, use defaults (already set in state)
+            console.log('Could not fetch in-kind donation settings, using defaults')
+        }
+    }
 
     const fetchDepartments = async () => {
         try {
-            axios.defaults.withCredentials = true
-            const { data } = await axios.get(`${backendUrl}api/users/departments`)
-            if (data.success) {
+            // Use forceRefresh to avoid old cached endpoints
+            const data = await cachedGet('departments', 'api/user/departments', { forceRefresh: true })
+            if (data?.success) {
                 setDepartments(data.departments || [])
             }
         } catch (err) {
             console.error('Failed to fetch departments:', err)
             // Fallback: departments will be empty, user can still donate to CRD or events
+            setDepartments([])
         }
     }
 
@@ -94,24 +124,22 @@ const DonationHistory = () => {
     }, [donations, searchTerm, statusFilter, paymentMethodFilter, dateFilter])
 
     const fetchDonations = async () => {
-            try {
+        try {
             setLoading(true)
-                axios.defaults.withCredentials = true
-                const { data } = await axios.get(`${backendUrl}api/donations/me`)
-            if (data.success) {
+            const data = await cachedGet('donations', 'api/donations/me', { identifier: 'user', forceRefresh: false })
+            if (data?.success) {
                 setDonations(data.donations || [])
             }
-            } catch (err) {
+        } catch (err) {
             toast.error(err?.response?.data?.message || 'Failed to load donations')
-            } finally {
-                setLoading(false)
-            }
+        } finally {
+            setLoading(false)
         }
+    }
 
     const fetchEvents = async () => {
         try {
-            axios.defaults.withCredentials = true
-            const { data } = await axios.get(`${backendUrl}api/events`)
+            const data = await cachedGet('events', 'api/events', { forceRefresh: false })
             if (data && Array.isArray(data)) {
                 // Filter only events open for donations
                 const openEvents = data.filter(e => e.isOpenForDonation && new Date(e.endDate) > new Date())
@@ -124,9 +152,8 @@ const DonationHistory = () => {
 
     const fetchInKindDonations = async () => {
         try {
-            axios.defaults.withCredentials = true
-            const { data } = await axios.get(`${backendUrl}api/in-kind-donations/me`)
-            if (data.success) {
+            const data = await cachedGet('inKindDonations', 'api/in-kind-donations/me', { identifier: 'user', forceRefresh: false })
+            if (data?.success) {
                 setInKindDonations(data.donations || [])
             }
         } catch (err) {
@@ -136,6 +163,18 @@ const DonationHistory = () => {
 
     const handleInKindSubmit = async (e) => {
         e.preventDefault()
+        
+        // Validate in-kind donations are enabled
+        if (!inKindSettings.enabled) {
+            toast.error('In-kind donations are currently disabled')
+            return
+        }
+        
+        // Validate donation type is allowed
+        if (!inKindSettings.allowedTypes.includes(inKindForm.donationType)) {
+            toast.error('Selected donation type is not currently allowed')
+            return
+        }
         
         if (!inKindForm.itemDescription || inKindForm.itemDescription.trim() === '') {
             toast.error('Please provide a description of the items you wish to donate')
@@ -617,13 +656,16 @@ const DonationHistory = () => {
                                 <div className="mb-6 space-y-4">
                                     {/* Search Bar */}
                                     <div className="relative">
-                                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                        <label htmlFor="search-donations" className="sr-only">Search donations</label>
+                                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" aria-hidden="true" />
                                         <input
+                                            id="search-donations"
                                             type="text"
-                                            placeholder="Search donations..."
+                                            placeholder="Search donations by name, message, or ID..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                            aria-label="Search donations"
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent transition-all min-h-[44px]"
                                         />
                                     </div>
 
@@ -631,9 +673,11 @@ const DonationHistory = () => {
                                     <div className="flex flex-wrap items-center gap-3">
                                         <button
                                             onClick={() => setShowFilters(!showFilters)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                            aria-label={showFilters ? "Hide filters" : "Show filters"}
+                                            aria-expanded={showFilters}
+                                            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-2 min-h-[44px]"
                                         >
-                                            <FaFilter />
+                                            <FaFilter aria-hidden="true" />
                                             <span className="text-sm font-medium">Filters</span>
                                         </button>
                                         
@@ -690,7 +734,17 @@ const DonationHistory = () => {
                                 ) : filteredDonations.length === 0 ? (
                                     <div className="text-center py-12">
                                         <FaHandHoldingHeart className="text-6xl text-gray-300 mx-auto mb-4" />
-                                        <p className="text-gray-500 text-lg">No donations found</p>
+                                        <div className="text-center py-8">
+                                            <FaHandHoldingHeart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                            <p className="text-gray-500 text-lg font-medium mb-2">No donations found</p>
+                                            <p className="text-gray-400 text-sm mb-4">You haven't made any donations yet</p>
+                                            <button
+                                                onClick={() => setActiveTab('donate')}
+                                                className="px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors"
+                                            >
+                                                Make Your First Donation
+                                            </button>
+                                        </div>
                                         <p className="text-gray-400 text-sm mt-2">
                                             {donations.length === 0 
                                                 ? 'You haven\'t made any donations yet' 
@@ -856,19 +910,23 @@ const DonationHistory = () => {
 
                                 <form onSubmit={handleDonate} className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Donation Amount (PHP)
+                                        <label htmlFor="donation-amount" className="block text-sm font-medium text-gray-700 mb-2">
+                                            Donation Amount (PHP) <span className="text-red-500" aria-label="required">*</span>
                                         </label>
                                         <input
+                                            id="donation-amount"
                                             type="number"
                                             min="1"
                                             step="0.01"
                                             value={donationForm.amount}
                                             onChange={(e) => setDonationForm({ ...donationForm, amount: e.target.value })}
-                                            placeholder="Enter amount"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-lg"
+                                            placeholder="Enter amount (e.g., 100.00)"
+                                            aria-label="Donation amount in Philippine Peso"
+                                            aria-required="true"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent text-lg transition-all"
                                             required
                                         />
+                                        <p className="mt-1 text-xs text-gray-500">Minimum donation: ₱1.00</p>
                                         <div className="mt-2 flex flex-wrap gap-2">
                                             {[100, 500, 1000, 5000].map((amount) => (
                                                 <button
@@ -908,13 +966,16 @@ const DonationHistory = () => {
 
                                     {donationForm.recipientType === 'department' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Select Department <span className="text-red-500">*</span>
+                                            <label htmlFor="donation-department" className="block text-sm font-medium text-gray-700 mb-2">
+                                                Select Department <span className="text-red-500" aria-label="required">*</span>
                                             </label>
                                             <select
+                                                id="donation-department"
                                                 value={donationForm.departmentId || ''}
                                                 onChange={(e) => setDonationForm({ ...donationForm, departmentId: e.target.value || null })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                aria-label="Select department to receive donation"
+                                                aria-required="true"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent transition-all min-h-[44px]"
                                                 required={donationForm.recipientType === 'department'}
                                             >
                                                 <option value="">Select a department...</option>
@@ -932,13 +993,16 @@ const DonationHistory = () => {
 
                                     {donationForm.recipientType === 'event' && (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Select Event <span className="text-red-500">*</span>
+                                            <label htmlFor="donation-event" className="block text-sm font-medium text-gray-700 mb-2">
+                                                Select Event <span className="text-red-500" aria-label="required">*</span>
                                             </label>
                                             <select
+                                                id="donation-event"
                                                 value={donationForm.eventId || ''}
                                                 onChange={(e) => setDonationForm({ ...donationForm, eventId: e.target.value || null })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                                aria-label="Select event to receive donation"
+                                                aria-required="true"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent transition-all min-h-[44px]"
                                                 required={donationForm.recipientType === 'event'}
                                             >
                                                 <option value="">Select an event...</option>
@@ -953,27 +1017,30 @@ const DonationHistory = () => {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Donation Method
+                                            Payment Method
                                         </label>
-                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3" role="radiogroup" aria-label="Select payment method">
                                             {[
-                                                { value: 'gcash', label: 'GCash', icon: <FaWallet /> },
-                                                { value: 'paymaya', label: 'PayMaya', icon: <FaCreditCard /> },
-                                                { value: 'card', label: 'Card', icon: <FaCreditCard /> },
-                                                { value: 'bank', label: 'Bank', icon: <FaMoneyBillWave /> },
-                                                { value: 'cash', label: 'Cash', icon: <FaMoneyBillWave /> }
+                                                { value: 'gcash', label: 'GCash', icon: <FaWallet />, description: 'Pay via GCash mobile wallet' },
+                                                { value: 'paymaya', label: 'PayMaya', icon: <FaCreditCard />, description: 'Pay via PayMaya mobile wallet' },
+                                                { value: 'card', label: 'Card', icon: <FaCreditCard />, description: 'Pay via debit or credit card' },
+                                                { value: 'bank', label: 'Bank', icon: <FaMoneyBillWave />, description: 'Pay via bank transfer' },
+                                                { value: 'cash', label: 'Cash', icon: <FaMoneyBillWave />, description: 'Pay with cash (requires verification)' }
                                             ].map((method) => (
                                                 <button
                                                     key={method.value}
                                                     type="button"
                                                     onClick={() => setDonationForm({ ...donationForm, paymentMethod: method.value })}
-                                                    className={`p-4 border-2 rounded-lg transition-all ${
+                                                    role="radio"
+                                                    aria-checked={donationForm.paymentMethod === method.value}
+                                                    aria-label={`${method.label} - ${method.description}`}
+                                                    className={`p-4 border-2 rounded-lg transition-all min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-2 ${
                                                         donationForm.paymentMethod === method.value
-                                                            ? 'border-[#800000] bg-red-50'
-                                                            : 'border-gray-200 hover:border-gray-300'
+                                                            ? 'border-[#800000] bg-red-50 ring-2 ring-[#800000]'
+                                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                                     }`}
                                                 >
-                                                    <div className="text-2xl mb-2 text-gray-600">{method.icon}</div>
+                                                    <div className="text-2xl mb-2 text-gray-600" aria-hidden="true">{method.icon}</div>
                                                     <div className="text-sm font-medium text-gray-700">{method.label}</div>
                                                 </button>
                                             ))}
@@ -994,22 +1061,27 @@ const DonationHistory = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label htmlFor="donation-message" className="block text-sm font-medium text-gray-700 mb-2">
                                             Message (Optional)
                                         </label>
                                         <textarea
+                                            id="donation-message"
                                             value={donationForm.message}
                                             onChange={(e) => setDonationForm({ ...donationForm, message: e.target.value })}
-                                            placeholder="Leave a message with your donation..."
+                                            placeholder="Leave a message with your donation (e.g., 'In memory of...', 'For the children...')"
                                             rows="4"
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                            aria-label="Optional message to include with donation"
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent transition-all resize-y"
                                         />
+                                        <p className="mt-1 text-xs text-gray-500">Maximum 500 characters</p>
                                     </div>
 
                                     <button
                                         type="submit"
                                         disabled={donating}
-                                        className="w-full bg-[#800000] text-white py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-[#9c0000] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                                        aria-label={donating ? "Processing donation..." : "Submit donation"}
+                                        aria-busy={donating}
+                                        className="w-full bg-[#800000] text-white py-3 sm:py-4 rounded-lg font-semibold text-lg hover:bg-[#9c0000] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-2 min-h-[52px]"
                                     >
                                         {donating ? (
                                             <>
@@ -1057,27 +1129,45 @@ const DonationHistory = () => {
                                 {/* Submission Form */}
                                 <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8">
                                     <h3 className="text-xl font-bold text-gray-900 mb-6">Submit In-Kind Donation Request</h3>
-                                    <form onSubmit={handleInKindSubmit} className="space-y-6">
-                                        {/* Donation Type */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Donation Type <span className="text-red-500">*</span>
-                                            </label>
-                                            <select
-                                                value={inKindForm.donationType}
-                                                onChange={(e) => setInKindForm({ ...inKindForm, donationType: e.target.value })}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                                required
-                                            >
-                                                <option value="food">Food & Beverages</option>
-                                                <option value="clothing">Clothing & Textiles</option>
-                                                <option value="school_supplies">School Supplies & Books</option>
-                                                <option value="medical_supplies">Medical Supplies</option>
-                                                <option value="equipment">Equipment & Tools</option>
-                                                <option value="services">Services & Expertise</option>
-                                                <option value="other">Other</option>
-                                            </select>
+                                    
+                                    {/* Instructions from System Settings */}
+                                    {inKindSettings.instructions && (
+                                        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <p className="text-sm text-gray-700 whitespace-pre-line">{inKindSettings.instructions}</p>
                                         </div>
+                                    )}
+                                    
+                                    {!inKindSettings.enabled ? (
+                                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <p className="text-sm text-yellow-800">In-kind donations are currently disabled. Please contact support for assistance.</p>
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleInKindSubmit} className="space-y-6">
+                                            {/* Donation Type */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Donation Type <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    value={inKindForm.donationType}
+                                                    onChange={(e) => {
+                                                        // Ensure selected type is in allowed types
+                                                        if (inKindSettings.allowedTypes.includes(e.target.value)) {
+                                                            setInKindForm({ ...inKindForm, donationType: e.target.value })
+                                                        }
+                                                    }}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                    required
+                                                >
+                                                    {inKindSettings.allowedTypes.includes('food') && <option value="food">Food & Beverages</option>}
+                                                    {inKindSettings.allowedTypes.includes('clothing') && <option value="clothing">Clothing & Textiles</option>}
+                                                    {inKindSettings.allowedTypes.includes('school_supplies') && <option value="school_supplies">School Supplies & Books</option>}
+                                                    {inKindSettings.allowedTypes.includes('medical_supplies') && <option value="medical_supplies">Medical Supplies</option>}
+                                                    {inKindSettings.allowedTypes.includes('equipment') && <option value="equipment">Equipment & Tools</option>}
+                                                    {inKindSettings.allowedTypes.includes('services') && <option value="services">Services & Expertise</option>}
+                                                    {inKindSettings.allowedTypes.includes('other') && <option value="other">Other</option>}
+                                                </select>
+                                            </div>
 
                                         {/* Item Description */}
                                         <div>
@@ -1280,6 +1370,7 @@ const DonationHistory = () => {
                                             )}
                                         </button>
                                     </form>
+                                    )}
                                 </div>
 
                                 {/* In-Kind Donation History */}

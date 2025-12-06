@@ -249,6 +249,187 @@ html[data-font-size="extra-large"] {
   z-index: 9999 !important;
 }
 
+/* Enhanced Accessibility Styles */
+/* Focus indicators for better keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #800000;
+  outline-offset: 2px;
+}
+
+/* Skip to main content link (hidden until focused) */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #800000;
+  color: white;
+  padding: 8px 16px;
+  text-decoration: none;
+  z-index: 10000;
+  border-radius: 4px;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* Improved form field focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #800000;
+  outline-offset: 2px;
+}
+
+/* Better button focus states */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #800000;
+  outline-offset: 2px;
+}
+
+/* Enhanced touch targets for mobile */
+@media (max-width: 768px) {
+  button,
+  a,
+  input[type="button"],
+  input[type="submit"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Improved text readability */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Better error message visibility */
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Success message styling */
+.success-message {
+  color: #16a34a;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Improved loading states */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+/* Better empty state styling */
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: #d1d5db;
+  margin-bottom: 1rem;
+}
+
+/* Improved card hover states */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Better table responsiveness */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  thead {
+    display: none;
+  }
+  
+  tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  
+  td {
+    display: block;
+    text-align: right;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  td:before {
+    content: attr(data-label);
+    float: left;
+    font-weight: 600;
+    color: #374151;
+  }
+  
+  td:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Improved print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+  
+  table {
+    page-break-inside: avoid;
+  }
+}
+
 .modal-content {
   z-index: 10000 !important;
 }
@@ -351,4 +532,67 @@ html[data-font-size="extra-large"] {
 
 .animate-bounce-in {
   animation: bounce-in 0.5s ease-out;
+}
+
+/* Print Styles */
+@media print {
+  /* Hide elements that shouldn't be printed */
+  .no-print,
+  header,
+  footer,
+  button,
+  .no-print * {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print\\:block {
+    display: block !important;
+  }
+  
+  /* Page setup */
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+  
+  /* Ensure proper page breaks */
+  .print-break {
+    page-break-after: always;
+  }
+  
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  /* Avoid breaking inside elements */
+  .print-no-break {
+    page-break-inside: avoid;
+  }
+  
+  /* Adjust colors for printing */
+  body {
+    color: #000 !important;
+    background: #fff !important;
+  }
+  
+  /* Ensure charts and tables print properly */
+  svg,
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Remove shadows and borders for cleaner print */
+  .shadow-lg,
+  .shadow-md,
+  .shadow {
+    box-shadow: none !important;
+  }
+  
+  /* Ensure text is readable */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

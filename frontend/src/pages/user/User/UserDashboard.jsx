@@ -4,6 +4,7 @@ import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { useCache } from '../../../context/CacheContext.jsx'
 import { useNavigate } from 'react-router-dom';
 import api from '../../../utils/api';
 import { notifyError, notifySuccess } from '../../../utils/notify';
@@ -15,6 +16,7 @@ import { FaStar } from 'react-icons/fa';
 const UserDashboard = () => {
     const navigate = useNavigate();
     const { backendUrl, userData, setUserData } = useContext(AppContent);
+    const { cachedGet } = useCache();
     const [events, setEvents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [today, setToday] = useState(new Date());
@@ -34,7 +36,7 @@ const UserDashboard = () => {
 
     const fetchEvents = async () => {
         try {
-            const { data } = await api.get('/api/events');
+            const data = await cachedGet('events', 'api/events', { forceRefresh: false });
             if (data) {
                 // Filter out Proposed events - only show Approved, Upcoming, Ongoing, or Completed events
                 const approvedEvents = Array.isArray(data) 
@@ -59,8 +61,8 @@ const UserDashboard = () => {
 
     const fetchUserData = async () => {
         try {
-            const { data } = await api.get('/api/auth/is-authenticated');
-            if (data.success) {
+            const data = await cachedGet('user', 'api/auth/is-authenticated', { forceRefresh: false });
+            if (data?.success) {
                 setUserData(data.user);
             }
         } catch (error) {
@@ -75,7 +77,7 @@ const UserDashboard = () => {
     const fetchPendingFeedback = async () => {
         try {
             setFeedbackLoading(true);
-            const { data } = await api.get('/api/feedback/me/pending');
+            const data = await cachedGet('notifications', 'api/feedback/me/pending', { forceRefresh: false });
             if (data?.success) {
                 // Ensure we always set an array, even if records is undefined or null
                 const records = Array.isArray(data.records) ? data.records : [];
@@ -96,7 +98,7 @@ const UserDashboard = () => {
 
     const fetchAttendanceSummary = async () => {
         try {
-            const { data } = await api.get('/api/attendance/me/summary');
+            const data = await cachedGet('volunteers', 'api/attendance/me/summary', { forceRefresh: false });
             if (data?.success) {
                 setAttendanceSummary({
                     totalHours: data.totalHours || 0,
@@ -640,31 +642,88 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Quick Links - 1 Row, 3 Columns for All Devices */}
+                        {/* Quick Actions - Mobile: 3 Columns (Icon Top, Text Bottom) | Desktop: Horizontal (Icon Left, Text Right) */}
                         <div className="bg-white rounded-xl shadow-md p-3 sm:p-4 md:p-5 transition-all duration-300 hover:shadow-lg">
-                            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                            <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 hidden sm:block">Quick Actions</h3>
+                            {/* Mobile: 3 Column Grid with Icons on Top */}
+                            <div className="grid grid-cols-3 gap-2 sm:hidden">
                                 <button 
                                     onClick={() => handleDonate()}
-                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
+                                    className="flex flex-col items-center justify-center space-y-1.5 px-2 py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
                                 >
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Donate</span>
+                                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                                        <svg className="w-5 h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                        </svg>
+                                    </div>
+                                    <span className="text-xs text-gray-900 font-medium text-center group-hover:text-[#800000] transition-colors">Donate</span>
                                 </button>
                                 <button 
                                     onClick={() => navigate('/user/events')}
-                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
+                                    className="flex flex-col items-center justify-center space-y-1.5 px-2 py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
                                 >
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Browse Events</span>
+                                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                                        <svg className="w-5 h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <span className="text-xs text-gray-900 font-medium text-center group-hover:text-[#800000] transition-colors">Browse Events</span>
                                 </button>
                                 <button
                                     onClick={() => navigate('/user/volunteer-history')}
-                                    className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 px-2 sm:px-3 py-3 sm:py-4 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100"
+                                    className="flex flex-col items-center justify-center space-y-1.5 px-2 py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
                                 >
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
+                                        <svg className="w-5 h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-xs text-gray-900 font-medium text-center group-hover:text-[#800000] transition-colors">Volunteer Hours</span>
+                                </button>
+                            </div>
+                            {/* Desktop/Tablet: Horizontal Layout with Icons on Left */}
+                            <div className="hidden sm:block space-y-2 sm:space-y-2.5">
+                                <button 
+                                    onClick={() => handleDonate()}
+                                    className="w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
+                                >
+                                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center rounded-lg bg-red-50 group-hover:bg-red-100 transition-colors">
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm sm:text-base text-gray-900 font-medium flex-1 text-left group-hover:text-[#800000] transition-colors">Donate</span>
+                                    <svg className="w-4 h-4 text-gray-400 group-hover:text-[#800000] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                     </svg>
-                                    <span className="text-xs sm:text-sm md:text-base text-black font-medium text-center">Volunteer Hours</span>
+                                </button>
+                                <button 
+                                    onClick={() => navigate('/user/events')}
+                                    className="w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
+                                >
+                                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm sm:text-base text-gray-900 font-medium flex-1 text-left group-hover:text-[#800000] transition-colors">Browse Events</span>
+                                    <svg className="w-4 h-4 text-gray-400 group-hover:text-[#800000] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={() => navigate('/user/volunteer-history')}
+                                    className="w-full flex items-center space-x-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 hover:border-gray-200 hover:shadow-sm group"
+                                >
+                                    <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center rounded-lg bg-green-50 group-hover:bg-green-100 transition-colors">
+                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#800000] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm sm:text-base text-gray-900 font-medium flex-1 text-left group-hover:text-[#800000] transition-colors">Volunteer Hours</span>
+                                    <svg className="w-4 h-4 text-gray-400 group-hover:text-[#800000] transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                    </svg>
                                 </button>
                             </div>
                         </div>

@@ -63,6 +63,48 @@ export const getMaintenanceMode = async (req, res) => {
     }
 };
 
+// Get in-kind donation settings (public endpoint - users need this for donation form)
+export const getInKindDonationSettings = async (req, res) => {
+    try {
+        // Check if database is connected
+        if (mongoose.connection.readyState !== 1) {
+            // Return default settings if DB is not connected
+            return res.json({ 
+                success: true, 
+                inKindDonationSettings: {
+                    enabled: true,
+                    allowedTypes: ["food", "clothing", "school_supplies", "medical_supplies", "equipment", "services", "other"],
+                    instructions: "Please provide detailed information about your in-kind donation including item description, quantity, and estimated value. Our team will review your donation and contact you regarding delivery or pickup arrangements."
+                }
+            });
+        }
+
+        const settings = await SystemSettings.getSettings();
+        res.json({ 
+            success: true, 
+            inKindDonationSettings: settings.inKindDonationSettings || {
+                enabled: true,
+                allowedTypes: ["food", "clothing", "school_supplies", "medical_supplies", "equipment", "services", "other"],
+                instructions: "Please provide detailed information about your in-kind donation including item description, quantity, and estimated value. Our team will review your donation and contact you regarding delivery or pickup arrangements."
+            }
+        });
+    } catch (error) {
+        // Only log if it's not a connection error
+        if (error.name !== 'MongooseError' || !error.message.includes('buffering')) {
+            console.error('Error fetching in-kind donation settings:', error.message);
+        }
+        // Return default settings on error
+        res.json({ 
+            success: true, 
+            inKindDonationSettings: {
+                enabled: true,
+                allowedTypes: ["food", "clothing", "school_supplies", "medical_supplies", "equipment", "services", "other"],
+                instructions: "Please provide detailed information about your in-kind donation including item description, quantity, and estimated value. Our team will review your donation and contact you regarding delivery or pickup arrangements."
+            }
+        });
+    }
+};
+
 // Update system settings (System Admin only)
 export const updateSystemSettings = async (req, res) => {
     try {
@@ -71,7 +113,7 @@ export const updateSystemSettings = async (req, res) => {
             return res.status(403).json({ success: false, message: 'Only System Administrators can update system settings' });
         }
 
-        const { maintenanceMode, systemName, emailNotifications, passwordPolicy, twoFactorAuth } = req.body;
+        const { maintenanceMode, systemName, emailNotifications, passwordPolicy, twoFactorAuth, inKindDonationSettings } = req.body;
         
         const settings = await SystemSettings.getSettings();
         
@@ -122,6 +164,23 @@ export const updateSystemSettings = async (req, res) => {
         if (emailNotifications !== undefined) settings.emailNotifications = emailNotifications;
         if (passwordPolicy !== undefined) settings.passwordPolicy = passwordPolicy;
         if (twoFactorAuth !== undefined) settings.twoFactorAuth = twoFactorAuth;
+        
+        // Update in-kind donation settings
+        if (req.body.inKindDonationSettings !== undefined) {
+            const inKindSettings = req.body.inKindDonationSettings;
+            if (!settings.inKindDonationSettings) {
+                settings.inKindDonationSettings = {};
+            }
+            if (inKindSettings.allowedTypes !== undefined) {
+                settings.inKindDonationSettings.allowedTypes = inKindSettings.allowedTypes;
+            }
+            if (inKindSettings.instructions !== undefined) {
+                settings.inKindDonationSettings.instructions = inKindSettings.instructions;
+            }
+            if (inKindSettings.enabled !== undefined) {
+                settings.inKindDonationSettings.enabled = inKindSettings.enabled;
+            }
+        }
         
         await settings.save();
         

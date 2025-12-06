@@ -3,6 +3,7 @@ import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { useCache } from '../../../context/CacheContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -39,12 +40,14 @@ import {
     FaMoneyBillWave,
     FaBoxOpen,
     FaCreditCard,
-    FaBriefcase
+    FaBriefcase,
+    FaPrint
 } from 'react-icons/fa'
 
 const Reports = () => {
     const navigate = useNavigate()
     const { backendUrl } = useContext(AppContent)
+    const { cachedGet } = useCache()
     const [activeTab, setActiveTab] = useState('overview')
     const [isLoading, setIsLoading] = useState(true)
     
@@ -53,6 +56,7 @@ const Reports = () => {
     const [donations, setDonations] = useState([])
     const [users, setUsers] = useState([])
     const [inKindDonations, setInKindDonations] = useState([])
+    const [expenditures, setExpenditures] = useState([])
     
     // Fetch all data
     useEffect(() => {
@@ -62,44 +66,71 @@ const Reports = () => {
     const fetchAllData = async () => {
         try {
             setIsLoading(true)
-            axios.defaults.withCredentials = true
             
-            // Fetch events
-            const eventsResponse = await axios.get(backendUrl + 'api/events')
-            const eventsData = eventsResponse.data || []
-            setEvents(eventsData)
+            // Declare variables at function scope for use in fallback code
+            let eventsData = []
+            let donationsData = []
             
-            // Fetch donations
-            const donationsResponse = await axios.get(backendUrl + 'api/donations/all')
-            const donationsData = donationsResponse.data?.donations || []
-            setDonations(donationsData)
-            
-            // Fetch in-kind donations
+            // Fetch events with caching
             try {
-                const inKindResponse = await axios.get(backendUrl + 'api/in-kind-donations')
-                setInKindDonations(inKindResponse.data?.donations || [])
+                eventsData = await cachedGet('events', 'api/events', { forceRefresh: false })
+                setEvents(eventsData || [])
+            } catch (error) {
+                console.error('Error fetching events:', error)
+                setEvents([])
+            }
+            
+            // Fetch donations with caching
+            try {
+                const donationsResponse = await cachedGet('donations', 'api/donations/all', { forceRefresh: false })
+                donationsData = donationsResponse?.donations || []
+                setDonations(donationsData)
+            } catch (error) {
+                console.error('Error fetching donations:', error)
+                setDonations([])
+            }
+            
+            // Fetch in-kind donations with caching
+            try {
+                const inKindResponse = await cachedGet('inKindDonations', 'api/in-kind-donations', { forceRefresh: false })
+                setInKindDonations(inKindResponse?.donations || [])
             } catch (error) {
                 console.error('Error fetching in-kind donations:', error)
                 setInKindDonations([])
             }
             
-            // Fetch users (for demographics) - try multiple endpoints
+            // Fetch expenditures with caching
+            try {
+                const expendituresResponse = await cachedGet('expenditures', 'api/expenditures', { forceRefresh: false })
+                setExpenditures(expendituresResponse?.expenditures || expendituresResponse || [])
+            } catch (error) {
+                console.error('Error fetching expenditures:', error)
+                setExpenditures([])
+            }
+            
+            // Fetch users (for demographics) - try multiple endpoints with caching
             let usersData = []
             try {
-                // Try admin endpoint first (System Admin only)
-                const adminResponse = await axios.get(backendUrl + 'api/admin/users?limit=10000')
-                if (adminResponse.data?.success && adminResponse.data?.users) {
-                    usersData = adminResponse.data.users
+                // Try admin endpoint first (System Admin only) with caching
+                const adminResponse = await cachedGet('users', 'api/admin/users', { 
+                    forceRefresh: false,
+                    params: { limit: 10000 }
+                })
+                if (adminResponse?.success && adminResponse?.users) {
+                    usersData = adminResponse.users
                 }
             } catch (error) {
                 console.log('Admin users endpoint not accessible, trying alternative...')
                 try {
-                    // Try regular users endpoint (System Admin only)
-                    const usersResponse = await axios.get(backendUrl + 'api/users?limit=10000')
-                    if (usersResponse.data?.success && usersResponse.data?.users) {
-                        usersData = usersResponse.data.users
-                    } else if (Array.isArray(usersResponse.data)) {
-                        usersData = usersResponse.data
+                    // Try regular users endpoint (System Admin only) with caching
+                    const usersResponse = await cachedGet('users', 'api/users', { 
+                        forceRefresh: false,
+                        params: { limit: 10000 }
+                    })
+                    if (usersResponse?.success && usersResponse?.users) {
+                        usersData = usersResponse.users
+                    } else if (Array.isArray(usersResponse)) {
+                        usersData = usersResponse
                     }
                 } catch (altError) {
                     console.log('Users endpoint not accessible, extracting from donations and events...')
@@ -107,9 +138,13 @@ const Reports = () => {
                     // Note: These may have limited fields, but we'll use what we have
                     const uniqueUsers = new Map()
                     
+                    // Ensure we have arrays
+                    const safeDonationsData = Array.isArray(donationsData) ? donationsData : []
+                    const safeEventsData = Array.isArray(eventsData) ? eventsData : []
+                    
                     // From donations - user data is populated but may be limited
-                    donationsData.forEach(donation => {
-                        if (donation.user) {
+                    safeDonationsData.forEach(donation => {
+                        if (donation && donation.user) {
                             const userId = donation.user._id?.toString() || donation.user.toString()
                             if (!uniqueUsers.has(userId)) {
                                 // Store user data, even if incomplete
@@ -130,10 +165,10 @@ const Reports = () => {
                     })
                     
                     // From events (volunteers) - user data is populated but may be limited
-                    eventsData.forEach(event => {
-                        if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                    safeEventsData.forEach(event => {
+                        if (event && event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
                             event.volunteerRegistrations.forEach(reg => {
-                                if (reg.user) {
+                                if (reg && reg.user) {
                                     const userId = reg.user._id?.toString() || reg.user.toString()
                                     if (!uniqueUsers.has(userId)) {
                                         // Store user data, even if incomplete
@@ -153,10 +188,12 @@ const Reports = () => {
                                     } else {
                                         // Merge additional data if available
                                         const existing = uniqueUsers.get(userId)
-                                        if (reg.user.userType) existing.userType = reg.user.userType
-                                        if (reg.user.mseufCategory) existing.mseufCategory = reg.user.mseufCategory
-                                        if (reg.user.outsiderCategory) existing.outsiderCategory = reg.user.outsiderCategory
-                                        if (reg.user.role) existing.role = reg.user.role
+                                        if (existing) {
+                                            if (reg.user.userType) existing.userType = reg.user.userType
+                                            if (reg.user.mseufCategory) existing.mseufCategory = reg.user.mseufCategory
+                                            if (reg.user.outsiderCategory) existing.outsiderCategory = reg.user.outsiderCategory
+                                            if (reg.user.role) existing.role = reg.user.role
+                                        }
                                     }
                                 }
                             })
@@ -483,9 +520,13 @@ const Reports = () => {
     
     // Calculate totals
     const totalEvents = events.length
-    const totalDonations = donations.filter(d => d.status === 'succeeded' || d.status === 'cash_completed')
+    const totalDonations = donations.filter(d => d.status === 'succeeded' || d.status === 'cash_completed' || d.status === 'cash_verified')
         .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0) +
         inKindDonations.reduce((sum, d) => sum + (parseFloat(d.estimatedValue) || 0), 0)
+    const totalExpenditures = expenditures
+        .filter(e => e.status === 'approved' || e.status === 'paid')
+        .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
+    const netBalance = totalDonations - totalExpenditures
     const totalVolunteers = new Set()
     events.forEach(event => {
         if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
@@ -512,17 +553,30 @@ const Reports = () => {
             
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
                 {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200 no-print">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Reports & Analytics</h1>
                             <p className="text-gray-600 text-base sm:text-lg">Live analytics and demographics for events, donations, volunteers, and users</p>
                         </div>
+                        <button
+                            onClick={() => window.print()}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg"
+                        >
+                            <FaPrint className="w-4 h-4" />
+                            <span>Print Report</span>
+                        </button>
                     </div>
                 </div>
                 
+                {/* Print Header - Only visible when printing */}
+                <div className="hidden print:block mb-4">
+                    <h1 className="text-2xl font-bold text-[#800020] mb-2">Reports & Analytics</h1>
+                    <p className="text-gray-600">Generated: {new Date().toLocaleString()}</p>
+                </div>
+                
                 {/* Key Metrics Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
                     <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center flex-shrink-0">
@@ -570,11 +624,44 @@ const Reports = () => {
                             </div>
                         </div>
                     </div>
+
+                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Expenditures</p>
+                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Financial Summary Card */}
+                <div className="bg-gradient-to-r from-[#800020] to-[#9c0000] rounded-xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 text-white">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Financial Summary</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                        <div>
+                            <p className="text-sm sm:text-base text-white/90 mb-1">Total Donations</p>
+                            <p className="text-2xl sm:text-3xl font-bold">₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm sm:text-base text-white/90 mb-1">Total Expenditures</p>
+                            <p className="text-2xl sm:text-3xl font-bold">₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm sm:text-base text-white/90 mb-1">Net Balance</p>
+                            <p className={`text-2xl sm:text-3xl font-bold ${netBalance >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                ₱{netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Tabs */}
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6 sm:mb-8 overflow-hidden">
-                    <div className="flex flex-wrap border-b border-gray-200 overflow-x-auto">
+                    <div className="flex flex-wrap border-b border-gray-200 overflow-x-auto no-print">
                         {[
                             { id: 'overview', label: 'Overview', icon: FaChartLine },
                             { id: 'events', label: 'Events', icon: FaCalendarAlt },
@@ -606,7 +693,16 @@ const Reports = () => {
                         {/* Overview Tab */}
                         {activeTab === 'overview' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Analytics Overview</h2>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+                                    <h2 className="text-xl sm:text-2xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Analytics Overview</h2>
+                                    <button
+                                        onClick={() => navigate('/crd-staff/donations?tab=event-report')}
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        <FaMoneyBillWave className="w-4 h-4" />
+                                        View Event Donations Report
+                                    </button>
+                                </div>
                                 
                                 {/* Monthly Trends Chart */}
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -819,6 +915,108 @@ const Reports = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Expenditures Tab */}
+                        {activeTab === 'expenditures' && (
+                            <div className="space-y-6 sm:space-y-8">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Expenditure Analytics</h2>
+                                
+                                {/* Expenditure Summary */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Expenditures</p>
+                                        <p className="text-2xl sm:text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                            ₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Pending</p>
+                                        <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
+                                            {expenditures.filter(e => e.status === 'pending').length}
+                                        </p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Approved</p>
+                                        <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                                            {expenditures.filter(e => e.status === 'approved' || e.status === 'paid').length}
+                                        </p>
+                                    </div>
+                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                        <p className="text-xs sm:text-sm text-gray-600 mb-1">Rejected</p>
+                                        <p className="text-2xl sm:text-3xl font-bold text-red-600">
+                                            {expenditures.filter(e => e.status === 'rejected').length}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                {/* Expenditures by Category */}
+                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Expenditures by Category</h3>
+                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                        <BarChart data={expenditures.reduce((acc, e) => {
+                                            const category = e.category || 'other'
+                                            const existing = acc.find(item => item.name === category)
+                                            if (existing) {
+                                                existing.value += parseFloat(e.amount) || 0
+                                            } else {
+                                                acc.push({ name: category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), value: parseFloat(e.amount) || 0 })
+                                            }
+                                            return acc
+                                        }, [])}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis dataKey="name" stroke="#6b7280" />
+                                            <YAxis stroke="#6b7280" />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar dataKey="value" fill={COLORS.maroon} radius={[8, 8, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                
+                                {/* Recent Expenditures Table */}
+                                <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Recent Expenditures</h3>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-gray-200">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {expenditures.slice(0, 10).map((exp, index) => (
+                                                    <tr key={index}>
+                                                        <td className="px-4 py-3 text-sm text-gray-900">{exp.title}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600 capitalize">{exp.category?.replace(/_/g, ' ') || 'Other'}</td>
+                                                        <td className="px-4 py-3 text-sm font-semibold text-gray-900">₱{parseFloat(exp.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                exp.status === 'approved' || exp.status === 'paid' ? 'bg-green-100 text-green-800' :
+                                                                exp.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                'bg-red-100 text-red-800'
+                                                            }`}>
+                                                                {exp.status?.charAt(0).toUpperCase() + exp.status?.slice(1)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                                            {exp.expenseDate ? new Date(exp.expenseDate).toLocaleDateString() : '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {expenditures.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="5" className="px-4 py-8 text-center text-gray-500">No expenditures found</td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>

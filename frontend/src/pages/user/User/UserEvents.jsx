@@ -5,12 +5,14 @@ import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { useCache } from '../../../context/CacheContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const UserEvents = () => {
     const navigate = useNavigate()
     const { backendUrl } = useContext(AppContent)
+    const { cachedGet } = useCache()
     const [events, setEvents] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [filter, setFilter] = useState('all') // all, volunteer, donation
@@ -22,15 +24,14 @@ const UserEvents = () => {
 
     const fetchEvents = async () => {
         try {
-            axios.defaults.withCredentials = true
-            console.log('Fetching events from:', backendUrl + 'api/events')
-            const response = await axios.get(backendUrl + 'api/events')
-            console.log('Events API response:', response)
-            if (response.data) {
-                console.log('Events data:', response.data)
+            setIsLoading(true)
+            console.log('Fetching events from cache or API')
+            const responseData = await cachedGet('events', 'api/events', { forceRefresh: false })
+            console.log('Events data:', responseData)
+            if (responseData) {
                 // Filter out Proposed events - only show Approved, Upcoming, Ongoing, or Completed events
-                const approvedEvents = Array.isArray(response.data) 
-                    ? response.data.filter(event => event.status !== 'Proposed' && event.status !== 'Pending')
+                const approvedEvents = Array.isArray(responseData) 
+                    ? responseData.filter(event => event.status !== 'Proposed' && event.status !== 'Pending')
                     : []
                 setEvents(approvedEvents)
             }

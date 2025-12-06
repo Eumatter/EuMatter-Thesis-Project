@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
-import { FaTools, FaCog, FaEnvelope, FaShieldAlt, FaSave, FaCheckCircle, FaUser, FaUsers, FaUserTie, FaUserShield } from 'react-icons/fa'
+import { FaTools, FaCog, FaEnvelope, FaShieldAlt, FaSave, FaCheckCircle, FaUser, FaUsers, FaUserTie, FaUserShield, FaBoxOpen } from 'react-icons/fa'
 
 const SystemSettings = () => {
     const navigate = useNavigate()
@@ -27,7 +27,12 @@ const SystemSettings = () => {
         systemName: 'EuMatter',
         emailNotifications: true,
         passwordPolicy: '6',
-        twoFactorAuth: false
+        twoFactorAuth: false,
+        inKindDonationSettings: {
+            enabled: true,
+            allowedTypes: ['food', 'clothing', 'school_supplies', 'medical_supplies', 'equipment', 'services', 'other'],
+            instructions: 'Please provide detailed information about your in-kind donation including item description, quantity, and estimated value. Our team will review your donation and contact you regarding delivery or pickup arrangements.'
+        }
     })
 
     useEffect(() => {
@@ -52,7 +57,12 @@ const SystemSettings = () => {
                     systemName: data.settings.systemName || 'EuMatter',
                     emailNotifications: data.settings.emailNotifications !== undefined ? data.settings.emailNotifications : true,
                     passwordPolicy: data.settings.passwordPolicy || '6',
-                    twoFactorAuth: data.settings.twoFactorAuth || false
+                    twoFactorAuth: data.settings.twoFactorAuth || false,
+                    inKindDonationSettings: {
+                        enabled: data.settings.inKindDonationSettings?.enabled !== undefined ? data.settings.inKindDonationSettings.enabled : true,
+                        allowedTypes: data.settings.inKindDonationSettings?.allowedTypes || ['food', 'clothing', 'school_supplies', 'medical_supplies', 'equipment', 'services', 'other'],
+                        instructions: data.settings.inKindDonationSettings?.instructions || settings.inKindDonationSettings.instructions
+                    }
                 })
             }
         } catch (error) {
@@ -86,7 +96,12 @@ const SystemSettings = () => {
                 systemName: settings.systemName,
                 emailNotifications: settings.emailNotifications,
                 passwordPolicy: settings.passwordPolicy,
-                twoFactorAuth: settings.twoFactorAuth
+                twoFactorAuth: settings.twoFactorAuth,
+                inKindDonationSettings: {
+                    enabled: settings.inKindDonationSettings.enabled,
+                    allowedTypes: settings.inKindDonationSettings.allowedTypes,
+                    instructions: settings.inKindDonationSettings.instructions
+                }
             }
 
             const { data } = await axios.put(backendUrl + 'api/system-settings', payload)
@@ -442,6 +457,131 @@ const SystemSettings = () => {
                                         </label>
                                     </div>
                                 </div>
+                            </div>
+                        </motion.div>
+
+                        {/* In-Kind Donation Settings */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.45 }}
+                            className="bg-white rounded-xl shadow-md p-4 sm:p-6 transform transition-all duration-300 hover:shadow-lg"
+                        >
+                            <div className="flex items-center space-x-3 mb-4 sm:mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#EE1212] rounded-lg flex items-center justify-center shadow-md">
+                                    <FaBoxOpen className="w-5 h-5 text-white" />
+                                </div>
+                                <h3 className="text-lg sm:text-xl font-semibold text-black">In-Kind Donation Settings</h3>
+                            </div>
+                            <div className="space-y-4">
+                                {/* Enable/Disable Toggle */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 border-2 border-gray-200 rounded-lg transition-all duration-200 hover:border-[#800000]/30">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-semibold text-black text-sm sm:text-base mb-1">Enable In-Kind Donations</h4>
+                                        <p className="text-xs sm:text-sm text-gray-600">Allow users to submit in-kind donation requests</p>
+                                    </div>
+                                    <div className="flex-shrink-0">
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={settings.inKindDonationSettings.enabled}
+                                                onChange={(e) => setSettings(prev => ({
+                                                    ...prev,
+                                                    inKindDonationSettings: {
+                                                        ...prev.inKindDonationSettings,
+                                                        enabled: e.target.checked
+                                                    }
+                                                }))}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#800000]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#800000]"></div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {settings.inKindDonationSettings.enabled && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="space-y-4 p-4 bg-blue-50/50 border-2 border-blue-200 rounded-lg"
+                                    >
+                                        {/* Allowed Donation Types */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-3">
+                                                Allowed Donation Types
+                                            </label>
+                                            <p className="text-xs text-gray-500 mb-3">
+                                                Select which types of in-kind donations users can submit. Only selected types will appear in the donation form.
+                                            </p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {[
+                                                    { value: 'food', label: 'Food & Beverages' },
+                                                    { value: 'clothing', label: 'Clothing & Textiles' },
+                                                    { value: 'school_supplies', label: 'School Supplies & Books' },
+                                                    { value: 'medical_supplies', label: 'Medical Supplies' },
+                                                    { value: 'equipment', label: 'Equipment & Tools' },
+                                                    { value: 'services', label: 'Services & Expertise' },
+                                                    { value: 'other', label: 'Other' }
+                                                ].map((type) => (
+                                                    <label
+                                                        key={type.value}
+                                                        className="flex items-center space-x-3 p-3 border-2 border-gray-200 rounded-lg hover:border-[#800000]/30 transition-all duration-200 cursor-pointer bg-white hover:bg-gray-50"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={settings.inKindDonationSettings.allowedTypes.includes(type.value)}
+                                                            onChange={(e) => {
+                                                                const currentTypes = settings.inKindDonationSettings.allowedTypes || []
+                                                                const newTypes = e.target.checked
+                                                                    ? [...currentTypes, type.value]
+                                                                    : currentTypes.filter(t => t !== type.value)
+                                                                
+                                                                setSettings(prev => ({
+                                                                    ...prev,
+                                                                    inKindDonationSettings: {
+                                                                        ...prev.inKindDonationSettings,
+                                                                        allowedTypes: newTypes
+                                                                    }
+                                                                }))
+                                                            }}
+                                                            className="w-5 h-5 text-[#800000] border-gray-300 rounded focus:ring-[#800000] focus:ring-2 cursor-pointer"
+                                                        />
+                                                        <span className="text-sm font-medium text-gray-900">{type.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {settings.inKindDonationSettings.allowedTypes.length === 0 && (
+                                                <p className="text-xs text-red-600 mt-2">
+                                                    ⚠️ At least one donation type must be selected.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        {/* Instructions */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                                Donation Instructions
+                                            </label>
+                                            <p className="text-xs text-gray-500 mb-2">
+                                                Custom instructions that will be displayed to users when they submit in-kind donations.
+                                            </p>
+                                            <textarea
+                                                value={settings.inKindDonationSettings.instructions || ''}
+                                                onChange={(e) => setSettings(prev => ({
+                                                    ...prev,
+                                                    inKindDonationSettings: {
+                                                        ...prev.inKindDonationSettings,
+                                                        instructions: e.target.value
+                                                    }
+                                                }))}
+                                                rows={4}
+                                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#800000] focus:border-[#800000] transition-colors duration-200 resize-none"
+                                                placeholder="Enter instructions for users submitting in-kind donations..."
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
                             </div>
                         </motion.div>
 

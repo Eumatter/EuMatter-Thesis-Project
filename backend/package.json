@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "test:local": "echo 'Backend is running. Test at http://localhost:8000'",
+    "check:env": "node -e \"require('dotenv/config'); console.log('✅ Environment variables loaded')\""
   },
   "author": "Buenaobra",
   "license": "ISC",

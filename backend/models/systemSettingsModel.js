@@ -14,7 +14,20 @@ const systemSettingsSchema = new mongoose.Schema({
     systemName: { type: String, default: 'EuMatter' },
     emailNotifications: { type: Boolean, default: true },
     passwordPolicy: { type: String, enum: ['6', '8', '12'], default: '6' },
-    twoFactorAuth: { type: Boolean, default: false }
+    twoFactorAuth: { type: Boolean, default: false },
+    // In-kind donation configuration
+    inKindDonationSettings: {
+        allowedTypes: {
+            type: [String],
+            default: ["food", "clothing", "school_supplies", "medical_supplies", "equipment", "services", "other"],
+            enum: ["food", "clothing", "school_supplies", "medical_supplies", "equipment", "services", "other"]
+        },
+        instructions: {
+            type: String,
+            default: "Please provide detailed information about your in-kind donation including item description, quantity, and estimated value. Our team will review your donation and contact you regarding delivery or pickup arrangements."
+        },
+        enabled: { type: Boolean, default: true }
+    }
 }, { timestamps: true });
 
 // Ensure only one settings document exists

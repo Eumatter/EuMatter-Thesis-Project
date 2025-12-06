@@ -54,7 +54,9 @@ import TermsOfService from './pages/TermsOfService.jsx'
 import Notifications from './pages/user/Notifications.jsx'
 import NotificationPreferences from './pages/user/NotificationPreferences.jsx'
 import MaintenanceMode from './pages/MaintenanceMode.jsx'
+import UserManual from './pages/UserManual.jsx'
 import { AppContent as AppContext } from './context/AppContext.jsx'
+import { CacheProvider } from './context/CacheContext.jsx'
 import PushNotificationPrompt from './components/PushNotificationPrompt.jsx'
 
 const AppContent = () => {
@@ -78,7 +80,16 @@ const AppContent = () => {
                     setMaintenanceAllowedRoles(data.allowedRoles || ['System Administrator', 'CRD Staff']);
                 }
             } catch (error) {
-                console.error('Error checking maintenance mode:', error);
+                // Only log connection errors in development mode
+                if (error.code === 'ERR_NETWORK' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+                    // Backend is not running - silently handle this
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('Backend server is not running. Maintenance mode check skipped.');
+                    }
+                } else {
+                    // Log other errors
+                    console.error('Error checking maintenance mode:', error);
+                }
                 // Default to false if check fails
                 setMaintenanceMode(false);
                 setMaintenanceAllowedRoles(['System Administrator', 'CRD Staff']);
@@ -183,6 +194,7 @@ const AppContent = () => {
                 <Route path="/safety-guidelines" element={<SafetyGuidelines />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/user-manual" element={<UserManual />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
                 <Route path="/email-verify" element={<VerifyEmailPage />} />

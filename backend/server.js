@@ -22,6 +22,7 @@ import feedbackRouter from "./routes/feedbackRoutes.js";
 import pushNotificationRouter from "./routes/pushNotificationRoutes.js";
 import walletRouter from "./routes/walletRoutes.js";
 import auditLogRouter from "./routes/auditLogRoutes.js";
+import expenditureRouter from "./routes/expenditureRoutes.js";
 import { scheduleReminders } from './utils/reminderScheduler.js'
 import { startMaintenanceScheduler } from './utils/maintenanceScheduler.js'
 import { startFeedbackScheduler } from './utils/feedbackScheduler.js'
@@ -149,6 +150,7 @@ app.use("/api/feedback", feedbackRouter);
 app.use("/api/push", pushNotificationRouter); // Push notification routes
 app.use("/api/wallets", walletRouter); // Wallet management routes
 app.use("/api/audit-logs", auditLogRouter); // Audit log routes
+app.use("/api/expenditures", expenditureRouter); // Expenditure management routes
 
 // Enhanced Error Handler with CORS headers
 app.use((err, req, res, next) => {

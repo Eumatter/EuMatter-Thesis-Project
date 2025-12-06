@@ -77,8 +77,18 @@ const Notifications = () => {
                 });
             }
         } catch (error) {
-            console.error('Error fetching notifications:', error);
-            toast.error('Failed to load notifications');
+            // Handle connection errors gracefully
+            if (error.code === 'ERR_NETWORK' || error.message?.includes('ERR_CONNECTION_REFUSED')) {
+                // Backend is not running - silently handle this
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn('Backend server is not running. Notifications cannot be loaded.');
+                }
+                // Don't show error toast for connection errors
+            } else {
+                // Log other errors and show toast
+                console.error('Error fetching notifications:', error);
+                toast.error('Failed to load notifications');
+            }
         } finally {
             setIsLoading(false);
         }

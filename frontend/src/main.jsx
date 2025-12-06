@@ -3,6 +3,7 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { AppContextProvider } from './context/AppContext.jsx'
+import { CacheProvider } from './context/CacheContext.jsx'
 import axios from 'axios'
 import { getBackendOrigin } from './utils/backendUrl.js'
 import { applySafariFixes, isBrowserSupported } from './utils/browserCompatibility.js'
@@ -21,7 +22,9 @@ axios.defaults.withCredentials = true
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AppContextProvider>
-      <App />
+      <CacheProvider>
+        <App />
+      </CacheProvider>
     </AppContextProvider>
   </BrowserRouter>
 )

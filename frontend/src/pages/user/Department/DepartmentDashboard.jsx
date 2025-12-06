@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from 'react'
 import { AppContent } from '../../../context/AppContext'
+import { useCache } from '../../../context/CacheContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
@@ -13,17 +14,23 @@ import CommentModal from '../../../components/social/CommentModal'
 const DepartmentDashboard = () => {
     const navigate = useNavigate()
     const { userData, backendUrl } = useContext(AppContent)
+    const { cachedGet } = useCache()
     const [events, setEvents] = useState([])
     const [notifications] = useState([]) // placeholder list
     const [selectedEventId, setSelectedEventId] = useState(null)
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false)
 
     useEffect(() => {
-        axios.defaults.withCredentials = true
-        axios.get(backendUrl + 'api/events')
-            .then(res => setEvents((res.data || []).filter(e => e?.createdBy?._id === userData?._id)))
-            .catch(() => {})
-    }, [backendUrl, userData?._id])
+        const fetchEvents = async () => {
+            try {
+                const data = await cachedGet('events', 'api/events', { forceRefresh: false })
+                setEvents((data || []).filter(e => e?.createdBy?._id === userData?._id))
+            } catch (error) {
+                console.error('Error fetching events:', error)
+            }
+        }
+        fetchEvents()
+    }, [backendUrl, userData?._id, cachedGet])
 
     const stats = {
         created: events.length,

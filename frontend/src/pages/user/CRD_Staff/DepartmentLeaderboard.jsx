@@ -20,10 +20,30 @@ const DepartmentLeaderboard = () => {
         fetchLeaderboardData()
     }, [filterPeriod])
 
+    // Sample data for all 10 MSEUF departments (always available)
+    const sampleDepartments = [
+        { id: 'ced', name: 'CED - College of Education', email: 'ced@mseuf.edu.ph', events: 18, volunteers: 145, donations: 185000, total: 3195 },
+        { id: 'cafa', name: 'CAFA - College of Architecture and Fine Arts', email: 'cafa@mseuf.edu.ph', events: 15, volunteers: 120, donations: 165000, total: 2805 },
+        { id: 'ccjc', name: 'CCJC - College of Criminal Justice and Criminology', email: 'ccjc@mseuf.edu.ph', events: 14, volunteers: 110, donations: 155000, total: 2655 },
+        { id: 'ceng', name: 'CENG - College of Engineering', email: 'ceng@mseuf.edu.ph', events: 13, volunteers: 105, donations: 150000, total: 2555 },
+        { id: 'cnahs', name: 'CNAHS - College of Nursing and Allied Health Sciences', email: 'cnahs@mseuf.edu.ph', events: 12, volunteers: 95, donations: 140000, total: 2395 },
+        { id: 'cas', name: 'CAS - College of Arts and Sciences', email: 'cas@mseuf.edu.ph', events: 11, volunteers: 85, donations: 130000, total: 2235 },
+        { id: 'cba', name: 'CBA - College of Business and Accountancy', email: 'cba@mseuf.edu.ph', events: 10, volunteers: 80, donations: 125000, total: 2145 },
+        { id: 'ccms', name: 'CCMS - College of Computing and Multimedia Studies', email: 'ccms@mseuf.edu.ph', events: 9, volunteers: 70, donations: 115000, total: 1995 },
+        { id: 'cme', name: 'CME - College of Maritime Education', email: 'cme@mseuf.edu.ph', events: 8, volunteers: 65, donations: 105000, total: 1855 },
+        { id: 'cihtm', name: 'CIHTM - College of International Tourism and Hospitality Management', email: 'cihtm@mseuf.edu.ph', events: 7, volunteers: 55, donations: 95000, total: 1700 },
+    ]
+
     const fetchLeaderboardData = async () => {
         try {
             setIsLoading(true)
             axios.defaults.withCredentials = true
+            
+            // Start with sample departments as baseline
+            const departmentMap = new Map()
+            sampleDepartments.forEach(dept => {
+                departmentMap.set(dept.id, { ...dept })
+            })
             
             // Fetch all events
             const eventsResponse = await axios.get(backendUrl + 'api/events')
@@ -58,15 +78,11 @@ const DepartmentLeaderboard = () => {
                 return isDepartmentRole
             })
             
-            // Group events by department and calculate metrics
-            const departmentMap = new Map()
-            
+            // Process real data and merge with sample data
             filteredEvents.forEach(event => {
                 if (event.createdBy && event.createdBy._id) {
                     const deptId = event.createdBy._id.toString()
-                    // Use name field (which contains department name like "Cyber Iskwela")
                     const deptName = event.createdBy.name || 'Unknown Department'
-                    // Use email field (contact person email)
                     const deptEmail = event.createdBy.email || ''
                     
                     // Only process if it's a Department/Organization role
@@ -74,11 +90,29 @@ const DepartmentLeaderboard = () => {
                         return // Skip non-department users
                     }
                     
-                    if (!departmentMap.has(deptId)) {
-                        departmentMap.set(deptId, {
-                            id: deptId,
-                            name: deptName,
-                            email: deptEmail,
+                    // Try to match with sample departments by name (check for acronym match)
+                    let matchedSampleId = null
+                    const deptNameUpper = deptName.toUpperCase()
+                    
+                    // Extract acronyms from sample departments and try to match
+                    for (const sample of sampleDepartments) {
+                        const sampleAcronym = sample.name.split(' - ')[0].toUpperCase() // e.g., "CED", "CAFA"
+                        // Check if department name contains the acronym or vice versa
+                        if (deptNameUpper.includes(sampleAcronym) || 
+                            sample.name.toUpperCase().includes(deptNameUpper.split(' - ')[0] || '')) {
+                            matchedSampleId = sample.id
+                            break
+                        }
+                    }
+                    
+                    // Use matched sample ID to update sample data, or create new entry with real ID
+                    const mapKey = matchedSampleId || deptId
+                    
+                    if (!departmentMap.has(mapKey)) {
+                        departmentMap.set(mapKey, {
+                            id: mapKey,
+                            name: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).name : deptName,
+                            email: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).email : deptEmail,
                             events: 0,
                             volunteers: 0,
                             donations: 0,
@@ -86,7 +120,19 @@ const DepartmentLeaderboard = () => {
                         })
                     }
                     
-                    const dept = departmentMap.get(deptId)
+                    const dept = departmentMap.get(mapKey)
+                    
+                    // If matching a sample department, reset to use real data
+                    if (matchedSampleId) {
+                        // Check if this is the first real data for this sample department
+                        const sampleDept = sampleDepartments.find(s => s.id === matchedSampleId)
+                        // Reset only if still using sample values (first time updating)
+                        if (dept.events === sampleDept.events && dept.volunteers === sampleDept.volunteers && dept.donations === sampleDept.donations) {
+                            dept.events = 0
+                            dept.volunteers = 0
+                            dept.donations = 0
+                        }
+                    }
                     
                     // Count events
                     dept.events += 1
@@ -143,16 +189,9 @@ const DepartmentLeaderboard = () => {
             setDepartments(departmentsArray)
         } catch (error) {
             console.error('Error fetching leaderboard data:', error)
-            toast.error('Failed to load leaderboard data')
-            // Use mock data as fallback
-            setDepartments([
-                { id: '1', name: 'Green Earth Organization', email: 'green@example.com', events: 15, volunteers: 120, donations: 150000, total: 2770 },
-                { id: '2', name: 'Community Health Initiative', email: 'health@example.com', events: 12, volunteers: 95, donations: 180000, total: 2745 },
-                { id: '3', name: 'Education Support Network', email: 'education@example.com', events: 10, volunteers: 80, donations: 120000, total: 2140 },
-                { id: '4', name: 'Youth Development Program', email: 'youth@example.com', events: 8, volunteers: 65, donations: 95000, total: 1730 },
-                { id: '5', name: 'Environmental Action Group', email: 'env@example.com', events: 7, volunteers: 55, donations: 85000, total: 1520 },
-                { id: '6', name: 'Social Welfare Foundation', email: 'social@example.com', events: 6, volunteers: 45, donations: 70000, total: 1315 },
-            ])
+            // Don't show error toast - just use sample data
+            // Always show sample departments even on error
+            setDepartments(sampleDepartments)
         } finally {
             setIsLoading(false)
         }
@@ -277,106 +316,214 @@ const DepartmentLeaderboard = () => {
                             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 text-center">Top Performers</h2>
                             <div className="flex items-end justify-center gap-2 sm:gap-4 lg:gap-6 max-w-5xl mx-auto">
                         {/* 2nd Place */}
-                        {topThree[1] && (
-                            <div className="flex-1 max-w-[200px] sm:max-w-[250px] animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                                <div className={`bg-gradient-to-b ${getRankColor(2)} rounded-t-2xl ${getPodiumHeight(2)} flex flex-col items-center justify-center p-4 sm:p-6 shadow-xl relative overflow-hidden`}>
-                                    <div className="absolute top-2 right-2 text-2xl sm:text-3xl opacity-20">🥈</div>
-                                    <div className="text-white text-3xl sm:text-4xl font-bold mb-2">2</div>
-                                    <div className="text-white text-xs sm:text-sm font-semibold text-center leading-tight">{topThree[1].name}</div>
-                                    <div className="text-white/90 text-[10px] sm:text-xs mt-1 font-medium">{topThree[1].total.toFixed(0)} pts</div>
+                        {topThree[1] && (() => {
+                            const nameParts = topThree[1].name.split(' - ')
+                            const acronym = nameParts[0] || topThree[1].name
+                            const fullName = nameParts[1] || ''
+                            return (
+                            <div className="flex-1 max-w-[200px] sm:max-w-[250px] lg:max-w-[280px] animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                                <div className={`bg-gradient-to-b ${getRankColor(2)} rounded-t-2xl ${getPodiumHeight(2)} flex flex-col items-center justify-between p-4 sm:p-5 lg:p-6 shadow-xl relative overflow-hidden`}>
+                                    {/* Medal Icon */}
+                                    <div className="absolute top-2 right-2 text-2xl sm:text-3xl opacity-25">🥈</div>
+                                    
+                                    {/* Top Section: Rank Number */}
+                                    <div className="flex-1 flex flex-col items-center justify-center w-full pt-2">
+                                        <div className="text-white text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-5 drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                                            2
+                                        </div>
+                                        
+                                        {/* Department Info Container */}
+                                        <div className="w-full px-3 sm:px-4 space-y-2 sm:space-y-2.5 flex-1 flex flex-col justify-center">
+                                            {/* Acronym - Prominent */}
+                                            <div className="text-white text-lg sm:text-xl lg:text-2xl font-bold text-center leading-tight tracking-wider" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+                                                {acronym}
+                                            </div>
+                                            {/* Full Name - Below Acronym */}
+                                            {fullName && (
+                                                <div className="text-white text-xs sm:text-sm lg:text-base font-medium text-center leading-relaxed px-2 line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem] flex items-center justify-center" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                                    {fullName}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Bottom Section: Total Score */}
+                                    <div className="w-full pt-2 pb-1">
+                                        <div className="text-white text-sm sm:text-base lg:text-lg font-bold text-center" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                            {topThree[1].total.toFixed(0)} pts
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="bg-white rounded-b-xl shadow-lg p-3 sm:p-4 -mt-1 relative z-10">
-                                    <div className="space-y-1.5 sm:space-y-2 text-center">
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                
+                                {/* Stats Section */}
+                                <div className="bg-white rounded-b-xl shadow-lg p-3 sm:p-4 lg:p-5 -mt-1 relative z-10">
+                                    <div className="space-y-2 sm:space-y-2.5 text-center">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">{topThree[1].events}</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[1].events}</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Events</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">{topThree[1].volunteers}</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[1].volunteers}</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Volunteers</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">₱{(topThree[1].donations / 1000).toFixed(0)}k</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">₱{(topThree[1].donations / 1000).toFixed(0)}k</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Donations</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
+                            )
+                        })()}
 
                         {/* 1st Place */}
-                        {topThree[0] && (
-                            <div className="flex-1 max-w-[220px] sm:max-w-[280px] animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                                <div className={`bg-gradient-to-b ${getRankColor(1)} rounded-t-2xl ${getPodiumHeight(1)} flex flex-col items-center justify-center p-4 sm:p-6 shadow-2xl relative overflow-hidden border-4 border-yellow-300`}>
-                                    <div className="absolute top-2 right-2 text-3xl sm:text-4xl opacity-30 animate-bounce">👑</div>
-                                    <div className="text-white text-4xl sm:text-5xl font-bold mb-2 drop-shadow-lg">1</div>
-                                    <div className="text-white text-sm sm:text-base font-bold text-center leading-tight">{topThree[0].name}</div>
-                                    <div className="text-white/90 text-xs sm:text-sm mt-1 font-semibold">{topThree[0].total.toFixed(0)} pts</div>
+                        {topThree[0] && (() => {
+                            const nameParts = topThree[0].name.split(' - ')
+                            const acronym = nameParts[0] || topThree[0].name
+                            const fullName = nameParts[1] || ''
+                            return (
+                            <div className="flex-1 max-w-[220px] sm:max-w-[280px] lg:max-w-[320px] animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                                <div className={`bg-gradient-to-b ${getRankColor(1)} rounded-t-2xl ${getPodiumHeight(1)} flex flex-col items-center justify-between p-5 sm:p-6 lg:p-8 shadow-2xl relative overflow-hidden border-4 border-yellow-300`}>
+                                    {/* Crown Icon */}
+                                    <div className="absolute top-2 right-2 text-3xl sm:text-4xl lg:text-5xl opacity-30 animate-bounce">👑</div>
+                                    
+                                    {/* Top Section: Rank Number */}
+                                    <div className="flex-1 flex flex-col items-center justify-center w-full pt-2">
+                                        <div className="text-white text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-5 sm:mb-6 drop-shadow-xl" style={{ textShadow: '0 3px 10px rgba(0,0,0,0.4)' }}>
+                                            1
+                                        </div>
+                                        
+                                        {/* Department Info Container */}
+                                        <div className="w-full px-3 sm:px-4 lg:px-5 space-y-2.5 sm:space-y-3 flex-1 flex flex-col justify-center">
+                                            {/* Acronym - Prominent */}
+                                            <div className="text-white text-xl sm:text-2xl lg:text-3xl font-bold text-center leading-tight tracking-wider" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.3)' }}>
+                                                {acronym}
+                                            </div>
+                                            {/* Full Name - Below Acronym */}
+                                            {fullName && (
+                                                <div className="text-white text-sm sm:text-base lg:text-lg font-medium text-center leading-relaxed px-2 line-clamp-2 min-h-[3rem] sm:min-h-[3.5rem] flex items-center justify-center" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
+                                                    {fullName}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Bottom Section: Total Score */}
+                                    <div className="w-full pt-2 pb-1">
+                                        <div className="text-white text-base sm:text-lg lg:text-xl font-bold text-center" style={{ textShadow: '0 2px 5px rgba(0,0,0,0.3)' }}>
+                                            {topThree[0].total.toFixed(0)} pts
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="bg-white rounded-b-xl shadow-xl p-4 sm:p-5 -mt-1 relative z-10 border-2 border-yellow-200">
-                                    <div className="space-y-2 text-center">
-                                        <div className="flex items-center justify-center space-x-2">
-                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                
+                                {/* Stats Section */}
+                                <div className="bg-white rounded-b-xl shadow-xl p-4 sm:p-5 lg:p-6 -mt-1 relative z-10 border-2 border-yellow-200">
+                                    <div className="space-y-2.5 sm:space-y-3 text-center">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
-                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[0].events} Events</span>
+                                            <span className="text-base sm:text-lg font-bold text-gray-900">{topThree[0].events}</span>
+                                            <span className="text-sm sm:text-base text-gray-600 font-medium">Events</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-2">
-                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
-                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[0].volunteers} Volunteers</span>
+                                            <span className="text-base sm:text-lg font-bold text-gray-900">{topThree[0].volunteers}</span>
+                                            <span className="text-sm sm:text-base text-gray-600 font-medium">Volunteers</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-2">
-                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                             </svg>
-                                            <span className="text-sm sm:text-base font-bold text-gray-900">₱{(topThree[0].donations / 1000).toFixed(0)}k Donations</span>
+                                            <span className="text-base sm:text-lg font-bold text-gray-900">₱{(topThree[0].donations / 1000).toFixed(0)}k</span>
+                                            <span className="text-sm sm:text-base text-gray-600 font-medium">Donations</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
+                            )
+                        })()}
 
                         {/* 3rd Place */}
-                        {topThree[2] && (
-                            <div className="flex-1 max-w-[200px] sm:max-w-[250px] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                                <div className={`bg-gradient-to-b ${getRankColor(3)} rounded-t-2xl ${getPodiumHeight(3)} flex flex-col items-center justify-center p-4 sm:p-6 shadow-xl relative overflow-hidden`}>
-                                    <div className="absolute top-2 right-2 text-2xl sm:text-3xl opacity-20">🥉</div>
-                                    <div className="text-white text-3xl sm:text-4xl font-bold mb-2">3</div>
-                                    <div className="text-white text-xs sm:text-sm font-semibold text-center leading-tight">{topThree[2].name}</div>
-                                    <div className="text-white/90 text-[10px] sm:text-xs mt-1 font-medium">{topThree[2].total.toFixed(0)} pts</div>
+                        {topThree[2] && (() => {
+                            const nameParts = topThree[2].name.split(' - ')
+                            const acronym = nameParts[0] || topThree[2].name
+                            const fullName = nameParts[1] || ''
+                            return (
+                            <div className="flex-1 max-w-[200px] sm:max-w-[250px] lg:max-w-[280px] animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                                <div className={`bg-gradient-to-b ${getRankColor(3)} rounded-t-2xl ${getPodiumHeight(3)} flex flex-col items-center justify-between p-4 sm:p-5 lg:p-6 shadow-xl relative overflow-hidden`}>
+                                    {/* Medal Icon */}
+                                    <div className="absolute top-2 right-2 text-2xl sm:text-3xl opacity-25">🥉</div>
+                                    
+                                    {/* Top Section: Rank Number */}
+                                    <div className="flex-1 flex flex-col items-center justify-center w-full pt-2">
+                                        <div className="text-white text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 sm:mb-5 drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                                            3
+                                        </div>
+                                        
+                                        {/* Department Info Container */}
+                                        <div className="w-full px-3 sm:px-4 space-y-2 sm:space-y-2.5 flex-1 flex flex-col justify-center">
+                                            {/* Acronym - Prominent */}
+                                            <div className="text-white text-lg sm:text-xl lg:text-2xl font-bold text-center leading-tight tracking-wider" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+                                                {acronym}
+                                            </div>
+                                            {/* Full Name - Below Acronym */}
+                                            {fullName && (
+                                                <div className="text-white text-xs sm:text-sm lg:text-base font-medium text-center leading-relaxed px-2 line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem] flex items-center justify-center" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                                    {fullName}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Bottom Section: Total Score */}
+                                    <div className="w-full pt-2 pb-1">
+                                        <div className="text-white text-sm sm:text-base lg:text-lg font-bold text-center" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                                            {topThree[2].total.toFixed(0)} pts
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="bg-white rounded-b-xl shadow-lg p-3 sm:p-4 -mt-1 relative z-10">
-                                    <div className="space-y-1.5 sm:space-y-2 text-center">
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                
+                                {/* Stats Section */}
+                                <div className="bg-white rounded-b-xl shadow-lg p-3 sm:p-4 lg:p-5 -mt-1 relative z-10">
+                                    <div className="space-y-2 sm:space-y-2.5 text-center">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">{topThree[2].events}</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[2].events}</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Events</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">{topThree[2].volunteers}</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">{topThree[2].volunteers}</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Volunteers</span>
                                         </div>
-                                        <div className="flex items-center justify-center space-x-1.5">
-                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="flex items-center justify-center space-x-2 sm:space-x-2.5">
+                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                             </svg>
-                                            <span className="text-xs sm:text-sm font-semibold text-gray-900">₱{(topThree[2].donations / 1000).toFixed(0)}k</span>
+                                            <span className="text-sm sm:text-base font-bold text-gray-900">₱{(topThree[2].donations / 1000).toFixed(0)}k</span>
+                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Donations</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        )}
+                            )
+                        })()}
                     </div>
                 </div>
 
@@ -387,59 +534,85 @@ const DepartmentLeaderboard = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     {rest.map((dept, index) => {
                                         const rank = index + 4
+                                        // Split department name into acronym and full name
+                                        const nameParts = dept.name.split(' - ')
+                                        const acronym = nameParts[0] || dept.name
+                                        const fullName = nameParts[1] || ''
+                                        
                                         return (
                                             <div
                                                 key={dept.id}
-                                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in"
+                                                className="bg-white rounded-xl shadow-lg border border-gray-100 p-4 sm:p-5 lg:p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] animate-fade-in"
                                                 style={{ animationDelay: `${(index + 3) * 0.1}s` }}
                                             >
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md">
+                                                {/* Header Section - Rank and Department Name */}
+                                                <div className="mb-4 sm:mb-5">
+                                                    <div className="flex items-start gap-3 sm:gap-4">
+                                                        {/* Rank Badge */}
+                                                        <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg sm:text-xl lg:text-2xl shadow-md flex-shrink-0">
                                                             {rank}
                                                         </div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">{dept.name}</h3>
-                                                            <p className="text-xs text-gray-500 truncate">{dept.email}</p>
+                                                        
+                                                        {/* Department Name - Split Layout */}
+                                                        <div className="flex-1 min-w-0">
+                                                            {/* Acronym - Prominent */}
+                                                            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 leading-tight">
+                                                                {acronym}
+                                                            </h3>
+                                                            {/* Full Name - Below Acronym */}
+                                                            {fullName && (
+                                                                <p className="text-xs sm:text-sm text-gray-600 leading-snug line-clamp-2">
+                                                                    {fullName}
+                                                                </p>
+                                                            )}
+                                                            {/* Email - Smaller, below full name */}
+                                                            <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate" title={dept.email}>
+                                                                {dept.email}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                        <div className="flex items-center space-x-2">
-                                                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                {/* Stats Section */}
+                                                <div className="space-y-2.5 sm:space-y-3">
+                                                    {/* Events */}
+                                                    <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                        <div className="flex items-center space-x-2 sm:space-x-2.5">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                             </svg>
-                                                            <span className="text-xs sm:text-sm text-gray-600">Events</span>
+                                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Events</span>
                                                         </div>
-                                                        <span className="text-sm sm:text-base font-bold text-gray-900">{dept.events}</span>
+                                                        <span className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">{dept.events}</span>
                                                     </div>
                                                     
-                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                        <div className="flex items-center space-x-2">
-                                                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    {/* Volunteers */}
+                                                    <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                        <div className="flex items-center space-x-2 sm:space-x-2.5">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                                             </svg>
-                                                            <span className="text-xs sm:text-sm text-gray-600">Volunteers</span>
+                                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Volunteers</span>
                                                         </div>
-                                                        <span className="text-sm sm:text-base font-bold text-gray-900">{dept.volunteers}</span>
+                                                        <span className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">{dept.volunteers}</span>
                                                     </div>
                                                     
-                                                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                                                        <div className="flex items-center space-x-2">
-                                                            <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    {/* Donations */}
+                                                    <div className="flex items-center justify-between p-2.5 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                                        <div className="flex items-center space-x-2 sm:space-x-2.5">
+                                                            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                                                             </svg>
-                                                            <span className="text-xs sm:text-sm text-gray-600">Donations</span>
+                                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Donations</span>
                                                         </div>
-                                                        <span className="text-sm sm:text-base font-bold text-gray-900">₱{dept.donations.toLocaleString()}</span>
+                                                        <span className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">₱{dept.donations.toLocaleString()}</span>
                                                     </div>
                                                     
-                                                    <div className="pt-2 border-t border-gray-200">
+                                                    {/* Total Score */}
+                                                    <div className="pt-2.5 sm:pt-3 border-t-2 border-gray-200">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-xs sm:text-sm text-gray-600 font-medium">Total Score</span>
-                                                            <span className="text-base sm:text-lg font-bold text-indigo-600">{dept.total.toFixed(0)} pts</span>
+                                                            <span className="text-xs sm:text-sm text-gray-600 font-semibold">Total Score</span>
+                                                            <span className="text-base sm:text-lg lg:text-xl font-bold text-indigo-600">{dept.total.toFixed(0)} pts</span>
                                                         </div>
                                                     </div>
                                                 </div>

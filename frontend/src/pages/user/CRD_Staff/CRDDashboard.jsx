@@ -4,6 +4,7 @@ import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { useCache } from '../../../context/CacheContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -39,6 +40,7 @@ import {
 const CRDDashboard = () => {
     const navigate = useNavigate()
     const { backendUrl, userData } = useContext(AppContent)
+    const { cachedGet, invalidateType } = useCache()
     const [stats, setStats] = useState({
         pendingEvents: 0,
         approvedEvents: 0,
@@ -69,23 +71,22 @@ const CRDDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setIsLoading(true)
-            axios.defaults.withCredentials = true
             
-            // Fetch events
+            // Fetch events with caching
             let events = []
             try {
-            const eventsResponse = await axios.get(backendUrl + 'api/events')
-                events = eventsResponse.data || []
+                const eventsData = await cachedGet('events', 'api/events', { forceRefresh: false })
+                events = eventsData || []
             } catch (error) {
                 console.error('Error fetching events:', error)
                 // Continue with empty events array
             }
             
-            // Fetch donations
+            // Fetch donations with caching
             let donationsData = []
             try {
-                const donationsResponse = await axios.get(backendUrl + 'api/donations/all')
-                donationsData = donationsResponse.data?.donations || []
+                const donationsResponse = await cachedGet('donations', 'api/donations/all', { forceRefresh: false })
+                donationsData = donationsResponse?.donations || []
             } catch (error) {
                 console.error('Error fetching donations:', error)
                 // Continue with empty donations array
@@ -95,6 +96,7 @@ const CRDDashboard = () => {
             // Calculate stats
             const pendingEvents = events.filter(event => event.status === 'Pending').length
             const approvedEvents = events.filter(event => event.status === 'Approved').length
+            // Only count succeeded and cash_completed donations (matching backend logic)
             const totalDonations = donationsData
                 .filter(d => d.status === 'succeeded' || d.status === 'cash_completed')
                 .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
@@ -121,8 +123,8 @@ const CRDDashboard = () => {
             
             // Store all events for calculations
             setAllEventsData(events)
-            // Set all events (limit to 3 for display)
-            setAllEvents(events.slice(0, 3))
+            // Set events for display (limit to 5 for list view)
+            setAllEvents(events.slice(0, 5))
             
         } catch (error) {
             console.error('Error fetching dashboard data:', error)
@@ -169,6 +171,64 @@ const CRDDashboard = () => {
         })
     }
 
+    // Get holidays for a specific date (Philippine holidays)
+    const getHolidaysForDate = (year, month, day) => {
+        const holidays = []
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        
+        // Fixed holidays (Philippines)
+        const fixedHolidays = {
+            '01-01': 'New Year\'s Day',
+            '02-14': 'Valentine\'s Day',
+            '04-09': 'Araw ng Kagitingan',
+            '05-01': 'Labor Day',
+            '06-12': 'Independence Day',
+            '08-21': 'Ninoy Aquino Day',
+            '08-26': 'National Heroes Day',
+            '11-01': 'All Saints\' Day',
+            '11-30': 'Bonifacio Day',
+            '12-25': 'Christmas Day',
+            '12-30': 'Rizal Day',
+            '12-31': 'New Year\'s Eve'
+        }
+        
+        const monthDay = `${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        if (fixedHolidays[monthDay]) {
+            holidays.push({ name: fixedHolidays[monthDay], type: 'holiday' })
+        }
+        
+        // Easter-based holidays (simplified - using common dates for 2024-2025)
+        // Maundy Thursday and Good Friday vary each year
+        // For simplicity, we'll add common dates
+        if (month === 3 && day === 28) { // Approximate Good Friday
+            holidays.push({ name: 'Good Friday', type: 'holiday' })
+        }
+        if (month === 3 && day === 27) { // Approximate Maundy Thursday
+            holidays.push({ name: 'Maundy Thursday', type: 'holiday' })
+        }
+        
+        return holidays
+    }
+    
+    // Get events for a specific date
+    const getEventsForDate = (year, month, day) => {
+        if (!allEventsData || allEventsData.length === 0) return []
+        
+        const targetDate = new Date(year, month, day)
+        targetDate.setHours(0, 0, 0, 0)
+        
+        return allEventsData.filter(event => {
+            if (!event.startDate) return false
+            const eventStart = new Date(event.startDate)
+            eventStart.setHours(0, 0, 0, 0)
+            
+            const eventEnd = event.endDate ? new Date(event.endDate) : eventStart
+            eventEnd.setHours(23, 59, 59, 999)
+            
+            return targetDate >= eventStart && targetDate <= eventEnd
+        })
+    }
+
     const getDaysInMonth = (date) => {
         const year = date.getFullYear()
         const month = date.getMonth()
@@ -178,11 +238,21 @@ const CRDDashboard = () => {
         const startingDayOfWeek = firstDay.getDay()
         
         const days = []
+        // Add empty days for days before the first day of the month
         for (let i = 0; i < startingDayOfWeek; i++) {
             days.push(null)
         }
+        // Add days with events and holidays
         for (let day = 1; day <= daysInMonth; day++) {
-            days.push(day)
+            const dayEvents = getEventsForDate(year, month, day)
+            const holidays = getHolidaysForDate(year, month, day)
+            days.push({ 
+                day, 
+                events: dayEvents || [], 
+                holidays: holidays || [],
+                hasEvents: (dayEvents || []).length > 0,
+                hasHolidays: (holidays || []).length > 0
+            })
         }
         return days
     }
@@ -370,6 +440,33 @@ const CRDDashboard = () => {
         }
     }
 
+    // Format currency helper function
+    const formatCurrency = (amount) => {
+        if (!amount || amount === 0) return '₱0.00'
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount)
+    }
+    
+    // Format currency for display (compact format for dashboard cards)
+    const formatCurrencyCompact = (amount) => {
+        if (!amount || amount === 0) return '₱0.00'
+        // For amounts less than 10,000, show full amount
+        if (amount < 10000) {
+            return formatCurrency(amount)
+        }
+        // For amounts 10,000 and above, use compact format
+        if (amount >= 1000000) {
+            return `₱${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 2)}M`
+        } else if (amount >= 1000) {
+            return `₱${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 2)}K`
+        }
+        return formatCurrency(amount)
+    }
+
     // Color Theme: 60% White, 30% Maroon, 10% Gold
     const THEME_COLORS = {
         white: '#FFFFFF',
@@ -552,49 +649,51 @@ const CRDDashboard = () => {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-5">
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaClock className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
-                            </div>
+                        <div className="flex items-center justify-between space-x-2.5 sm:space-x-3">
                             <div className="flex-1 min-w-0">
                                 <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.pendingEvents}</p>
                                 <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Pending Reviews</p>
                             </div>
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaClock className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                            </div>
                         </div>
                     </div>
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaCheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
-                            </div>
+                        <div className="flex items-center justify-between space-x-2.5 sm:space-x-3">
                             <div className="flex-1 min-w-0">
                                 <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.approvedEvents}</p>
                                 <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Approved Events</p>
                             </div>
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaCheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
+                            </div>
                         </div>
                     </div>
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
+                        <div className="flex items-center justify-between space-x-2.5 sm:space-x-3">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-base sm:text-lg lg:text-xl font-bold truncate" style={{ color: THEME_COLORS.maroon }} title={formatCurrency(stats.totalDonations)}>
+                                    {formatCurrencyCompact(stats.totalDonations)}
+                                </p>
+                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Total Donations</p>
+                            </div>
                             <div className="flex items-center justify-center flex-shrink-0">
                                 <FaMoneyBillWave className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>₱{(stats.totalDonations / 1000).toFixed(0)}k</p>
-                                <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Total Donations</p>
-                            </div>
                         </div>
                     </div>
 
                     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-3 sm:p-4 transition-all duration-200 hover:shadow-md border group" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                        <div className="flex items-center space-x-2.5 sm:space-x-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
-                            </div>
+                        <div className="flex items-center justify-between space-x-2.5 sm:space-x-3">
                             <div className="flex-1 min-w-0">
                                 <p className="text-base sm:text-lg lg:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>{stats.activeVolunteers}</p>
                                 <p className="text-[10px] sm:text-xs font-medium truncate text-gray-600">Active Volunteers</p>
+                            </div>
+                            <div className="flex items-center justify-center flex-shrink-0">
+                                <FaUserCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                             </div>
                         </div>
                     </div>
@@ -607,7 +706,7 @@ const CRDDashboard = () => {
                         <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 lg:p-6 border hover:shadow-md transition-all duration-200 h-full flex flex-col" style={{ borderColor: THEME_COLORS.maroonBg }}>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-3">
                                 <div className="flex items-center space-x-2 sm:space-x-2.5">
-                                    <div className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center flex-shrink-0">
                                         <FaHandHoldingHeart className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
                                     <div>
@@ -1006,119 +1105,122 @@ const CRDDashboard = () => {
 
                 {/* Bottom Section - Calendar, Events, and Quick Actions (3 Column Layout) */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch">
-                    {/* Left Column - Calendar + Quick Actions - Wider */}
-                    <div className="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-3 sm:gap-4">
-                        {/* Calendar Card */}
-                        <div className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 border hover:shadow-md transition-all duration-200" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            <div className="flex items-center space-x-2 sm:space-x-2.5 mb-3 sm:mb-4">
-                                <div className="flex items-center justify-center">
-                                    <FaCalendarAlt className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
-                                </div>
-                                <h3 className="text-base sm:text-lg font-bold" style={{ color: THEME_COLORS.maroon }}>Calendar</h3>
-                            </div>
-
-                            <div className="flex items-center justify-between mb-4 sm:mb-5 rounded-lg p-2" style={{ backgroundColor: THEME_COLORS.whiteLight }}>
-                                <button
-                                    onClick={() => navigateMonth(-1)}
-                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
-                                    style={{ 
-                                        backgroundColor: THEME_COLORS.white,
-                                        borderColor: THEME_COLORS.maroonBg,
-                                        backgroundImage: 'none'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
-                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
-                                        const icon = e.currentTarget.querySelector('svg');
-                                        if (icon) icon.style.color = THEME_COLORS.white;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundImage = 'none';
-                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
-                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
-                                        const icon = e.currentTarget.querySelector('svg');
-                                        if (icon) icon.style.color = THEME_COLORS.maroon;
-                                    }}
-                                >
-                                    <FaChevronLeft className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
-                                </button>
-                                <h4 className="text-xs sm:text-sm font-bold px-2 sm:px-3" style={{ color: THEME_COLORS.maroon }}>
-                                    {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                </h4>
-                                <button
-                                    onClick={() => navigateMonth(1)}
-                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
-                                    style={{ 
-                                        backgroundColor: THEME_COLORS.white,
-                                        borderColor: THEME_COLORS.maroonBg,
-                                        backgroundImage: 'none'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
-                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
-                                        const icon = e.currentTarget.querySelector('svg');
-                                        if (icon) icon.style.color = THEME_COLORS.white;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                        e.currentTarget.style.backgroundImage = 'none';
-                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
-                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
-                                        const icon = e.currentTarget.querySelector('svg');
-                                        if (icon) icon.style.color = THEME_COLORS.maroon;
-                                    }}
-                                >
-                                    <FaChevronRight className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
-                                </button>
-                            </div>
-
-                            <div className="grid grid-cols-7 gap-1 mb-2 sm:mb-3">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                    <div key={day} className="text-center text-xs font-bold py-1 sm:py-2" style={{ color: THEME_COLORS.gray }}>
-                                        {day}
+                    {/* Left Column - Events Feed (List View) */}
+                    <div className="lg:col-span-4 order-1 lg:order-1 flex flex-col gap-3 sm:gap-4">
+                        {/* Events Feed Card - Simple List View */}
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 flex flex-col w-full h-full" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            {/* Header */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
+                                    <div className="flex items-center justify-center flex-shrink-0">
+                                        <FaListAlt className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                     </div>
-                                ))}
+                                    <div>
+                                        <h3 className="text-lg sm:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>All Events</h3>
+                                        <p className="text-xs" style={{ color: THEME_COLORS.gray }}>List of all events</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/crd-staff/events')}
+                                    className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold border-2 rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                                    style={{ 
+                                        borderColor: THEME_COLORS.maroon, 
+                                        color: THEME_COLORS.maroon,
+                                        backgroundColor: 'transparent'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
+                                        e.target.style.color = THEME_COLORS.white;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = 'transparent';
+                                        e.target.style.color = THEME_COLORS.maroon;
+                                    }}
+                                >
+                                    View All
+                                </button>
+                            </div>
+                        
+                            {/* Events List - Simple List View */}
+                            {isLoading ? (
+                                <div className="flex-1 flex items-center justify-center py-8 sm:py-12 min-h-[300px]">
+                                    <LoadingSpinner size="medium" text="Loading events..." />
+                                </div>
+                            ) : allEvents.length > 0 ? (
+                                <div className="flex-1 overflow-y-auto min-h-0">
+                                    <div className="divide-y" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                        {allEvents.map((event, index) => {
+                                            const startDate = new Date(event.startDate)
+                                            const endDate = event.endDate ? new Date(event.endDate) : null
+                                            const isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString()
+                                            
+                                            return (
+                                                <div 
+                                                    key={event._id || index} 
+                                                    className="group p-4 sm:p-5 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
+                                                    onClick={() => navigate('/crd-staff/events')}
+                                    style={{ 
+                                                        borderColor: THEME_COLORS.maroonBg
+                                                    }}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-start justify-between gap-3 mb-2">
+                                                                <h4 className="font-bold text-base sm:text-lg flex-1 transition-colors group-hover:text-[#9c0000]" style={{ color: THEME_COLORS.maroon }}>
+                                                                    {event.title}
+                                                                </h4>
+                                                                <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-sm border-2 flex-shrink-0 whitespace-nowrap ${
+                                                                    event.status === 'Approved' ? 'text-green-800 border-green-300 bg-green-50' :
+                                                                    event.status === 'Pending' ? 'text-yellow-800 border-yellow-300 bg-yellow-50' :
+                                                                    event.status === 'Upcoming' ? 'text-blue-800 border-blue-300 bg-blue-50' :
+                                                                    'text-red-800 border-red-300 bg-red-50'
+                                                                }`}>
+                                                                    {event.status || 'Pending'}
+                                                                </span>
+                            </div>
+
+                                                            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-sm">
+                                                                <div className="flex items-center gap-2">
+                                                                    <FaCalendarAlt className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
+                                                                    <span className="text-gray-700">
+                                                                        {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                        {isMultiDay && ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                                                    </span>
+                                    </div>
+                                                                {event.location && (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <svg className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                        </svg>
+                                                                        <span className="text-gray-700 truncate max-w-[200px]">{event.location}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                             </div>
                             
-                            <div className="grid grid-cols-7 gap-1 mb-4 sm:mb-6">
-                                {getDaysInMonth(currentDate).map((day, index) => (
-                                    <div
-                                        key={index}
-                                        className={`text-center py-1 sm:py-2 text-xs rounded-lg transition-all duration-200 ${
-                                            day ? 'cursor-pointer font-medium hover:scale-110' : ''
-                                        }`}
-                                        style={day === new Date().getDate() && 
-                                            currentDate.getMonth() === new Date().getMonth() && 
-                                            currentDate.getFullYear() === new Date().getFullYear()
-                                                ? { 
-                                                    backgroundColor: THEME_COLORS.maroon, 
-                                                    color: THEME_COLORS.white,
-                                                    fontWeight: 'bold',
-                                                    transform: 'scale(1.1)'
-                                                }
-                                                : day ? { 
-                                                    color: THEME_COLORS.gray 
-                                                } : { 
-                                                    color: 'transparent' 
-                                                }}
-                                        onMouseEnter={(e) => {
-                                            if (day) {
-                                                e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                                e.target.style.color = THEME_COLORS.white;
-                                            }
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            if (day && !(day === new Date().getDate() && 
-                                                currentDate.getMonth() === new Date().getMonth() && 
-                                                currentDate.getFullYear() === new Date().getFullYear())) {
-                                                e.target.style.backgroundColor = 'transparent';
-                                                e.target.style.color = THEME_COLORS.gray;
-                                            }
-                                        }}
-                                    >
-                                        {day}
+                                                        <div className="flex items-center justify-end sm:justify-start sm:pt-1">
+                                                            <svg className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                            </svg>
                                     </div>
-                                ))}
                             </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex items-center justify-center py-12 sm:py-16 min-h-[300px]">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
+                                            <FaListAlt className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
+                                        </div>
+                                        <p className="font-medium text-base sm:text-lg mb-1" style={{ color: THEME_COLORS.gray }}>No events found</p>
+                                        <p className="text-sm" style={{ color: THEME_COLORS.grayLight }}>Events will appear here once created</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Quick Actions Card */}
@@ -1271,212 +1373,273 @@ const CRDDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Right Column - Events Feed - Height matches Calendar + Quick Actions - List Design */}
-                    <div className="lg:col-span-8 order-1 lg:order-2 flex">
-                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border hover:shadow-xl transition-all duration-300 flex flex-col w-full h-full" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                            {/* Header - Fixed */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b flex-shrink-0" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-0">
-                                    <div className="flex items-center justify-center">
-                                        <FaListAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: THEME_COLORS.maroon }} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg sm:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>All Events Feed</h3>
-                                        <p className="text-xs" style={{ color: THEME_COLORS.gray }}>Recent event activities</p>
-                                    </div>
+                    {/* Right Column - Calendar with Events and Holidays */}
+                    <div className="lg:col-span-8 order-2 lg:order-2 flex flex-col gap-3 sm:gap-4">
+                        {/* Calendar Card - Big Card */}
+                        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 border hover:shadow-xl transition-all duration-300 flex-1" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                            <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-5">
+                                <div className="flex items-center justify-center flex-shrink-0">
+                                    <FaCalendarAlt className="w-4 h-4 sm:w-4.5 sm:h-4.5" style={{ color: THEME_COLORS.maroon }} />
                                 </div>
+                                <div>
+                                    <h3 className="text-lg sm:text-xl font-bold" style={{ color: THEME_COLORS.maroon }}>Calendar</h3>
+                                    <p className="text-xs sm:text-sm" style={{ color: THEME_COLORS.gray }}>Events and holidays</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between mb-4 sm:mb-5 rounded-lg p-2" style={{ backgroundColor: THEME_COLORS.whiteLight }}>
                                 <button 
-                                    onClick={() => navigate('/crd-staff/events')}
-                                    className="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold border-2 rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 whitespace-nowrap"
+                                    onClick={() => navigateMonth(-1)}
+                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
                                     style={{ 
-                                        borderColor: THEME_COLORS.maroon, 
-                                        color: THEME_COLORS.maroon,
-                                        backgroundColor: 'transparent'
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroonBg,
+                                        backgroundImage: 'none'
                                     }}
                                     onMouseEnter={(e) => {
-                                        e.target.style.backgroundColor = THEME_COLORS.maroon;
-                                        e.target.style.color = THEME_COLORS.white;
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
                                     }}
                                     onMouseLeave={(e) => {
-                                        e.target.style.backgroundColor = 'transparent';
-                                        e.target.style.color = THEME_COLORS.maroon;
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
                                     }}
                                 >
-                                    View All
+                                    <FaChevronLeft className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
+                                </button>
+                                <h4 className="text-sm sm:text-base font-bold px-2 sm:px-3" style={{ color: THEME_COLORS.maroon }}>
+                                    {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                </h4>
+                                <button
+                                    onClick={() => navigateMonth(1)}
+                                    className="calendar-nav-btn w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg border-2 transition-all duration-200 shadow-sm hover:scale-110 relative overflow-hidden"
+                                    style={{ 
+                                        backgroundColor: THEME_COLORS.white,
+                                        borderColor: THEME_COLORS.maroonBg,
+                                        backgroundImage: 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundImage = `linear-gradient(to bottom right, ${THEME_COLORS.maroon}, ${THEME_COLORS.maroonLight})`;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroon;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.white;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundImage = 'none';
+                                        e.currentTarget.style.backgroundColor = THEME_COLORS.white;
+                                        e.currentTarget.style.borderColor = THEME_COLORS.maroonBg;
+                                        const icon = e.currentTarget.querySelector('svg');
+                                        if (icon) icon.style.color = THEME_COLORS.maroon;
+                                    }}
+                                >
+                                    <FaChevronRight className="w-3 h-3 transition-colors duration-200" style={{ color: THEME_COLORS.maroon }} />
                                 </button>
                             </div>
                         
-                            {/* Events List - Scrollable */}
-                            {isLoading ? (
-                                <div className="flex-1 flex items-center justify-center py-8 sm:py-12 min-h-[300px]">
-                                    <LoadingSpinner size="medium" text="Loading events..." />
+                            <div className="grid grid-cols-7 gap-1 mb-3 sm:mb-4">
+                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                    <div key={day} className="text-center text-xs sm:text-sm font-bold py-2" style={{ color: THEME_COLORS.gray }}>
+                                        {day}
                                 </div>
-                            ) : allEvents.length > 0 ? (
-                                <div className="flex-1 overflow-y-auto min-h-0">
-                                    <div className="divide-y" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                        {allEvents.map((event, index) => {
-                                            const startDate = new Date(event.startDate)
-                                            const endDate = event.endDate ? new Date(event.endDate) : null
-                                            const isMultiDay = endDate && startDate.toDateString() !== endDate.toDateString()
-                                            const volunteersCount = event.volunteerRegistrations?.filter(v => ['approved', 'accepted'].includes(v.status)).length || 0
-                                            const donationsCount = event.donations?.filter(d => d.status === 'succeeded' || d.status === 'cash_completed').length || 0
-                                            
-                                            // Determine image URL - handle base64, data URLs, and regular URLs
-                                            let imageUrl = null;
-                                            if (event.image) {
-                                                // If it's already a data URL, use it as-is
-                                                if (event.image.startsWith('data:image')) {
-                                                    imageUrl = event.image;
-                                                }
-                                                // If it's a URL (http:// or https://), use it as-is
-                                                else if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
-                                                    imageUrl = event.image;
-                                                }
-                                                // Otherwise, assume it's base64 data and prepend data URL prefix
-                                                else {
-                                                    imageUrl = `data:image/jpeg;base64,${event.image}`;
-                                                }
-                                            }
-
+                                ))}
+                            </div>
+                            
+                            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+                                {getDaysInMonth(currentDate).map((dayData, index) => {
+                                    // Handle null/empty days
+                                    if (!dayData || (typeof dayData === 'object' && !dayData.day)) {
+                                        return (
+                                            <div
+                                                key={index}
+                                                className="text-center py-2 text-xs sm:text-sm rounded-lg transition-all duration-200"
+                                                style={{ color: 'transparent' }}
+                                            >
+                                            </div>
+                                        )
+                                    }
+                                    
+                                    // Handle old number format for backward compatibility
+                                    if (typeof dayData === 'number') {
+                                        return (
+                                            <div
+                                                key={index}
+                                                className="text-center py-2 text-xs sm:text-sm rounded-lg transition-all duration-200"
+                                                style={{ color: 'transparent' }}
+                                            >
+                                                {dayData}
+                                            </div>
+                                        )
+                                    }
+                                    
+                                    const { day, events = [], holidays = [], hasEvents = false, hasHolidays = false } = dayData
+                                    const isToday = day === new Date().getDate() && 
+                                        currentDate.getMonth() === new Date().getMonth() && 
+                                        currentDate.getFullYear() === new Date().getFullYear()
+                                    
                                             return (
                                                 <div 
-                                                    key={event._id} 
-                                                    className="group p-4 sm:p-5 hover:bg-gray-50 transition-all duration-200 cursor-pointer"
-                                                    onClick={() => navigate('/crd-staff/events')}
-                                                    style={{ 
-                                                        borderColor: THEME_COLORS.maroonBg
-                                                    }}
-                                                >
-                                                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                                                        {/* Left Side - Event Image */}
-                                                        <div className="w-full sm:w-32 md:w-40 lg:w-48 flex-shrink-0">
-                                                            {imageUrl ? (
-                                                                <div className="w-full h-40 sm:h-32 md:h-36 lg:h-40 rounded-lg overflow-hidden border-2 bg-gray-100 group-hover:shadow-md transition-all duration-200 relative" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                                    <img
-                                                                        src={imageUrl}
-                                                                        alt={event.title}
-                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                                        onError={(e) => {
-                                                                            e.target.onerror = null;
-                                                                            e.target.style.display = 'none';
-                                                                            const fallback = e.target.parentElement.querySelector('.image-fallback');
-                                                                            if (fallback) {
-                                                                                fallback.style.display = 'flex';
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                    <div className="image-fallback absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200" style={{ display: 'none' }}>
-                                                                        <svg className="w-10 h-10 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                        </svg>
+                                            key={index}
+                                            className={`text-center py-2 sm:py-3 text-xs sm:text-sm rounded-lg transition-all duration-200 cursor-pointer hover:scale-105 relative ${
+                                                day ? 'font-medium' : ''
+                                            }`}
+                                            style={isToday ? { 
+                                                backgroundColor: THEME_COLORS.maroon, 
+                                                color: THEME_COLORS.white,
+                                                fontWeight: 'bold',
+                                                transform: 'scale(1.05)'
+                                            } : day ? { 
+                                                color: THEME_COLORS.gray,
+                                                backgroundColor: hasEvents || hasHolidays ? THEME_COLORS.maroonBg : 'transparent'
+                                            } : { 
+                                                color: 'transparent' 
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (day) {
+                                                    e.currentTarget.style.backgroundColor = THEME_COLORS.maroon;
+                                                    e.currentTarget.style.color = THEME_COLORS.white;
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (day && !isToday) {
+                                                    e.currentTarget.style.backgroundColor = hasEvents || hasHolidays ? THEME_COLORS.maroonBg : 'transparent';
+                                                    e.currentTarget.style.color = THEME_COLORS.gray;
+                                                }
+                                            }}
+                                            title={day ? `${day}${events.length > 0 ? ` - ${events.length} event(s)` : ''}${holidays.length > 0 ? ` - ${holidays.map(h => h.name).join(', ')}` : ''}` : ''}
+                                        >
+                                            <div className="font-semibold mb-1">{day}</div>
+                                            {(hasEvents || hasHolidays) && (
+                                                <div className="flex flex-col gap-0.5 items-center">
+                                                    {holidays.length > 0 && (
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" title={holidays.map(h => h.name).join(', ')}></div>
+                                                    )}
+                                                    {events.length > 0 && (
+                                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: THEME_COLORS.maroon }} title={events.map(e => e.title).join(', ')}></div>
+                                                    )}
+                                                    {events.length > 1 && (
+                                                        <div className="text-[8px] font-bold" style={{ color: isToday ? THEME_COLORS.white : THEME_COLORS.maroon }}>
+                                                            +{events.length - 1}
                                                                     </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="w-full h-40 sm:h-32 md:h-36 lg:h-40 rounded-lg border-2 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden group-hover:shadow-md transition-all duration-200" style={{ borderColor: THEME_COLORS.maroonBg }}>
-                                                                    <div className="text-center p-4">
-                                                                        <svg className="w-10 h-10 sm:w-8 sm:h-8 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                        </svg>
-                                                                        <p className="mt-1.5 text-xs text-gray-500 hidden sm:block">No image</p>
-                                                                    </div>
+                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
-
-                                                        {/* Middle Section - Event Info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            {/* Title and Status */}
-                                                            <div className="flex items-start justify-between gap-3 mb-2">
-                                                                <h4 className="font-bold text-base sm:text-lg flex-1 transition-colors group-hover:text-[#9c0000]" style={{ color: THEME_COLORS.maroon }}>
-                                                                    {event.title}
-                                                                </h4>
-                                                                <span className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold shadow-sm border-2 flex-shrink-0 whitespace-nowrap ${
-                                                                    event.status === 'Approved' ? 'text-green-800 border-green-300 bg-green-50' :
-                                                                    event.status === 'Pending' ? 'text-yellow-800 border-yellow-300 bg-yellow-50' :
-                                                                    event.status === 'Upcoming' ? 'text-blue-800 border-blue-300 bg-blue-50' :
-                                                                    'text-red-800 border-red-300 bg-red-50'
+                                    )
+                                })}
+                                                            </div>
+                                                            
+                            {/* Legend */}
+                            <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-3 sm:pt-4 border-t mb-4" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: THEME_COLORS.maroon }}></div>
+                                    <span className="text-xs sm:text-sm text-gray-600">Events</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <span className="text-xs sm:text-sm text-gray-600">Holidays</span>
+                                </div>
+                            </div>
+                            
+                            {/* Upcoming Events and Holidays for the Month */}
+                            <div className="border-t pt-4" style={{ borderColor: THEME_COLORS.maroonBg }}>
+                                <h4 className="text-sm sm:text-base font-bold mb-3" style={{ color: THEME_COLORS.maroon }}>Upcoming This Month</h4>
+                                <div className="space-y-2 max-h-64 overflow-y-auto">
+                                    {(() => {
+                                        const year = currentDate.getFullYear()
+                                        const month = currentDate.getMonth()
+                                        const today = new Date()
+                                        today.setHours(0, 0, 0, 0)
+                                        
+                                        // Get all events for this month
+                                        const monthEvents = allEventsData.filter(event => {
+                                            if (!event.startDate) return false
+                                            const eventStart = new Date(event.startDate)
+                                            eventStart.setHours(0, 0, 0, 0)
+                                            return eventStart.getFullYear() === year && 
+                                                   eventStart.getMonth() === month &&
+                                                   eventStart >= today
+                                        }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+                                        
+                                        // Get all holidays for this month
+                                        const monthHolidays = []
+                                        const lastDay = new Date(year, month + 1, 0).getDate()
+                                        for (let day = 1; day <= lastDay; day++) {
+                                            const dayDate = new Date(year, month, day)
+                                            if (dayDate >= today) {
+                                                const holidays = getHolidaysForDate(year, month, day)
+                                                holidays.forEach(holiday => {
+                                                    monthHolidays.push({
+                                                        ...holiday,
+                                                        date: dayDate
+                                                    })
+                                                })
+                                            }
+                                        }
+                                        
+                                        // Combine and sort by date
+                                        const allUpcoming = [
+                                            ...monthEvents.map(e => ({ type: 'event', data: e, date: new Date(e.startDate) })),
+                                            ...monthHolidays.map(h => ({ type: 'holiday', data: h, date: h.date }))
+                                        ].sort((a, b) => a.date - b.date)
+                                        
+                                        if (allUpcoming.length === 0) {
+                                            return (
+                                                <div className="text-center py-4 text-sm text-gray-500">
+                                                    No upcoming events or holidays this month
+                                                </div>
+                                            )
+                                        }
+                                        
+                                        return allUpcoming.map((item, index) => {
+                                            const date = item.date
+                                            const isEvent = item.type === 'event'
+                                            const isHoliday = item.type === 'holiday'
+                                            
+                                            return (
+                                                <div 
+                                                    key={index}
+                                                    className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                                                    onClick={() => isEvent && navigate('/crd-staff/events')}
+                                                >
+                                                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                                        isEvent ? '' : 'bg-yellow-500'
+                                                    }`} style={isEvent ? { backgroundColor: THEME_COLORS.maroon } : {}}></div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-xs sm:text-sm font-semibold" style={{ color: THEME_COLORS.maroon }}>
+                                                                {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                            </span>
+                                                            {isEvent && (
+                                                                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-medium ${
+                                                                    item.data.status === 'Approved' ? 'text-green-700 bg-green-100' :
+                                                                    item.data.status === 'Pending' ? 'text-yellow-700 bg-yellow-100' :
+                                                                    item.data.status === 'Upcoming' ? 'text-blue-700 bg-blue-100' :
+                                                                    'text-red-700 bg-red-100'
                                                                 }`}>
-                                                                    {event.status || 'Pending'}
+                                                                    {item.data.status || 'Pending'}
                                                                 </span>
-                                                            </div>
-                                                            
-                                                            {/* Description */}
-                                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                                                                {String(event.description || 'No description available').replace(/<[^>]*>/g, '').substring(0, 150)}
-                                                                {String(event.description || '').replace(/<[^>]*>/g, '').length > 150 ? '...' : ''}
-                                                            </p>
-                                                            
-                                                            {/* Event Details Row */}
-                                                            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                                                                {/* Date */}
-                                                                <div className="flex items-center gap-2">
-                                                                    <FaCalendarAlt className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} />
-                                                                    <div>
-                                                                        <div className="text-xs font-semibold text-gray-600">Date</div>
-                                                                        <div className="text-sm font-bold" style={{ color: THEME_COLORS.maroon }}>
-                                                                            {startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                                            {isMultiDay && ` - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                
-                                                                {/* Location */}
-                                                                {event.location && (
-                                                                    <div className="flex items-center gap-2">
-                                                                        <svg className="w-4 h-4 flex-shrink-0" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                        </svg>
-                                                                        <div>
-                                                                            <div className="text-xs font-semibold text-gray-600">Location</div>
-                                                                            <div className="text-sm font-bold truncate max-w-[200px]" style={{ color: THEME_COLORS.maroon }}>{event.location}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                
-                                                                {/* Stats */}
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <FaUsers className="w-4 h-4 text-blue-600" />
-                                                                        <div>
-                                                                            <div className="text-xs text-gray-600">Volunteers</div>
-                                                                            <div className="text-sm font-bold text-blue-700">{volunteersCount}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <FaHandHoldingHeart className="w-4 h-4 text-amber-600" />
-                                                                        <div>
-                                                                            <div className="text-xs text-gray-600">Donations</div>
-                                                                            <div className="text-sm font-bold text-amber-700">{donationsCount}</div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                            )}
                                                         </div>
-                                                        
-                                                        {/* Right Side - Action Arrow */}
-                                                        <div className="flex items-center justify-end sm:justify-start sm:pt-1">
-                                                            <svg className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: THEME_COLORS.maroon }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                            </svg>
+                                                        <div className="text-xs sm:text-sm font-medium text-gray-700 line-clamp-1">
+                                                            {isEvent ? item.data.title : item.data.name}
                                                         </div>
+                                                        {isEvent && item.data.location && (
+                                                            <div className="text-[10px] sm:text-xs text-gray-500 mt-0.5 line-clamp-1">
+                                                                📍 {item.data.location}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )
-                                        })}
-                                    </div>
+                                        })
+                                    })()}
                                 </div>
-                            ) : (
-                                <div className="flex-1 flex items-center justify-center py-12 sm:py-16 min-h-[300px]">
-                                    <div className="text-center">
-                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: THEME_COLORS.grayBg }}>
-                                            <FaListAlt className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: THEME_COLORS.grayLight }} />
-                                        </div>
-                                        <p className="font-medium text-base sm:text-lg mb-1" style={{ color: THEME_COLORS.gray }}>No events found</p>
-                                        <p className="text-sm" style={{ color: THEME_COLORS.grayLight }}>Events will appear here once created</p>
-                                    </div>
-                                </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>

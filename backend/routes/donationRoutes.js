@@ -1,6 +1,6 @@
 import express from "express";
 import userAuth from "../middleware/userAuth.js";
-import {paymongoRedirect , attachPaymentMethod, createDonation, confirmSourcePayment, downloadReceipt, getDonationById, getMyDonations, getAllDonations, handleWebhook, verifyCashDonation, completeCashDonation } from "../controllers/donationController.js";
+import {paymongoRedirect , attachPaymentMethod, createDonation, confirmSourcePayment, downloadReceipt, getDonationById, getMyDonations, getAllDonations, handleWebhook, verifyCashDonation, completeCashDonation, getTotalDonationsPerEvent } from "../controllers/donationController.js";
 const router = express.Router();
 
 // Test endpoint to check if donation routes are working
@@ -61,6 +61,9 @@ router.post("/:id/verify-cash", userAuth, verifyCashDonation);
 
 // Complete cash donation (CRD Staff or Department)
 router.post("/:id/complete-cash", userAuth, completeCashDonation);
+
+// Get total donations per event (CRD Staff or System Administrator)
+router.get("/totals/per-event", userAuth, getTotalDonationsPerEvent);
 
 export default router;
 
