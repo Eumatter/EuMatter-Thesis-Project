@@ -437,7 +437,6 @@ const Header = () => {
 								<NavLink to={getDashboardRoute(userData.role)}>Dashboard</NavLink>
 								<NavLink to="/user/donations">Donations</NavLink>
                                 <NavLink to="/user/events">Events</NavLink>
-                                <NavLink to="/user-manual">User Manual</NavLink>
 							</nav>
 						)}
                         {isDept && (
@@ -937,7 +936,6 @@ const Header = () => {
                                 <NavLink to="/program" className="whitespace-nowrap">Program</NavLink>
                                 <NavLink to="/nstp" className="whitespace-nowrap">NSTP</NavLink>
                                 <NavLink to="/about" className="whitespace-nowrap">About</NavLink>
-                                <NavLink to="/user-manual" className="whitespace-nowrap">User Manual</NavLink>
                             </div>
                             <Button onClick={() => navigate('/login')} variant="gold" size="md" className="ml-2 xl:ml-4 whitespace-nowrap">
                                 Join Us

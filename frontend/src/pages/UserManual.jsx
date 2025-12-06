@@ -1,26 +1,234 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FaBook, FaDownload, FaPrint, FaChevronRight, FaUser, FaUsers, FaUserTie, FaCog, FaHandHoldingHeart, FaCalendarAlt, FaChartBar, FaFileAlt, FaCheckCircle, FaTimes, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+const sections = [
+    { id: 'introduction', title: 'Introduction', icon: FaInfoCircle },
+    { id: 'getting-started', title: 'Getting Started', icon: FaCheckCircle },
+    { id: 'user-role', title: 'User Role Guide', icon: FaUser },
+    { id: 'crd-staff', title: 'CRD Staff Guide', icon: FaUsers },
+    { id: 'department', title: 'Department Guide', icon: FaUserTie },
+    { id: 'system-admin', title: 'System Admin Guide', icon: FaCog },
+    { id: 'common-features', title: 'Common Features', icon: FaHandHoldingHeart },
+    { id: 'troubleshooting', title: 'Troubleshooting', icon: FaExclamationTriangle },
+    { id: 'faqs', title: 'FAQs', icon: FaFileAlt }
+];
+
 const UserManual = () => {
     const [activeSection, setActiveSection] = useState('introduction');
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const manualRef = useRef(null);
 
+    // Scroll to section with offset for header
+    const scrollToSection = (sectionId) => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            const headerOffset = 100; // Account for header height
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+            setActiveSection(sectionId);
+        }
+    };
+
+    // Scroll spy to highlight active section
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollPosition = window.scrollY + 150; // Offset for header
+
+            sections.forEach((section) => {
+                const element = document.getElementById(section.id);
+                if (element) {
+                    const { offsetTop, offsetHeight } = element;
+                    if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+                        setActiveSection(section.id);
+                    }
+                }
+            });
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     const handleDownloadPDF = async () => {
+        if (isGeneratingPDF) return; // Prevent multiple simultaneous generations
+        
         try {
+            setIsGeneratingPDF(true);
             const element = manualRef.current;
+            if (!element) {
+                alert('Error: Content not found. Please refresh the page and try again.');
+                setIsGeneratingPDF(false);
+                return;
+            }
+
+            // Temporarily add comprehensive CSS override to convert oklch colors and fix gradient text
+            // This must be added before html2canvas processes the document
+            const style = document.createElement('style');
+            style.id = 'pdf-conversion-styles';
+            style.textContent = `
+                /* Override oklch colors and gradient text for html2canvas compatibility */
+                /* Convert all text colors to rgb */
+                * {
+                    color: rgb(128, 0, 32) !important;
+                }
+                /* Fix gradient text headings - convert to solid color */
+                h1, h2, h3, h4, h5, h6 {
+                    -webkit-text-fill-color: rgb(128, 0, 32) !important;
+                    color: rgb(128, 0, 32) !important;
+                    background-image: none !important;
+                    -webkit-background-clip: unset !important;
+                    background-clip: unset !important;
+                }
+                /* Remove gradient backgrounds from any element */
+                [style*="backgroundImage"] {
+                    background-image: none !important;
+                }
+                [style*="WebkitBackgroundClip"] {
+                    -webkit-background-clip: unset !important;
+                    background-clip: unset !important;
+                }
+                /* Ensure all headings have solid color */
+                h1[style*="backgroundImage"], 
+                h2[style*="backgroundImage"], 
+                h3[style*="backgroundImage"],
+                h4[style*="backgroundImage"],
+                h5[style*="backgroundImage"],
+                h6[style*="backgroundImage"] {
+                    -webkit-text-fill-color: rgb(128, 0, 32) !important;
+                    color: rgb(128, 0, 32) !important;
+                    background-image: none !important;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Wait a moment for styles to apply and force reflow
+            await new Promise(resolve => setTimeout(resolve, 200));
+            void element.offsetHeight; // Force reflow
+
             const canvas = await html2canvas(element, {
                 scale: 2,
                 useCORS: true,
+                allowTaint: false,
                 logging: false,
                 windowWidth: element.scrollWidth,
-                windowHeight: element.scrollHeight
+                windowHeight: element.scrollHeight,
+                backgroundColor: '#ffffff',
+                removeContainer: false,
+                imageTimeout: 0,
+                proxy: undefined, // Don't use proxy
+                foreignObjectRendering: false, // Use canvas rendering
+                onclone: (clonedDoc, clonedElement) => {
+                    // Convert oklch colors and fix gradient text for html2canvas compatibility
+                    try {
+                        // First, add a style element to the cloned document to override oklch
+                        const styleEl = clonedDoc.createElement('style');
+                        styleEl.textContent = `
+                            * {
+                                color: rgb(128, 0, 32) !important;
+                            }
+                            h1, h2, h3, h4, h5, h6 {
+                                -webkit-text-fill-color: rgb(128, 0, 32) !important;
+                                color: rgb(128, 0, 32) !important;
+                                background-image: none !important;
+                                -webkit-background-clip: unset !important;
+                                background-clip: unset !important;
+                            }
+                        `;
+                        clonedDoc.head.appendChild(styleEl);
+                        
+                        // Fix gradient text elements
+                        const gradientElements = clonedDoc.querySelectorAll('[style*="backgroundImage"], [style*="WebkitBackgroundClip"], h1, h2, h3, h4, h5, h6');
+                        gradientElements.forEach((el) => {
+                            if (el.style) {
+                                // Remove gradient background and use solid color instead
+                                el.style.setProperty('background-image', 'none', 'important');
+                                el.style.setProperty('-webkit-background-clip', 'unset', 'important');
+                                el.style.setProperty('background-clip', 'unset', 'important');
+                                el.style.setProperty('-webkit-text-fill-color', 'rgb(128, 0, 32)', 'important');
+                                el.style.setProperty('color', 'rgb(128, 0, 32)', 'important');
+                            }
+                        });
+                        
+                        // Process all elements in the cloned document for oklch colors
+                        const allElements = clonedDoc.querySelectorAll('*');
+                        allElements.forEach((el) => {
+                            // Handle inline styles via attribute
+                            if (el.hasAttribute('style')) {
+                                const styleText = el.getAttribute('style');
+                                if (styleText) {
+                                    // Replace oklch() function calls with rgb equivalent
+                                    let updatedStyle = styleText.replace(/oklch\([^)]+\)/g, 'rgb(128, 0, 32)');
+                                    // Remove gradient-related properties
+                                    updatedStyle = updatedStyle.replace(/backgroundImage[^;]*/g, '');
+                                    updatedStyle = updatedStyle.replace(/webkitBackgroundClip[^;]*/g, '');
+                                    updatedStyle = updatedStyle.replace(/webkitTextFillColor[^;]*/g, '');
+                                    updatedStyle = updatedStyle.replace(/backgroundClip[^;]*/g, '');
+                                    // Clean up multiple semicolons
+                                    updatedStyle = updatedStyle.replace(/;;+/g, ';').replace(/^;|;$/g, '');
+                                    if (updatedStyle !== styleText) {
+                                        el.setAttribute('style', updatedStyle);
+                                        // Ensure color is set
+                                        if (!updatedStyle.includes('color')) {
+                                            el.style.setProperty('color', 'rgb(128, 0, 32)', 'important');
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Handle style property directly
+                            if (el.style) {
+                                // Remove problematic gradient properties
+                                el.style.setProperty('background-image', 'none', 'important');
+                                el.style.setProperty('-webkit-background-clip', 'unset', 'important');
+                                el.style.setProperty('background-clip', 'unset', 'important');
+                                
+                                // Set solid color for headings
+                                if (['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(el.tagName)) {
+                                    el.style.setProperty('-webkit-text-fill-color', 'rgb(128, 0, 32)', 'important');
+                                    el.style.setProperty('color', 'rgb(128, 0, 32)', 'important');
+                                }
+                                
+                                // Convert oklch colors in all style properties
+                                const styleProps = ['color', 'background', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor'];
+                                styleProps.forEach(prop => {
+                                    try {
+                                        const value = el.style.getPropertyValue(prop);
+                                        if (value && (value.includes('oklch') || value.includes('oklch'))) {
+                                            el.style.setProperty(prop, 'rgb(128, 0, 32)', 'important');
+                                        }
+                                    } catch (e) {
+                                        // Ignore errors for individual properties
+                                    }
+                                });
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('Error processing colors in cloned document:', e);
+                    }
+                },
+                ignoreElements: (element) => {
+                    // Ignore elements that might cause issues
+                    return element.classList?.contains('no-print') || false;
+                }
+            }).catch((error) => {
+                console.error('html2canvas error:', error);
+                // If html2canvas fails, suggest using print instead
+                if (error.message?.includes('blocked') || error.name === 'SecurityError') {
+                    throw new Error('PDF generation blocked by browser. Please use the Print button instead, or disable ad blockers/extensions and try again.');
+                }
+                throw error;
             });
 
-            const imgData = canvas.toDataURL('image/png');
+            const imgData = canvas.toDataURL('image/png', 1.0);
             const pdf = new jsPDF('p', 'mm', 'a4');
             const imgWidth = 210;
             const pageHeight = 297;
@@ -39,27 +247,39 @@ const UserManual = () => {
             }
 
             pdf.save('EuMatter_User_Manual.pdf');
+            
+            // Remove temporary style
+            const tempStyle = document.getElementById('pdf-conversion-styles');
+            if (tempStyle) {
+                tempStyle.remove();
+            }
+            
+            setIsGeneratingPDF(false);
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please try again.');
+            const errorMessage = error.message || 'Unknown error occurred';
+            
+            // Remove temporary style on error
+            const tempStyle = document.getElementById('pdf-conversion-styles');
+            if (tempStyle) {
+                tempStyle.remove();
+            }
+            
+            setIsGeneratingPDF(false);
+            
+            if (errorMessage.includes('blocked') || errorMessage.includes('SecurityError')) {
+                alert('PDF generation was blocked. This is usually caused by browser extensions (ad blockers, privacy tools).\n\nSolutions:\n1. Disable ad blockers/extensions temporarily\n2. Use the Print button instead (Ctrl+P or Cmd+P)\n3. Try a different browser');
+            } else if (errorMessage.includes('oklch') || errorMessage.includes('color')) {
+                alert('PDF generation encountered a color format issue (oklch colors not supported by html2canvas).\n\nPlease use the Print button instead (Ctrl+P or Cmd+P) and save as PDF from the print dialog.\n\nThis method provides better results and preserves all formatting.');
+            } else {
+                alert(`Error generating PDF: ${errorMessage}\n\nPlease try using the Print button instead, or refresh the page and try again.`);
+            }
         }
     };
 
     const handlePrint = () => {
         window.print();
     };
-
-    const sections = [
-        { id: 'introduction', title: 'Introduction', icon: FaInfoCircle },
-        { id: 'getting-started', title: 'Getting Started', icon: FaCheckCircle },
-        { id: 'user-role', title: 'User Role Guide', icon: FaUser },
-        { id: 'crd-staff', title: 'CRD Staff Guide', icon: FaUsers },
-        { id: 'department', title: 'Department Guide', icon: FaUserTie },
-        { id: 'system-admin', title: 'System Admin Guide', icon: FaCog },
-        { id: 'common-features', title: 'Common Features', icon: FaHandHoldingHeart },
-        { id: 'troubleshooting', title: 'Troubleshooting', icon: FaExclamationTriangle },
-        { id: 'faqs', title: 'FAQs', icon: FaFileAlt }
-    ];
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -82,10 +302,13 @@ const UserManual = () => {
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={handleDownloadPDF}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg"
+                                disabled={isGeneratingPDF}
+                                className={`flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <FaDownload className="w-4 h-4" />
-                                <span className="hidden sm:inline">Download PDF</span>
+                                <span className="hidden sm:inline">
+                                    {isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
+                                </span>
                             </button>
                             <button
                                 onClick={handlePrint}
@@ -101,7 +324,7 @@ const UserManual = () => {
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Sidebar Navigation */}
                     <div className="lg:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-xl shadow-lg p-4 sticky top-4 border border-gray-200">
+                        <div className="bg-white rounded-xl shadow-lg p-4 sticky top-24 border border-gray-200 z-10 max-h-[calc(100vh-8rem)] overflow-y-auto">
                             <h2 className="text-lg font-semibold mb-4 text-gray-800">Table of Contents</h2>
                             <nav className="space-y-1">
                                 {sections.map((section) => {
@@ -109,10 +332,7 @@ const UserManual = () => {
                                     return (
                                         <button
                                             key={section.id}
-                                            onClick={() => {
-                                                setActiveSection(section.id);
-                                                document.getElementById(section.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                            }}
+                                            onClick={() => scrollToSection(section.id)}
                                             className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
                                                 activeSection === section.id
                                                     ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white shadow-md'
@@ -132,7 +352,7 @@ const UserManual = () => {
                     <div className="flex-1">
                         <div ref={manualRef} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 border border-gray-200">
                             {/* Introduction */}
-                            <section id="introduction" className="mb-12">
+                            <section id="introduction" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-4" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Introduction
                                 </h2>
@@ -174,7 +394,7 @@ const UserManual = () => {
                             </section>
 
                             {/* Getting Started */}
-                            <section id="getting-started" className="mb-12">
+                            <section id="getting-started" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Getting Started
                                 </h2>
@@ -255,7 +475,7 @@ const UserManual = () => {
                             </section>
 
                             {/* User Role Guide */}
-                            <section id="user-role" className="mb-12">
+                            <section id="user-role" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     User Role Guide
                                 </h2>
@@ -334,7 +554,7 @@ const UserManual = () => {
                             </section>
 
                             {/* CRD Staff Guide */}
-                            <section id="crd-staff" className="mb-12">
+                            <section id="crd-staff" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     CRD Staff Guide
                                 </h2>
@@ -401,7 +621,7 @@ const UserManual = () => {
                             </section>
 
                             {/* Department Guide */}
-                            <section id="department" className="mb-12">
+                            <section id="department" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Department/Organization Guide
                                 </h2>
@@ -464,7 +684,7 @@ const UserManual = () => {
                             </section>
 
                             {/* System Admin Guide */}
-                            <section id="system-admin" className="mb-12">
+                            <section id="system-admin" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     System Administrator Guide
                                 </h2>
@@ -517,7 +737,7 @@ const UserManual = () => {
                             </section>
 
                             {/* Common Features */}
-                            <section id="common-features" className="mb-12">
+                            <section id="common-features" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Common Features
                                 </h2>
@@ -564,7 +784,7 @@ const UserManual = () => {
                             </section>
 
                             {/* Troubleshooting */}
-                            <section id="troubleshooting" className="mb-12">
+                            <section id="troubleshooting" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Troubleshooting
                                 </h2>
@@ -594,7 +814,7 @@ const UserManual = () => {
                             </section>
 
                             {/* FAQs */}
-                            <section id="faqs" className="mb-12">
+                            <section id="faqs" className="mb-12 scroll-mt-24">
                                 <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                                     Frequently Asked Questions
                                 </h2>

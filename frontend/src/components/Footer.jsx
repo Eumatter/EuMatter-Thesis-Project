@@ -178,7 +178,7 @@ const Footer = () => {
                                     onClick={() => handleNavigation('/user-manual')}
                                     className="hover:underline text-left cursor-pointer"
                                 >
-                                    User Manual
+                                    User Manual (All Roles)
                                 </button>
                             </li>
                         </ul>
