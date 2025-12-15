@@ -22,6 +22,7 @@ import Reports from './pages/user/CRD_Staff/Reports.jsx'
 import DepartmentLeaderboard from './pages/user/CRD_Staff/DepartmentLeaderboard.jsx'
 import InKindDonations from './pages/user/CRD_Staff/InKindDonations.jsx'
 import CRDDonations from './pages/user/CRD_Staff/CRDDonations.jsx'
+import ExpenditureManagement from './pages/user/CRD_Staff/ExpenditureManagement.jsx'
 import SystemAdminDashboard from './pages/user/System_Admin/SystemAdminDashboard.jsx'
 import UserManagement from './pages/user/System_Admin/UserManagement.jsx'
 import SystemAdminSettings from './pages/user/System_Admin/SystemSettings.jsx'
@@ -49,7 +50,7 @@ import NSTP from './pages/NSTP.jsx'
 import About from './pages/About.jsx'
 import SuccessStories from './pages/SuccessStories.jsx'
 import SafetyGuidelines from './pages/SafetyGuidelines.jsx'
-import PrivacyPolicy from './pages/PrivacyPolicy.jsx'
+import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsOfService from './pages/TermsOfService.jsx'
 import Notifications from './pages/user/Notifications.jsx'
 import NotificationPreferences from './pages/user/NotificationPreferences.jsx'
@@ -218,6 +219,7 @@ const AppContent = () => {
                 <Route path="/crd-staff/leaderboard" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><DepartmentLeaderboard /></ProtectedRoute>} />
                 <Route path="/crd-staff/in-kind-donations" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><InKindDonations /></ProtectedRoute>} />
                 <Route path="/crd-staff/donations" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><CRDDonations /></ProtectedRoute>} />
+                <Route path="/crd-staff/expenditures" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><ExpenditureManagement /></ProtectedRoute>} />
                 <Route path="/crd-staff/profile" element={<ProtectedRoute allowedRoles={['CRD Staff','System Administrator']}><UserProfile /></ProtectedRoute>} />
 
                 {/* System Administrator Routes */}

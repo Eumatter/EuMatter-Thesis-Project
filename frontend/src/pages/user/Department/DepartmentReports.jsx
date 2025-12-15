@@ -24,64 +24,107 @@ const DepartmentReports = () => {
     })
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        if (userData?._id) {
+            fetchData()
+        }
+    }, [userData?._id])
 
     const fetchData = async () => {
         try {
             setIsLoading(true)
             axios.defaults.withCredentials = true
             
+            // Declare variables in outer scope to avoid reference errors
+            let departmentEvents = []
+            let allDonations = []
+            
             // Fetch events
-            const eventsRes = await axios.get(backendUrl + 'api/events')
-            if (eventsRes.data) {
-                const departmentEvents = eventsRes.data.filter(e => e?.createdBy?._id === userData?._id)
-                setEvents(departmentEvents)
-                
-                // Extract donations from events
-                const allDonations = []
-                departmentEvents.forEach(event => {
-                    if (event.donations && event.donations.length > 0) {
-                        event.donations.forEach(donation => {
-                            allDonations.push({
-                                ...donation,
-                                eventId: event._id,
-                                eventTitle: event.title
+            try {
+                const eventsRes = await axios.get(`${backendUrl}api/events`)
+                if (eventsRes.data && Array.isArray(eventsRes.data)) {
+                    departmentEvents = eventsRes.data.filter(e => e?.createdBy?._id === userData?._id)
+                    setEvents(departmentEvents)
+                    
+                    // Extract donations from events
+                    departmentEvents.forEach(event => {
+                        if (event.donations && Array.isArray(event.donations) && event.donations.length > 0) {
+                            event.donations.forEach(donation => {
+                                // Only include successful donations
+                                if (donation.status === 'succeeded' || donation.status === 'cash_completed' || donation.status === 'completed') {
+                                    allDonations.push({
+                                        ...donation,
+                                        eventId: event._id,
+                                        eventTitle: event.title
+                                    })
+                                }
                             })
-                        })
-                    }
-                })
-                setDonations(allDonations)
+                        }
+                    })
+                    setDonations(allDonations)
+                }
+            } catch (eventsError) {
+                console.error('Error fetching events:', eventsError)
+                if (eventsError.response?.status !== 404) {
+                    toast.error('Failed to fetch events')
+                }
             }
             
             // Try to fetch users (may fail if no access)
             try {
-                const usersRes = await axios.get(backendUrl + 'api/users', { withCredentials: true })
-                if (usersRes.data) {
+                const usersRes = await axios.get(`${backendUrl}api/users`, { withCredentials: true })
+                if (usersRes.data && Array.isArray(usersRes.data)) {
                     setUsers(usersRes.data)
                 }
             } catch (userError) {
                 // If users API fails, extract unique users from donations and departmentEvents
+                if (userError.response?.status === 404) {
+                    console.log('Users API not available, extracting from events and donations')
+                }
+                
                 const uniqueUsers = new Map()
-                departmentEvents.forEach(event => {
-                    if (event.volunteers && event.volunteers.length > 0) {
-                        event.volunteers.forEach(vol => {
-                            if (vol.userId && !uniqueUsers.has(vol.userId.toString())) {
-                                uniqueUsers.set(vol.userId.toString(), vol)
+                
+                // Extract users from events volunteers
+                if (departmentEvents && departmentEvents.length > 0) {
+                    departmentEvents.forEach(event => {
+                        if (event.volunteers && Array.isArray(event.volunteers) && event.volunteers.length > 0) {
+                            event.volunteers.forEach(vol => {
+                                if (vol.userId && !uniqueUsers.has(vol.userId.toString())) {
+                                    uniqueUsers.set(vol.userId.toString(), {
+                                        _id: vol.userId,
+                                        name: vol.name || 'Unknown User',
+                                        mseufCategory: vol.mseufCategory || 'Guest'
+                                    })
+                                }
+                            })
+                        }
+                    })
+                }
+                
+                // Extract users from donations
+                if (allDonations && allDonations.length > 0) {
+                    allDonations.forEach(donation => {
+                        if (donation.donor) {
+                            const donorId = donation.donor._id?.toString() || donation.donor.toString()
+                            if (!uniqueUsers.has(donorId)) {
+                                uniqueUsers.set(donorId, {
+                                    _id: donation.donor._id || donation.donor,
+                                    name: donation.donor.name || 'Anonymous Donor',
+                                    mseufCategory: donation.donor.mseufCategory || 'Guest'
+                                })
                             }
-                        })
-                    }
-                })
-                allDonations.forEach(donation => {
-                    if (donation.donor && !uniqueUsers.has(donation.donor._id?.toString() || donation.donor.toString())) {
-                        uniqueUsers.set(donation.donor._id?.toString() || donation.donor.toString(), donation.donor)
-                    }
-                })
+                        }
+                    })
+                }
+                
                 setUsers(Array.from(uniqueUsers.values()))
             }
         } catch (error) {
             console.error('Error fetching data:', error)
-            toast.error('Failed to fetch data')
+            if (error.response?.status === 404) {
+                toast.error('Resource not found. Please check your connection.')
+            } else {
+                toast.error('Failed to fetch data. Please try again.')
+            }
         } finally {
             setIsLoading(false)
         }
@@ -242,27 +285,52 @@ const DepartmentReports = () => {
         }
 
         if (format === 'pdf') {
-            toast.info('PDF export feature coming soon!')
+            // Trigger browser print dialog for PDF
+            window.print()
+            toast.success('Opening print dialog for PDF export')
         } else if (format === 'excel') {
             toast.info('Excel export feature coming soon!')
         } else if (format === 'csv') {
-            const csvContent = [
-                ['Report Type', 'Value'],
-                ['Total Events', data.eventStats.total],
-                ['Total Donations', data.financialStats.totalDonations],
-                ['Total Volunteers', data.demographics.ageGroups.reduce((sum, group) => sum + group.count, 0)],
-                ['Average Attendance', data.engagement.averageAttendance],
-                ['Volunteer Retention', data.engagement.volunteerRetention]
-            ].map(row => row.join(',')).join('\n')
+            try {
+                const csvContent = [
+                    ['Department Report', ''],
+                    ['Generated At', new Date().toLocaleString()],
+                    ['Period', selectedPeriod],
+                    ['Event Type', selectedEvent === 'all' ? 'All Events' : events.find(e => e._id === selectedEvent)?.title || 'All Events'],
+                    [''],
+                    ['Report Type', 'Value'],
+                    ['Total Events', data.eventStats.total],
+                    ['Approved Events', data.eventStats.approved],
+                    ['Pending Events', data.eventStats.pending],
+                    ['Completed Events', data.eventStats.completed],
+                    ['Total Donations (₱)', data.financialStats.totalDonations.toFixed(2)],
+                    ['Average Donation (₱)', data.financialStats.averageDonation.toFixed(2)],
+                    ['Total Volunteers', data.demographics.volunteerCount],
+                    ['Total Donors', data.demographics.donationCount],
+                    ['Average Attendance (%)', data.engagement.averageAttendance],
+                    ['Volunteer Retention (%)', data.engagement.volunteerRetention],
+                    [''],
+                    ['Donor Categories', 'Count', 'Percentage'],
+                    ...data.demographics.donorCategories.map(cat => [cat.category, cat.count, `${cat.percentage}%`]),
+                    [''],
+                    ['Event Status', 'Count', 'Percentage'],
+                    ...data.demographics.eventStatus.map(status => [status.status, status.count, `${status.percentage}%`])
+                ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
 
-            const blob = new Blob([csvContent], { type: 'text/csv' })
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `department-report-${new Date().toISOString().split('T')[0]}.csv`
-            a.click()
-            window.URL.revokeObjectURL(url)
-            toast.success('Report exported successfully!')
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+                const url = window.URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `department-report-${new Date().toISOString().split('T')[0]}.csv`
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                window.URL.revokeObjectURL(url)
+                toast.success('Report exported successfully!')
+            } catch (error) {
+                console.error('Error exporting CSV:', error)
+                toast.error('Failed to export report')
+            }
         }
     }
 
@@ -493,9 +561,50 @@ const DepartmentReports = () => {
         )
     }
 
+    // Empty state check
+    const hasData = events.length > 0 || donations.length > 0
+
+    if (!hasData && !isLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Header />
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                    <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div className="min-w-0">
+                                <h1 className="text-3xl font-bold text-black mb-2">Analytics & Reports</h1>
+                                <p className="text-gray-600">
+                                    Comprehensive insights into your department's performance
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 sm:p-12 text-center">
+                        <div className="max-w-md mx-auto">
+                            <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No Data Available</h3>
+                            <p className="text-gray-600 mb-6">
+                                You don't have any events or donations yet. Start by creating an event to see analytics and reports.
+                            </p>
+                            <button
+                                onClick={() => navigate('/department/dashboard')}
+                                className="inline-flex items-center justify-center bg-gradient-to-r from-[#800020] to-[#9c0000] text-white px-6 py-3 rounded-lg hover:from-[#9c0000] hover:to-[#a0002a] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                            >
+                                Go to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Global CSS for Donut Chart Animations */}
+            {/* Global CSS for Donut Chart Animations and Print Styles */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                     @keyframes drawArc {
@@ -511,13 +620,65 @@ const DepartmentReports = () => {
                         stroke-dashoffset: 1000;
                         animation: drawArc 1.5s ease-out forwards;
                     }
+                    
+                    @media print {
+                        @page {
+                            margin: 1cm;
+                        }
+                        body * {
+                            visibility: hidden;
+                        }
+                        main, main * {
+                            visibility: visible;
+                        }
+                        main {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                        }
+                        .no-print {
+                            display: none !important;
+                        }
+                        .print-header {
+                            display: block;
+                            margin-bottom: 20px;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid #800020;
+                        }
+                        .print-header h1 {
+                            color: #800020;
+                            font-size: 24px;
+                            margin: 0;
+                        }
+                        .print-header p {
+                            color: #666;
+                            font-size: 12px;
+                            margin: 5px 0 0 0;
+                        }
+                        .bg-white {
+                            background: white !important;
+                        }
+                        .shadow-lg, .shadow-md, .shadow-sm {
+                            box-shadow: none !important;
+                        }
+                        button {
+                            display: none !important;
+                        }
+                    }
                 `
             }} />
             <Header />
             
             <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+                {/* Print Header */}
+                <div className="print-header no-print" style={{ display: 'none' }}>
+                    <h1>Department Analytics & Reports</h1>
+                    <p>Generated on {new Date().toLocaleString()}</p>
+                </div>
+
                 {/* Back Button - Top Left (Mobile/Tablet Only) */}
-                <div className="mb-4 lg:hidden">
+                <div className="mb-4 lg:hidden no-print">
                     <button
                         onClick={() => navigate('/department/dashboard')}
                         className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
@@ -538,22 +699,22 @@ const DepartmentReports = () => {
                                 Comprehensive insights into your department's performance
                             </p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 no-print">
                             <button 
-                                onClick={() => handleExportReport('pdf')}
-                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
+                                onClick={() => window.print()}
+                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border-2 border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white hover:border-transparent transition-all duration-200 font-medium shadow-sm hover:shadow-md w-full sm:w-auto"
                             >
                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                                 </svg>
-                                <span>Export PDF</span>
+                                <span>Print Report</span>
                             </button>
                             <button 
                                 onClick={() => handleExportReport('csv')}
-                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center bg-gradient-to-r from-[#800020] to-[#9c0000] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-[#9c0000] hover:to-[#a0002a] transition-all duration-200 font-medium shadow-md hover:shadow-lg w-full sm:w-auto"
                             >
                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
                                 <span>Export CSV</span>
                             </button>
@@ -562,7 +723,7 @@ const DepartmentReports = () => {
                 </div>
 
                 {/* Filter Controls */}
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8 no-print">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
                         <h3 className="text-base sm:text-lg font-semibold text-gray-900">Report Filters</h3>
                         <div className="flex items-center space-x-2">
@@ -765,7 +926,7 @@ const DepartmentReports = () => {
                 </div>
 
                 {/* Top Performing Event */}
-                {data.financialStats.topEvent && data.financialStats.topEvent._id && (
+                {data.financialStats.topEvent && data.financialStats.topEvent._id && events.length > 0 && (
                     <div className="bg-gradient-to-r from-[#800020] to-[#9c0000] rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
                         <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-0">
                             <div className="text-center lg:text-left w-full lg:w-auto">

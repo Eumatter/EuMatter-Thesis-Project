@@ -73,6 +73,8 @@ const CRDDonations = () => {
     const [overallTotal, setOverallTotal] = useState(0)
     const [totalEvents, setTotalEvents] = useState(0)
     const [eventReportLoading, setEventReportLoading] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(10)
     
     // Update URL when tab changes (but don't trigger navigation on initial load)
     useEffect(() => {
@@ -381,6 +383,8 @@ const CRDDonations = () => {
                 setEventsData(data.events || [])
                 setOverallTotal(data.overallTotal || 0)
                 setTotalEvents(data.totalEvents || 0)
+                // Reset to first page when new data is loaded
+                setCurrentPage(1)
             } else {
                 toast.error(data?.message || 'Failed to fetch event donations')
             }
@@ -391,6 +395,13 @@ const CRDDonations = () => {
             setEventReportLoading(false)
         }
     }
+    
+    // Reset pagination when tab changes to event-report
+    useEffect(() => {
+        if (activeTab === 'event-report') {
+            setCurrentPage(1)
+        }
+    }, [activeTab])
     
     const handlePrintEventReport = () => {
         window.print()
@@ -1032,7 +1043,7 @@ const CRDDonations = () => {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handlePrintEventReport}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg"
+                                        className="flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors duration-200 shadow-md hover:shadow-lg"
                                     >
                                         <FaPrint className="w-4 h-4" />
                                         <span>Print</span>
@@ -1049,7 +1060,7 @@ const CRDDonations = () => {
                             
                             {/* Print Header - Only visible when printing */}
                             <div className="hidden print:block mb-4">
-                                <h1 className="text-2xl font-bold text-[#800020] mb-2">Event Donations Report</h1>
+                                <h1 className="text-2xl font-bold text-[#800000] mb-2">Event Donations Report</h1>
                                 <p className="text-gray-600">Generated: {new Date().toLocaleString()}</p>
                             </div>
                             
@@ -1068,11 +1079,11 @@ const CRDDonations = () => {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800020]" />
+                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Donations</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800020]">
+                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
                                                         {formatCurrency(overallTotal)}
                                                     </p>
                                                 </div>
@@ -1087,11 +1098,11 @@ const CRDDonations = () => {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6 text-[#800020]" />
+                                                    <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800020]">
+                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
                                                         {totalEvents}
                                                     </p>
                                                 </div>
@@ -1106,11 +1117,11 @@ const CRDDonations = () => {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800020]" />
+                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Average per Event</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800020]">
+                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
                                                         {formatCurrency(totalEvents > 0 ? overallTotal / totalEvents : 0)}
                                                     </p>
                                                 </div>
@@ -1118,11 +1129,43 @@ const CRDDonations = () => {
                                         </motion.div>
                                     </div>
                                     
+                                    {/* Pagination Controls - Top */}
+                                    {eventsData.length > 0 && (
+                                        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <div className="flex items-center gap-4">
+                                                <label className="text-sm font-medium text-gray-700">Items per page:</label>
+                                                <select
+                                                    value={itemsPerPage}
+                                                    onChange={(e) => {
+                                                        setItemsPerPage(Number(e.target.value))
+                                                        setCurrentPage(1)
+                                                    }}
+                                                    className="px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-sm"
+                                                >
+                                                    <option value={5}>5</option>
+                                                    <option value={10}>10</option>
+                                                    <option value={20}>20</option>
+                                                    <option value={50}>50</option>
+                                                    <option value={100}>100</option>
+                                                </select>
+                                            </div>
+                                            <div className="text-sm text-gray-600">
+                                                Showing <span className="font-semibold text-gray-900">
+                                                    {((currentPage - 1) * itemsPerPage) + 1}
+                                                </span> to <span className="font-semibold text-gray-900">
+                                                    {Math.min(currentPage * itemsPerPage, eventsData.length)}
+                                                </span> of <span className="font-semibold text-gray-900">
+                                                    {eventsData.length}
+                                                </span> events
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Events Table */}
                                     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                                         <div className="overflow-x-auto">
                                             <table className="w-full">
-                                                <thead className="bg-gradient-to-r from-[#800020] to-[#9c0000] text-white">
+                                                <thead className="bg-gradient-to-r from-[#800000] to-[#900000] text-white">
                                                     <tr>
                                                         <th className="px-4 py-3 text-left text-sm font-semibold">Event Title</th>
                                                         <th className="px-4 py-3 text-left text-sm font-semibold">Start Date</th>
@@ -1145,7 +1188,9 @@ const CRDDonations = () => {
                                                             </td>
                                                         </tr>
                                                     ) : (
-                                                        eventsData.map((event, index) => {
+                                                        eventsData
+                                                            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                                            .map((event, index) => {
                                                             const progress = calculateProgress(event.totalDonations, event.donationTarget)
                                                             return (
                                                                 <tr key={event.eventId || index} className="hover:bg-gray-50 transition-colors">
@@ -1158,7 +1203,7 @@ const CRDDonations = () => {
                                                                     <td className="px-4 py-3 text-sm text-gray-600">
                                                                         {event.endDate ? new Date(event.endDate).toLocaleDateString() : 'N/A'}
                                                                     </td>
-                                                                    <td className="px-4 py-3 text-sm font-semibold text-[#800020] text-right">
+                                                                    <td className="px-4 py-3 text-sm font-semibold text-[#800000] text-right">
                                                                         {formatCurrency(event.totalDonations)}
                                                                     </td>
                                                                     <td className="px-4 py-3 text-sm text-gray-600 text-center">
@@ -1172,7 +1217,7 @@ const CRDDonations = () => {
                                                                             <div className="flex items-center justify-center gap-2">
                                                                                 <div className="w-16 bg-gray-200 rounded-full h-2">
                                                                                     <div
-                                                                                        className="bg-[#800020] h-2 rounded-full"
+                                                                                        className="bg-[#800000] h-2 rounded-full"
                                                                                         style={{ width: `${Math.min(100, progress)}%` }}
                                                                                     />
                                                                                 </div>
@@ -1193,7 +1238,7 @@ const CRDDonations = () => {
                                                             <td colSpan="3" className="px-4 py-3 text-sm font-semibold text-gray-900">
                                                                 Total
                                                             </td>
-                                                            <td className="px-4 py-3 text-sm font-bold text-[#800020] text-right">
+                                                            <td className="px-4 py-3 text-sm font-bold text-[#800000] text-right">
                                                                 {formatCurrency(overallTotal)}
                                                             </td>
                                                             <td className="px-4 py-3 text-sm font-semibold text-gray-900 text-center">
@@ -1206,6 +1251,90 @@ const CRDDonations = () => {
                                             </table>
                                         </div>
                                     </div>
+
+                                    {/* Pagination Controls - Bottom */}
+                                    {eventsData.length > 0 && (
+                                        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <div className="text-sm text-gray-600">
+                                                Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{Math.ceil(eventsData.length / itemsPerPage)}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setCurrentPage(1)}
+                                                    disabled={currentPage === 1}
+                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    title="First page"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    title="Previous page"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                    </svg>
+                                                </button>
+                                                
+                                                {/* Page Numbers */}
+                                                <div className="flex items-center gap-1">
+                                                    {Array.from({ length: Math.min(5, Math.ceil(eventsData.length / itemsPerPage)) }, (_, i) => {
+                                                        const totalPages = Math.ceil(eventsData.length / itemsPerPage)
+                                                        let pageNum
+                                                        
+                                                        if (totalPages <= 5) {
+                                                            pageNum = i + 1
+                                                        } else if (currentPage <= 3) {
+                                                            pageNum = i + 1
+                                                        } else if (currentPage >= totalPages - 2) {
+                                                            pageNum = totalPages - 4 + i
+                                                        } else {
+                                                            pageNum = currentPage - 2 + i
+                                                        }
+                                                        
+                                                        return (
+                                                            <button
+                                                                key={pageNum}
+                                                                onClick={() => setCurrentPage(pageNum)}
+                                                                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                                                                    currentPage === pageNum
+                                                                        ? 'bg-[#800000] text-white hover:bg-[#900000]'
+                                                                        : 'text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50'
+                                                                }`}
+                                                            >
+                                                                {pageNum}
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
+                                                
+                                                <button
+                                                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(eventsData.length / itemsPerPage), prev + 1))}
+                                                    disabled={currentPage >= Math.ceil(eventsData.length / itemsPerPage)}
+                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    title="Next page"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPage(Math.ceil(eventsData.length / itemsPerPage))}
+                                                    disabled={currentPage >= Math.ceil(eventsData.length / itemsPerPage)}
+                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    title="Last page"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </>
