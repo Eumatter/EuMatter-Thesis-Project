@@ -2554,7 +2554,7 @@ const Reports = () => {
 
             {/* Expenditure Add/Edit Modal */}
             {showExpenditureModal && (
-                <div className="fixed inset-0 bg-white bg-opacity-20 backdrop-blur-md flex items-center justify-center z-[9999] p-4" onClick={() => {
+                <div className="fixed inset-0 bg-gray-900 bg-opacity-40 backdrop-blur-lg flex items-center justify-center z-[9999] p-4" onClick={() => {
                     setShowExpenditureModal(false)
                     resetExpenditureForm()
                 }}>
