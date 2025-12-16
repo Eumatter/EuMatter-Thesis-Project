@@ -303,7 +303,7 @@ const UserManual = () => {
                             <button
                                 onClick={handleDownloadPDF}
                                 disabled={isGeneratingPDF}
-                                className={`flex items-center gap-2 px-4 py-2 bg-[#800020] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <FaDownload className="w-4 h-4" />
                                 <span className="hidden sm:inline">

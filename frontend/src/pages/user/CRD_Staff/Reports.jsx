@@ -151,29 +151,29 @@ const Reports = () => {
             const userRole = userData?.role
             
             if (userRole === 'System Administrator') {
+            try {
+                // Try admin endpoint first (System Admin only) with caching
+                const adminResponse = await cachedGet('users', 'api/admin/users', { 
+                    forceRefresh: false,
+                    params: { limit: 10000 }
+                })
+                if (adminResponse?.success && adminResponse?.users) {
+                    usersData = adminResponse.users
+                }
+            } catch (error) {
+                    // Silently fall back if admin endpoint fails
                 try {
-                    // Try admin endpoint first (System Admin only) with caching
-                    const adminResponse = await cachedGet('users', 'api/admin/users', { 
+                    // Try regular users endpoint (System Admin only) with caching
+                    const usersResponse = await cachedGet('users', 'api/users', { 
                         forceRefresh: false,
                         params: { limit: 10000 }
                     })
-                    if (adminResponse?.success && adminResponse?.users) {
-                        usersData = adminResponse.users
+                    if (usersResponse?.success && usersResponse?.users) {
+                        usersData = usersResponse.users
+                    } else if (Array.isArray(usersResponse)) {
+                        usersData = usersResponse
                     }
-                } catch (error) {
-                    // Silently fall back if admin endpoint fails
-                    try {
-                        // Try regular users endpoint (System Admin only) with caching
-                        const usersResponse = await cachedGet('users', 'api/users', { 
-                            forceRefresh: false,
-                            params: { limit: 10000 }
-                        })
-                        if (usersResponse?.success && usersResponse?.users) {
-                            usersData = usersResponse.users
-                        } else if (Array.isArray(usersResponse)) {
-                            usersData = usersResponse
-                        }
-                    } catch (altError) {
+                } catch (altError) {
                         // Silently fall back to extraction method
                     }
                 }
@@ -181,73 +181,73 @@ const Reports = () => {
             
             // If no users data from API (CRD Staff or API failed), extract from donations and events
             if (usersData.length === 0) {
-                // Extract unique users from donations and events
-                // Note: These may have limited fields, but we'll use what we have
-                const uniqueUsers = new Map()
-                
-                // Ensure we have arrays
-                const safeDonationsData = Array.isArray(donationsData) ? donationsData : []
-                const safeEventsData = Array.isArray(eventsData) ? eventsData : []
-                
-                // From donations - user data is populated but may be limited
-                safeDonationsData.forEach(donation => {
-                    if (donation && donation.user) {
-                        const userId = donation.user._id?.toString() || donation.user.toString()
-                        if (!uniqueUsers.has(userId)) {
-                            // Store user data, even if incomplete
-                            uniqueUsers.set(userId, {
-                                _id: donation.user._id || donation.user,
-                                name: donation.user.name,
-                                email: donation.user.email,
-                                profileImage: donation.user.profileImage,
-                                department: donation.user.department,
-                                // These fields may not be populated, will be undefined
-                                userType: donation.user.userType,
-                                mseufCategory: donation.user.mseufCategory,
-                                outsiderCategory: donation.user.outsiderCategory,
-                                role: donation.user.role || 'User'
-                            })
+                    // Extract unique users from donations and events
+                    // Note: These may have limited fields, but we'll use what we have
+                    const uniqueUsers = new Map()
+                    
+                    // Ensure we have arrays
+                    const safeDonationsData = Array.isArray(donationsData) ? donationsData : []
+                    const safeEventsData = Array.isArray(eventsData) ? eventsData : []
+                    
+                    // From donations - user data is populated but may be limited
+                    safeDonationsData.forEach(donation => {
+                        if (donation && donation.user) {
+                            const userId = donation.user._id?.toString() || donation.user.toString()
+                            if (!uniqueUsers.has(userId)) {
+                                // Store user data, even if incomplete
+                                uniqueUsers.set(userId, {
+                                    _id: donation.user._id || donation.user,
+                                    name: donation.user.name,
+                                    email: donation.user.email,
+                                    profileImage: donation.user.profileImage,
+                                    department: donation.user.department,
+                                    // These fields may not be populated, will be undefined
+                                    userType: donation.user.userType,
+                                    mseufCategory: donation.user.mseufCategory,
+                                    outsiderCategory: donation.user.outsiderCategory,
+                                    role: donation.user.role || 'User'
+                                })
+                            }
                         }
-                    }
-                })
-                
-                // From events (volunteers) - user data is populated but may be limited
-                safeEventsData.forEach(event => {
-                    if (event && event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
-                        event.volunteerRegistrations.forEach(reg => {
-                            if (reg && reg.user) {
-                                const userId = reg.user._id?.toString() || reg.user.toString()
-                                if (!uniqueUsers.has(userId)) {
-                                    // Store user data, even if incomplete
-                                    uniqueUsers.set(userId, {
-                                        _id: reg.user._id || reg.user,
-                                        name: reg.user.name,
-                                        email: reg.user.email,
-                                        profileImage: reg.user.profileImage,
-                                        department: reg.user.department,
-                                        course: reg.user.course,
-                                        // These fields may not be populated, will be undefined
-                                        userType: reg.user.userType,
-                                        mseufCategory: reg.user.mseufCategory,
-                                        outsiderCategory: reg.user.outsiderCategory,
-                                        role: reg.user.role || 'User'
-                                    })
-                                } else {
-                                    // Merge additional data if available
-                                    const existing = uniqueUsers.get(userId)
-                                    if (existing) {
-                                        if (reg.user.userType) existing.userType = reg.user.userType
-                                        if (reg.user.mseufCategory) existing.mseufCategory = reg.user.mseufCategory
-                                        if (reg.user.outsiderCategory) existing.outsiderCategory = reg.user.outsiderCategory
-                                        if (reg.user.role) existing.role = reg.user.role
+                    })
+                    
+                    // From events (volunteers) - user data is populated but may be limited
+                    safeEventsData.forEach(event => {
+                        if (event && event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                            event.volunteerRegistrations.forEach(reg => {
+                                if (reg && reg.user) {
+                                    const userId = reg.user._id?.toString() || reg.user.toString()
+                                    if (!uniqueUsers.has(userId)) {
+                                        // Store user data, even if incomplete
+                                        uniqueUsers.set(userId, {
+                                            _id: reg.user._id || reg.user,
+                                            name: reg.user.name,
+                                            email: reg.user.email,
+                                            profileImage: reg.user.profileImage,
+                                            department: reg.user.department,
+                                            course: reg.user.course,
+                                            // These fields may not be populated, will be undefined
+                                            userType: reg.user.userType,
+                                            mseufCategory: reg.user.mseufCategory,
+                                            outsiderCategory: reg.user.outsiderCategory,
+                                            role: reg.user.role || 'User'
+                                        })
+                                    } else {
+                                        // Merge additional data if available
+                                        const existing = uniqueUsers.get(userId)
+                                        if (existing) {
+                                            if (reg.user.userType) existing.userType = reg.user.userType
+                                            if (reg.user.mseufCategory) existing.mseufCategory = reg.user.mseufCategory
+                                            if (reg.user.outsiderCategory) existing.outsiderCategory = reg.user.outsiderCategory
+                                            if (reg.user.role) existing.role = reg.user.role
+                                        }
                                     }
                                 }
-                            }
-                        })
-                    }
-                })
-                
-                usersData = Array.from(uniqueUsers.values())
+                            })
+                        }
+                    })
+                    
+                    usersData = Array.from(uniqueUsers.values())
             }
             setUsers(usersData)
         } catch (error) {
@@ -415,7 +415,7 @@ const Reports = () => {
 
     const expenditureCategories = ['event_expenses', 'operational', 'equipment', 'supplies', 'transportation', 'food', 'other']
     const paymentMethods = ['cash', 'check', 'bank_transfer', 'gcash', 'paymaya', 'other']
-
+    
     // Calculate event demographics
     const getEventDemographics = () => {
         const statusCounts = {
@@ -1906,7 +1906,8 @@ const Reports = () => {
                                 {/* Monthly Trends Chart */}
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
-                                    <ResponsiveContainer width="100%" height={300} minHeight={300}>
+                                    <div style={{ width: '100%', height: '300px', minHeight: '300px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                                         <ComposedChart data={monthlyTrends}>
                                             <defs>
                                                 <linearGradient id="colorEvents" x1="0" y1="0" x2="0" y2="1">
@@ -1982,13 +1983,15 @@ const Reports = () => {
                                             />
                                         </ComposedChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
                                 
                                 {/* Quick Stats Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
-                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
+                                        <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
+                                            <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={eventDemographics}
@@ -2027,11 +2030,13 @@ const Reports = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        </div>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
-                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
+                                        <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
+                                            <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={donationDemographics.counts}
@@ -2071,11 +2076,13 @@ const Reports = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        </div>
                                     </div>
                                     
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
-                                        <ResponsiveContainer width="100%" height={220} minHeight={220}>
+                                        <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
+                                            <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
                                                 <Pie
                                                     data={donorDemographics.counts}
@@ -2114,6 +2121,7 @@ const Reports = () => {
                                                 />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2146,7 +2154,7 @@ const Reports = () => {
                                             <select
                                                 value={filterStatus}
                                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                             >
                                                 <option value="all">All Status</option>
                                                 <option value="pending">Pending</option>
@@ -2160,7 +2168,7 @@ const Reports = () => {
                                             <select
                                                 value={filterCategory}
                                                 onChange={(e) => setFilterCategory(e.target.value)}
-                                                className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                             >
                                                 <option value="all">All Categories</option>
                                                 {expenditureCategories.map(cat => (
@@ -2202,7 +2210,8 @@ const Reports = () => {
                                 {/* Expenditures by Category */}
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Expenditures by Category</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                    <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                                         <BarChart data={expenditures.reduce((acc, e) => {
                                             const category = e.category || 'other'
                                             const existing = acc.find(item => item.name === category)
@@ -2220,6 +2229,7 @@ const Reports = () => {
                                             <Bar dataKey="value" fill={COLORS.maroon} radius={[8, 8, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
                                 
                                 {/* Expenditures Table */}
@@ -2331,7 +2341,8 @@ const Reports = () => {
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Events by Status</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                    <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                                         <BarChart data={eventDemographics} layout="vertical">
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis type="number" stroke="#6b7280" />
@@ -2344,6 +2355,7 @@ const Reports = () => {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
                                 
                                 <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -2369,7 +2381,8 @@ const Reports = () => {
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Methods (Amount)</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                    <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                                         <BarChart data={donationDemographics.amounts.filter(d => d.name !== 'in-kind')}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis dataKey="name" stroke="#6b7280" />
@@ -2382,6 +2395,7 @@ const Reports = () => {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
 
                                 <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -2420,7 +2434,8 @@ const Reports = () => {
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Volunteers by Category</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                    <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                                         <BarChart data={volunteerDemographics}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis dataKey="name" stroke="#6b7280" />
@@ -2433,6 +2448,7 @@ const Reports = () => {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
 
                                 <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -2465,7 +2481,8 @@ const Reports = () => {
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Users by Category</h3>
-                                    <ResponsiveContainer width="100%" height={300} minHeight={300}>
+                                    <div style={{ width: '100%', height: '300px', minHeight: '300px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                                         <BarChart data={userDemographics.filter(u => u.name !== 'CRD Staff' && u.name !== 'System Administrator')} layout="vertical">
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis type="number" stroke="#6b7280" />
@@ -2478,6 +2495,7 @@ const Reports = () => {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
                                 
                                 <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -2503,7 +2521,8 @@ const Reports = () => {
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Amount by Category</h3>
-                                    <ResponsiveContainer width="100%" height={250} minHeight={250}>
+                                    <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                                         <BarChart data={donorDemographics.amounts}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                             <XAxis dataKey="name" stroke="#6b7280" />
@@ -2516,6 +2535,7 @@ const Reports = () => {
                                             </Bar>
                                         </BarChart>
                                     </ResponsiveContainer>
+                                    </div>
                                 </div>
 
                                 <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
@@ -2552,9 +2572,10 @@ const Reports = () => {
                 </div>
             </main>
 
-            {/* Expenditure Add/Edit Modal */}
-            {showExpenditureModal && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-40 backdrop-blur-lg flex items-center justify-center z-[9999] p-4" onClick={() => {
+            <>
+                {/* Expenditure Add/Edit Modal */}
+                {showExpenditureModal && (
+                <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-lg flex items-center justify-center z-[9999] p-4" onClick={() => {
                     setShowExpenditureModal(false)
                     resetExpenditureForm()
                 }}>
@@ -2586,7 +2607,7 @@ const Reports = () => {
                                         value={expenditureFormData.title}
                                         onChange={handleExpenditureInputChange}
                                         required
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                     />
                                 </div>
 
@@ -2597,7 +2618,7 @@ const Reports = () => {
                                         value={expenditureFormData.description}
                                         onChange={handleExpenditureInputChange}
                                         rows="3"
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                     />
                                 </div>
 
@@ -2612,7 +2633,7 @@ const Reports = () => {
                                             required
                                             min="0"
                                             step="0.01"
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         />
                                     </div>
 
@@ -2623,7 +2644,7 @@ const Reports = () => {
                                             value={expenditureFormData.category}
                                             onChange={handleExpenditureInputChange}
                                             required
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         >
                                             {expenditureCategories.map(cat => (
                                                 <option key={cat} value={cat}>{cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
@@ -2639,7 +2660,7 @@ const Reports = () => {
                                             name="paymentMethod"
                                             value={expenditureFormData.paymentMethod}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         >
                                             {paymentMethods.map(method => (
                                                 <option key={method} value={method}>{method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
@@ -2655,7 +2676,7 @@ const Reports = () => {
                                             value={expenditureFormData.expenseDate}
                                             onChange={handleExpenditureInputChange}
                                             required
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         />
                                     </div>
                                 </div>
@@ -2668,7 +2689,7 @@ const Reports = () => {
                                             name="receiptNumber"
                                             value={expenditureFormData.receiptNumber}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         />
                                     </div>
 
@@ -2679,7 +2700,7 @@ const Reports = () => {
                                             name="receiptUrl"
                                             value={expenditureFormData.receiptUrl}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                         />
                                     </div>
                                 </div>
@@ -2691,7 +2712,7 @@ const Reports = () => {
                                         value={expenditureFormData.notes}
                                         onChange={handleExpenditureInputChange}
                                         rows="2"
-                                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
                                     />
                                 </div>
 
@@ -2717,9 +2738,10 @@ const Reports = () => {
                         </div>
                     </div>
                 </div>
-            )}
+                )}
 
             <Footer />
+            </>
         </div>
     )
 }
