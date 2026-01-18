@@ -312,6 +312,23 @@ const EventDetails = () => {
                                     </div>
                                 </div>
 
+                                {openForDonation && (
+                                    <div className="flex items-start space-x-3">
+                                        <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                        </svg>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">Donations</p>
+                                            <p className="text-gray-600">
+                                                ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} raised
+                                                {event.donations && event.donations.length > 0 && (
+                                                    <span className="text-gray-500"> from {event.donations.length} donor{event.donations.length !== 1 ? 's' : ''}</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex items-start space-x-3">
                                     <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -323,6 +340,51 @@ const EventDetails = () => {
                                 </div>
                             </div>
                         </div>
+                        
+                        {/* Donation Progress Section */}
+                        {openForDonation && event.donationTarget && (
+                            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 sm:p-6 mb-8">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                    Donation Progress
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="font-medium text-gray-700">Raised</span>
+                                        <span className="font-bold text-gray-900">
+                                            ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                                            <span className="text-gray-600 font-normal ml-2">
+                                                / ₱{parseFloat(event.donationTarget).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                                        <div 
+                                            className={`h-4 rounded-full transition-all duration-500 ${
+                                                ((event.totalDonations || 0) / event.donationTarget) >= 1 ? 'bg-green-600' :
+                                                ((event.totalDonations || 0) / event.donationTarget) >= 0.5 ? 'bg-yellow-500' :
+                                                'bg-red-500'
+                                            }`}
+                                            style={{ 
+                                                width: `${Math.min(((event.totalDonations || 0) / event.donationTarget) * 100, 100)}%` 
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs text-gray-600">
+                                        <span>
+                                            {event.donations && event.donations.length > 0 
+                                                ? `${event.donations.length} donor${event.donations.length !== 1 ? 's' : ''} contributed`
+                                                : 'Be the first to donate!'}
+                                        </span>
+                                        <span className="font-semibold">
+                                            {((event.totalDonations || 0) / event.donationTarget * 100).toFixed(1)}% of goal
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Action Buttons - Show based on event status and settings */}
                         {(() => {

@@ -41,7 +41,9 @@ import {
     FaBoxOpen,
     FaCreditCard,
     FaBriefcase,
-    FaPrint
+    FaPrint,
+    FaFileExcel,
+    FaDownload
 } from 'react-icons/fa'
 
 const Reports = () => {
@@ -76,6 +78,30 @@ const Reports = () => {
     const [users, setUsers] = useState([])
     const [inKindDonations, setInKindDonations] = useState([])
     const [expenditures, setExpenditures] = useState([])
+    const [eventDonationsReport, setEventDonationsReport] = useState([])
+    const [isLoadingEventDonations, setIsLoadingEventDonations] = useState(false)
+    
+    // Fetch event donations report
+    const fetchEventDonationsReport = async () => {
+        try {
+            setIsLoadingEventDonations(true)
+            const token = localStorage.getItem('token')
+            const response = await axios.get(`${backendUrl}api/donations/totals/per-event`, {
+                headers: { Authorization: `Bearer ${token}` },
+                withCredentials: true
+            })
+            if (response.data?.success && response.data?.events) {
+                setEventDonationsReport(response.data.events)
+            } else {
+                setEventDonationsReport([])
+            }
+        } catch (error) {
+            console.error('Error fetching event donations report:', error)
+            setEventDonationsReport([])
+        } finally {
+            setIsLoadingEventDonations(false)
+        }
+    }
     
     // Fetch all data
     useEffect(() => {
@@ -144,6 +170,9 @@ const Reports = () => {
                 }
                 setExpenditures([])
             }
+            
+            // Fetch event donations report
+            fetchEventDonationsReport()
             
             // Fetch users (for demographics) - try multiple endpoints with caching
             let usersData = []
@@ -415,6 +444,54 @@ const Reports = () => {
 
     const expenditureCategories = ['event_expenses', 'operational', 'equipment', 'supplies', 'transportation', 'food', 'other']
     const paymentMethods = ['cash', 'check', 'bank_transfer', 'gcash', 'paymaya', 'other']
+    
+    // Export to Excel
+    const exportToExcel = () => {
+        // Filter events that are open for donations or have donations
+        const reportData = eventDonationsReport.filter(event => 
+            event.isOpenForDonation || event.totalDonations > 0
+        )
+        
+        // Create CSV content
+        const headers = ['Event Title', 'Start Date', 'End Date', 'Donation Target', 'Total Donations', 'Donor Count', 'Progress %']
+        const rows = reportData.map(event => {
+            const startDate = event.startDate ? new Date(event.startDate).toLocaleDateString() : 'N/A'
+            const endDate = event.endDate ? new Date(event.endDate).toLocaleDateString() : 'N/A'
+            const target = event.donationTarget ? `₱${parseFloat(event.donationTarget).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'
+            const total = `₱${parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            const progress = event.donationTarget && event.donationTarget > 0 
+                ? `${((event.totalDonations / event.donationTarget) * 100).toFixed(2)}%`
+                : 'N/A'
+            
+            return [
+                `"${event.eventTitle}"`,
+                startDate,
+                endDate,
+                target,
+                total,
+                event.donationCount || 0,
+                progress
+            ].join(',')
+        })
+        
+        const csvContent = [
+            headers.join(','),
+            ...rows
+        ].join('\n')
+        
+        // Create blob and download
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute('download', `Event_Donations_Report_${new Date().toISOString().split('T')[0]}.csv`)
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        toast.success('Report exported successfully!')
+    }
     
     // Calculate event demographics
     const getEventDemographics = () => {
@@ -1864,6 +1941,7 @@ const Reports = () => {
                             { id: 'overview', label: 'Overview', icon: FaChartLine },
                             { id: 'events', label: 'Events', icon: FaCalendarAlt },
                             { id: 'donations', label: 'Donations', icon: FaHandHoldingHeart },
+                            { id: 'event-donations-report', label: 'Event Donations Report', icon: FaMoneyBillWave },
                             { id: 'expenditures', label: 'Expenditures', icon: FaMoneyBillWave },
                             { id: 'volunteers', label: 'Volunteers', icon: FaUsers },
                             { id: 'users', label: 'Users', icon: FaUser },
@@ -2424,6 +2502,153 @@ const Reports = () => {
                                         })}
                                     </div>
                                 </div>
+                            </div>
+                        )}
+                        
+                        {/* Event Donations Report Tab */}
+                        {activeTab === 'event-donations-report' && (
+                            <div className="space-y-6 sm:space-y-8 print-section-content">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6 print-no-break">
+                                    <h2 className="text-xl sm:text-2xl font-bold print-section-title" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Donations Report</h2>
+                                    <div className="flex items-center gap-2 no-print">
+                                        <button
+                                            onClick={exportToExcel}
+                                            disabled={isLoadingEventDonations || eventDonationsReport.length === 0}
+                                            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <FaFileExcel className="w-4 h-4" />
+                                            Export to Excel
+                                        </button>
+                                        <button
+                                            onClick={() => window.print()}
+                                            disabled={isLoadingEventDonations || eventDonationsReport.length === 0}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors duration-200 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <FaPrint className="w-4 h-4" />
+                                            Print Report
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {isLoadingEventDonations ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <LoadingSpinner size="medium" text="Loading event donations report..." />
+                                    </div>
+                                ) : eventDonationsReport.length === 0 ? (
+                                    <div className="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-md">
+                                        <FaMoneyBillWave className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                                        <p className="text-gray-600 text-lg font-medium">No event donations data available</p>
+                                        <p className="text-gray-500 text-sm mt-2">Events with donations will appear here once data is available.</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Summary Cards */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 print-no-break">
+                                            <div className="bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl p-4 sm:p-6 text-white shadow-md">
+                                                <p className="text-sm sm:text-base text-white/90 mb-1">Total Events</p>
+                                                <p className="text-2xl sm:text-3xl font-bold">
+                                                    {eventDonationsReport.filter(e => e.isOpenForDonation || e.totalDonations > 0).length}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-4 sm:p-6 text-white shadow-md">
+                                                <p className="text-sm sm:text-base text-white/90 mb-1">Total Donations</p>
+                                                <p className="text-2xl sm:text-3xl font-bold">
+                                                    ₱{eventDonationsReport.reduce((sum, e) => sum + (parseFloat(e.totalDonations) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </p>
+                                            </div>
+                                            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 sm:p-6 text-white shadow-md">
+                                                <p className="text-sm sm:text-base text-white/90 mb-1">Total Donors</p>
+                                                <p className="text-2xl sm:text-3xl font-bold">
+                                                    {eventDonationsReport.reduce((sum, e) => sum + (e.donationCount || 0), 0)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Event Donations Table */}
+                                        <div className="bg-white rounded-xl shadow-md overflow-hidden print-section">
+                                            <div className="overflow-x-auto">
+                                                <table className="min-w-full divide-y divide-gray-200">
+                                                    <thead className="bg-gray-50">
+                                                        <tr>
+                                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event Title</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Donation Target</th>
+                                                            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Donations</th>
+                                                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Donor Count</th>
+                                                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="bg-white divide-y divide-gray-200">
+                                                        {eventDonationsReport
+                                                            .filter(event => event.isOpenForDonation || event.totalDonations > 0)
+                                                            .sort((a, b) => parseFloat(b.totalDonations) - parseFloat(a.totalDonations))
+                                                            .map((event) => {
+                                                                const progress = event.donationTarget && event.donationTarget > 0 
+                                                                    ? (event.totalDonations / event.donationTarget) * 100 
+                                                                    : null
+                                                                const progressPercent = progress !== null ? Math.min(progress, 100).toFixed(2) : null
+                                                                
+                                                                return (
+                                                                    <tr key={event.eventId} className="hover:bg-gray-50 transition-colors">
+                                                                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{event.eventTitle}</td>
+                                                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                                                            {event.startDate ? new Date(event.startDate).toLocaleDateString() : 'N/A'}
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-sm text-gray-600">
+                                                                            {event.endDate ? new Date(event.endDate).toLocaleDateString() : 'N/A'}
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-sm text-right font-semibold text-gray-900">
+                                                                            {event.donationTarget 
+                                                                                ? `₱${parseFloat(event.donationTarget).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                                                : 'N/A'}
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-sm text-right font-bold" style={{ color: COLORS.maroon }}>
+                                                                            ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-sm text-center text-gray-900">
+                                                                            {event.donationCount || 0}
+                                                                        </td>
+                                                                        <td className="px-4 py-3 text-sm">
+                                                                            {progressPercent !== null ? (
+                                                                                <div className="flex items-center justify-center gap-2">
+                                                                                    <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                                                                                        <div 
+                                                                                            className={`h-2 rounded-full ${
+                                                                                                parseFloat(progressPercent) >= 100 ? 'bg-green-600' : 
+                                                                                                parseFloat(progressPercent) >= 50 ? 'bg-yellow-500' : 
+                                                                                                'bg-red-500'
+                                                                                            }`}
+                                                                                            style={{ width: `${Math.min(parseFloat(progressPercent), 100)}%` }}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <span className="text-xs font-medium text-gray-700 min-w-[45px]">
+                                                                                        {progressPercent}%
+                                                                                    </span>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <span className="text-gray-500">N/A</span>
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                )
+                                                            })}
+                                                        {eventDonationsReport.filter(event => event.isOpenForDonation || event.totalDonations > 0).length === 0 && (
+                                                            <tr>
+                                                                <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
+                                                                    <div className="flex flex-col items-center">
+                                                                        <FaMoneyBillWave className="w-12 h-12 text-gray-400 mb-2" />
+                                                                        <p className="text-sm font-medium">No events with donations found</p>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                         
