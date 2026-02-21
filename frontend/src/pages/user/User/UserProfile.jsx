@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect, useRef } from 'react'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
-import Button from '../../../components/Button'
 import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -405,128 +404,85 @@ const UserProfile = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* CSS Animations */}
+        <div className="min-h-screen bg-[#F5F5F5]">
             <style>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-                @keyframes scaleIn {
-                    from {
-                        opacity: 0;
-                        transform: scale(0.9);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: scale(1);
-                    }
-                }
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out;
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes scaleIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+                .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+                .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
             `}</style>
             <Header />
-            
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Page Header */}
-                <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold text-black mb-2">Profile Settings</h1>
-                            <p className="text-gray-600">Manage your account information and preferences.</p>
-                        </div>
-                        {/* Back to Dashboard removed per role UX */}
-                    </div>
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-4 sm:py-5 mb-6">
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Profile</h1>
+                    <p className="text-sm text-gray-600 mt-0.5">Manage your account information.</p>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Profile Overview */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
                             <div className="text-center">
-                                {/* Enhanced Profile Picture Section */}
-                                <div className="relative inline-block mb-6">
-                                    <div className="relative w-32 h-32 mx-auto">
+                                <div className="relative inline-block mb-5">
+                                    <div className="relative w-28 h-28 sm:w-32 sm:h-32 mx-auto">
                                         {(profileImage || userData?.profileImage) ? (
-                                            <div className="relative w-full h-full rounded-full overflow-hidden ring-4 ring-[#800000] ring-offset-4 ring-offset-white shadow-xl">
+                                            <div className="w-full h-full rounded-full overflow-hidden ring-2 ring-[#800000]/20 ring-offset-2 ring-offset-white">
                                                 <img
                                                     src={profileImage || userData?.profileImage}
                                                     alt={userData?.name || 'User'}
                                                     className="w-full h-full object-cover"
                                                 />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-full"></div>
                                             </div>
                                         ) : (
-                                            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#800000] via-[#900000] to-[#800000] flex items-center justify-center text-4xl font-bold text-white shadow-xl ring-4 ring-[#800000] ring-offset-4 ring-offset-white">
+                                            <div className="w-full h-full rounded-full bg-[#800000] flex items-center justify-center text-3xl sm:text-4xl font-bold text-white ring-2 ring-[#800000]/20 ring-offset-2 ring-offset-white">
                                                 {(userData?.name || 'User').split(' ').slice(0,2).map(n=>n.charAt(0).toUpperCase()).join('')}
                                             </div>
                                         )}
-                                        
-                                        {/* Change Photo Button */}
                                         <button
+                                            type="button"
                                             onClick={handleOpenImageModal}
-                                            className="absolute -bottom-2 -right-2 w-12 h-12 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center cursor-pointer hover:from-[#900000] hover:to-[#800000] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95 group border-4 border-white"
+                                            className="absolute -bottom-1 -right-1 w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center text-white hover:bg-[#6b0000] transition border-2 border-white shadow-sm"
                                             aria-label="Change profile picture"
                                         >
-                                            <FaCamera className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
+                                            <FaCamera className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
-
-                                {/* Update Button */}
                                 {profileImage && profileImage !== userData?.profileImage && (
-                                    <div className="mb-4 animate-fadeIn">
-                                        <Button
+                                    <div className="mb-4">
+                                        <button
+                                            type="button"
                                             onClick={handleUpdateProfileImage}
                                             disabled={isImageLoading}
-                                            size="sm"
-                                            className="shadow-md hover:shadow-lg transition-all duration-300"
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] disabled:opacity-70 transition"
                                         >
                                             {isImageLoading ? (
-                                                <span className="flex items-center gap-2">
-                                                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Updating...
-                                                </span>
+                                                <>
+                                                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                                                    Saving...
+                                                </>
                                             ) : (
-                                                <span className="flex items-center gap-2">
-                                                    <FaUpload className="w-4 h-4" />
-                                                    Save Changes
-                                                </span>
+                                                <><FaUpload className="w-4 h-4" /> Save photo</>
                                             )}
-                                        </Button>
+                                        </button>
                                     </div>
                                 )}
-                                
-                                <h2 className="text-2xl font-bold text-gray-900 mb-1">{userData?.name || 'User'}</h2>
-                                <p className="text-gray-600 mb-3 text-sm">{userData?.email || 'user@example.com'}</p>
-                                <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#800000]/10 to-[#900000]/10 text-[#800000] rounded-full text-sm font-semibold border border-[#800000]/20">
+                                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-0.5">{userData?.name || 'User'}</h2>
+                                <p className="text-sm text-gray-500 mb-3">{userData?.email || '—'}</p>
+                                <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#800000]/10 text-[#800000] border border-[#800000]/20">
                                     {userData?.role || 'User'}
                                 </span>
                             </div>
-                            
-                            <div className="mt-6 space-y-4">
-                                <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Account Status</span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        userData?.isAccountVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
+                            <div className="mt-5 space-y-0 border-t border-gray-100 pt-5">
+                                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                                    <span className="text-sm text-gray-600">Account status</span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${userData?.isAccountVerified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                         {userData?.isAccountVerified ? 'Verified' : 'Unverified'}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between py-2 border-b border-gray-200">
-                                    <span className="text-gray-600">Member Since</span>
-                                    <span className="text-sm text-gray-800 font-medium">
+                                <div className="flex items-center justify-between py-3">
+                                    <span className="text-sm text-gray-600">Member since</span>
+                                    <span className="text-sm font-medium text-gray-900">
                                         {(() => {
                                             // Try multiple possible date field names
                                             const createdAt = userData?.createdAt || userData?.created_at || userData?.joinedAt || userData?.joined_at;
@@ -553,34 +509,24 @@ const UserProfile = () => {
                         </div>
                     </div>
 
-                    {/* Profile Settings */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Basic Information */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-xl font-semibold text-black">Basic Information</h3>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+                            <div className="flex items-center justify-between mb-5">
+                                <h3 className="text-base font-semibold text-[#800000]">Basic information</h3>
                                 <button
+                                    type="button"
                                     onClick={() => setIsEditing(!isEditing)}
-                                    className={`p-2 rounded-lg transition-colors duration-200 ${
-                                        isEditing 
-                                            ? 'text-red-600 hover:bg-red-50' 
-                                            : 'text-red-900 hover:bg-red-50'
-                                    }`}
-                                    title={isEditing ? 'Cancel' : 'Edit Profile'}
+                                    className="p-2.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
+                                    title={isEditing ? 'Cancel' : 'Edit'}
                                 >
-                                    {isEditing ? (
-                                        <FaTimes className="w-5 h-5" />
-                                    ) : (
-                                        <FaEdit className="w-5 h-5" />
-                                    )}
+                                    {isEditing ? <FaTimes className="w-5 h-5" /> : <FaEdit className="w-5 h-5" />}
                                 </button>
                             </div>
-
                             <form onSubmit={handleUpdateProfile} className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="name" className="block text-sm font-medium text-black mb-2">
-                                            {userData?.role === 'Department/Organization' ? 'Department Name' : 'Full Name'}
+                                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                            {userData?.role === 'Department/Organization' ? 'Department name' : 'Full name'}
                                         </label>
                                         <input
                                             id="name"
@@ -589,14 +535,12 @@ const UserProfile = () => {
                                             value={formData.name}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
-                                            placeholder={userData?.role === 'Department/Organization' ? 'Enter department name' : 'Enter full name'}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            placeholder={userData?.role === 'Department/Organization' ? 'Department name' : 'Full name'}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] disabled:bg-gray-50 disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-black mb-2">
-                                            Email Address
-                                        </label>
+                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
                                         <input
                                             id="email"
                                             name="email"
@@ -604,19 +548,15 @@ const UserProfile = () => {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
-                                            placeholder="Enter email address"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            placeholder="Email address"
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] disabled:bg-gray-50 disabled:cursor-not-allowed text-sm"
                                         />
                                     </div>
                                 </div>
-
-                                {/* Additional fields for Department/Organization */}
                                 {userData?.role === 'Department/Organization' && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label htmlFor="contact" className="block text-sm font-medium text-black mb-2">
-                                                Contact Number
-                                            </label>
+                                            <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-1.5">Contact</label>
                                             <input
                                                 id="contact"
                                                 name="contact"
@@ -624,14 +564,12 @@ const UserProfile = () => {
                                                 value={formData.contact}
                                                 onChange={handleInputChange}
                                                 disabled={!isEditing}
-                                                placeholder="Enter contact number"
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                                placeholder="Contact number"
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] disabled:bg-gray-50 disabled:cursor-not-allowed text-sm"
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="address" className="block text-sm font-medium text-black mb-2">
-                                                Address
-                                            </label>
+                                            <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1.5">Address</label>
                                             <input
                                                 id="address"
                                                 name="address"
@@ -639,314 +577,227 @@ const UserProfile = () => {
                                                 value={formData.address}
                                                 onChange={handleInputChange}
                                                 disabled={!isEditing}
-                                                placeholder="Enter address"
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                                placeholder="Address"
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] disabled:bg-gray-50 disabled:cursor-not-allowed text-sm"
                                             />
                                         </div>
                                     </div>
                                 )}
-
                                 {isEditing && (
-                                    <div className="flex justify-end">
-                                        <Button
+                                    <div className="flex justify-end pt-2">
+                                        <button
                                             type="submit"
                                             disabled={isLoading}
+                                            className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] disabled:opacity-70 transition"
                                         >
-                                            {isLoading ? 'Updating...' : 'Update Profile'}
-                                        </Button>
+                                            {isLoading ? 'Saving...' : 'Save changes'}
+                                        </button>
                                     </div>
                                 )}
                             </form>
                         </div>
 
-                        {/* Account Actions */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-xl font-semibold text-black mb-6">Account Actions</h3>
-                            
-                            <div className="space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-gray-200 rounded-lg">
-                                    <div className="flex-1">
-                                        <h4 className="font-medium text-black mb-1">Change Password</h4>
-                                        <p className="text-sm text-gray-600">Update your account password</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsPasswordModalOpen(true)}
-                                        className="px-4 py-2 border-2 border-red-900 text-red-900 rounded-lg font-medium hover:bg-red-900 hover:text-white transition-colors duration-200 whitespace-nowrap flex-shrink-0"
-                                    >
-                                        Change Password
-                                    </button>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+                            <h3 className="text-base font-semibold text-[#800000] mb-4">Account actions</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                                <div>
+                                    <h4 className="font-medium text-gray-900 text-sm">Change password</h4>
+                                    <p className="text-xs text-gray-500 mt-0.5">Update your account password</p>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPasswordModalOpen(true)}
+                                    className="px-4 py-2.5 rounded-xl text-sm font-medium border border-[#800000] text-[#800000] hover:bg-[#800000] hover:text-white transition flex-shrink-0"
+                                >
+                                    Change password
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </main>
 
-            {/* Change Password Modal */}
             {isPasswordModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-modal-in">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 md:p-8 animate-modal-in">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-gray-900">Change Password</h3>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-md overflow-hidden">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900">Change password</h3>
                             <button
+                                type="button"
                                 onClick={handleClosePasswordModal}
-                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
                             >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-
-                        {/* Step 1: Request OTP */}
-                        {passwordStep === 1 && (
-                            <div className="space-y-4">
-                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <p className="text-sm text-blue-800">
-                                        We'll send a verification code to your email address: <strong>{userData?.email}</strong>
-                                    </p>
-                                </div>
-                                <Button
-                                    onClick={handleRequestOtp}
-                                    disabled={isLoading}
-                                    className="w-full"
-                                >
-                                    {isLoading ? 'Sending...' : 'Send Verification Code'}
-                                </Button>
-                            </div>
-                        )}
-
-                        {/* Step 2: Enter OTP */}
-                        {passwordStep === 2 && (
-                            <div className="space-y-4">
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <p className="text-sm text-green-800">
-                                        Verification code sent to <strong>{userData?.email}</strong>. Please check your email.
-                                    </p>
-                                </div>
-                                <div>
-                                    <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Enter Verification Code
-                                    </label>
-                                    <input
-                                        id="otp"
-                                        type="text"
-                                        maxLength={6}
-                                        value={passwordChangeData.otp}
-                                        onChange={(e) => setPasswordChangeData(prev => ({ ...prev, otp: e.target.value.replace(/\D/g, '') }))}
-                                        placeholder="000000"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900 text-center text-2xl tracking-widest"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-2">Enter the 6-digit code from your email</p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <Button
-                                        variant="outlineLight"
-                                        onClick={() => {
-                                            setPasswordStep(1)
-                                            setIsOtpSent(false)
-                                            setPasswordChangeData(prev => ({ ...prev, otp: '' }))
-                                        }}
-                                        className="flex-1"
+                        <div className="p-5 space-y-4">
+                            {passwordStep === 1 && (
+                                <>
+                                    <p className="text-sm text-gray-600">We&apos;ll send a verification code to <strong className="text-gray-900">{userData?.email}</strong></p>
+                                    <button
+                                        type="button"
+                                        onClick={handleRequestOtp}
+                                        disabled={isLoading}
+                                        className="w-full py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] disabled:opacity-70 transition"
                                     >
-                                        Back
-                                    </Button>
-                                    <Button
-                                        onClick={handleVerifyOtp}
-                                        disabled={isLoading || passwordChangeData.otp.length !== 6}
-                                        className="flex-1"
-                                    >
-                                        {isLoading ? 'Verifying...' : 'Verify Code'}
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Step 3: Change Password */}
-                        {passwordStep === 3 && (
-                            <form onSubmit={handleChangePassword} className="space-y-4">
-                                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <p className="text-sm text-green-800">
-                                        OTP verified! Please enter your new password.
-                                    </p>
-                                </div>
-                                <div>
-                                    <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                                        New Password
-                                    </label>
-                                    <input
-                                        id="newPassword"
-                                        type="password"
-                                        value={passwordChangeData.newPassword}
-                                        onChange={(e) => setPasswordChangeData(prev => ({ ...prev, newPassword: e.target.value }))}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900"
-                                        required
-                                    />
-                                </div>
+                                        {isLoading ? 'Sending...' : 'Send code'}
+                                    </button>
+                                </>
+                            )}
+                            {passwordStep === 2 && (
+                                <>
+                                    <p className="text-sm text-gray-600">Code sent to <strong className="text-gray-900">{userData?.email}</strong>. Check your email.</p>
                                     <div>
-                                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Confirm New Password
-                                        </label>
+                                        <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1.5">Verification code</label>
+                                        <input
+                                            id="otp"
+                                            type="text"
+                                            maxLength={6}
+                                            value={passwordChangeData.otp}
+                                            onChange={(e) => setPasswordChangeData(prev => ({ ...prev, otp: e.target.value.replace(/\D/g, '') }))}
+                                            placeholder="000000"
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] text-center text-xl tracking-widest"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1.5">6-digit code from your email</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setPasswordStep(1); setIsOtpSent(false); setPasswordChangeData(prev => ({ ...prev, otp: '' })) }}
+                                            className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleVerifyOtp}
+                                            disabled={isLoading || passwordChangeData.otp.length !== 6}
+                                            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] disabled:opacity-70 transition"
+                                        >
+                                            {isLoading ? 'Verifying...' : 'Verify'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                            {passwordStep === 3 && (
+                                <form onSubmit={handleChangePassword} className="space-y-4">
+                                    <p className="text-sm text-gray-600">Enter your new password below.</p>
+                                    <div>
+                                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1.5">New password</label>
+                                        <input
+                                            id="newPassword"
+                                            type="password"
+                                            value={passwordChangeData.newPassword}
+                                            onChange={(e) => setPasswordChangeData(prev => ({ ...prev, newPassword: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Confirm password</label>
                                         <input
                                             id="confirmPassword"
                                             type="password"
-                                        value={passwordChangeData.confirmPassword}
-                                        onChange={(e) => setPasswordChangeData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900"
-                                        required
+                                            value={passwordChangeData.confirmPassword}
+                                            onChange={(e) => setPasswordChangeData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
+                                            required
                                         />
-                                </div>
-                                <div className="flex gap-3">
-                                    <Button
-                                        type="button"
-                                        variant="outlineLight"
-                                        onClick={() => {
-                                            setPasswordStep(2)
-                                            setPasswordChangeData(prev => ({ ...prev, newPassword: '', confirmPassword: '' }))
-                                        }}
-                                        className="flex-1"
-                                    >
-                                        Back
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="flex-1"
-                                    >
-                                        {isLoading ? 'Changing...' : 'Change Password'}
-                                    </Button>
-                                </div>
-                            </form>
-                        )}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => { setPasswordStep(2); setPasswordChangeData(prev => ({ ...prev, newPassword: '', confirmPassword: '' })) }}
+                                            className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isLoading}
+                                            className="flex-1 py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] disabled:opacity-70 transition"
+                                        >
+                                            {isLoading ? 'Changing...' : 'Change password'}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Image Upload/Camera Modal */}
             {showImageModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[9999] p-4 animate-fadeIn">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scaleIn">
-                        {/* Modal Header */}
-                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#900000]">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-2xl font-bold text-white">Change Profile Picture</h3>
-                                <button
-                                    onClick={handleCloseImageModal}
-                                    className="p-2 rounded-lg hover:bg-white/20 transition-colors text-white"
-                                    aria-label="Close"
-                                >
-                                    <FaTimes className="w-5 h-5" />
-                                </button>
-                            </div>
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-2xl max-h-[90vh] overflow-hidden animate-scaleIn">
+                        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-gray-900">Change profile picture</h3>
+                            <button type="button" onClick={handleCloseImageModal} className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition" aria-label="Close">
+                                <FaTimes className="w-5 h-5" />
+                            </button>
                         </div>
-
-                        {/* Modal Content */}
-                        <div className="p-6">
+                        <div className="p-5">
                             {!imageSource && (
-                                <div className="space-y-4">
-                                    <p className="text-gray-600 text-center mb-6">Choose how you want to update your profile picture</p>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Camera Option */}
+                                <div className="space-y-5">
+                                    <p className="text-sm text-gray-600 text-center">Choose how to update your photo</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <button
+                                            type="button"
                                             onClick={handleChooseCamera}
-                                            className="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-[#800000] hover:bg-[#800000]/5 transition-all duration-300 group"
+                                            className="flex flex-col items-center justify-center p-6 border border-gray-200 rounded-2xl hover:border-[#800000]/30 hover:bg-[#F5E6E8]/50 transition group"
                                         >
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#800000] to-[#900000] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                                <FaCamera className="w-8 h-8 text-white" />
+                                            <div className="w-14 h-14 rounded-xl bg-[#800000] flex items-center justify-center mb-3">
+                                                <FaCamera className="w-7 h-7 text-white" />
                                             </div>
-                                            <h4 className="text-lg font-semibold text-gray-900 mb-2">Take Photo</h4>
-                                            <p className="text-sm text-gray-600 text-center">Use your device camera to take a new photo</p>
+                                            <span className="text-sm font-medium text-gray-900">Take photo</span>
+                                            <span className="text-xs text-gray-500 mt-0.5">Use camera</span>
                                         </button>
-
-                                        {/* Upload Option */}
                                         <button
+                                            type="button"
                                             onClick={handleChooseUpload}
-                                            className="flex flex-col items-center justify-center p-8 border-2 border-gray-200 rounded-xl hover:border-[#800000] hover:bg-[#800000]/5 transition-all duration-300 group"
+                                            className="flex flex-col items-center justify-center p-6 border border-gray-200 rounded-2xl hover:border-[#800000]/30 hover:bg-[#F5E6E8]/50 transition group"
                                         >
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#800000] to-[#900000] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                                <FaImage className="w-8 h-8 text-white" />
+                                            <div className="w-14 h-14 rounded-xl bg-[#800000] flex items-center justify-center mb-3">
+                                                <FaImage className="w-7 h-7 text-white" />
                                             </div>
-                                            <h4 className="text-lg font-semibold text-gray-900 mb-2">Upload Photo</h4>
-                                            <p className="text-sm text-gray-600 text-center">Choose an existing photo from your device</p>
+                                            <span className="text-sm font-medium text-gray-900">Upload photo</span>
+                                            <span className="text-xs text-gray-500 mt-0.5">From device</span>
                                         </button>
                                     </div>
                                 </div>
                             )}
-
-                            {/* Camera View */}
                             {imageSource === 'camera' && !capturedImage && (
                                 <div className="space-y-4">
                                     <div className="relative bg-black rounded-xl overflow-hidden">
-                                        <video
-                                            ref={videoRef}
-                                            autoPlay
-                                            playsInline
-                                            className="w-full h-auto max-h-[60vh]"
-                                        />
-                                        <div className="absolute inset-0 border-4 border-white/50 rounded-xl pointer-events-none"></div>
+                                        <video ref={videoRef} autoPlay playsInline className="w-full h-auto max-h-[50vh]" />
                                     </div>
-                                    <div className="flex justify-center gap-4">
-                                        <button
-                                            onClick={handleCapturePhoto}
-                                            className="px-6 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 hover:scale-105 active:scale-95"
-                                        >
-                                            <FaCamera className="w-5 h-5" />
-                                            Capture Photo
+                                    <div className="flex justify-center gap-2">
+                                        <button type="button" onClick={handleCapturePhoto} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] transition flex items-center gap-2">
+                                            <FaCamera className="w-4 h-4" /> Capture
                                         </button>
-                                        <button
-                                            onClick={handleCloseImageModal}
-                                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300"
-                                        >
-                                            Cancel
-                                        </button>
+                                        <button type="button" onClick={handleCloseImageModal} className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition">Cancel</button>
                                     </div>
                                 </div>
                             )}
-
-                            {/* Preview Section (for both camera and upload) */}
                             {previewImage && (
                                 <div className="space-y-4">
-                                    <div className="relative bg-gray-100 rounded-xl overflow-hidden">
-                                        <img
-                                            src={previewImage}
-                                            alt="Preview"
-                                            className="w-full h-auto max-h-[60vh] object-contain mx-auto"
-                                        />
+                                    <div className="bg-gray-100 rounded-xl overflow-hidden">
+                                        <img src={previewImage} alt="Preview" className="w-full h-auto max-h-[50vh] object-contain mx-auto" />
                                     </div>
-                                    <div className="flex justify-center gap-4">
-                                        <button
-                                            onClick={handleConfirmImage}
-                                            className="px-6 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2 hover:scale-105 active:scale-95"
-                                        >
-                                            <FaCheck className="w-5 h-5" />
-                                            Use This Photo
+                                    <div className="flex flex-wrap justify-center gap-2">
+                                        <button type="button" onClick={handleConfirmImage} className="px-5 py-2.5 rounded-xl text-sm font-medium bg-[#800000] text-white hover:bg-[#6b0000] transition flex items-center gap-2">
+                                            <FaCheck className="w-4 h-4" /> Use this photo
                                         </button>
                                         {imageSource === 'camera' ? (
-                                            <button
-                                                onClick={handleRetakePhoto}
-                                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300 flex items-center gap-2"
-                                            >
-                                                <FaUndo className="w-5 h-5" />
-                                                Retake
+                                            <button type="button" onClick={handleRetakePhoto} className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition flex items-center gap-2">
+                                                <FaUndo className="w-4 h-4" /> Retake
                                             </button>
                                         ) : (
-                                            <button
-                                                onClick={() => {
-                                                    setPreviewImage(null)
-                                                    handleChooseUpload()
-                                                }}
-                                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300 flex items-center gap-2"
-                                            >
-                                                <FaUndo className="w-5 h-5" />
-                                                Choose Another
+                                            <button type="button" onClick={() => { setPreviewImage(null); handleChooseUpload() }} className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition flex items-center gap-2">
+                                                <FaUndo className="w-4 h-4" /> Choose another
                                             </button>
                                         )}
-                                        <button
-                                            onClick={handleCloseImageModal}
-                                            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-300"
-                                        >
-                                            Cancel
-                                        </button>
+                                        <button type="button" onClick={handleCloseImageModal} className="px-5 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition">Cancel</button>
                                     </div>
                                 </div>
                             )}

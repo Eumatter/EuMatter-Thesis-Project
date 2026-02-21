@@ -11,7 +11,7 @@ import { notifyError, notifySuccess } from '../../../utils/notify';
 import Reactions from '../../../components/social/Reactions';
 import CommentModal from '../../../components/social/CommentModal';
 import { Tooltip } from 'react-tooltip';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaHandHoldingHeart, FaCalendarAlt, FaClock } from 'react-icons/fa';
 
 const UserDashboard = () => {
     const navigate = useNavigate();
@@ -623,20 +623,20 @@ const UserDashboard = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-xl border border-gray-200 p-4">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Quick actions</p>
-                            <div className="grid grid-cols-3 sm:grid-cols-1 gap-2">
-                                <button type="button" onClick={() => handleDonate()} className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:text-[#800000] sm:justify-start">
-                                    <svg className="w-4 h-4 text-[#800000] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
-                                    <span className="truncate">Donate</span>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Quick actions</p>
+                            <div className="space-y-1">
+                                <button type="button" onClick={() => handleDonate()} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors">
+                                    <FaHandHoldingHeart className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">Donate</span>
                                 </button>
-                                <button type="button" onClick={() => navigate('/user/events')} className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:text-[#800000] sm:justify-start">
-                                    <svg className="w-4 h-4 text-[#800000] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    <span className="truncate">Events</span>
+                                <button type="button" onClick={() => navigate('/user/events')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors">
+                                    <FaCalendarAlt className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">Events</span>
                                 </button>
-                                <button type="button" onClick={() => navigate('/user/volunteer-history')} className="flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:text-[#800000] sm:justify-start">
-                                    <svg className="w-4 h-4 text-[#800000] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    <span className="truncate">Hours</span>
+                                <button type="button" onClick={() => navigate('/user/volunteer-history')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors">
+                                    <FaClock className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">Volunteer Hours</span>
                                 </button>
                             </div>
                         </div>

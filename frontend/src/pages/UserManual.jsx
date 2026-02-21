@@ -282,134 +282,123 @@ const UserManual = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50/80">
             <Header />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 border border-gray-200">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                {/* Header: minimalist */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 mb-6 sm:mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 bg-gradient-to-br from-[#800020] to-[#9c0000] rounded-xl">
-                                <FaBook className="w-8 h-8 text-white" />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[#800000] flex items-center justify-center">
+                                <FaBook className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                             </div>
-                            <div>
-                                <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    User Manual
-                                </h1>
-                                <p className="text-gray-600 text-base sm:text-lg">Complete guide to using the EuMatter platform</p>
+                            <div className="min-w-0">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-[#800000] tracking-tight">User Manual</h1>
+                                <p className="text-gray-600 text-sm sm:text-base mt-0.5">Complete guide to the EuMatter platform</p>
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                             <button
                                 onClick={handleDownloadPDF}
                                 disabled={isGeneratingPDF}
-                                className={`flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#9c0000] transition-colors duration-200 shadow-md hover:shadow-lg ${isGeneratingPDF ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-[#800000] text-white hover:bg-[#6b0000] active:scale-[0.98] transition-all duration-200 ${isGeneratingPDF ? 'opacity-60 cursor-not-allowed' : ''}`}
                             >
-                                <FaDownload className="w-4 h-4" />
-                                <span className="hidden sm:inline">
-                                    {isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
-                                </span>
+                                <FaDownload className="w-4 h-4 flex-shrink-0" />
+                                <span className="hidden sm:inline">{isGeneratingPDF ? 'Generating…' : 'Download PDF'}</span>
                             </button>
                             <button
                                 onClick={handlePrint}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 shadow-md hover:shadow-lg"
+                                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl bg-gray-600 text-white hover:bg-gray-700 active:scale-[0.98] transition-all duration-200"
                             >
-                                <FaPrint className="w-4 h-4" />
+                                <FaPrint className="w-4 h-4 flex-shrink-0" />
                                 <span className="hidden sm:inline">Print</span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Sidebar Navigation */}
-                    <div className="lg:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-xl shadow-lg p-4 sticky top-24 border border-gray-200 z-10 max-h-[calc(100vh-8rem)] overflow-y-auto">
-                            <h2 className="text-lg font-semibold mb-4 text-gray-800">Table of Contents</h2>
-                            <nav className="space-y-1">
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                    {/* Sidebar: table of contents */}
+                    <aside className="lg:w-56 xl:w-60 flex-shrink-0">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24 z-10 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin">
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">Contents</h2>
+                            <nav className="space-y-0.5">
                                 {sections.map((section) => {
                                     const Icon = section.icon;
+                                    const isActive = activeSection === section.id;
                                     return (
                                         <button
                                             key={section.id}
                                             onClick={() => scrollToSection(section.id)}
-                                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-lg transition-all duration-200 ${
-                                                activeSection === section.id
-                                                    ? 'bg-gradient-to-r from-[#800020] to-[#9c0000] text-white shadow-md'
+                                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm rounded-xl transition-colors duration-200 ${
+                                                isActive
+                                                    ? 'bg-[#800000] text-white font-medium'
                                                     : 'text-gray-700 hover:bg-gray-100'
                                             }`}
                                         >
-                                            <Icon className="w-4 h-4 flex-shrink-0" />
-                                            <span className="text-left">{section.title}</span>
+                                            <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#800000]'}`} />
+                                            <span>{section.title}</span>
                                         </button>
                                     );
                                 })}
                             </nav>
                         </div>
-                    </div>
+                    </aside>
 
                     {/* Main Content */}
-                    <div className="flex-1">
-                        <div ref={manualRef} className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 lg:p-10 border border-gray-200">
+                    <main className="flex-1 min-w-0">
+                        <div ref={manualRef} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 lg:p-10">
                             {/* Introduction */}
-                            <section id="introduction" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-4" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Introduction
-                                </h2>
-                                <div className="prose max-w-none">
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">What is EuMatter?</h3>
-                                    <p className="text-gray-700 mb-4 leading-relaxed">
-                                        EuMatter is a comprehensive web-based platform designed to facilitate community engagement, volunteer management, and donation tracking for Manuel S. Enverga University Foundation (MSEUF). The system enables students, faculty, staff, departments, and external partners to participate in community service activities, make donations, and track their contributions.
+                            <section id="introduction" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Introduction</h2>
+                                <div className="prose prose-sm max-w-none">
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mt-4 mb-2">What is EuMatter?</h3>
+                                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">
+                                        EuMatter is a web-based platform for community engagement, volunteer management, and donation tracking for Manuel S. Enverga University Foundation (MSEUF). Students, faculty, staff, departments, and partners can participate in community service, make donations, and track contributions.
                                     </p>
 
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">Key Features</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                                        <li><strong>Event Management:</strong> Create, manage, and participate in community events</li>
-                                        <li><strong>Donation System:</strong> Make financial and in-kind donations with multiple payment methods</li>
-                                        <li><strong>Volunteer Tracking:</strong> Register for events, track volunteer hours, and generate certificates</li>
-                                        <li><strong>Reporting & Analytics:</strong> Comprehensive reports and analytics for all stakeholders</li>
-                                        <li><strong>NSTP Integration:</strong> Track NSTP hours and requirements</li>
-                                        <li><strong>Social Features:</strong> Comment, react, and engage with events</li>
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mt-4 mb-2">Key Features</h3>
+                                    <ul className="list-disc list-inside space-y-1.5 text-gray-600 text-sm sm:text-base mb-4">
+                                        <li><strong className="text-gray-800">Event Management:</strong> Create, manage, and join community events</li>
+                                        <li><strong className="text-gray-800">Donation System:</strong> Financial and in-kind donations; multiple payment methods</li>
+                                        <li><strong className="text-gray-800">Volunteer Tracking:</strong> Register, track hours, and certificates</li>
+                                        <li><strong className="text-gray-800">Reporting & Analytics:</strong> Reports and analytics for stakeholders</li>
+                                        <li><strong className="text-gray-800">NSTP Integration:</strong> NSTP hours and requirements</li>
+                                        <li><strong className="text-gray-800">Social:</strong> Comment, react, and engage with events</li>
                                     </ul>
 
-                                    <h3 className="text-xl font-semibold mb-3 text-gray-800">System Requirements</h3>
-                                    <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                        <li><strong>Web Browser:</strong> Chrome, Firefox, Safari, or Edge (latest versions)</li>
-                                        <li><strong>Internet Connection:</strong> Stable internet connection required</li>
-                                        <li><strong>Mobile Support:</strong> Progressive Web App (PWA) - can be installed on mobile devices</li>
-                                        <li><strong>Screen Resolution:</strong> Responsive design supports all screen sizes</li>
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mt-4 mb-2">System Requirements</h3>
+                                    <ul className="list-disc list-inside space-y-1.5 text-gray-600 text-sm sm:text-base mb-4">
+                                        <li><strong className="text-gray-800">Browser:</strong> Chrome, Firefox, Safari, or Edge (latest)</li>
+                                        <li><strong className="text-gray-800">Connection:</strong> Stable internet required</li>
+                                        <li><strong className="text-gray-800">Mobile:</strong> PWA — installable on phones and tablets</li>
+                                        <li><strong className="text-gray-800">Display:</strong> Responsive; works on all screen sizes</li>
                                     </ul>
 
-                                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 my-6 rounded">
-                                        <div className="flex items-start">
-                                            <FaInfoCircle className="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
-                                            <div>
-                                                <p className="text-sm text-blue-800">
-                                                    <strong>Note:</strong> This manual is organized by user roles. Please refer to the section relevant to your role for specific instructions.
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 mt-6 flex gap-3">
+                                        <FaInfoCircle className="w-5 h-5 text-[#800000] flex-shrink-0 mt-0.5" />
+                                        <p className="text-sm text-gray-700">
+                                            <strong className="text-gray-900">Note:</strong> This manual is organized by role. Use the contents to jump to the section for your role.
+                                        </p>
                                     </div>
                                 </div>
                             </section>
 
                             {/* Getting Started */}
-                            <section id="getting-started" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Getting Started
-                                </h2>
+                            <section id="getting-started" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Getting Started</h2>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">1. Account Registration</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">1. Account Registration</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
                                             <p className="text-sm text-gray-600 mb-2"><strong>Step 1:</strong> Access Registration Page</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to the EuMatter homepage</li>
                                                 <li>Click on <strong>"Register"</strong> or <strong>"Sign Up"</strong> button in the top navigation</li>
                                             </ol>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
                                             <p className="text-sm text-gray-600 mb-2"><strong>Step 2:</strong> Fill Registration Form</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Enter your <strong>Full Name</strong></li>
@@ -425,7 +414,7 @@ const UserManual = () => {
                                                 </li>
                                             </ol>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
                                             <p className="text-sm text-gray-600 mb-2"><strong>Step 3:</strong> Complete Profile Information</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Select <strong>User Type:</strong> MSEUF or Outsider</li>
@@ -434,7 +423,7 @@ const UserManual = () => {
                                                 <li>Enter additional information (Birthday, Gender, Address, Contact Number - all optional)</li>
                                             </ol>
                                         </div>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-sm text-gray-600 mb-2"><strong>Step 4:</strong> Email Verification</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Check your email inbox for verification code</li>
@@ -446,8 +435,8 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">2. Logging In</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">2. Logging In</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to the homepage</li>
                                                 <li>Click <strong>"Login"</strong> button</li>
@@ -459,8 +448,8 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">3. Password Reset</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">3. Password Reset</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700 mb-2">If you forgot your password:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Click <strong>"Forgot Password?"</strong> on the login page</li>
@@ -475,19 +464,17 @@ const UserManual = () => {
                             </section>
 
                             {/* User Role Guide */}
-                            <section id="user-role" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    User Role Guide
-                                </h2>
+                            <section id="user-role" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">User Role Guide</h2>
                                 <p className="text-gray-700 mb-4">
                                     The <strong>User</strong> role is for regular users including students, faculty, staff, alumni, and general public. Users can browse events, make donations, volunteer for events, and track their contributions.
                                 </p>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Dashboard</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/user/dashboard</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Dashboard</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/user/dashboard</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Features:</p>
                                             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                                                 <li><strong>Upcoming Events:</strong> View events you're registered for or interested in</li>
@@ -497,17 +484,17 @@ const UserManual = () => {
                                                 <li><strong>Notifications:</strong> View recent notifications</li>
                                             </ul>
                                         </div>
-                                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                                            <p className="text-sm text-blue-800">
-                                                <strong>How to Use:</strong> Access dashboard from navigation menu. Browse events in the feed. Click on an event card to view details. Use quick action buttons for common tasks.
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                                            <p className="text-sm text-gray-700">
+                                                <strong className="text-gray-900">How to Use:</strong> Access dashboard from the menu. Browse events in the feed, click a card for details, and use quick actions for common tasks.
                                             </p>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Browse Events</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/user/events</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Browse Events</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/user/events</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Browse Events:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Click <strong>"Events"</strong> in navigation menu</li>
@@ -520,9 +507,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Making Donations</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> Event Details Page or <code className="bg-gray-100 px-2 py-1 rounded">/donate</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Making Donations</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> Event Details Page or <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/donate</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Make a Donation:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to an event details page or click <strong>"Donate"</strong> button</li>
@@ -536,9 +523,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Volunteering for Events</h3>
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Volunteering for Events</h3>
                                         <p className="text-gray-700 mb-3"><strong>Location:</strong> Event Details Page</p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Register as Volunteer:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to event details page</li>
@@ -554,19 +541,17 @@ const UserManual = () => {
                             </section>
 
                             {/* CRD Staff Guide */}
-                            <section id="crd-staff" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    CRD Staff Guide
-                                </h2>
-                                <p className="text-gray-700 mb-4">
+                            <section id="crd-staff" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">CRD Staff Guide</h2>
+                                <p className="text-gray-600 text-sm sm:text-base mb-4">
                                     <strong>CRD Staff</strong> manages event approvals, donation records, and generates comprehensive reports for the organization.
                                 </p>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Dashboard</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/crd-staff/dashboard</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Dashboard</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/crd-staff/dashboard</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Features:</p>
                                             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Overview of all activities and statistics</li>
@@ -579,9 +564,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Event Management</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/crd-staff/events</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Event Management</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/crd-staff/events</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Approve/Decline Events:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to <strong>"Event Management"</strong> from menu</li>
@@ -595,9 +580,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Reports & Analytics</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/crd-staff/reports</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Reports & Analytics</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/crd-staff/reports</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Generate Reports:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to <strong>"Reports"</strong> from menu</li>
@@ -609,9 +594,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Department Leaderboard</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/crd-staff/leaderboard</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Department Leaderboard</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/crd-staff/leaderboard</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700">
                                                 View department rankings based on donations and volunteer participation. The leaderboard shows top-performing departments and their contributions to community events.
                                             </p>
@@ -621,19 +606,17 @@ const UserManual = () => {
                             </section>
 
                             {/* Department Guide */}
-                            <section id="department" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Department/Organization Guide
-                                </h2>
+                            <section id="department" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Department/Organization Guide</h2>
                                 <p className="text-gray-700 mb-4">
                                     <strong>Department/Organization</strong> users can create event proposals, manage volunteers, and track department-specific donations and activities.
                                 </p>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Creating Event Proposals</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/department/events</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Creating Event Proposals</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/department/events</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Create Event Proposal:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to <strong>"Events"</strong> from menu</li>
@@ -656,9 +639,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Volunteer Management</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/department/volunteer-management/:eventId</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Volunteer Management</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/department/volunteer-management/:eventId</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Manage Volunteers:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to your event details page</li>
@@ -672,9 +655,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Department Reports</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/department/reports</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Department Reports</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/department/reports</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700">
                                                 View department-specific reports including event statistics, donation totals, volunteer participation, and other analytics relevant to your department.
                                             </p>
@@ -684,19 +667,17 @@ const UserManual = () => {
                             </section>
 
                             {/* System Admin Guide */}
-                            <section id="system-admin" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    System Administrator Guide
-                                </h2>
+                            <section id="system-admin" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">System Administrator Guide</h2>
                                 <p className="text-gray-700 mb-4">
                                     <strong>System Administrator</strong> manages the entire system including users, roles, wallets, system settings, and generates system-wide reports.
                                 </p>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">User Management</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/system-admin/users</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">User Management</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/system-admin/users</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Steps to Create New User:</p>
                                             <ol className="list-decimal list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Navigate to <strong>"User Management"</strong> from sidebar</li>
@@ -710,9 +691,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">System Settings</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/system-admin/settings</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">System Settings</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/system-admin/settings</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="font-semibold text-gray-800 mb-2">Available Settings:</p>
                                             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                                                 <li><strong>Maintenance Mode:</strong> Enable/disable system maintenance</li>
@@ -725,9 +706,9 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Wallet Management</h3>
-                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 px-2 py-1 rounded">/system-admin/wallets</code></p>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Wallet Management</h3>
+                                        <p className="text-gray-700 mb-3"><strong>Location:</strong> <code className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-mono">/system-admin/wallets</code></p>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700">
                                                 Manage department wallet configurations, verify payment credentials, and monitor wallet transactions. Ensure payment gateways are properly configured for each department.
                                             </p>
@@ -737,15 +718,13 @@ const UserManual = () => {
                             </section>
 
                             {/* Common Features */}
-                            <section id="common-features" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Common Features
-                                </h2>
+                            <section id="common-features" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Common Features</h2>
 
                                 <div className="space-y-6">
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Profile Management</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Profile Management</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700 mb-2">All users can manage their profiles:</p>
                                             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Update personal information</li>
@@ -757,8 +736,8 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Notifications</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Notifications</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700 mb-2">The system sends notifications for:</p>
                                             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
                                                 <li>Event approvals and updates</li>
@@ -773,8 +752,8 @@ const UserManual = () => {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-semibold mb-3 text-gray-800">Calendar View</h3>
-                                        <div className="bg-gray-50 rounded-lg p-4">
+                                        <h3 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Calendar View</h3>
+                                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                             <p className="text-gray-700">
                                                 All users can access a calendar view to see upcoming events, holidays, and important dates. The calendar is role-specific and shows relevant events based on your permissions.
                                             </p>
@@ -784,90 +763,78 @@ const UserManual = () => {
                             </section>
 
                             {/* Troubleshooting */}
-                            <section id="troubleshooting" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Troubleshooting
-                                </h2>
+                            <section id="troubleshooting" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Troubleshooting</h2>
 
                                 <div className="space-y-4">
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                                        <h3 className="font-semibold text-yellow-800 mb-2">Email Verification Issues</h3>
-                                        <p className="text-sm text-yellow-700">
-                                            If you don't receive the verification email, check your spam folder. Click "Resend Code" if the code expires. Ensure your email address is correct.
+                                    <div className="bg-amber-50/80 border border-amber-100 rounded-xl p-4">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Email Verification Issues</h3>
+                                        <p className="text-sm text-gray-700">
+                                            Check spam folder. Use "Resend Code" if the code expires. Ensure your email is correct.
                                         </p>
                                     </div>
 
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                                        <h3 className="font-semibold text-yellow-800 mb-2">Login Problems</h3>
-                                        <p className="text-sm text-yellow-700">
-                                            If you cannot log in, verify your email is confirmed. Use "Forgot Password" to reset your password. Clear browser cache and cookies if issues persist.
+                                    <div className="bg-amber-50/80 border border-amber-100 rounded-xl p-4">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Login Problems</h3>
+                                        <p className="text-sm text-gray-700">
+                                            Confirm your email is verified. Use "Forgot Password" to reset. Clear cache and cookies if issues persist.
                                         </p>
                                     </div>
 
-                                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded">
-                                        <h3 className="font-semibold text-yellow-800 mb-2">Payment Issues</h3>
-                                        <p className="text-sm text-yellow-700">
-                                            If payment fails, check your payment method details. For wallet payments, ensure your department wallet is properly configured. Contact support if problems continue.
+                                    <div className="bg-amber-50/80 border border-amber-100 rounded-xl p-4">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Payment Issues</h3>
+                                        <p className="text-sm text-gray-700">
+                                            Verify payment method details. For wallet payments, ensure the department wallet is configured. Contact support if problems continue.
                                         </p>
                                     </div>
                                 </div>
                             </section>
 
                             {/* FAQs */}
-                            <section id="faqs" className="mb-12 scroll-mt-24">
-                                <h2 className="text-3xl font-bold mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-                                    Frequently Asked Questions
-                                </h2>
+                            <section id="faqs" className="mb-10 sm:mb-12 scroll-mt-28">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[#800000] mb-4 pb-2 border-b border-gray-100">Frequently Asked Questions</h2>
 
                                 <div className="space-y-4">
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Q: How do I change my role?</h3>
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Q: How do I change my role?</h3>
                                         <p className="text-gray-700">
                                             A: Role changes must be approved by a System Administrator. Contact your administrator or submit a request through the system.
                                         </p>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Q: Can I volunteer for multiple events?</h3>
-                                        <p className="text-gray-700">
-                                            A: Yes, you can register as a volunteer for multiple events. Each event requires separate registration and approval.
-                                        </p>
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Q: Can I volunteer for multiple events?</h3>
+                                        <p className="text-gray-700 text-sm">A: Yes. Each event requires separate registration and approval.</p>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Q: How do I track my volunteer hours?</h3>
-                                        <p className="text-gray-700">
-                                            A: Your volunteer hours are automatically tracked when you check in and check out at events. View your volunteer history in your dashboard or profile.
-                                        </p>
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Q: How do I track my volunteer hours?</h3>
+                                        <p className="text-gray-700 text-sm">A: Hours are tracked when you check in and out at events. View history in your dashboard or profile.</p>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Q: What payment methods are accepted?</h3>
-                                        <p className="text-gray-700">
-                                            A: The system accepts Wallet payments, Cash, and Cheque. In-kind donations are also accepted for approved item types.
-                                        </p>
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Q: What payment methods are accepted?</h3>
+                                        <p className="text-gray-700 text-sm">A: Wallet, Cash, and Cheque. In-kind donations are accepted for approved item types.</p>
                                     </div>
 
-                                    <div className="bg-gray-50 rounded-lg p-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Q: How long does event approval take?</h3>
-                                        <p className="text-gray-700">
-                                            A: Event approval typically takes 1-3 business days. You will receive a notification once your event is approved or declined.
-                                        </p>
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <h3 className="font-semibold text-gray-900 mb-1.5 text-sm">Q: How long does event approval take?</h3>
+                                        <p className="text-gray-700 text-sm">A: Typically 1–3 business days. You’ll get a notification when the event is approved or declined.</p>
                                     </div>
                                 </div>
                             </section>
 
-                            {/* Footer Note */}
-                            <div className="mt-12 pt-8 border-t border-gray-200">
-                                <p className="text-center text-gray-600 text-sm">
-                                    <strong>EuMatter User Manual</strong> | Version 1.0 | Last Updated: {new Date().getFullYear()}
+                            {/* Footer */}
+                            <div className="mt-10 pt-6 border-t border-gray-100">
+                                <p className="text-center text-gray-500 text-sm">
+                                    <strong className="text-gray-700">EuMatter User Manual</strong> · Version 1.0 · {new Date().getFullYear()}
                                 </p>
-                                <p className="text-center text-gray-500 text-xs mt-2">
-                                    For additional support, please contact the CRD Office or System Administrator.
+                                <p className="text-center text-gray-400 text-xs mt-1">
+                                    For support, contact the CRD Office or System Administrator.
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </main>
                 </div>
             </div>
             <Footer />

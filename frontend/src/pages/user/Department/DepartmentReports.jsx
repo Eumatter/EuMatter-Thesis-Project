@@ -3,7 +3,6 @@ import { AppContent } from '../../../context/AppContext'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
-import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -196,32 +195,27 @@ const DepartmentReports = () => {
                 percentage: totalEvents > 0 ? Math.round((count / totalEvents) * 100 * 10) / 10 : 0
             }))
         
-        // Monthly trends from actual data
+        // Monthly trends: current year only (accurate)
+        const currentYear = new Date().getFullYear()
         const monthlyTrends = []
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        
         months.forEach((monthName, monthIndex) => {
             const monthEvents = events.filter(e => {
                 const eventDate = new Date(e.startDate)
-                return eventDate.getMonth() === monthIndex
+                return eventDate.getFullYear() === currentYear && eventDate.getMonth() === monthIndex
             })
-            
             const monthDonations = donations.filter(d => {
                 const donationDate = new Date(d.donatedAt || d.createdAt)
-                return donationDate.getMonth() === monthIndex
+                return donationDate.getFullYear() === currentYear && donationDate.getMonth() === monthIndex
             })
-            
             const monthVolunteers = new Set()
             monthEvents.forEach(event => {
                 if (event.volunteers && event.volunteers.length > 0) {
                     event.volunteers.forEach(vol => {
-                        if (vol.userId) {
-                            monthVolunteers.add(vol.userId.toString())
-                        }
+                        if (vol.userId) monthVolunteers.add(vol.userId.toString())
                     })
                 }
             })
-            
             monthlyTrends.push({
                 month: monthName,
                 events: monthEvents.length,
@@ -229,9 +223,59 @@ const DepartmentReports = () => {
                 volunteers: monthVolunteers.size
             })
         })
-        
+
+        // Month-over-month donation growth (this month vs last month) – real data
+        const now = new Date()
+        const thisMonthDonations = donations
+            .filter(d => {
+                const dte = new Date(d.donatedAt || d.createdAt)
+                return dte.getFullYear() === now.getFullYear() && dte.getMonth() === now.getMonth()
+            })
+            .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+        const lastMonthDonations = donations
+            .filter(d => {
+                const dte = new Date(d.donatedAt || d.createdAt)
+                const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+                return dte.getFullYear() === lastMonth.getFullYear() && dte.getMonth() === lastMonth.getMonth()
+            })
+            .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+        const monthlyGrowth = lastMonthDonations > 0
+            ? Math.round(((thisMonthDonations - lastMonthDonations) / lastMonthDonations) * 1000) / 10
+            : (thisMonthDonations > 0 ? 100 : 0)
+
+        // Volunteer retention: volunteers who appear in more than one event / total volunteers (when we have data)
+        let volunteerRetention = null
+        if (totalVolunteers > 0) {
+            const volunteerEventCount = new Map()
+            events.forEach(event => {
+                if (event.volunteers && event.volunteers.length > 0) {
+                    event.volunteers.forEach(vol => {
+                        if (vol.userId) {
+                            const id = vol.userId.toString()
+                            volunteerEventCount.set(id, (volunteerEventCount.get(id) || 0) + 1)
+                        }
+                    })
+                }
+            })
+            const returningVolunteers = [...volunteerEventCount.values()].filter(c => c > 1).length
+            volunteerRetention = Math.round((returningVolunteers / totalVolunteers) * 1000) / 10
+        }
+
+        // Top event by donation total (only when we have events)
+        let topEvent = null
+        if (events.length > 0) {
+            topEvent = events.reduce((max, event) => {
+                const eventTotal = donations
+                    .filter(d => d.eventId === event._id)
+                    .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                const maxTotal = donations
+                    .filter(d => d.eventId === max._id)
+                    .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                return eventTotal > maxTotal ? event : max
+            }, events[0])
+        }
+
         return {
-            // Event Statistics
             eventStats: {
                 total: totalEvents,
                 approved: events.filter(e => e.status === 'Approved').length,
@@ -239,37 +283,22 @@ const DepartmentReports = () => {
                 completed: events.filter(e => e.status === 'Completed').length,
                 upcoming: events.filter(e => e.status === 'Upcoming').length
             },
-            
-            // Financial Statistics
             financialStats: {
                 totalDonations: totalDonations,
                 averageDonation: donations.length > 0 ? totalDonations / donations.length : 0,
-                monthlyGrowth: 15.2,
-                topEvent: events.reduce((max, event) => {
-                    const eventDonations = donations.filter(d => d.eventId === event._id)
-                    const eventTotal = eventDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
-                    const maxTotal = donations.filter(d => d.eventId === max._id).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
-                    return eventTotal > maxTotal ? event : max
-                }, events[0] || {})
+                monthlyGrowth,
+                topEvent
             },
-            
-            // Demographics Data
             demographics: {
                 donorCategories: donorDemographics,
                 eventStatus: eventStatusData,
                 volunteerCount: totalVolunteers,
                 donationCount: donations.length
             },
-            
-            // Engagement Metrics
             engagement: {
-                averageAttendance: 78.5,
-                volunteerRetention: 82.3,
-                eventSatisfaction: 4.6
+                volunteerRetention
             },
-            
-            // Monthly Trends
-            monthlyTrends: monthlyTrends
+            monthlyTrends
         }
     }
 
@@ -307,8 +336,7 @@ const DepartmentReports = () => {
                     ['Average Donation (₱)', data.financialStats.averageDonation.toFixed(2)],
                     ['Total Volunteers', data.demographics.volunteerCount],
                     ['Total Donors', data.demographics.donationCount],
-                    ['Average Attendance (%)', data.engagement.averageAttendance],
-                    ['Volunteer Retention (%)', data.engagement.volunteerRetention],
+                    ['Volunteer Retention (%)', data.engagement.volunteerRetention != null ? data.engagement.volunteerRetention : 'N/A'],
                     [''],
                     ['Donor Categories', 'Count', 'Percentage'],
                     ...data.demographics.donorCategories.map(cat => [cat.category, cat.count, `${cat.percentage}%`]),
@@ -335,223 +363,60 @@ const DepartmentReports = () => {
     }
 
     const StatCard = ({ title, value, subtitle, icon, trend }) => (
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 hover:shadow-xl transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center justify-center flex-shrink-0">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+            <div className="flex items-center justify-between mb-2">
+                <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
                     {icon}
                 </div>
-                {trend && (
-                    <div className={`flex items-center space-x-1 flex-shrink-0 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={trend > 0 ? "M7 17l9.2-9.2M17 17V7H7" : "M17 7l-9.2 9.2M7 7v10h10"} />
-                        </svg>
-                        <span className="text-xs sm:text-sm font-medium">{Math.abs(trend)}%</span>
-                    </div>
+                {trend != null && (
+                    <span className={`text-xs font-medium ${trend > 0 ? 'text-green-600' : trend < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+                        {trend > 0 ? '+' : ''}{trend}%
+                    </span>
                 )}
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold mb-1 truncate" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{value}</h3>
-            <p className="text-gray-600 text-xs sm:text-sm font-medium">{title}</p>
-            {subtitle && <p className="text-gray-500 text-xs mt-1 hidden sm:block">{subtitle}</p>}
+            <p className="text-xl sm:text-2xl font-bold text-[#800000] truncate">{value}</p>
+            <p className="text-gray-600 text-sm font-medium">{title}</p>
+            {subtitle && <p className="text-gray-500 text-xs mt-0.5 hidden sm:block">{subtitle}</p>}
         </div>
     )
 
-    const ProgressBar = ({ label, percentage, color = 'bg-indigo-500' }) => (
-        <div className="space-y-2">
-            <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">{label}</span>
-                <span className="text-sm font-semibold text-gray-900">{percentage}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                    className={`${color} h-2 rounded-full transition-all duration-500`}
-                    style={{ width: `${percentage}%` }}
-                ></div>
-            </div>
-        </div>
-    )
-
-    // Advanced Donut Chart Component
-    const DonutChart = ({ data, colors, size = 200, strokeWidth = 20, title, subtitle }) => {
+    // Minimal list with thin solid bar – no gradients, no donut
+    const SimpleBreakdownList = ({ data, totalLabel }) => {
         const total = data.reduce((sum, item) => sum + item.value, 0)
-        const radius = (size - strokeWidth) / 2
-        const circumference = 2 * Math.PI * radius
-        let cumulativePercentage = 0
-
-        const createArcPath = (percentage, index) => {
-            const startAngle = cumulativePercentage * 3.6
-            const endAngle = (cumulativePercentage + percentage) * 3.6
-            cumulativePercentage += percentage
-
-            const startAngleRad = (startAngle - 90) * (Math.PI / 180)
-            const endAngleRad = (endAngle - 90) * (Math.PI / 180)
-            
-            const centerX = size / 2
-            const centerY = size / 2
-
-            const x1 = centerX + radius * Math.cos(startAngleRad)
-            const y1 = centerY + radius * Math.sin(startAngleRad)
-            const x2 = centerX + radius * Math.cos(endAngleRad)
-            const y2 = centerY + radius * Math.sin(endAngleRad)
-
-            const largeArcFlag = percentage > 50 ? 1 : 0
-
-            return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`
-        }
-
         return (
-            <div className="flex flex-col items-center justify-center space-y-3 sm:space-y-4">
-                <div className="relative w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] lg:w-[220px] lg:h-[220px]">
-                    {/* Background Circle */}
-                    <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="transform -rotate-90 drop-shadow-lg">
-                        <circle
-                            cx={size / 2}
-                            cy={size / 2}
-                            r={radius}
-                            fill="none"
-                            stroke="#f3f4f6"
-                            strokeWidth={strokeWidth}
-                            className="opacity-30"
-                        />
-                        
-                        {/* Data Segments */}
-                        {data.map((item, index) => {
-                            const pathLength = (item.percentage / 100) * circumference
-                            return (
-                                <g key={index}>
-                                    <defs>
-                                        <linearGradient id={`gradient-${index}-${title}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor={colors[index]} stopOpacity="0.8" />
-                                            <stop offset="100%" stopColor={colors[index]} stopOpacity="1" />
-                                        </linearGradient>
-                                        <filter id={`glow-${index}-${title}`}>
-                                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                                            <feMerge> 
-                                                <feMergeNode in="coloredBlur"/>
-                                                <feMergeNode in="SourceGraphic"/>
-                                            </feMerge>
-                                        </filter>
-                                    </defs>
-                                    <path
-                                        d={createArcPath(item.percentage, index)}
-                                        fill="none"
-                                        stroke={`url(#gradient-${index}-${title})`}
-                                        strokeWidth={strokeWidth}
-                                        strokeLinecap="round"
-                                        filter={`url(#glow-${index}-${title})`}
-                                        className="donut-segment transition-all duration-700 ease-out hover:stroke-width-6 cursor-pointer"
-                                        style={{
-                                            strokeDasharray: `${pathLength} ${circumference}`,
-                                            strokeDashoffset: 0,
-                                            animationDelay: `${index * 0.2}s`
-                                        }}
-                                    />
-                                </g>
-                            )
-                        })}
-                    </svg>
-                    
-                    {/* Center Content */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                            <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{total}</div>
-                            <div className="text-xs sm:text-sm text-gray-600 font-medium">{title || 'Total'}</div>
-                            {subtitle && <div className="text-[10px] sm:text-xs text-gray-500 mt-1 hidden sm:block">{subtitle}</div>}
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Legend with Enhanced Design */}
-                <div className="grid grid-cols-1 gap-2 sm:gap-3 w-full max-w-xs">
+            <div className="space-y-4">
+                {totalLabel && total > 0 && (
+                    <p className="text-sm text-gray-500">{total} {totalLabel}</p>
+                )}
+                <ul className="space-y-4">
                     {data.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 sm:p-3 bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200">
-                            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                                <div className="relative flex-shrink-0">
-                                    <div 
-                                        className="w-3 h-3 sm:w-4 sm:h-4 rounded-full shadow-sm"
-                                        style={{ backgroundColor: colors[index] }}
-                                    ></div>
-                                    <div 
-                                        className="absolute inset-0 w-3 h-3 sm:w-4 sm:h-4 rounded-full animate-ping opacity-20"
-                                        style={{ backgroundColor: colors[index] }}
-                                    ></div>
+                        <li key={index} className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-2 h-2 rounded-full bg-[#800000] flex-shrink-0" aria-hidden />
+                                    <span className="text-sm font-medium text-gray-900 truncate">{item.label}</span>
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{item.label}</div>
-                                    <div className="text-[10px] sm:text-xs text-gray-500">{item.percentage}%</div>
+                                <div className="flex items-baseline gap-1.5 flex-shrink-0">
+                                    <span className="text-sm font-semibold text-[#800000]">{item.value}</span>
+                                    <span className="text-xs text-gray-500">{item.percentage}%</span>
                                 </div>
                             </div>
-                            <div className="text-right flex-shrink-0 ml-2">
-                                <div className="text-xs sm:text-sm font-bold text-gray-900">{item.value}</div>
-                                <div className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">count</div>
+                            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#800000] rounded-full transition-all duration-300"
+                                    style={{ width: `${Math.min(100, item.percentage)}%` }}
+                                />
                             </div>
-                        </div>
+                        </li>
                     ))}
-                </div>
-                
-            </div>
-        )
-    }
-
-    // Enhanced Bar Chart Component
-    const BarChart = ({ data, colors, height = 200 }) => {
-        const maxValue = Math.max(...data.map(item => item.value), 1)
-        const maroonShades = ['#800020', '#9c0000', '#a0002a', '#b30024', '#c40028']
-        
-        return (
-            <div className="space-y-4 sm:space-y-6">
-                {data.map((item, index) => {
-                    const colorIndex = index % maroonShades.length
-                    const barColor = maroonShades[colorIndex]
-                    return (
-                        <div key={index} className="group">
-                            <div className="flex justify-between items-center mb-2 sm:mb-3">
-                                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                                    <div className="relative flex-shrink-0">
-                                        <div 
-                                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full shadow-sm"
-                                            style={{ backgroundColor: barColor }}
-                                        ></div>
-                                        <div 
-                                            className="absolute inset-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full animate-ping opacity-20"
-                                            style={{ backgroundColor: barColor }}
-                                        ></div>
-                                    </div>
-                                    <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{item.label}</span>
-                                </div>
-                                <div className="text-right flex-shrink-0 ml-2">
-                                    <span className="text-base sm:text-lg font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{item.value}</span>
-                                    <span className="text-[10px] sm:text-xs text-gray-500 ml-1">({item.percentage}%)</span>
-                                </div>
-                            </div>
-                            <div className="relative">
-                                <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4 shadow-inner">
-                                    <div 
-                                        className="h-3 sm:h-4 rounded-full transition-all duration-1000 ease-out shadow-sm group-hover:shadow-md"
-                                        style={{ 
-                                            width: `${(item.value / maxValue) * 100}%`,
-                                            background: `linear-gradient(to right, ${barColor}, ${maroonShades[(colorIndex + 1) % maroonShades.length]})`,
-                                            animationDelay: `${index * 0.1}s`
-                                        }}
-                                    >
-                                        <div className="w-full h-full bg-white bg-opacity-20 rounded-full animate-pulse"></div>
-                                    </div>
-                                </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="text-[10px] sm:text-xs font-medium text-white mix-blend-difference">
-                                        {Math.round((item.value / maxValue) * 100)}%
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
+                </ul>
             </div>
         )
     }
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-[#F5F5F5]">
                 <Header />
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <LoadingSpinner size="large" text="Loading reports..." />
@@ -566,35 +431,26 @@ const DepartmentReports = () => {
 
     if (!hasData && !isLoading) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-[#F5F5F5]">
                 <Header />
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-                    <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                            <div className="min-w-0">
-                                <h1 className="text-3xl font-bold text-black mb-2">Analytics & Reports</h1>
-                                <p className="text-gray-600">
-                                    Comprehensive insights into your department's performance
-                                </p>
-                            </div>
-                        </div>
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-5 mb-6">
+                        <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Analytics & Reports</h1>
+                        <p className="text-sm text-gray-600 mt-0.5">Insights into your department&apos;s performance.</p>
                     </div>
-                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-8 sm:p-12 text-center">
-                        <div className="max-w-md mx-auto">
-                            <svg className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No Data Available</h3>
-                            <p className="text-gray-600 mb-6">
-                                You don't have any events or donations yet. Start by creating an event to see analytics and reports.
-                            </p>
-                            <button
-                                onClick={() => navigate('/department/dashboard')}
-                                className="inline-flex items-center justify-center bg-gradient-to-r from-[#800020] to-[#9c0000] text-white px-6 py-3 rounded-lg hover:from-[#9c0000] hover:to-[#a0002a] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-                            >
-                                Go to Dashboard
-                            </button>
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                         </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No data yet</h3>
+                        <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">Create events and receive donations to see analytics and reports.</p>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/department/dashboard')}
+                            className="inline-flex items-center justify-center bg-[#800000] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#6b0000] transition"
+                        >
+                            Go to Dashboard
+                        </button>
                     </div>
                 </main>
                 <Footer />
@@ -603,24 +459,10 @@ const DepartmentReports = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F5]">
             {/* Global CSS for Donut Chart Animations and Print Styles */}
             <style dangerouslySetInnerHTML={{
                 __html: `
-                    @keyframes drawArc {
-                        from {
-                            stroke-dashoffset: 1000;
-                        }
-                        to {
-                            stroke-dashoffset: 0;
-                        }
-                    }
-                    .donut-segment {
-                        stroke-dasharray: 1000;
-                        stroke-dashoffset: 1000;
-                        animation: drawArc 1.5s ease-out forwards;
-                    }
-                    
                     @media print {
                         @page {
                             margin: 1cm;
@@ -677,67 +519,53 @@ const DepartmentReports = () => {
                     <p>Generated on {new Date().toLocaleString()}</p>
                 </div>
 
-                {/* Back Button - Top Left (Mobile/Tablet Only) */}
                 <div className="mb-4 lg:hidden no-print">
                     <button
+                        type="button"
                         onClick={() => navigate('/department/dashboard')}
                         className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
                     >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Back to Dashboard
                     </button>
                 </div>
 
-                {/* Header Section */}
-                <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-4 sm:py-5 mb-6 no-print">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="min-w-0">
-                            <h1 className="text-3xl font-bold text-black mb-2">Analytics & Reports</h1>
-                            <p className="text-gray-600">
-                                Comprehensive insights into your department's performance
-                            </p>
+                            <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Analytics & Reports</h1>
+                            <p className="text-sm text-gray-600 mt-0.5">Insights into your department&apos;s performance.</p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 no-print">
-                            <button 
+                        <div className="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
                                 onClick={() => window.print()}
-                                className="inline-flex items-center justify-center bg-white text-[#800020] px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border-2 border-[#800020] hover:bg-gradient-to-r hover:from-[#800020] hover:to-[#9c0000] hover:text-white hover:border-transparent transition-all duration-200 font-medium shadow-sm hover:shadow-md w-full sm:w-auto"
+                                className="inline-flex items-center justify-center gap-2 bg-white text-[#800000] px-4 py-2.5 rounded-xl text-sm font-medium border border-[#800000] hover:bg-[#800000] hover:text-white transition w-full sm:w-auto"
                             >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
-                                <span>Print Report</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                Print
                             </button>
-                            <button 
+                            <button
+                                type="button"
                                 onClick={() => handleExportReport('csv')}
-                                className="inline-flex items-center justify-center bg-gradient-to-r from-[#800020] to-[#9c0000] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-[#9c0000] hover:to-[#a0002a] transition-all duration-200 font-medium shadow-md hover:shadow-lg w-full sm:w-auto"
+                                className="inline-flex items-center justify-center gap-2 bg-[#800000] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#6b0000] transition w-full sm:w-auto"
                             >
-                                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <span>Export CSV</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                Export CSV
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Filter Controls */}
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8 no-print">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Report Filters</h3>
-                        <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                            <span className="text-xs sm:text-sm text-gray-600">Real-time data</span>
-                        </div>
-                    </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6 no-print">
+                    <h3 className="text-base font-semibold text-gray-900 mb-4">Filters</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                         <div>
-                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Time Period</label>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Time period</label>
                             <select
                                 value={selectedPeriod}
                                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                             >
                                 <option value="week">This Week</option>
                                 <option value="month">This Month</option>
@@ -747,11 +575,11 @@ const DepartmentReports = () => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Event Type</label>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Event</label>
                             <select
                                 value={selectedEvent}
                                 onChange={(e) => setSelectedEvent(e.target.value)}
-                                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                             >
                                 <option value="all">All Events</option>
                                 {events.map(event => (
@@ -760,11 +588,11 @@ const DepartmentReports = () => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Report Type</label>
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Report type</label>
                             <select
                                 value={reportType}
                                 onChange={(e) => setReportType(e.target.value)}
-                                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                                className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                             >
                                 <option value="overview">Overview</option>
                                 <option value="demographics">Demographics</option>
@@ -773,19 +601,19 @@ const DepartmentReports = () => {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Custom Range</label>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-2">
+                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Date range</label>
+                            <div className="flex gap-2">
                                 <input
                                     type="date"
                                     value={dateRange.start}
-                                    onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
-                                    className="flex-1 px-3 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                                    className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                                 />
                                 <input
                                     type="date"
                                     value={dateRange.end}
-                                    onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
-                                    className="flex-1 px-3 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 sm:focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 bg-gray-50 focus:bg-white text-sm"
+                                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                                    className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                                 />
                             </div>
                         </div>
@@ -793,86 +621,70 @@ const DepartmentReports = () => {
                 </div>
 
                 {/* Key Metrics */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
                     <StatCard
                         title="Total Events"
                         value={data.eventStats.total}
                         subtitle={`${data.eventStats.approved} approved`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-                        trend={12.5}
+                        icon={<svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                     />
                     <StatCard
                         title="Total Donations"
-                        value={`₱${data.financialStats.totalDonations.toLocaleString()}`}
-                        subtitle={`₱${Math.round(data.financialStats.averageDonation).toLocaleString()} average`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>}
-                        trend={8.3}
+                        value={`₱${data.financialStats.totalDonations.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                        subtitle={`₱${Math.round(data.financialStats.averageDonation).toLocaleString()} avg`}
+                        icon={<svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>}
+                        trend={data.financialStats.monthlyGrowth}
                     />
                     <StatCard
                         title="Active Volunteers"
                         value={data.demographics.volunteerCount}
-                        subtitle={`${data.engagement.volunteerRetention}% retention`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-                        trend={15.7}
+                        subtitle={data.engagement.volunteerRetention != null ? `${data.engagement.volunteerRetention}% in 2+ events` : 'Across events'}
+                        icon={<svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
                     />
                     <StatCard
                         title="Total Donors"
                         value={data.demographics.donationCount}
                         subtitle={`${data.demographics.donorCategories.length} categories`}
-                        icon={<svg className="w-5 h-5 sm:w-6 sm:h-7" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-                        trend={5.2}
+                        icon={<svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
                     />
                 </div>
 
-                {/* Demographics Section */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
-                    {/* Donor Categories - Bar Chart */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donor Demographics</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+                        <h3 className="text-base sm:text-lg font-bold text-[#800000] mb-4">Donor demographics</h3>
                         {data.demographics.donorCategories.length > 0 ? (
-                            <BarChart
+                            <SimpleBreakdownList
                                 data={data.demographics.donorCategories.map(cat => ({
                                     label: cat.category,
                                     value: cat.count,
                                     percentage: cat.percentage
                                 }))}
-                                colors={[
-                                    'bg-gradient-to-r from-[#800020] to-[#9c0000]',
-                                    'bg-gradient-to-r from-[#9c0000] to-[#a0002a]',
-                                    'bg-gradient-to-r from-[#a0002a] to-[#b30024]',
-                                    'bg-gradient-to-r from-[#b30024] to-[#c40028]'
-                                ]}
+                                totalLabel="donors"
                             />
                         ) : (
-                            <div className="text-center py-8 text-gray-500">No donor data available</div>
+                            <p className="text-sm text-gray-500 py-4">No donor data available.</p>
                         )}
                     </div>
 
-                    {/* Event Status Distribution - Advanced Donut Chart */}
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Status Distribution</h3>
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+                        <h3 className="text-base sm:text-lg font-bold text-[#800000] mb-4">Event status</h3>
                         {data.demographics.eventStatus.length > 0 ? (
-                            <DonutChart
+                            <SimpleBreakdownList
                                 data={data.demographics.eventStatus.map(status => ({
                                     label: status.status,
                                     value: status.count,
                                     percentage: status.percentage
                                 }))}
-                                colors={['#800020', '#9c0000', '#a0002a', '#b30024', '#c40028']}
-                                size={220}
-                                strokeWidth={24}
-                                title="Events"
-                                subtitle="Status breakdown"
+                                totalLabel="events"
                             />
                         ) : (
-                            <div className="text-center py-8 text-gray-500">No event data available</div>
+                            <p className="text-sm text-gray-500 py-4">No event data available.</p>
                         )}
                     </div>
                 </div>
 
-                {/* Monthly Trends Chart */}
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Monthly Performance Trends</h3>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
+                    <h3 className="text-base sm:text-lg font-bold text-[#800000] mb-4">Monthly trends ({new Date().getFullYear()})</h3>
                     <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                         <div className="grid grid-cols-12 gap-1 sm:gap-2 lg:gap-4 min-w-[600px] sm:min-w-0">
                             {data.monthlyTrends.map((month, index) => {
@@ -890,7 +702,7 @@ const DepartmentReports = () => {
                                                     minHeight: '20px'
                                                 }}
                                             ></div>
-                                            <div className="text-[10px] sm:text-xs font-medium" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{month.events}</div>
+                                            <div className="text-[10px] sm:text-xs font-medium text-[#800000]">{month.events}</div>
                                             <div className="text-[9px] sm:text-xs text-gray-500 truncate">₱{(month.donations / 1000).toFixed(0)}k</div>
                                             <div className="text-[9px] sm:text-xs text-gray-400">{month.volunteers} vol</div>
                                         </div>
@@ -901,37 +713,26 @@ const DepartmentReports = () => {
                     </div>
                 </div>
 
-                {/* Engagement Metrics */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4">
-                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Average Attendance</h4>
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
+                {/* Volunteer retention (only when we have data) */}
+                {data.engagement.volunteerRetention != null && data.demographics.volunteerCount > 0 && (
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="text-base font-semibold text-gray-900">Volunteer retention</h4>
+                                <p className="text-sm text-gray-500 mt-0.5">Volunteers who joined 2+ events</p>
+                            </div>
+                            <p className="text-2xl font-bold text-[#800000]">{data.engagement.volunteerRetention}%</p>
                         </div>
-                        <div className="text-2xl sm:text-3xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{data.engagement.averageAttendance}%</div>
-                        <p className="text-xs sm:text-sm text-gray-600">Event participation rate</p>
                     </div>
-                    <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6">
-                        <div className="flex items-center justify-between mb-3 sm:mb-4">
-                            <h4 className="text-base sm:text-lg font-semibold text-gray-900">Volunteer Retention</h4>
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div className="text-2xl sm:text-3xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800020, #9c0000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{data.engagement.volunteerRetention}%</div>
-                        <p className="text-xs sm:text-sm text-gray-600">Returning volunteers</p>
-                    </div>
-                </div>
+                )}
 
                 {/* Top Performing Event */}
-                {data.financialStats.topEvent && data.financialStats.topEvent._id && events.length > 0 && (
-                    <div className="bg-gradient-to-r from-[#800020] to-[#9c0000] rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 text-white">
-                        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-0">
-                            <div className="text-center lg:text-left w-full lg:w-auto">
-                                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2">Top Performing Event</h3>
-                                <p className="text-white/90 text-sm sm:text-base lg:text-lg mb-4 truncate">{data.financialStats.topEvent.title || 'N/A'}</p>
+                {data.financialStats.topEvent && data.financialStats.topEvent._id && (
+                    <div className="bg-[#800000] rounded-2xl border border-[#800000] shadow-sm p-4 sm:p-6 text-white">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="text-center sm:text-left w-full sm:w-auto">
+                                <h3 className="text-lg font-bold mb-2">Top performing event</h3>
+                                <p className="text-white/90 text-sm sm:text-base mb-4 truncate">{data.financialStats.topEvent.title || 'N/A'}</p>
                                 <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                                     <div className="text-center lg:text-left">
                                         <p className="text-white/80 text-xs sm:text-sm">Total Donations</p>

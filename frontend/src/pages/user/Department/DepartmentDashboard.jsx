@@ -4,13 +4,12 @@ import { useCache } from '../../../context/CacheContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
-import Button from '../../../components/Button'
-import axios from 'axios'
-import { toast } from 'react-toastify'
 import api from '../../../utils/api'
+import { toast } from 'react-toastify'
 import { stripHtml } from '../../../utils/stripHtml'
 import Reactions from '../../../components/social/Reactions'
 import CommentModal from '../../../components/social/CommentModal'
+import { FaCalendarAlt, FaCheckCircle, FaHandHoldingHeart, FaChartBar, FaListAlt, FaImage } from 'react-icons/fa'
 
 const DepartmentDashboard = () => {
     const navigate = useNavigate()
@@ -418,89 +417,83 @@ const DepartmentDashboard = () => {
     const days = Array.from({ length: startDay + end.getDate() }, (_, i) => i < startDay ? null : i - startDay + 1)
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F5]">
             <Header />
-            
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
-                    {/* Left Column: Profile + Stats - Responsive like UserDashboard */}
-                    <aside className="lg:col-span-3 space-y-6 text-[0.95rem] overflow-hidden">
-                        <div className="bg-white rounded-xl shadow-md p-5">
-                            <div className="flex items-center space-x-3">
-                                <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden">
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 h-[calc(100vh-5rem)] flex flex-col min-h-0">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 flex-1 min-h-0">
+                    {/* Left: Profile + Stats + Quick links - fixed, no scroll */}
+                    <aside className="lg:col-span-3 space-y-4 sm:space-y-5 shrink-0">
+                        {/* Profile card */}
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
                                     {userData?.profileImage ? (
-                                        <img src={userData.profileImage} alt="Profile" className="w-full h-full object-cover" />
+                                        <img src={userData.profileImage} alt="" className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">IMG</div>
+                                        <div className="w-full h-full flex items-center justify-center text-[#800000] font-semibold text-sm">
+                                            {(userData?.name || 'D').charAt(0).toUpperCase()}
+                                        </div>
                                     )}
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="text-base font-semibold text-black truncate">{userData?.name || 'Department User'}</p>
-                                    <p className="text-xs text-gray-500 truncate">{userData?.email || ''}</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm sm:text-base font-semibold text-gray-900 break-words" title={userData?.name || 'Department'}>{userData?.name || 'Department'}</p>
+                                    <p className="text-xs text-gray-600 break-all" title={userData?.email || ''}>{userData?.email || ''}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-3 lg:gap-2 lg:space-y-0 mt-4 sm:mt-5">
-                                {/* Events Created */}
-                                <div className="flex flex-col items-center justify-center bg-red-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                                    <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                        <span className="text-[10px] sm:text-xs lg:text-xs text-gray-600 text-center lg:text-left">Events Created</span>
-                                    </div>
-                                    <span className="text-sm sm:text-base lg:text-xs font-semibold text-black mt-1 lg:mt-0">{stats.created}</span>
+                            {/* Stats row - full labels, no truncation */}
+                            <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4">
+                                <div className="bg-[#F5E6E8] rounded-xl border border-[#800000]/10 p-3 flex flex-col items-center justify-center gap-1 text-center transition-all hover:shadow-sm min-w-0">
+                                    <FaListAlt className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <p className="text-[11px] sm:text-xs font-medium text-gray-700 leading-tight">Created</p>
+                                    <p className="text-base sm:text-lg font-bold text-[#800000]">{stats.created}</p>
                                 </div>
-                                {/* Total Donated */}
-                                <div className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                                    <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#B8860B] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>
-                                        <span className="text-[10px] sm:text-xs lg:text-xs text-gray-600 text-center lg:text-left">Total Donated</span>
-                                    </div>
-                                    <span className="text-sm sm:text-base lg:text-xs font-semibold text-black mt-1 lg:mt-0">₱{stats.donationsTotal}</span>
+                                <div className="bg-[#F5E6E8] rounded-xl border border-[#800000]/10 p-3 flex flex-col items-center justify-center gap-1 text-center transition-all hover:shadow-sm min-w-0">
+                                    <FaHandHoldingHeart className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <p className="text-[11px] sm:text-xs font-medium text-gray-700 leading-tight">Donated</p>
+                                    <p className="text-base sm:text-lg font-bold text-[#800000]">₱{stats.donationsTotal}</p>
                                 </div>
-                                {/* Approved Events */}
-                                <div className="flex flex-col items-center justify-center bg-green-50 rounded-lg p-2.5 sm:p-3 lg:flex-row lg:justify-between transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
-                                    <div className="flex flex-col items-center lg:flex-row lg:items-center space-y-1 lg:space-y-0 lg:space-x-2">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-4 lg:h-4 text-[#800000] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        <span className="text-[10px] sm:text-xs lg:text-xs text-gray-600 text-center lg:text-left">Approved Events</span>
-                                    </div>
-                                    <span className="text-sm sm:text-base lg:text-xs font-semibold text-black mt-1 lg:mt-0">{stats.approved}</span>
+                                <div className="bg-[#F5E6E8] rounded-xl border border-[#800000]/10 p-3 flex flex-col items-center justify-center gap-1 text-center transition-all hover:shadow-sm min-w-0">
+                                    <FaCheckCircle className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <p className="text-[11px] sm:text-xs font-medium text-gray-700 leading-tight">Approved</p>
+                                    <p className="text-base sm:text-lg font-bold text-[#800000]">{stats.approved}</p>
                                 </div>
                             </div>
-
-                            
                         </div>
 
-                        {/* Quick Links with icons - Responsive grid like UserDashboard */}
-                        <div className="bg-white rounded-xl shadow-md p-4">
-                            <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 lg:gap-2 lg:space-y-2">
-                                <button 
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                        {/* Quick actions */}
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Quick actions</p>
+                            <div className="space-y-1">
+                                <button
                                     onClick={() => navigate('/department/events')}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">Manage Events</span>
+                                    <FaCalendarAlt className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">Manage Events</span>
                                 </button>
-                                <button 
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                <button
                                     onClick={() => navigate('/department/donations')}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">View Donations</span>
+                                    <FaHandHoldingHeart className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">View Donations</span>
                                 </button>
-                                <button 
-                                    className="flex flex-col items-center justify-center space-y-2 lg:flex-row lg:justify-start lg:space-y-0 lg:space-x-3 px-3 py-4 sm:py-3 lg:py-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation border border-gray-100 lg:border-0"
+                                <button
                                     onClick={() => navigate('/department/reports')}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium text-gray-800 hover:bg-gray-50 hover:text-[#800000] transition-colors"
                                 >
-                                    <svg className="w-6 h-6 sm:w-7 sm:h-7 lg:w-5 lg:h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-                                    <span className="text-xs sm:text-sm lg:text-sm text-black font-medium lg:font-normal">View Reports</span>
+                                    <FaChartBar className="w-5 h-5 text-[#800000] flex-shrink-0" />
+                                    <span className="break-words">View Reports</span>
                                 </button>
                             </div>
                         </div>
                     </aside>
 
-                    {/* Middle Column: Feed-style Events (scrollable only) */}
-                    <section className="lg:col-span-6 h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    {/* Middle: Events feed - only this section scrolls */}
+                    <section className="lg:col-span-6 min-h-0 overflow-y-auto pr-1 scrollbar-thin flex flex-col">
                         {events.length > 0 ? (
-                            <div className="space-y-10 pb-8">
+                            <div className="space-y-4 sm:space-y-5 pb-6">
                                 {events.map((event) => {
                                     const postedAt = event.createdAt || event.startDate
                                     const timeAgo = (() => {
@@ -527,127 +520,123 @@ const DepartmentDashboard = () => {
                                         ? event.comments.filter(c => c && c._id && c.text && c.user)
                                         : [];
                                     return (
-                                        <article key={event._id} className="bg-white rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 p-4 sm:p-6">
-                                            {/* Post header */}
-                                            <div className="flex items-center mb-3 sm:mb-4">
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 overflow-hidden mr-3 flex-shrink-0 ring-2 ring-gray-100">
+                                        <article key={event._id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow">
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
                                                     {organizerLogo ? (
-                                                        <img src={organizerLogo} alt={organizerName} className="w-full h-full object-cover" />
+                                                        <img src={organizerLogo} alt="" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">LOGO</div>
+                                                        <div className="w-full h-full flex items-center justify-center text-[#800000] font-semibold text-xs">{organizerName.charAt(0)}</div>
                                                     )}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-black truncate">{organizerName}</p>
+                                                    <p className="text-sm font-semibold text-gray-900 truncate">{organizerName}</p>
                                                     <p className="text-xs text-gray-500">{timeAgo}</p>
                                                 </div>
                                             </div>
 
-                                            {/* Image or placeholder - fixed 16:9 rectangle like UserDashboard */}
-                                            <div className="w-full bg-gray-100 overflow-hidden rounded-lg sm:rounded-xl aspect-video mb-4 sm:mb-5 shadow-sm">
+                                            <div className="w-full bg-gray-50 overflow-hidden rounded-xl aspect-video mb-4 border border-gray-100">
                                                 {event.image ? (
                                                     <img
                                                         src={`data:image/jpeg;base64,${event.image}`}
-                                                        alt={event.title}
-                                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                                        alt=""
+                                                        className="w-full h-full object-cover"
                                                         onError={(e)=>{ e.target.onerror=null; e.target.src='/default-event.jpg'; }}
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-50 to-gray-100">
-                                                        <div className="text-center p-6">
-                                                            <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                            <p className="mt-3 text-sm text-gray-500">No event image available</p>
-                                                        </div>
+                                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                        <FaImage className="w-12 h-12 sm:w-14 sm:h-14" />
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* Details */}
-                                            <div className="mt-3 sm:mt-4 space-y-2">
-                                                <h3 className="text-base sm:text-lg font-semibold text-black leading-tight">{event.title}</h3>
+                                            <div className="space-y-2">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900 leading-tight">{event.title}</h3>
                                                 {event.description && (
-                                                    <p className="text-sm text-gray-700 whitespace-pre-line">
-                                                        {stripHtml(event.description)}
-                                                    </p>
+                                                    <p className="text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">{stripHtml(event.description)}</p>
                                                 )}
-                                                <div className="flex items-center text-sm text-gray-500">
-                                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                                                    <span className="inline-block w-3.5 h-3.5 rounded-full bg-gray-200" aria-hidden />
                                                     {event.location || 'Location TBA'}
-                                                </div>
+                                                </p>
                                             </div>
 
-                                            {/* Social Interactions */}
-                                            <div className="mt-3 pt-3 border-t border-gray-100">
-                                                {/* Reactions */}
-                                                <div className="flex items-center gap-4 sm:gap-6 flex-wrap mb-2">
-                                                    <Reactions 
-                                                        eventId={event._id} 
-                                                        initialReactions={event.reactions || {}} 
-                                                        onReact={handleReact}
-                                                        currentUserId={userData?._id}
-                                                    />
-                                                    <button 
-                                                        onClick={() => handleOpenComments(event._id)}
-                                                        className="flex items-center text-gray-500 hover:text-[#800000] transition-colors duration-200 text-sm font-medium cursor-pointer group"
-                                                    >
-                                                        <svg className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                                        </svg>
-                                                        <span className="group-hover:underline whitespace-nowrap">{eventComments.length || 0} {eventComments.length === 1 ? 'Comment' : 'Comments'}</span>
-                                                    </button>
-                                                </div>
+                                            <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-4 flex-wrap">
+                                                <Reactions
+                                                    eventId={event._id}
+                                                    initialReactions={event.reactions || {}}
+                                                    onReact={handleReact}
+                                                    currentUserId={userData?._id}
+                                                />
+                                                <button
+                                                    onClick={() => handleOpenComments(event._id)}
+                                                    className="text-sm font-medium text-gray-500 hover:text-[#800000] transition-colors"
+                                                >
+                                                    {eventComments.length || 0} {eventComments.length === 1 ? 'Comment' : 'Comments'}
+                                                </button>
                                             </div>
                                         </article>
                                     )
                                 })}
                             </div>
                         ) : (
-                            <div className="text-center py-12">
-                                <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center">
+                                <div className="w-14 h-14 rounded-full bg-[#F5E6E8] flex items-center justify-center mx-auto mb-4">
+                                    <FaListAlt className="w-7 h-7 text-[#800000]" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-gray-600 mb-2">No events created yet</h3>
-                                <p className="text-gray-500">Create your first community event!</p>
+                                <h3 className="text-base font-semibold text-gray-900 mb-1">No events yet</h3>
+                                <p className="text-sm text-gray-500 mb-4">Create your first event from Manage Events.</p>
+                                <button
+                                    onClick={() => navigate('/department/events')}
+                                    className="text-sm font-medium text-[#800000] hover:underline"
+                                >
+                                    Go to Events →
+                                </button>
                             </div>
                         )}
                     </section>
 
-                    {/* Right Column: Calendar + Notifications - Fixed/Non-scrollable (hidden on mobile) */}
-                    <aside className="hidden lg:block lg:col-span-3 space-y-6 text-[0.95rem] overflow-hidden">
-                        <div className="bg-white rounded-xl shadow-md p-5">
+                    {/* Right: Calendar (desktop) - fixed, no scroll */}
+                    <aside className="hidden lg:block lg:col-span-3 shrink-0">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                             <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-base font-semibold text-black">{monthName} {year}</h3>
-                                <div className="flex items-center space-x-1">
-                                    <button 
-                                        className="w-8 h-8 flex items-center justify-center text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" 
+                                <h3 className="text-sm font-semibold text-gray-900">{monthName} {year}</h3>
+                                <div className="flex gap-1">
+                                    <button
+                                        type="button"
+                                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                                         onClick={() => setToday(new Date(today.getFullYear(), today.getMonth() - 1, 1))}
                                         aria-label="Previous month"
                                     >
-                                        {'<'}
+                                        ‹
                                     </button>
-                                    <button 
-                                        className="w-8 h-8 flex items-center justify-center text-sm rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" 
+                                    <button
+                                        type="button"
+                                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
                                         onClick={() => setToday(new Date(today.getFullYear(), today.getMonth() + 1, 1))}
                                         aria-label="Next month"
                                     >
-                                        {'>'}
+                                        ›
                                     </button>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-7 gap-2 text-center text-[10px] text-gray-500 mb-2">
-                                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (<div key={d}>{d}</div>))}
+                            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-medium text-gray-500 mb-2">
+                                {['S','M','T','W','T','F','S'].map(d => <div key={d}>{d}</div>)}
                             </div>
-                            <div className="grid grid-cols-7 gap-2 text-xs">
-                                {days.map((d, idx) => (
-                                    <div key={idx} className={`h-8 flex items-center justify-center rounded ${d === new Date().getDate() && today.getMonth() === new Date().getMonth() && today.getFullYear() === new Date().getFullYear() ? 'bg-red-100 text-red-900' : 'bg-gray-50 text-gray-700'}`}>
-                                        {d || ''}
-                                    </div>
-                                ))}
+                            <div className="grid grid-cols-7 gap-1 text-xs">
+                                {days.map((d, idx) => {
+                                    const isToday = d === new Date().getDate() && today.getMonth() === new Date().getMonth() && today.getFullYear() === new Date().getFullYear()
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`h-8 flex items-center justify-center rounded-lg ${isToday ? 'bg-[#800000] text-white font-semibold' : 'bg-gray-50 text-gray-700'}`}
+                                        >
+                                            {d ?? ''}
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
-
                     </aside>
                 </div>
             </main>

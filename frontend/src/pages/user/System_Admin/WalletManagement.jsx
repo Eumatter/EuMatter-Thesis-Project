@@ -204,56 +204,54 @@ const WalletManagement = () => {
     }, [wallets, searchTerm]);
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-[#F5F5F5] min-h-screen">
             <SystemAdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             <main className="lg:ml-64 xl:ml-72 min-h-screen overflow-y-auto">
-                <div className="lg:hidden sticky top-0 z-30 bg-white shadow-sm px-4 py-3 flex items-center">
+                <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center">
                     <button
+                        type="button"
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 text-[#800000] hover:bg-gray-100 rounded-lg transition-colors"
+                        className="p-2 text-gray-600 hover:text-[#800000] hover:bg-gray-100 rounded-xl transition"
                         aria-label="Open menu"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
-                    <h1 className="ml-3 text-xl font-bold text-[#800000]">Wallet Management</h1>
+                    <h1 className="ml-3 text-lg font-bold text-[#800000]">System Admin</h1>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                            <div>
-                                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black mb-2">Wallet Management</h1>
-                                <p className="text-sm sm:text-base text-gray-600">Manage PayMongo wallets for departments and organizations</p>
-                            </div>
-                        </div>
-
-                        {/* Search */}
-                        <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                            <div className="flex-1 relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <FaSearch className="h-5 w-5 text-gray-400" />
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                        <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Wallet Management</h1>
+                        <p className="text-sm text-gray-600 mt-0.5">Manage PayMongo wallets for departments and organizations.</p>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:items-end mt-4 pt-4 border-t border-gray-100">
+                            <div className="flex-1">
+                                <label htmlFor="wallet-search" className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <FaSearch className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <input
+                                        id="wallet-search"
+                                        type="text"
+                                        placeholder="Search by department or email..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-400 focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search by department name or email..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm"
-                                />
                             </div>
                             {searchTerm && (
                                 <button
+                                    type="button"
                                     onClick={() => setSearchTerm('')}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
+                                    className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
                                 >
                                     Clear
                                 </button>
                             )}
                         </div>
                         {filteredWallets.length !== wallets.length && (
-                            <p className="text-sm text-gray-600 mt-2">
+                            <p className="text-sm text-gray-500 mt-3">
                                 Showing {filteredWallets.length} of {wallets.length} wallets
                             </p>
                         )}
@@ -264,81 +262,78 @@ const WalletManagement = () => {
                             <LoadingSpinner />
                         </div>
                     ) : wallets.length === 0 ? (
-                        <div className="bg-white rounded-xl shadow-md p-8 text-center">
-                            <FaWallet className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Wallets Found</h3>
-                            <p className="text-gray-600">No department wallets have been created yet.</p>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                            <FaWallet className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                            <h3 className="text-base font-semibold text-gray-900 mb-1">No Wallets Found</h3>
+                            <p className="text-sm text-gray-500">No department wallets have been created yet.</p>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <table className="min-w-full">
+                                    <thead>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Public Key</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="divide-y divide-gray-100">
                                         {filteredWallets.length === 0 ? (
                                             <tr>
-                                                <td colSpan="3" className="px-6 py-8 text-center text-sm text-gray-500">
-                                                    No wallets found matching your search criteria.
+                                                <td colSpan="3" className="px-4 py-8 text-center text-sm text-gray-500">
+                                                    No wallets match your search.
                                                 </td>
                                             </tr>
                                         ) : (
                                             filteredWallets.map((wallet, index) => {
-                                                // Use userId as primary key since it's always present for Department/Organization users
                                                 const uniqueKey = wallet.userId?._id || wallet.userId || wallet._id || `wallet-${index}`;
                                                 return (
-                                                <tr key={uniqueKey} className="hover:bg-gray-50">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm font-medium text-gray-900">
-                                                            {wallet.userId?.name || 'Unknown'}
-                                                        </div>
-                                                        <div className="text-sm text-gray-500">
-                                                            {wallet.userId?.email || ''}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-900 font-mono">
-                                                            {wallet.hasWallet ? (wallet.publicKey || '****') : <span className="text-gray-400 italic">No wallet</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-3">
-                                                            {wallet.hasWallet ? (
-                                                                <>
+                                                    <tr key={uniqueKey} className="hover:bg-gray-50/50 transition">
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            <div className="text-sm font-medium text-gray-900">{wallet.userId?.name || 'Unknown'}</div>
+                                                            <div className="text-sm text-gray-500">{wallet.userId?.email || ''}</div>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900 font-mono">
+                                                                {wallet.hasWallet ? (wallet.publicKey || '****') : <span className="text-gray-400">No wallet</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-4 py-3 whitespace-nowrap">
+                                                            <div className="flex items-center gap-3">
+                                                                {wallet.hasWallet ? (
+                                                                    <>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleEdit(wallet)}
+                                                                            className="inline-flex items-center justify-center w-8 h-8 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition"
+                                                                            title="Edit Wallet"
+                                                                        >
+                                                                            <FaEdit className="h-4 w-4" />
+                                                                        </button>
+                                                                        <label className="relative inline-flex items-center cursor-pointer">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={wallet.isActive}
+                                                                                onChange={() => handleToggleClick(wallet)}
+                                                                                className="sr-only peer"
+                                                                            />
+                                                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#800000]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#800000]" />
+                                                                        </label>
+                                                                    </>
+                                                                ) : (
                                                                     <button
-                                                                        onClick={() => handleEdit(wallet)}
-                                                                        className="text-blue-600 hover:text-blue-900 p-1"
-                                                                        title="Edit Wallet (Master Key)"
+                                                                        type="button"
+                                                                        onClick={() => handleCreateWallet(wallet)}
+                                                                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] transition"
                                                                     >
-                                                                        <FaEdit />
+                                                                        <FaPlus className="h-3.5 w-3.5" />
+                                                                        Create Wallet
                                                                     </button>
-                                                                    <label className="relative inline-flex items-center cursor-pointer">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={wallet.isActive}
-                                                                            onChange={() => handleToggleClick(wallet)}
-                                                                            className="sr-only peer"
-                                                                        />
-                                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#800000]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#800000]"></div>
-                                                                    </label>
-                                                                </>
-                                                            ) : (
-                                                                <button
-                                                                    onClick={() => handleCreateWallet(wallet)}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000] flex items-center gap-1"
-                                                                >
-                                                                    <FaPlus className="h-3 w-3" />
-                                                                    Create Wallet
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
                                                 );
                                             })
                                         )}
@@ -549,60 +544,56 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                 <Dialog as="div" className="relative z-50" onClose={onClose}>
                     <Transition.Child
                         as={Fragment}
-                        enter="ease-out duration-300"
+                        enter="ease-out duration-200"
                         enterFrom="opacity-0"
                         enterTo="opacity-100"
-                        leave="ease-in duration-200"
+                        leave="ease-in duration-150"
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" />
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                     </Transition.Child>
 
                     <div className="fixed inset-0 z-10 overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                        <div className="flex min-h-full items-center justify-center p-4">
                             <Transition.Child
                                 as={Fragment}
-                                enter="ease-out duration-300"
+                                enter="ease-out duration-200"
                                 enterFrom="opacity-0 scale-95"
                                 enterTo="opacity-100 scale-100"
-                                leave="ease-in duration-200"
+                                leave="ease-in duration-150"
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <Dialog.Title
-                                            as="h3"
-                                            className="text-xl font-semibold leading-6 text-gray-900"
-                                        >
+                                <Dialog.Panel className="w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden text-left">
+                                    <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100">
+                                        <Dialog.Title as="h3" className="text-lg font-bold text-gray-900">
                                             {wallet.hasWallet ? 'Edit Wallet' : 'Create Wallet'}
                                         </Dialog.Title>
                                         <button
                                             type="button"
-                                            className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                                            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition"
                                             onClick={onClose}
                                         >
                                             <span className="sr-only">Close</span>
-                                            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                                            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
                                         </button>
                                     </div>
 
-                                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                        <p className="text-sm font-medium text-gray-900 mb-1">
-                                            {wallet.userId?.name || 'Unknown'}
-                                        </p>
-                                        <p className="text-xs text-gray-600">{wallet.userId?.email || ''}</p>
-                                    </div>
-
-                                    {!wallet.hasWallet && (
-                                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                            <p className="text-sm text-blue-800">
-                                                <FaExclamationTriangle className="inline h-4 w-4 mr-2" />
-                                                Creating a new wallet for this department/organization.
-                                            </p>
+                                    <div className="px-4 sm:px-6 py-4">
+                                        <div className="mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                            <p className="text-sm font-medium text-gray-900">{wallet.userId?.name || 'Unknown'}</p>
+                                            <p className="text-xs text-gray-600 mt-0.5">{wallet.userId?.email || ''}</p>
                                         </div>
-                                    )}
+
+                                        {!wallet.hasWallet && (
+                                            <div className="mb-4 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                                                <p className="text-sm text-blue-800">
+                                                    <FaExclamationTriangle className="inline h-4 w-4 mr-2" />
+                                                    Creating a new wallet for this department/organization.
+                                                </p>
+                                            </div>
+                                        )}
 
                                     <form onSubmit={handleSubmit} className="space-y-4">
                                         <div>
@@ -610,9 +601,7 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                                 Public Key {!wallet.hasWallet && <span className="text-red-500">*</span>}
                                             </label>
                                             {wallet.hasWallet && (
-                                                <p className="text-xs text-gray-500 mb-2">
-                                                    Current: {wallet.publicKey || 'Not set'}
-                                                </p>
+                                                <p className="text-xs text-gray-500 mb-2">Current: {wallet.publicKey || 'Not set'}</p>
                                             )}
                                             <input
                                                 type="text"
@@ -621,7 +610,7 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                                 required={!wallet.hasWallet}
                                                 value={formData.publicKey}
                                                 onChange={handleChange}
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm font-mono"
+                                                className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                                 placeholder="Enter public key (pk_...)"
                                             />
                                             {wallet.hasWallet ? (
@@ -647,7 +636,7 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                                     required
                                                     value={formData.secretKey}
                                                     onChange={handleChange}
-                                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm font-mono"
+                                                    className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                                     placeholder="Enter secret key (sk_...)"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
@@ -693,7 +682,7 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                                         id="webhookSecret"
                                                         value={formData.webhookSecret}
                                                         onChange={handleChange}
-                                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm font-mono"
+                                                        className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                                         placeholder="Enter webhook secret (whsec_...)"
                                                     />
                                                     <p className="text-xs text-gray-500 mt-1">
@@ -711,21 +700,17 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                         </div>
 
                                         {wallet.hasWallet && (
-                                            <div className="border-t border-gray-200 pt-4">
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Secret Key
-                                                </label>
-                                                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div className="border-t border-gray-100 pt-4">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                                                <div className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
                                                     <div>
                                                         <p className="text-sm text-gray-900 font-mono">sk_****</p>
-                                                        <p className="text-xs text-gray-500 mt-1">
-                                                            Secret key cannot be edited directly for security reasons.
-                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-1">Secret key cannot be edited directly.</p>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowRegenerateDialog(true)}
-                                                        className="ml-4 px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000] flex items-center gap-2"
+                                                        className="flex-shrink-0 px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] flex items-center gap-2 transition"
                                                     >
                                                         <FaKey className="h-4 w-4" />
                                                         Regenerate
@@ -738,19 +723,20 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
                                             <button
                                                 type="button"
                                                 onClick={onClose}
-                                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
+                                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 type="submit"
                                                 disabled={isUpdating || isCreating}
-                                                className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000] disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] disabled:opacity-50 disabled:cursor-not-allowed transition"
                                             >
                                                 {isCreating ? 'Creating...' : (isUpdating ? 'Saving...' : (wallet.hasWallet ? 'Save Changes' : 'Create Wallet'))}
                                             </button>
                                         </div>
                                     </form>
+                                    </div>
                                 </Dialog.Panel>
                             </Transition.Child>
                         </div>
@@ -761,81 +747,54 @@ const EditWalletModal = ({ isOpen, onClose, wallet, onUpdate, onRegenerateSecret
             {/* Regenerate Secret Key Dialog */}
             <Transition appear show={showRegenerateDialog} as={Fragment}>
                 <Dialog as="div" className="relative z-50" onClose={() => setShowRegenerateDialog(false)}>
-                    <Transition.Child
-                        as={Fragment}
-                        enter="ease-out duration-300"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="ease-in duration-200"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" />
+                    <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                     </Transition.Child>
-
                     <div className="fixed inset-0 z-10 overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4 text-center">
-                            <Transition.Child
-                                as={Fragment}
-                                enter="ease-out duration-300"
-                                enterFrom="opacity-0 scale-95"
-                                enterTo="opacity-100 scale-100"
-                                leave="ease-in duration-200"
-                                leaveFrom="opacity-100 scale-100"
-                                leaveTo="opacity-0 scale-95"
-                            >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                    <Dialog.Title
-                                        as="h3"
-                                        className="text-lg font-semibold leading-6 text-gray-900 mb-4"
-                                    >
-                                        Regenerate Secret Key
-                                    </Dialog.Title>
-
-                                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-sm text-yellow-800">
-                                            <FaExclamationTriangle className="inline h-4 w-4 mr-2" />
-                                            Warning: Regenerating the secret key will invalidate the current key. Make sure you have the new key from PayMongo.
-                                        </p>
+                        <div className="flex min-h-full items-center justify-center p-4">
+                            <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                                <Dialog.Panel className="w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden text-left">
+                                    <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
+                                        <Dialog.Title as="h3" className="text-lg font-bold text-gray-900">Regenerate Secret Key</Dialog.Title>
                                     </div>
-
-                                    <form onSubmit={handleRegenerateSubmit} className="space-y-4">
-                                        <div>
-                                            <label htmlFor="newSecretKey" className="block text-sm font-medium text-gray-700 mb-1">
-                                                New Secret Key <span className="text-red-500">*</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="newSecretKey"
-                                                id="newSecretKey"
-                                                required
-                                                value={newSecretKey}
-                                                onChange={(e) => setNewSecretKey(e.target.value)}
-                                                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-[#800000] focus:border-[#800000] sm:text-sm font-mono"
-                                                placeholder="Enter new secret key (sk_...)"
-                                            />
+                                    <div className="px-4 sm:px-6 py-4">
+                                        <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                                            <p className="text-sm text-amber-800">
+                                                <FaExclamationTriangle className="inline h-4 w-4 mr-2" />
+                                                Regenerating will invalidate the current key. Use the new key from PayMongo.
+                                            </p>
                                         </div>
-
-                                        <div className="flex justify-end gap-3 pt-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setShowRegenerateDialog(false);
-                                                    setNewSecretKey('');
-                                                }}
-                                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isRegenerating || !newSecretKey.trim()}
-                                                className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000] disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                {isRegenerating ? 'Regenerating...' : 'Regenerate'}
-                                            </button>
-                                        </div>
-                                    </form>
+                                        <form onSubmit={handleRegenerateSubmit} className="space-y-4">
+                                            <div>
+                                                <label htmlFor="newSecretKey" className="block text-sm font-medium text-gray-700 mb-1">New Secret Key <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    id="newSecretKey"
+                                                    required
+                                                    value={newSecretKey}
+                                                    onChange={(e) => setNewSecretKey(e.target.value)}
+                                                    className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
+                                                    placeholder="Enter new secret key (sk_...)"
+                                                />
+                                            </div>
+                                            <div className="flex justify-end gap-3 pt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setShowRegenerateDialog(false); setNewSecretKey(''); }}
+                                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    disabled={isRegenerating || !newSecretKey.trim()}
+                                                    className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                                >
+                                                    {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </Dialog.Panel>
                             </Transition.Child>
                         </div>
@@ -853,64 +812,34 @@ const ConfirmDisableDialog = ({ isOpen, onClose, onConfirm, wallet }) => {
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity" />
+                <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
                 </Transition.Child>
-
                 <div className="fixed inset-0 z-10 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 text-center">
-                        <Transition.Child
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 scale-95"
-                            enterTo="opacity-100 scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 scale-100"
-                            leaveTo="opacity-0 scale-95"
-                        >
-                            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-                                <Dialog.Title
-                                    as="h3"
-                                    className="text-lg font-semibold leading-6 text-gray-900 mb-4"
-                                >
-                                    Disable Wallet?
-                                </Dialog.Title>
-
-                                <div className="mb-4">
+                    <div className="flex min-h-full items-center justify-center p-4">
+                        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                            <Dialog.Panel className="w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden text-left">
+                                <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
+                                    <Dialog.Title as="h3" className="text-lg font-bold text-gray-900">Disable Wallet?</Dialog.Title>
+                                </div>
+                                <div className="px-4 sm:px-6 py-4">
                                     <p className="text-sm text-gray-600 mb-3">
-                                        Are you sure you want to disable the wallet for <strong>{wallet.userId?.name || 'Unknown'}</strong>?
+                                        Disable the wallet for <strong>{wallet.userId?.name || 'Unknown'}</strong>?
                                     </p>
-                                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-sm text-yellow-800">
+                                    <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl mb-4">
+                                        <p className="text-sm text-amber-800">
                                             <FaExclamationTriangle className="inline h-4 w-4 mr-2" />
-                                            Disabling this wallet will prevent new donations from being processed. Existing donations will remain in the system.
+                                            New donations will not be processed. Existing data remains.
                                         </p>
                                     </div>
-                                </div>
-
-                                <div className="flex justify-end gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={onClose}
-                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={onConfirm}
-                                        className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#700000] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#800000]"
-                                    >
-                                        Disable Wallet
-                                    </button>
+                                    <div className="flex justify-end gap-3">
+                                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                                            Cancel
+                                        </button>
+                                        <button type="button" onClick={onConfirm} className="px-4 py-2 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] transition">
+                                            Disable Wallet
+                                        </button>
+                                    </div>
                                 </div>
                             </Dialog.Panel>
                         </Transition.Child>

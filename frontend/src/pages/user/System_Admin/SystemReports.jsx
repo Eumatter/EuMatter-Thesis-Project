@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react'
 import { AppContent } from '../../../context/AppContext.jsx'
-import { useNavigate } from 'react-router-dom'
 import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx'
 import AuditLogTable from '../../../components/AuditLogTable.jsx'
 import LoadingSpinner from '../../../components/LoadingSpinner'
@@ -42,8 +41,7 @@ const PRIORITY_OPTIONS = [
 ];
 
 const SystemReports = () => {
-    const navigate = useNavigate()
-    const { userData, backendUrl } = useContext(AppContent)
+    const { backendUrl } = useContext(AppContent)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     
     // Audit log state
@@ -477,48 +475,43 @@ const SystemReports = () => {
     const today = new Date().toISOString().split('T')[0]
 
     return (
-        <div className="bg-gray-50 min-h-screen">
+        <div className="bg-[#F5F5F5] min-h-screen">
             <SystemAdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
             <main className="lg:ml-64 xl:ml-72 min-h-screen overflow-y-auto">
-                {/* Mobile Menu Button */}
-                <div className="lg:hidden sticky top-0 z-30 bg-white shadow-sm px-4 py-3 flex items-center">
+                <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center">
                     <button
+                        type="button"
                         onClick={() => setIsSidebarOpen(true)}
-                        className="p-2 text-[#800000] hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                        className="p-2 text-gray-600 hover:text-[#800000] hover:bg-gray-100 rounded-xl transition"
                         aria-label="Open menu"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
-                    <h1 className="ml-3 text-xl font-bold text-[#800000]">System Admin</h1>
+                    <h1 className="ml-3 text-lg font-bold text-[#800000]">System Admin</h1>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-6 py-8">
-                    {/* Header Section */}
-                    <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                             <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-2">Reports</h1>
-                                <p className="text-gray-600 text-lg">Monitor and track all system activities and audit logs</p>
+                                <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">System Reports</h1>
+                                <p className="text-sm text-gray-600 mt-0.5">Monitor and track system activities and audit logs.</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    type="button"
                                     onClick={() => setAutoRefresh(!autoRefresh)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                                        autoRefresh
-                                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                    className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition ${
+                                        autoRefresh ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100/80' : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <ArrowPathIcon className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
-                                        {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
-                                    </div>
+                                    <ArrowPathIcon className="w-4 h-4" />
+                                    {autoRefresh ? 'Auto-refresh ON' : 'Auto-refresh OFF'}
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={fetchAuditLogs}
-                                    className="px-4 py-2 text-sm font-medium text-[#800000] bg-white border border-[#800000] rounded-lg hover:bg-[#800000] hover:text-white transition-colors"
+                                    className="px-4 py-2.5 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] transition"
                                 >
                                     Refresh
                                 </button>
@@ -526,13 +519,13 @@ const SystemReports = () => {
                         </div>
                     </div>
 
-                    {/* Filters Section */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-black">Filters</h2>
+                            <h2 className="text-lg font-bold text-gray-900">Filters</h2>
                             <button
+                                type="button"
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors"
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-[#800000] rounded-xl hover:bg-gray-50 transition"
                             >
                                 <FunnelIcon className="w-5 h-5" />
                                 {showFilters ? 'Hide' : 'Show'} Filters
@@ -541,90 +534,69 @@ const SystemReports = () => {
 
                         {showFilters && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {/* Search */}
                                 <div className="lg:col-span-3">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Search
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
                                     <div className="relative">
-                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                         <input
                                             type="text"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             placeholder="Search by action, user, or resource..."
-                                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                         />
                                     </div>
                                 </div>
-
-                                {/* Date Range */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Start Date
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                                     <input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
                                         max={today}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                     />
                                 </div>
-
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        End Date
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                                     <input
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
                                         max={today}
                                         min={startDate}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000]"
                                     />
                                 </div>
-
-                                {/* Priority Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Priority
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
                                     <select
                                         value={selectedPriority}
                                         onChange={(e) => setSelectedPriority(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] bg-white"
                                     >
                                         {PRIORITY_OPTIONS.map(option => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
+                                            <option key={option.value} value={option.value}>{option.label}</option>
                                         ))}
                                     </select>
                                 </div>
-
-                                {/* Success Filter */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Status
-                                    </label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                                     <select
                                         value={selectedSuccess}
                                         onChange={(e) => setSelectedSuccess(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000]"
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] bg-white"
                                     >
                                         <option value="">All Status</option>
                                         <option value="true">Success</option>
                                         <option value="false">Failure</option>
                                     </select>
                                 </div>
-
-                                {/* Reset Button */}
                                 <div className="flex items-end">
                                     <button
+                                        type="button"
                                         onClick={handleResetFilters}
-                                        className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors"
+                                        className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
                                     >
                                         Reset Filters
                                     </button>
@@ -632,12 +604,12 @@ const SystemReports = () => {
                             </div>
                         )}
 
-                        {/* Apply Filters Button */}
                         {showFilters && (
                             <div className="mt-4 flex justify-end">
                                 <button
+                                    type="button"
                                     onClick={fetchAuditLogs}
-                                    className="px-6 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#900000] transition-colors"
+                                    className="px-5 py-2.5 text-sm font-medium text-white bg-[#800000] rounded-xl hover:bg-[#6b0000] transition"
                                 >
                                     Apply Filters
                                 </button>
@@ -645,53 +617,50 @@ const SystemReports = () => {
                         )}
                     </div>
 
-                    {/* Main Audit Log Table */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-                            <h2 className="text-lg font-semibold text-black">
-                                Audit Logs {selectedCategory && `- ${selectedCategory}`}
+                            <h2 className="text-lg font-bold text-gray-900">
+                                Audit Logs {selectedCategory && `– ${selectedCategory}`}
                             </h2>
                             <div className="flex flex-wrap items-center gap-3">
-                                {/* Page Size Selector */}
                                 <div className="flex items-center gap-2">
-                                    <label htmlFor="pageSize" className="text-sm text-gray-700 whitespace-nowrap">
-                                        Show:
-                                    </label>
+                                    <label htmlFor="pageSize" className="text-sm font-medium text-gray-700 whitespace-nowrap">Show</label>
                                     <select
                                         id="pageSize"
                                         value={pagination.limit}
                                         onChange={(e) => handlePageSizeChange(e.target.value)}
-                                        className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] bg-white"
+                                        className="px-3 py-2 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] bg-white"
                                     >
                                         <option value="25">25</option>
                                         <option value="50">50</option>
                                         <option value="100">100</option>
                                         <option value="200">200</option>
                                     </select>
-                                    <span className="text-sm text-gray-600 whitespace-nowrap">per page</span>
+                                    <span className="text-sm text-gray-500 whitespace-nowrap">per page</span>
                                 </div>
-                                
-                                {/* Export Buttons */}
-                                <div className="flex items-center gap-2 border-l border-gray-300 pl-3">
+                                <div className="flex items-center gap-2 border-l border-gray-100 pl-3">
                                     <button
+                                        type="button"
                                         onClick={() => handleExport('pdf')}
-                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:text-[#800000] hover:bg-gray-50 flex items-center gap-2 transition"
                                         title="Export as PDF"
                                     >
                                         <DocumentArrowDownIcon className="w-4 h-4" />
                                         <span className="hidden sm:inline">PDF</span>
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleExport('excel')}
-                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:text-[#800000] hover:bg-gray-50 flex items-center gap-2 transition"
                                         title="Export as Excel"
                                     >
                                         <DocumentArrowDownIcon className="w-4 h-4" />
                                         <span className="hidden sm:inline">Excel</span>
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleExport('csv')}
-                                        className="px-3 py-2 text-sm text-gray-700 hover:text-[#800000] transition-colors flex items-center gap-2 rounded-lg hover:bg-gray-100"
+                                        className="px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-xl hover:text-[#800000] hover:bg-gray-50 flex items-center gap-2 transition"
                                         title="Export as CSV"
                                     >
                                         <DocumentArrowDownIcon className="w-4 h-4" />
@@ -718,16 +687,15 @@ const SystemReports = () => {
                         )}
                     </div>
 
-                    {/* Category Filter Links */}
-                    <div className="bg-white rounded-xl shadow-md p-4 sm:p-6">
-                        <h2 className="text-lg font-semibold text-black mb-4">Filter by Category</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-3">Filter by Category</h2>
+                        <p className="text-sm text-gray-500 mb-4">Select a category to filter audit logs.</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             <button
+                                type="button"
                                 onClick={() => handleCategoryFilter('all')}
-                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors text-left ${
-                                    !selectedCategory
-                                        ? 'bg-[#800000] text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                className={`px-4 py-2.5 text-sm font-medium rounded-xl transition text-left ${
+                                    !selectedCategory ? 'bg-[#800000] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50 bg-white'
                                 }`}
                             >
                                 All Categories
@@ -735,11 +703,10 @@ const SystemReports = () => {
                             {AUDIT_CATEGORIES.map((category) => (
                                 <button
                                     key={category.id}
+                                    type="button"
                                     onClick={() => handleCategoryFilter(category.id)}
-                                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors text-left ${
-                                        selectedCategory === category.id
-                                            ? 'bg-[#800000] text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    className={`px-4 py-2.5 text-sm font-medium rounded-xl transition text-left ${
+                                        selectedCategory === category.id ? 'bg-[#800000] text-white' : 'border border-gray-200 text-gray-700 hover:bg-gray-50 bg-white'
                                     }`}
                                 >
                                     {category.label}

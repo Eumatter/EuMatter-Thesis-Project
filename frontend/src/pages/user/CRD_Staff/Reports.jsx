@@ -728,7 +728,7 @@ const Reports = () => {
         return trends
     }
     
-    // Chart colors - Maroon and white theme
+    // Chart colors - Maroon for line/area charts
     const COLORS = {
         maroon: '#800000',
         maroonLight: '#900000',
@@ -738,18 +738,35 @@ const Reports = () => {
         gray: '#F3F4F6',
         grayDark: '#6B7280'
     }
-    
-    // Maroon gradient colors for charts
-    const PIE_COLORS = [
-        COLORS.maroon,
-        COLORS.maroonLight,
-        COLORS.maroonDark,
-        COLORS.maroonLighter,
-        '#a3001e',
-        '#8d001a',
-        '#730016',
-        '#c40028'
-    ]
+
+    // Per-category colors so no two slices look the same (Event Status)
+    const EVENT_STATUS_COLORS = {
+        Proposed: '#800000',   // maroon
+        Pending: '#2563eb',   // blue
+        Approved: '#059669',  // emerald
+        Declined: '#dc2626',  // red
+        Upcoming: '#d97706',  // amber
+        Ongoing: '#0891b2',   // cyan
+        Completed: '#7c3aed', // violet
+    }
+    // Donation Methods (by data key: wallet, cash, cheque, in-kind)
+    const DONATION_METHOD_COLORS = {
+        wallet: '#800000',    // maroon
+        cash: '#d97706',     // amber
+        cheque: '#64748b',   // slate
+        'in-kind': '#7c3aed', // violet
+    }
+    // Donor Demographics
+    const DONOR_CATEGORY_COLORS = {
+        Student: '#2563eb',   // blue
+        Alumni: '#d97706',    // amber
+        Faculty: '#059669',   // emerald
+        Staff: '#7c3aed',     // violet
+        Guest: '#64748b',     // slate
+    }
+
+    // Fallback palette for other pie charts (e.g. Donors tab) by index
+    const PIE_COLORS = ['#800000', '#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#64748b', '#db2777', '#65a30d']
     
     // Custom tooltip
     const CustomTooltip = ({ active, payload, label }) => {
@@ -818,8 +835,13 @@ const Reports = () => {
         if (userId) totalDonors.add(userId.toString())
     })
     
+    // UI theme: minimalist, consistent
+    const cardClass = 'bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 sm:p-6'
+    const labelClass = 'text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide'
+    const valueClass = 'text-xl sm:text-2xl font-bold text-[#800000] tabular-nums'
+
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50/80">
             {/* Print Styles */}
             <style dangerouslySetInnerHTML={{
                 __html: `
@@ -1817,16 +1839,16 @@ const Reports = () => {
             <Header />
             
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200 no-print">
+                {/* Header Section - minimalist, consistent with CRD pages */}
+                <div className={`${cardClass} mb-6 sm:mb-8 no-print`}>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Reports & Analytics</h1>
-                            <p className="text-gray-600 text-base sm:text-lg">Live analytics and demographics for events, donations, volunteers, and users</p>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-[#800000] mb-1">Reports & Analytics</h1>
+                            <p className="text-gray-500 text-sm sm:text-base">Events, donations, volunteers, and user analytics</p>
                         </div>
                         <button
                             onClick={() => window.print()}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors duration-200 shadow-md hover:shadow-lg"
+                            className="flex items-center gap-2 px-4 py-2.5 text-[#800000] border-2 border-[#800000] rounded-xl hover:bg-[#800000] hover:text-white transition-colors duration-200 text-sm font-medium"
                         >
                             <FaPrint className="w-4 h-4" />
                             <span>Print Report</span>
@@ -1841,93 +1863,89 @@ const Reports = () => {
                     <p>Manuel S. Enverga University Foundation - Community Relations Department</p>
                 </div>
                 
-                {/* Key Metrics Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8 print-no-break">
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                {/* Key Metrics Cards - minimalist, consistent */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 mb-6 sm:mb-8 print-no-break">
+                    <div className={`${cardClass} transition-shadow hover:shadow-md`}>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#800000]/10 flex items-center justify-center">
+                                <FaCalendarAlt className="w-5 h-5 text-[#800000]" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalEvents}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaHandHoldingHeart className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Donations</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className={`${labelClass} mb-0.5`}>Total Events</p>
+                                <p className={`${valueClass} truncate`}>{totalEvents}</p>
                             </div>
                         </div>
                     </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUsers className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                    <div className={`${cardClass} transition-shadow hover:shadow-md`}>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#800000]/10 flex items-center justify-center">
+                                <FaHandHoldingHeart className="w-5 h-5 text-[#800000]" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Volunteers</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalVolunteers.size}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Users</p>
-                                <p className="text-2xl sm:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{totalUsers}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className={`${labelClass} mb-0.5`}>Total Donations</p>
+                                <p className={`${valueClass} truncate`} title={`₱${totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                         </div>
                     </div>
-
-                    <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 transition-all duration-200 hover:shadow-xl">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center flex-shrink-0">
-                                <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />
+                    <div className={`${cardClass} transition-shadow hover:shadow-md`}>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#800000]/10 flex items-center justify-center">
+                                <FaUsers className="w-5 h-5 text-[#800000]" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Expenditures</p>
-                                <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <div className="min-w-0 flex-1">
+                                <p className={`${labelClass} mb-0.5`}>Total Volunteers</p>
+                                <p className={`${valueClass} truncate`}>{totalVolunteers.size}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`${cardClass} transition-shadow hover:shadow-md`}>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#800000]/10 flex items-center justify-center">
+                                <FaUser className="w-5 h-5 text-[#800000]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className={`${labelClass} mb-0.5`}>Total Users</p>
+                                <p className={`${valueClass} truncate`}>{totalUsers}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className={`${cardClass} transition-shadow hover:shadow-md`}>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#800000]/10 flex items-center justify-center">
+                                <FaMoneyBillWave className="w-5 h-5 text-[#800000]" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className={`${labelClass} mb-0.5`}>Total Expenditures</p>
+                                <p className={`${valueClass} truncate`} title={`₱${totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}>₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                {/* Financial Summary Card */}
-                <div className="bg-gradient-to-r from-[#800000] to-[#900000] rounded-xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 text-white print-no-break">
-                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Financial Summary</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                {/* Financial Summary - minimalist card */}
+                <div className="rounded-2xl border border-gray-200/80 bg-white shadow-sm p-6 sm:p-8 mb-6 sm:mb-8 print-no-break">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-100">Financial Summary</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
                         <div>
-                            <p className="text-sm sm:text-base text-white/90 mb-1">Total Donations</p>
-                            <p className="text-2xl sm:text-3xl font-bold">₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Donations</p>
+                            <p className="text-xl sm:text-2xl font-bold text-[#800000] tabular-nums">₱{totalDonations.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div>
-                            <p className="text-sm sm:text-base text-white/90 mb-1">Total Expenditures</p>
-                            <p className="text-2xl sm:text-3xl font-bold">₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Expenditures</p>
+                            <p className="text-xl sm:text-2xl font-bold text-[#800000] tabular-nums">₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                         </div>
                         <div>
-                            <p className="text-sm sm:text-base text-white/90 mb-1">Net Balance</p>
-                            <p className={`text-2xl sm:text-3xl font-bold ${netBalance >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Net Balance</p>
+                            <p className={`text-xl sm:text-2xl font-bold tabular-nums ${netBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                 ₱{netBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Tabs */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6 sm:mb-8 overflow-hidden print-section">
-                    <div className="flex flex-wrap border-b border-gray-200 overflow-x-auto no-print">
+                {/* Tabs - minimal underline style */}
+                <div className={`${cardClass} mb-6 sm:mb-8 overflow-hidden print-section`}>
+                    <div className="flex flex-wrap gap-1 border-b border-gray-200 overflow-x-auto no-print px-1 -mb-px">
                         {[
                             { id: 'overview', label: 'Overview', icon: FaChartLine },
                             { id: 'events', label: 'Events', icon: FaCalendarAlt },
@@ -1939,14 +1957,15 @@ const Reports = () => {
                             { id: 'donors', label: 'Donor Demographics', icon: FaChartPie }
                         ].map(tab => {
                             const Icon = tab.icon
+                            const isActive = activeTab === tab.id
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-medium transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                                        activeTab === tab.id
-                                        ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white border-b-2 border-[#800000]'
-                                        : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50'
+                                    className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors duration-200 whitespace-nowrap flex-shrink-0 border-b-2 ${
+                                        isActive
+                                        ? 'text-[#800000] border-[#800000]'
+                                        : 'text-gray-500 border-transparent hover:text-gray-700'
                                     }`}
                                 >
                                     <Icon className="w-4 h-4 flex-shrink-0" />
@@ -1962,10 +1981,10 @@ const Reports = () => {
                         {activeTab === 'overview' && (
                             <div className="space-y-6 sm:space-y-8 print-section-content">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6 print-no-break">
-                                    <h2 className="text-xl sm:text-2xl font-bold print-section-title" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Analytics Overview</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900 print-section-title">Analytics Overview</h2>
                                     <button
                                         onClick={() => navigate('/crd-staff/donations?tab=event-report')}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors duration-200 text-sm font-medium"
+                                        className="flex items-center gap-2 px-4 py-2.5 text-[#800000] border-2 border-[#800000] rounded-xl hover:bg-[#800000] hover:text-white transition-colors duration-200 text-sm font-medium"
                                     >
                                         <FaMoneyBillWave className="w-4 h-4" />
                                         View Event Donations Report
@@ -1973,8 +1992,8 @@ const Reports = () => {
                                 </div>
                                 
                                 {/* Monthly Trends Chart */}
-                                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
-                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
+                                <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-6 shadow-sm">
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 sm:mb-4">Monthly Trends ({new Date().getFullYear()})</h3>
                                     <div style={{ width: '100%', height: '300px', minHeight: '300px' }}>
                                         <ResponsiveContainer width="100%" height="100%" minHeight={300}>
                                         <ComposedChart data={monthlyTrends}>
@@ -2056,9 +2075,9 @@ const Reports = () => {
                                 </div>
                                 
                                 {/* Quick Stats Grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Event Status Distribution</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                                    <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-6 shadow-sm">
+                                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Event Status Distribution</h4>
                                         <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
                                             <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
@@ -2072,7 +2091,7 @@ const Reports = () => {
                                                     dataKey="value"
                                                 >
                                                     {eventDemographics.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                        <Cell key={`cell-${index}`} fill={EVENT_STATUS_COLORS[entry.name] ?? PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
@@ -2102,8 +2121,8 @@ const Reports = () => {
                                         </div>
                                     </div>
                                     
-                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donation Methods</h4>
+                                    <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-6 shadow-sm">
+                                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Donation Methods</h4>
                                         <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
                                             <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
@@ -2117,7 +2136,7 @@ const Reports = () => {
                                                     dataKey="value"
                                                 >
                                                     {donationDemographics.counts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                        <Cell key={`cell-${index}`} fill={DONATION_METHOD_COLORS[entry.name] ?? PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
@@ -2148,8 +2167,8 @@ const Reports = () => {
                                         </div>
                                     </div>
                                     
-                                    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
-                                        <h4 className="text-xs sm:text-sm font-medium text-gray-600 mb-2">Donor Demographics</h4>
+                                    <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-6 shadow-sm">
+                                        <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Donor Demographics</h4>
                                         <div style={{ width: '100%', height: '220px', minHeight: '220px' }}>
                                             <ResponsiveContainer width="100%" height="100%" minHeight={220}>
                                             <PieChart>
@@ -2163,7 +2182,7 @@ const Reports = () => {
                                                     dataKey="value"
                                                 >
                                                     {donorDemographics.counts.map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                        <Cell key={`cell-${index}`} fill={DONOR_CATEGORY_COLORS[entry.name] ?? PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}
                                                 </Pie>
                                                 <Tooltip 
@@ -2200,13 +2219,13 @@ const Reports = () => {
                         {activeTab === 'expenditures' && (
                             <div className="space-y-6 sm:space-y-8">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
-                                    <h2 className="text-xl sm:text-2xl font-bold print-section-title" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Expenditure Management</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900 print-section-title">Expenditure Management</h2>
                                     <button
                                         onClick={() => {
                                             resetExpenditureForm()
                                             setShowExpenditureModal(true)
                                         }}
-                                        className="inline-flex items-center justify-center bg-gradient-to-r from-[#800000] to-[#900000] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg hover:from-[#900000] hover:to-[#990000] transition-all duration-200 font-medium shadow-md hover:shadow-lg no-print"
+                                        className="inline-flex items-center justify-center bg-[#800000] text-white px-4 py-2.5 rounded-xl hover:bg-[#900000] transition-colors duration-200 text-sm font-medium no-print"
                                     >
                                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2216,7 +2235,7 @@ const Reports = () => {
                                 </div>
                                 
                                 {/* Filters */}
-                                <div className="bg-white rounded-xl shadow-md p-4 sm:p-6 no-print">
+                                <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-6 shadow-sm no-print">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">Filter by Status</label>
@@ -2252,7 +2271,7 @@ const Reports = () => {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                                     <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                         <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Expenditures</p>
-                                        <p className="text-2xl sm:text-3xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                        <p className="text-2xl sm:text-3xl font-bold text-[#800000]">
                                             ₱{totalExpenditures.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </p>
                                     </div>
@@ -2406,7 +2425,7 @@ const Reports = () => {
                         {/* Events Tab */}
                         {activeTab === 'events' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Analytics</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Event Analytics</h2>
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Events by Status</h3>
@@ -2446,7 +2465,7 @@ const Reports = () => {
                         {/* Donations Tab */}
                         {activeTab === 'donations' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donation Analytics</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Donation Analytics</h2>
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Methods (Amount)</h3>
@@ -2475,11 +2494,11 @@ const Reports = () => {
                                             return (
                                                 <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                     <div className="flex items-center justify-center mb-2">
-                                                        {method.name === 'wallet' && <FaWallet className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {method.name === 'cash' && <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {method.name === 'cheque' && <FaCreditCard className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {method.name === 'wallet' && <FaWallet className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {method.name === 'cash' && <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {method.name === 'cheque' && <FaCreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
                                                     </div>
-                                                    <p className="text-lg sm:text-xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                    <p className="text-lg sm:text-xl font-bold text-[#800000]">
                                                         {method.value}
                                                     </p>
                                                     <p className="text-xs text-gray-600 mt-1 capitalize">{method.name}</p>
@@ -2500,7 +2519,7 @@ const Reports = () => {
                         {activeTab === 'event-donations-report' && (
                             <div className="space-y-6 sm:space-y-8 print-section-content">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6 print-no-break">
-                                    <h2 className="text-xl sm:text-2xl font-bold print-section-title" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Donations Report</h2>
+                                    <h2 className="text-lg font-semibold text-gray-900 print-section-title">Event Donations Report</h2>
                                     <div className="flex items-center gap-2 no-print">
                                         <button
                                             onClick={exportToExcel}
@@ -2646,7 +2665,7 @@ const Reports = () => {
                         {/* Volunteers Tab */}
                         {activeTab === 'volunteers' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Volunteer Analytics</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Volunteer Analytics</h2>
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Volunteers by Category</h3>
@@ -2673,13 +2692,13 @@ const Reports = () => {
                                         {volunteerDemographics.map((stat, index) => (
                                             <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                 <div className="flex items-center justify-center mb-2">
-                                                    {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                    {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                    {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                    {stat.name === 'Staff' && <FaBriefcase className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                    {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                    {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                    {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                    {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                    {stat.name === 'Staff' && <FaBriefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                    {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
                                                 </div>
-                                                <p className="text-xl sm:text-2xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                <p className="text-xl sm:text-2xl font-bold text-[#800000]">
                                                     {stat.value}
                                                 </p>
                                                 <p className="text-xs sm:text-sm text-gray-600 mt-1">{stat.name}</p>
@@ -2693,7 +2712,7 @@ const Reports = () => {
                         {/* Users Tab */}
                         {activeTab === 'users' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>User Demographics</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">User Demographics</h2>
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Users by Category</h3>
@@ -2719,7 +2738,7 @@ const Reports = () => {
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                                         {userDemographics.filter(u => u.name !== 'CRD Staff' && u.name !== 'System Administrator').map((stat, index) => (
                                             <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
-                                                <p className="text-xl sm:text-2xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                <p className="text-xl sm:text-2xl font-bold text-[#800000]">
                                                     {stat.value}
                                                 </p>
                                                 <p className="text-xs text-gray-600 mt-1">{stat.name}</p>
@@ -2733,7 +2752,7 @@ const Reports = () => {
                         {/* Donor Demographics Tab */}
                         {activeTab === 'donors' && (
                             <div className="space-y-6 sm:space-y-8">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donor Demographics</h2>
+                                <h2 className="text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Donor Demographics</h2>
                                 
                                 <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 sm:p-6 border border-gray-200 shadow-md">
                                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Donation Amount by Category</h3>
@@ -2762,13 +2781,13 @@ const Reports = () => {
                                             return (
                                                 <div key={index} className="text-center p-3 sm:p-4 bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200">
                                                     <div className="flex items-center justify-center mb-2">
-                                                        {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {stat.name === 'Staff' && <FaBriefcase className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
-                                                        {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} />}
+                                                        {stat.name === 'Student' && <FaUserGraduate className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {stat.name === 'Alumni' && <FaUniversity className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {stat.name === 'Faculty' && <FaUserTie className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {stat.name === 'Staff' && <FaBriefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
+                                                        {stat.name === 'Guest' && <FaUser className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />}
                                                     </div>
-                                                    <p className="text-lg sm:text-xl font-bold" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                                                    <p className="text-lg sm:text-xl font-bold text-[#800000]">
                                                         {stat.value}
                                                     </p>
                                                     <p className="text-xs text-gray-600 mt-1">{stat.name} Donors</p>

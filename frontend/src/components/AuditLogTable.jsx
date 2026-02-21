@@ -42,18 +42,16 @@ const AuditLogTable = ({
 
     const getPriorityBadge = (priority) => {
         const colors = {
-            Critical: 'bg-red-100 text-red-800 border-red-300',
-            High: 'bg-orange-100 text-orange-800 border-orange-300',
-            Medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-            Low: 'bg-blue-100 text-blue-800 border-blue-300'
+            Critical: 'bg-red-50 text-red-700',
+            High: 'bg-amber-50 text-amber-700',
+            Medium: 'bg-amber-50 text-amber-700',
+            Low: 'bg-blue-50 text-blue-700'
         };
         return colors[priority] || colors.Medium;
     };
 
     const getStatusBadge = (success) => {
-        return success 
-            ? 'bg-green-100 text-green-800 border-green-300'
-            : 'bg-red-100 text-red-800 border-red-300';
+        return success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700';
     };
 
     const handleSort = (field) => {
@@ -97,12 +95,12 @@ const AuditLogTable = ({
         <div className="-mx-4 sm:mx-0">
             <div className="inline-block w-full align-middle">
                 <div className="overflow-hidden">
-                    <table className="w-full divide-y divide-gray-300 bg-white border-collapse border-0 outline-none" style={{ border: 'none', outline: 'none' }}>
-                        <thead className="bg-gray-50">
-                            <tr>
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-100 bg-gray-50/50">
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[18%]"
+                                    className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors w-[18%]"
                                     onClick={() => handleSort('timestamp')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -112,7 +110,7 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[15%]"
+                                    className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors w-[15%]"
                                     onClick={() => handleSort('userEmail')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -122,7 +120,7 @@ const AuditLogTable = ({
                                 </th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[20%]"
+                                    className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors w-[20%]"
                                     onClick={() => handleSort('actionType')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -130,21 +128,11 @@ const AuditLogTable = ({
                                         <SortIcon field="actionType" />
                                     </div>
                                 </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%]">Category</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[12%]">Status</th>
                                 <th 
                                     scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider w-[25%]"
-                                >
-                                    Category
-                                </th>
-                                <th 
-                                    scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider w-[12%]"
-                                >
-                                    Status
-                                </th>
-                                <th 
-                                    scope="col"
-                                    className="px-3 py-3.5 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors w-[10%]"
+                                    className="px-3 py-3.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors w-[10%]"
                                     onClick={() => handleSort('priority')}
                                 >
                                     <div className="flex items-center gap-1">
@@ -154,11 +142,11 @@ const AuditLogTable = ({
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="divide-y divide-gray-100">
                             {logs.map((log) => (
                                 <React.Fragment key={log._id}>
                                     <tr 
-                                        className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                        className="hover:bg-gray-50/50 transition-colors cursor-pointer"
                                         onClick={() => toggleRow(log._id)}
                                         title={expandedRows.has(log._id) ? 'Click to hide details' : 'Click to show details'}
                                     >
@@ -186,14 +174,14 @@ const AuditLogTable = ({
                                             </div>
                                         </td>
                                         <td className="px-3 py-3.5 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(log.success)}`}>
+                                            <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg ${getStatusBadge(log.success)}`}>
                                                 {log.success ? 'Success' : 'Failure'}
                                             </span>
                                         </td>
                                         <td className="px-3 py-3.5 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
                                                 {log.priority ? (
-                                                    <span className={`inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full border ${getPriorityBadge(log.priority)}`}>
+                                                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-lg ${getPriorityBadge(log.priority)}`}>
                                                         {log.priority}
                                                     </span>
                                                 ) : (
@@ -211,7 +199,7 @@ const AuditLogTable = ({
                                     </tr>
                                     {expandedRows.has(log._id) && (
                                         <tr>
-                                            <td colSpan="6" className="px-4 py-4 bg-gray-50 border-t border-gray-200">
+                                            <td colSpan="6" className="px-4 py-4 bg-gray-50/80 border-t border-gray-100">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                             <div>
                                                 <h4 className="font-semibold text-gray-900 mb-2">Request Details</h4>
@@ -220,13 +208,13 @@ const AuditLogTable = ({
                                                         <div><span className="font-medium">Method:</span> {log.requestMethod}</div>
                                                     )}
                                                     {log.requestEndpoint && (
-                                                        <div><span className="font-medium">Endpoint:</span> <code className="text-xs bg-gray-200 px-1 rounded">{log.requestEndpoint}</code></div>
+                                                        <div><span className="font-medium">Endpoint:</span> <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-lg font-mono">{log.requestEndpoint}</code></div>
                                                     )}
                                                     {log.responseStatus && (
                                                         <div><span className="font-medium">Status Code:</span> {log.responseStatus}</div>
                                                     )}
                                                     {log.sessionId && (
-                                                        <div><span className="font-medium">Session ID:</span> <code className="text-xs bg-gray-200 px-1 rounded">{log.sessionId.substring(0, 20)}...</code></div>
+                                                        <div><span className="font-medium">Session ID:</span> <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded-lg font-mono">{log.sessionId.substring(0, 20)}...</code></div>
                                                     )}
                                                 </div>
                                             </div>
@@ -266,7 +254,7 @@ const AuditLogTable = ({
                                                         {log.previousValues && (
                                                             <div>
                                                                 <div className="text-xs font-medium text-gray-500 mb-1">Previous Values:</div>
-                                                                <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
+                                                                <pre className="text-xs bg-gray-100 p-3 rounded-xl overflow-auto max-h-32 border border-gray-100">
                                                                     {JSON.stringify(log.previousValues, null, 2)}
                                                                 </pre>
                                                             </div>
@@ -274,7 +262,7 @@ const AuditLogTable = ({
                                                         {log.newValues && (
                                                             <div>
                                                                 <div className="text-xs font-medium text-gray-500 mb-1">New Values:</div>
-                                                                <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
+                                                                <pre className="text-xs bg-gray-100 p-3 rounded-xl overflow-auto max-h-32 border border-gray-100">
                                                                     {JSON.stringify(log.newValues, null, 2)}
                                                                 </pre>
                                                             </div>
@@ -285,7 +273,7 @@ const AuditLogTable = ({
                                             {log.requestPayload && Object.keys(log.requestPayload).length > 0 && (
                                                 <div className="md:col-span-2">
                                                     <h4 className="font-semibold text-gray-900 mb-2">Request Payload</h4>
-                                                    <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
+                                                    <pre className="text-xs bg-gray-100 p-3 rounded-xl overflow-auto max-h-32 border border-gray-100">
                                                         {JSON.stringify(log.requestPayload, null, 2)}
                                                     </pre>
                                                 </div>
@@ -293,7 +281,7 @@ const AuditLogTable = ({
                                             {log.metadata && Object.keys(log.metadata).length > 0 && (
                                                 <div className="md:col-span-2">
                                                     <h4 className="font-semibold text-gray-900 mb-2">Metadata</h4>
-                                                    <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32">
+                                                    <pre className="text-xs bg-gray-100 p-3 rounded-xl overflow-auto max-h-32 border border-gray-100">
                                                         {JSON.stringify(log.metadata, null, 2)}
                                                     </pre>
                                                 </div>
@@ -311,16 +299,14 @@ const AuditLogTable = ({
 
             {/* Pagination */}
             {pagination && pagination.totalPages > 1 && (
-                <div className="bg-white px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 sm:px-6">
+                <div className="px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 bg-gray-50/50 sm:px-6">
                     {/* Mobile Pagination */}
                     <div className="flex-1 flex justify-between items-center w-full sm:hidden">
                         <button
                             onClick={() => onPageChange(pagination.page - 1)}
                             disabled={pagination.page === 1}
-                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg transition-colors ${
-                                pagination.page === 1
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                            className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-xl transition-colors ${
+                                pagination.page === 1 ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
                             <ChevronLeftIcon className="w-4 h-4 mr-1" />
@@ -332,10 +318,8 @@ const AuditLogTable = ({
                         <button
                             onClick={() => onPageChange(pagination.page + 1)}
                             disabled={pagination.page === pagination.totalPages}
-                            className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg transition-colors ${
-                                pagination.page === pagination.totalPages
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                            className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-xl transition-colors ${
+                                pagination.page === pagination.totalPages ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
                             Next
@@ -354,14 +338,13 @@ const AuditLogTable = ({
                                 of <span className="font-semibold text-gray-900">{pagination.total}</span> results
                             </p>
                         </div>
-                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <nav className="inline-flex rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm" aria-label="Pagination">
                             <button
+                                type="button"
                                 onClick={() => onPageChange(pagination.page - 1)}
                                 disabled={pagination.page === 1}
-                                className={`relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium transition-colors ${
-                                    pagination.page === 1
-                                        ? 'text-gray-400 cursor-not-allowed'
-                                        : 'text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                className={`inline-flex items-center px-3 py-2 border-r border-gray-200 text-sm ${
+                                    pagination.page === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-50 hover:text-[#800000]'
                                 }`}
                                 aria-label="Previous page"
                             >
@@ -382,10 +365,8 @@ const AuditLogTable = ({
                                     <button
                                         key={pageNum}
                                         onClick={() => onPageChange(pageNum)}
-                                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-colors ${
-                                            pagination.page === pageNum
-                                                ? 'z-10 bg-[#800000] border-[#800000] text-white'
-                                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                        className={`inline-flex items-center justify-center min-w-[2.5rem] py-2 text-sm font-medium transition-colors ${
+                                            pagination.page === pageNum ? 'bg-[#800000] text-white' : 'text-gray-600 hover:bg-gray-50 hover:text-[#800000]'
                                         }`}
                                         aria-label={`Page ${pageNum}`}
                                         aria-current={pagination.page === pageNum ? 'page' : undefined}
@@ -395,12 +376,11 @@ const AuditLogTable = ({
                                 );
                             })}
                             <button
+                                type="button"
                                 onClick={() => onPageChange(pagination.page + 1)}
                                 disabled={pagination.page === pagination.totalPages}
-                                className={`relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium transition-colors ${
-                                    pagination.page === pagination.totalPages
-                                        ? 'text-gray-400 cursor-not-allowed'
-                                        : 'text-gray-700 hover:bg-gray-50 hover:text-[#800000]'
+                                className={`inline-flex items-center px-3 py-2 border-l border-gray-200 text-sm ${
+                                    pagination.page === pagination.totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-50 hover:text-[#800000]'
                                 }`}
                                 aria-label="Next page"
                             >
@@ -413,7 +393,7 @@ const AuditLogTable = ({
             
             {/* Pagination Info for Mobile */}
             {pagination && pagination.totalPages > 1 && (
-                <div className="bg-gray-50 px-4 py-2 text-center text-xs text-gray-600 sm:hidden border-t border-gray-200">
+                <div className="px-4 py-2 text-center text-xs text-gray-500 sm:hidden border-t border-gray-100 bg-gray-50/50">
                     Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} results
                 </div>
             )}

@@ -107,6 +107,8 @@ const EventManagement = () => {
     const [pendingCancelSeriesId, setPendingCancelSeriesId] = useState(null)
     const [sortBy, setSortBy] = useState('date') // 'date', 'status'
     const [sortOrder, setSortOrder] = useState('desc') // 'asc', 'desc'
+    const [eventsTablePage, setEventsTablePage] = useState(1)
+    const [eventsPerPage] = useState(10)
     const [showCalendar, setShowCalendar] = useState(false)
     const [calendarCursor, setCalendarCursor] = useState(() => {
         const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1)
@@ -965,6 +967,11 @@ const EventManagement = () => {
         return () => { active = false; clearInterval(t) }
     }, [showAttendanceModal, attendanceForEvent, backendUrl])
 
+    useEffect(() => {
+        const totalPages = Math.max(1, Math.ceil(events.length / eventsPerPage))
+        if (eventsTablePage > totalPages) setEventsTablePage(totalPages)
+    }, [events.length, eventsPerPage])
+
     const sortedEvents = [...events].sort((a, b) => {
         if (sortBy === 'date') {
             const dateA = new Date(a.startDate || a.createdAt)
@@ -979,6 +986,11 @@ const EventManagement = () => {
         return 0
     })
 
+    const eventsTotalPages = Math.max(1, Math.ceil(sortedEvents.length / eventsPerPage))
+    const eventsStartIndex = (eventsTablePage - 1) * eventsPerPage
+    const eventsEndIndex = eventsStartIndex + eventsPerPage
+    const paginatedEvents = sortedEvents.slice(eventsStartIndex, eventsEndIndex)
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Proposed': return 'bg-yellow-100 text-yellow-800'
@@ -992,45 +1004,37 @@ const EventManagement = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F5F5F5]">
             <Header />
-            
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header Section */}
-                <div className="bg-white rounded-xl shadow-md px-4 sm:px-6 py-5 mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                {/* Page header - minimalist */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 sm:px-6 py-4 sm:py-5 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="min-w-0">
-                            <h1 className="text-3xl font-bold text-black mb-2">Event Management</h1>
-                            <p className="text-gray-600">
-                                Create and manage your department events and proposals.
-                            </p>
+                            <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Event Management</h1>
+                            <p className="text-sm text-gray-600 mt-0.5">Create and manage department events and proposals.</p>
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
                             <button
                                 onClick={() => setShowProposalModal(true)}
-                                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center gap-2 bg-[#800000] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#6b0000] active:scale-[0.98] transition-all w-full sm:w-auto"
                             >
-                                <svg className="w-5 h-5 text-[#800020]" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                                 <span>Propose Event</span>
                             </button>
                             <button
                                 onClick={() => setShowPostModal(true)}
-                                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center gap-2 bg-[#800000] text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-[#6b0000] active:scale-[0.98] transition-all w-full sm:w-auto"
                             >
-                                <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                                </svg>
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
                                 <span>Post Event</span>
                             </button>
                             <button
                                 onClick={() => setShowCalendar(true)}
-                                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 font-medium shadow-sm w-full md:w-auto"
+                                className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-4 py-2.5 rounded-xl text-sm font-medium border border-gray-200 hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] transition-all w-full sm:w-auto"
                             >
-                                <svg className="w-5 h-5 text-[#800020]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
+                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
                                 <span>Calendar</span>
                             </button>
                         </div>
@@ -1048,22 +1052,20 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden border border-gray-200 animate-modal-in relative flex flex-col">
-                            {/* Minimalist Header */}
-                            <div className="sticky top-0 bg-gray-100 border-b border-gray-200 px-6 py-4 z-10">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden animate-modal-in relative flex flex-col">
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-4 z-10">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg border border-gray-300 flex items-center justify-center">
-                                            <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                                         </div>
-                                        <div>
-                                            <h2 className="text-xl font-semibold text-gray-900">Propose New Event</h2>
-                                            <p className="text-sm text-gray-500 mt-0.5">Submit your event proposal for review</p>
+                                        <div className="min-w-0">
+                                            <h2 className="text-lg font-semibold text-gray-900">Propose New Event</h2>
+                                            <p className="text-sm text-gray-500 mt-0.5">Submit for CRD review</p>
                                         </div>
                                     </div>
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setShowProposalModal(false)
                                             // Reset form when closing
@@ -1101,7 +1103,7 @@ const EventManagement = () => {
                                                 setRecurrenceMonthday('')
                                             }, 200)
                                         }}
-                                        className="text-white/90 hover:text-white hover:bg-[#d4af37]/20 transition-all duration-200 rounded-xl p-2.5 border border-white/20 hover:border-[#d4af37]/40"
+                                        className="p-2.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -1121,11 +1123,8 @@ const EventManagement = () => {
                                                 </svg>
                                 </div>
                                         <div>
-                                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                    <span>Basic Information</span>
-                                                    <span className="text-[#d4af37] text-sm">★</span>
-                                                </h3>
-                                                <p className="text-sm text-gray-600">Essential details about your event</p>
+                                                <h3 className="text-base font-semibold text-gray-900">Basic Information</h3>
+                                                <p className="text-sm text-gray-500 mt-0.5">Essential details about your event</p>
                                         </div>
                                         </div>
 
@@ -1339,7 +1338,7 @@ const EventManagement = () => {
                                                     >
                                                         {docPreviewName ? (
                                                             <div className="flex items-center space-x-3 p-4 w-full">
-                                                                <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border-2 border-[#d4af37]/30">
+                                                                <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border border-gray-200">
                                                                     <svg className="w-6 h-6 text-[#800020]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                                     </svg>
@@ -1393,7 +1392,7 @@ const EventManagement = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 space-y-4">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-4">
                                                 {/* Calculate event duration */}
                                                 {(() => {
                                                     const start = formData.startDate ? new Date(formData.startDate) : null
@@ -1420,7 +1419,7 @@ const EventManagement = () => {
                                                                         const existingDay = formData.volunteerSettings.dailySchedule?.find(d => d.date === dayKey)
                                                                         
                                                                         return (
-                                                                            <div key={i} className="bg-white rounded-xl p-4 border-2 border-[#d4af37]/20 shadow-sm">
+                                                                            <div key={i} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                                                                 <div className="flex items-center justify-between mb-3">
                                                                                     <label className="text-sm font-semibold text-[#800020]">
                                                                                         Day {i + 1} - {dayDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -1476,7 +1475,7 @@ const EventManagement = () => {
                                                                         <p className="text-sm font-medium text-blue-800">Single-day Event</p>
                                                                         <p className="text-xs text-blue-600 mt-1">Set check-in and check-out times for this event</p>
                                                                     </div>
-                                                                    <div className="bg-white rounded-xl p-4 border-2 border-[#d4af37]/20 shadow-sm">
+                                                                    <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                                             <div className="space-y-2">
                                                                                 <label className="text-sm font-semibold text-[#800020]">Check-in Time</label>
@@ -1545,7 +1544,7 @@ const EventManagement = () => {
 
                                         <div className="space-y-5">
                                             {/* Open for Donations */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -1572,7 +1571,7 @@ const EventManagement = () => {
                                             </div>
 
                                             {/* Open for Volunteers */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -1610,7 +1609,7 @@ const EventManagement = () => {
                                             </div>
                                         </div>
 
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border-2 border-[#d4af37]/20 shadow-sm">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                                         <div className="space-y-2">
                                                             <label className="flex items-center space-x-2 text-xs font-semibold text-[#800020]">
                                                                 <div className="w-6 h-6 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
@@ -1683,7 +1682,7 @@ const EventManagement = () => {
                                                                 setReqSkillInput('')
                                                             }
                                                                     }}
-                                                                        className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#a0002a] text-white text-sm font-semibold hover:from-[#a0002a] hover:to-[#800020] transition-all shadow-md hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
+                                                                        className="px-4 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] transition-all whitespace-nowrap w-full sm:w-auto"
                                                                 >
                                                                     Add
                                                                 </button>
@@ -1691,7 +1690,7 @@ const EventManagement = () => {
                                                                 {formData.volunteerSettings.requiredSkills && formData.volunteerSettings.requiredSkills.length > 0 && (
                                                         <div className="mt-2 flex flex-wrap gap-2">
                                                                         {formData.volunteerSettings.requiredSkills.map((skill, index) => (
-                                                                            <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#d4af37]/20 text-[#800020] border-2 border-[#d4af37]/40 rounded-full">
+                                                                            <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#800000]/10 text-[#800000] border border-[#800000]/20 rounded-full">
                                                                     {skill}
                                                                             <button 
                                                                                 type="button" 
@@ -1744,7 +1743,7 @@ const EventManagement = () => {
                                                                                     setFormData(prev => ({ ...prev, volunteerSettings: { ...prev.volunteerSettings, allowedDepartments: addTokenToArray(prev.volunteerSettings.allowedDepartments || [], selectedDept) } }))
                                                                     setSelectedDept('')
                                                                             }}
-                                                                                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#a0002a] text-white text-sm font-semibold hover:from-[#a0002a] hover:to-[#800020] transition-all shadow-md hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
+                                                                                className="px-4 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] transition-all whitespace-nowrap w-full sm:w-auto"
                                                                         >
                                                                             Add
                                                                         </button>
@@ -1752,7 +1751,7 @@ const EventManagement = () => {
                                                                         {formData.volunteerSettings.allowedDepartments && formData.volunteerSettings.allowedDepartments.length > 0 && (
                                                                         <div className="flex flex-wrap gap-2">
                                                                                 {formData.volunteerSettings.allowedDepartments.map((dep, index) => (
-                                                                                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#d4af37]/20 text-[#800020] border-2 border-[#d4af37]/40 rounded-full">
+                                                                                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#800000]/10 text-[#800000] border border-[#800000]/20 rounded-full">
                                                                             {dep}
                                                                                     <button 
                                                                                         type="button" 
@@ -1793,7 +1792,7 @@ const EventManagement = () => {
                                                 </div>
                                                 
                                             {/* Recurring Event - Moved down */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -1819,23 +1818,23 @@ const EventManagement = () => {
                                                                                 </div>
                                                 {isRecurring && (
                                                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-down">
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Pattern</label>
                                                             <select className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
                                                                 <option value="weekly">Weekly</option>
                                                                 <option value="monthly">Monthly</option>
                                                             </select>
                                                                                 </div>
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Repeat Every</label>
                                                             <input type="number" min={1} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceInterval} onChange={(e) => setRecurrenceInterval(Number(e.target.value) || 1)} placeholder="1" />
                                                                             </div>
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Occurrences</label>
                                                             <input type="number" min={1} max={24} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceCount} onChange={(e) => setRecurrenceCount(Number(e.target.value) || 1)} placeholder="4" />
                                                         </div>
                                                         {recurrenceType === 'weekly' && (
-                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                                 <label className="block text-xs font-semibold text-[#800020] mb-2">Weekday (Optional)</label>
                                                                 <select className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceWeekday} onChange={(e) => setRecurrenceWeekday(e.target.value)}>
                                                                     <option value="">Same as start date</option>
@@ -1850,7 +1849,7 @@ const EventManagement = () => {
                                                                                 </div>
                                                                             )}
                                                         {recurrenceType === 'monthly' && (
-                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                                 <label className="block text-xs font-semibold text-[#800020] mb-2">Day of Month (Optional)</label>
                                                                 <input type="number" min={1} max={31} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceMonthday} onChange={(e) => setRecurrenceMonthday(e.target.value)} placeholder="Same as start date if empty" />
                                                                         </div>
@@ -1863,7 +1862,7 @@ const EventManagement = () => {
                                 </form>
                             </div>
                             {/* Sticky Footer with Buttons */}
-                            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3 z-10">
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-4 flex justify-end gap-3 z-10">
                                         <button 
                                             onClick={() => {
                                                 setShowProposalModal(false)
@@ -1901,18 +1900,16 @@ const EventManagement = () => {
                                                     setRecurrenceMonthday('')
                                                 }, 200)
                                             }}
-                                            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+                                            className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
                                         >
                                             Cancel
                                         </button>
                                         <button 
                                             type="submit" 
                                     form="propose-form"
-                                            className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#9c0000] text-white font-semibold shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020]/50 focus-visible:ring-offset-2 flex items-center space-x-2"
+                                            className="px-6 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000]/50 focus-visible:ring-offset-2 flex items-center gap-2"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                             <span>Propose Event</span>
                                         </button>
                             </div>
@@ -1931,22 +1928,20 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden border border-gray-200 animate-modal-in relative flex flex-col">
-                            {/* Minimalist Header */}
-                            <div className="sticky top-0 bg-gray-100 border-b border-gray-200 px-6 py-4 z-10">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-5xl max-h-[90vh] my-auto overflow-hidden animate-modal-in relative flex flex-col">
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-4 z-10">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg border border-gray-300 flex items-center justify-center">
-                                            <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
-                                            </svg>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" /></svg>
                                         </div>
-                                        <div>
-                                            <h2 className="text-xl font-semibold text-gray-900">Post Event</h2>
+                                        <div className="min-w-0">
+                                            <h2 className="text-lg font-semibold text-gray-900">Post Event</h2>
                                             <p className="text-sm text-gray-500 mt-0.5">Publish your event immediately</p>
                                         </div>
                                     </div>
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setShowPostModal(false)
                                             // Reset form when closing
@@ -1962,7 +1957,7 @@ const EventManagement = () => {
                                                 setRecurrenceMonthday('')
                                             }, 200)
                                         }}
-                                        className="text-white/90 hover:text-white hover:bg-[#d4af37]/20 transition-all duration-200 rounded-xl p-2.5 border border-white/20 hover:border-[#d4af37]/40"
+                                        className="p-2.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                                     >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -2332,7 +2327,7 @@ const EventManagement = () => {
                                                     >
                                                         {postDocPreviewName ? (
                                                             <div className="flex items-center space-x-3 p-4 w-full">
-                                                                <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border-2 border-[#d4af37]/30">
+                                                                <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border border-gray-200">
                                                                     <svg className="w-6 h-6 text-[#800020]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                                     </svg>
@@ -2387,7 +2382,7 @@ const EventManagement = () => {
 
                                         <div className="space-y-5">
                                             {/* Open for Donations */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -2414,7 +2409,7 @@ const EventManagement = () => {
                                             </div>
 
                                             {/* Open for Volunteers */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -2452,7 +2447,7 @@ const EventManagement = () => {
                                         </div>
                                     </div>
 
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                                             <div className="space-y-2">
                                                                 <label className="flex items-center space-x-2 text-xs font-semibold text-[#800020]">
                                                                     <div className="w-6 h-6 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
@@ -2556,7 +2551,7 @@ const EventManagement = () => {
                                             </div>
 
                                             {/* Recurring Event - Moved down */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                             <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -2582,23 +2577,23 @@ const EventManagement = () => {
                                                             </div>
                                                 {isRecurring && (
                                                     <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 animate-slide-down">
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Pattern</label>
                                                             <select className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
                                                                 <option value="weekly">Weekly</option>
                                                                 <option value="monthly">Monthly</option>
                                                             </select>
                                                         </div>
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Repeat Every</label>
                                                             <input type="number" min={1} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceInterval} onChange={(e) => setRecurrenceInterval(Number(e.target.value) || 1)} placeholder="1" />
                                                         </div>
-                                                        <div className="bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                             <label className="block text-xs font-semibold text-[#800020] mb-2">Occurrences</label>
                                                             <input type="number" min={1} max={24} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceCount} onChange={(e) => setRecurrenceCount(Number(e.target.value) || 1)} placeholder="4" />
                                                         </div>
                                                         {recurrenceType === 'weekly' && (
-                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                                 <label className="block text-xs font-semibold text-[#800020] mb-2">Weekday (Optional)</label>
                                                                 <select className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceWeekday} onChange={(e) => setRecurrenceWeekday(e.target.value)}>
                                                                     <option value="">Same as start date</option>
@@ -2613,7 +2608,7 @@ const EventManagement = () => {
                                                         </div>
                                                     )}
                                                         {recurrenceType === 'monthly' && (
-                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border-2 border-[#d4af37]/20 shadow-sm">
+                                                            <div className="md:col-span-3 bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
                                                                 <label className="block text-xs font-semibold text-[#800020] mb-2">Day of Month (Optional)</label>
                                                                 <input type="number" min={1} max={31} className="w-full rounded-lg border-2 border-gray-200 px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#d4af37] focus:border-[#d4af37] transition-all bg-white" value={recurrenceMonthday} onChange={(e) => setRecurrenceMonthday(e.target.value)} placeholder="Same as start date if empty" />
                                                 </div>
@@ -2628,7 +2623,7 @@ const EventManagement = () => {
                                 </form>
                             </div>
                             {/* Sticky Footer with Buttons */}
-                            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3 z-10">
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-4 flex justify-end gap-3 z-10">
                                         <button 
                                             onClick={() => {
                                                 setShowPostModal(false)
@@ -2644,18 +2639,16 @@ const EventManagement = () => {
                                                     setRecurrenceMonthday('')
                                                 }, 200)
                                             }}
-                                            className="px-6 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
+                                            className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2"
                                         >
                                             Cancel
                                         </button>
                                         <button 
                                             type="submit" 
                                     form="post-form"
-                                    className="px-8 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#900000] text-white font-semibold shadow-sm transition-all duration-200 hover:from-[#900000] hover:to-[#A00000] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020] focus-visible:ring-offset-2 flex items-center space-x-2"
+                                    className="px-6 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000]/50 focus-visible:ring-offset-2 flex items-center gap-2"
                                         >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                                             <span>Post Event</span>
                                         </button>
                             </div>
@@ -2673,28 +2666,24 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-hidden border border-gray-200 relative flex flex-col">
-                            {/* Minimalist Header */}
-                            <div className="sticky top-0 bg-gray-100 border-b border-gray-200 px-6 py-4 z-10">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-5xl max-h-[90vh] overflow-hidden relative flex flex-col">
+                            <div className="sticky top-0 bg-white border-b border-gray-100 px-4 sm:px-6 py-4 z-10">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white rounded-lg border border-gray-300 flex items-center justify-center">
-                                            <svg className="w-5 h-5 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 4h2a2 2 0 012 2v2m-6 8l8-8M7 18l-3 1 1-3 9-9a2 2 0 112 2l-9 9z" />
-                                            </svg>
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 4h2a2 2 0 012 2v2m-6 8l8-8M7 18l-3 1 1-3 9-9a2 2 0 112 2l-9 9z" /></svg>
                                         </div>
-                                        <div>
-                                            <h2 className="text-xl font-semibold text-gray-900">Edit Proposed Event</h2>
+                                        <div className="min-w-0">
+                                            <h2 className="text-lg font-semibold text-gray-900">Edit Proposed Event</h2>
                                             <p className="text-sm text-gray-500 mt-0.5">Update your proposal details</p>
                                         </div>
                                     </div>
                                     <button
+                                        type="button"
                                         onClick={() => setShowEditModal(false)}
-                                        className="text-gray-400 hover:text-gray-600 transition-colors duration-200 rounded-full p-2 hover:bg-gray-100"
+                                        className="p-2.5 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 border border-transparent hover:border-gray-200 transition-all"
                                     >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
                                 </div>
                             </div>
@@ -2934,7 +2923,7 @@ const EventManagement = () => {
                                                 >
                                                     {editDocPreviewName ? (
                                                         <div className="flex items-center space-x-3 p-4 w-full">
-                                                            <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border-2 border-[#d4af37]/30">
+                                                            <div className="w-12 h-12 bg-[#800020]/10 rounded-lg flex items-center justify-center border border-gray-200">
                                                                 <svg className="w-6 h-6 text-[#800020]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                                 </svg>
@@ -2988,7 +2977,7 @@ const EventManagement = () => {
 
                                         <div className="space-y-5">
                                             {/* Open for Donations */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -3015,7 +3004,7 @@ const EventManagement = () => {
                                         </div>
 
                                             {/* Open for Volunteers */}
-                                            <div className="bg-gradient-to-br from-[#d4af37]/5 to-[#f4d03f]/10 border-2 border-[#d4af37]/30 rounded-2xl p-5 hover:shadow-md transition-all duration-200 shadow-sm">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-3 flex-1">
                                                         <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -3053,7 +3042,7 @@ const EventManagement = () => {
                                         </div>
                                     </div>
 
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border-2 border-[#d4af37]/20 shadow-sm">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                                             <div className="space-y-2">
                                                                 <label className="flex items-center space-x-2 text-xs font-semibold text-[#800020]">
                                                                     <div className="w-6 h-6 bg-[#d4af37]/10 rounded-lg flex items-center justify-center border border-[#d4af37]/30">
@@ -3126,7 +3115,7 @@ const EventManagement = () => {
                                                                                 setEditReqSkillInput('')
                                                                             }
                                                                         }}
-                                                                        className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#a0002a] text-white text-sm font-semibold hover:from-[#a0002a] hover:to-[#800020] transition-all shadow-md hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
+                                                                        className="px-4 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] transition-all whitespace-nowrap w-full sm:w-auto"
                                         >
                                                                         Add
                                         </button>
@@ -3134,7 +3123,7 @@ const EventManagement = () => {
                                                                 {editData.volunteerSettings.requiredSkills && editData.volunteerSettings.requiredSkills.length > 0 && (
                                                                     <div className="mt-2 flex flex-wrap gap-2">
                                                                         {editData.volunteerSettings.requiredSkills.map((skill, index) => (
-                                                                            <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#d4af37]/20 text-[#800020] border-2 border-[#d4af37]/40 rounded-full">
+                                                                            <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#800000]/10 text-[#800000] border border-[#800000]/20 rounded-full">
                                                                                 {skill}
                                         <button 
                                             type="button" 
@@ -3187,7 +3176,7 @@ const EventManagement = () => {
                                                                                     setEditData(prev => ({ ...prev, volunteerSettings: { ...prev.volunteerSettings, allowedDepartments: addTokenToArray(prev.volunteerSettings.allowedDepartments || [], editSelectedDept) } }))
                                                                                     setEditSelectedDept('')
                                                                                 }}
-                                                                                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-[#800020] to-[#a0002a] text-white text-sm font-semibold hover:from-[#a0002a] hover:to-[#800020] transition-all shadow-md hover:shadow-lg whitespace-nowrap w-full sm:w-auto"
+                                                                                className="px-4 py-2.5 rounded-xl bg-[#800000] text-white text-sm font-medium hover:bg-[#6b0000] transition-all whitespace-nowrap w-full sm:w-auto"
                                                                             >
                                                                                 Add
                                                                             </button>
@@ -3195,7 +3184,7 @@ const EventManagement = () => {
                                                                         {editData.volunteerSettings.allowedDepartments && editData.volunteerSettings.allowedDepartments.length > 0 && (
                                                                             <div className="flex flex-wrap gap-2">
                                                                                 {editData.volunteerSettings.allowedDepartments.map((dep, index) => (
-                                                                                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#d4af37]/20 text-[#800020] border-2 border-[#d4af37]/40 rounded-full">
+                                                                                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#800000]/10 text-[#800000] border border-[#800000]/20 rounded-full">
                                                                                         {dep}
                                                                                         <button
                                                                                             type="button"
@@ -3241,7 +3230,7 @@ const EventManagement = () => {
                             </div>
                             
                             {/* Sticky Footer */}
-                            <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-4">
+                            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-4 sm:px-6 py-4 flex justify-end gap-4">
                                 <button 
                                     type="button" 
                                     onClick={() => setShowEditModal(false)}
@@ -3252,7 +3241,7 @@ const EventManagement = () => {
                                 <button 
                                     type="submit"
                                     form="edit-event-form"
-                                    className="bg-gradient-to-r from-[#800020] to-[#900000] text-white px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:from-[#900000] hover:to-[#A00000] hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800020] focus-visible:ring-offset-2"
+                                    className="bg-[#800000] text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-[#6b0000] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#800000]/50 focus-visible:ring-offset-2"
                                 >
                                     Update Event
                                 </button>
@@ -3271,8 +3260,8 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
-                            <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-md overflow-hidden">
+                            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
                                         <svg className="w-5 h-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3293,11 +3282,11 @@ const EventManagement = () => {
                             <div className="px-6 py-5">
                                 <p className="text-gray-700">Are you sure you want to delete this proposed event? This action cannot be undone.</p>
                             </div>
-                            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
                                 <button 
                                     type="button" 
                                     onClick={() => setShowDeleteModal(false)}
-                                    className="bg-white text-gray-700 px-5 py-2.5 rounded-xl border border-gray-300 font-semibold transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98]"
+                                    className="bg-white text-gray-700 px-5 py-2.5 rounded-xl border border-gray-200 font-medium transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98]"
                                 >
                                     Cancel
                                 </button>
@@ -3326,8 +3315,8 @@ const EventManagement = () => {
                             }
                         }}
                     >
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-scale-in">
-                            <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-red-50 to-orange-50">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-md overflow-hidden animate-scale-in">
+                            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center shadow-sm">
                                         <svg className="w-6 h-6 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3353,7 +3342,7 @@ const EventManagement = () => {
                             <div className="px-6 py-6">
                                 <p className="text-gray-700 text-base leading-relaxed">{confirmMessage}</p>
                             </div>
-                            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+                            <div className="px-6 py-4 border-t border-gray-100 bg-white flex justify-end gap-3">
                                 <button 
                                     type="button" 
                                     onClick={() => {
@@ -3362,7 +3351,7 @@ const EventManagement = () => {
                                         setPendingCancelSeriesId(null)
                                         setConfirmMessage('')
                                     }}
-                                    className="bg-white text-gray-700 px-6 py-2.5 rounded-xl border border-gray-300 font-semibold transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98]"
+                                    className="bg-white text-gray-700 px-5 py-2.5 rounded-xl border border-gray-200 font-medium transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98]"
                                 >
                                     Cancel
                                 </button>
@@ -3514,41 +3503,38 @@ const EventManagement = () => {
                             </div>
                             {selectedCalEvent && (
                                 <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
-                                    <div className="pointer-events-auto w-full max-w-xl m-4 bg-white border-2 border-[#d4af37]/30 rounded-2xl shadow-2xl animate-modal-in">
-                                        <div className="p-5 border-b-2 border-[#d4af37]/20 bg-gradient-to-r from-[#800020]/5 to-[#a0002a]/5 flex items-center justify-between">
+                                    <div className="pointer-events-auto w-full max-w-xl m-4 bg-white border border-gray-200 rounded-2xl shadow-2xl animate-modal-in">
+                                        <div className="p-5 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
                                             <div>
-                                                <div className="text-lg font-bold text-[#800020] flex items-center gap-2">
-                                                    <span>{selectedCalEvent.title}</span>
-                                                    <span className="text-[#d4af37] text-sm">★</span>
-                                            </div>
+                                                <div className="text-lg font-semibold text-gray-900">{selectedCalEvent.title}</div>
                                                 <div className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                                                    <svg className="w-3.5 h-3.5 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
                                                     {new Date(selectedCalEvent.startDate).toLocaleString()} — {new Date(selectedCalEvent.endDate).toLocaleString()}
                                                 </div>
                                             </div>
-                                            <button className="text-[#800020] hover:text-[#a0002a] hover:bg-[#d4af37]/20 rounded-xl p-2 border border-[#d4af37]/30 transition-all" onClick={() => setSelectedCalEvent(null)}>
+                                            <button type="button" className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all" onClick={() => setSelectedCalEvent(null)}>
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
                                         </div>
                                         <div className="p-5 space-y-3 bg-white">
-                                            <div className="text-sm text-[#800020] flex items-center gap-2">
-                                                <svg className="w-4 h-4 text-[#d4af37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="text-sm text-gray-700 flex items-center gap-2">
+                                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 </svg>
                                                 <span><span className="font-bold">Location:</span> {selectedCalEvent.location || 'TBA'}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {selectedCalEvent.seriesId && <span className="text-xs px-2 py-1 rounded-full border-2 border-[#d4af37] bg-[#d4af37]/20 text-[#800020] font-semibold">Recurring</span>}
+                                                {selectedCalEvent.seriesId && <span className="text-xs px-2 py-1 rounded-full border border-[#800000]/30 bg-[#800000]/10 text-[#800000] font-medium">Recurring</span>}
                                                 <span className={`text-xs px-2 py-1 rounded-full border-2 font-semibold ${selectedCalEvent.status === 'Approved' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>{selectedCalEvent.status || 'Proposed'}</span>
                                             </div>
                                         </div>
-                                        <div className="p-5 border-t-2 border-[#d4af37]/20 bg-gradient-to-r from-[#800020]/5 to-[#a0002a]/5 flex items-center justify-between">
+                                        <div className="p-5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    className="px-3 py-2 text-sm rounded-lg border-2 border-[#800020] text-[#800020] hover:bg-[#800020] hover:text-white transition-all font-semibold"
+                                                    className="px-3 py-2 text-sm rounded-xl border border-[#800000] text-[#800000] hover:bg-[#800000] hover:text-white transition-all font-medium"
                                                     onClick={() => {
                                                         const ev = selectedCalEvent
                                                         const start = new Date(ev.startDate)
@@ -3567,7 +3553,7 @@ const EventManagement = () => {
                                                 </button>
                                                 {/* Subscribe/Unsubscribe */}
                                                 <button
-                                                    className="px-3 py-2 text-sm rounded-lg border-2 border-[#d4af37] bg-[#d4af37]/20 text-[#800020] hover:bg-[#d4af37] hover:text-white transition-all font-semibold"
+                                                    className="px-3 py-2 text-sm rounded-xl border border-[#800000] bg-[#800000]/10 text-[#800000] hover:bg-[#800000] hover:text-white transition-all font-medium"
                                                     onClick={async () => {
                                                         try {
                                                             const isSub = mySubscriptions.some(s => s.scope === 'event' && s.targetId === selectedCalEvent._id)
@@ -3592,33 +3578,33 @@ const EventManagement = () => {
                     </div>
                 )}
 
-                {/* Events List Section */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200">
-                    <div className="px-4 sm:px-6 py-5 border-b border-gray-200">
+                {/* Events list card - minimalist */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="px-4 sm:px-6 py-4 border-b border-gray-100">
                         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-white border border-gray-300 flex items-center justify-center shadow-sm">
-                                    <svg className="w-6 h-6 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                 </div>
                                 <div className="min-w-0">
-                                    <h2 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight mb-1">Proposed Events</h2>
-                                    <p className="text-sm text-gray-600 leading-snug">Review, track, and manage proposals from departments.</p>
+                                    <h2 className="text-lg sm:text-xl font-bold text-[#800000] tracking-tight">Proposed Events</h2>
+                                    <p className="text-sm text-gray-600 mt-0.5">Review, track, and manage proposals.</p>
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                                 <div className="flex items-center gap-2">
                                     <select
                                         value={sortBy}
-                                        onChange={e => setSortBy(e.target.value)}
-                                        className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/40 focus:border-[#800000] transition"
+                                        onChange={e => { setSortBy(e.target.value); setEventsTablePage(1) }}
+                                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition"
                                     >
                                         <option value="date">Sort: Date</option>
                                         <option value="status">Sort: Status</option>
                                     </select>
                                     <select
                                         value={sortOrder}
-                                        onChange={e => setSortOrder(e.target.value)}
-                                        className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/40 focus:border-[#800000] transition"
+                                        onChange={e => { setSortOrder(e.target.value); setEventsTablePage(1) }}
+                                        className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition"
                                     >
                                         <option value="desc">Newest</option>
                                         <option value="asc">Oldest</option>
@@ -3640,9 +3626,10 @@ const EventManagement = () => {
                                 <p className="text-gray-500">Start by proposing your first event!</p>
                             </div>
                         ) : (
+                            <>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200 text-sm">
-                                    <thead className="bg-gray-50">
+                                    <thead className="bg-gray-50/80">
                                         <tr>
                                             <th className="px-4 py-3 text-left font-semibold text-gray-700">Event</th>
                                             <th className="px-4 py-3 text-left font-semibold text-gray-700">Schedule</th>
@@ -3651,7 +3638,7 @@ const EventManagement = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-100">
-                                        {sortedEvents.map(event => (
+                                        {paginatedEvents.map(event => (
                                             <tr key={event._id} className="hover:bg-gray-50">
                                                 <td className="px-4 py-3">
                                                     <div className="font-semibold text-gray-900 truncate max-w-xs">{event.title}</div>
@@ -3723,6 +3710,49 @@ const EventManagement = () => {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {eventsTotalPages > 1 && (
+                                <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                    <p className="text-xs sm:text-sm text-gray-500 order-2 sm:order-1">
+                                        Showing <span className="font-medium text-gray-700">{eventsStartIndex + 1}</span>–<span className="font-medium text-gray-700">{Math.min(eventsEndIndex, sortedEvents.length)}</span> of <span className="font-medium text-gray-700">{sortedEvents.length}</span> events
+                                    </p>
+                                    <div className="flex items-center gap-2 order-1 sm:order-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEventsTablePage(p => Math.max(1, p - 1))}
+                                            disabled={eventsTablePage === 1}
+                                            className="px-3 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition"
+                                        >
+                                            Previous
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {Array.from({ length: eventsTotalPages }, (_, i) => i + 1).map((page) => (
+                                                <button
+                                                    key={page}
+                                                    type="button"
+                                                    onClick={() => setEventsTablePage(page)}
+                                                    className={`min-w-[36px] px-3 py-2 text-sm font-medium rounded-xl transition ${
+                                                        eventsTablePage === page
+                                                            ? 'bg-[#800000] text-white'
+                                                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEventsTablePage(p => Math.min(eventsTotalPages, p + 1))}
+                                            disabled={eventsTablePage === eventsTotalPages}
+                                            className="px-3 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            </>
                         )}
                     </div>
                 </div>

@@ -511,125 +511,82 @@ const CRDDonations = () => {
         }
     }
     
+    // UI theme: minimalist, consistent with other CRD pages
+    const cardClass = 'bg-white rounded-2xl border border-gray-200/80 shadow-sm p-5 sm:p-6'
+    const labelClass = 'text-xs font-medium text-gray-500 uppercase tracking-wide'
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="min-h-screen bg-gray-50/80">
             <Header />
-            
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Back Button - Top Left (Mobile/Tablet Only) */}
+
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 <div className="mb-4 lg:hidden">
                     <button
+                        type="button"
                         onClick={() => navigate('/crd-staff/dashboard')}
-                        className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+                        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
                     >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         Back to Dashboard
                     </button>
                 </div>
 
-                {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Donations</h1>
-                            <p className="text-gray-600 text-base sm:text-lg">Manage and track all donation types across your organization</p>
-                        </div>
-                    </div>
+                {/* Header */}
+                <div className={`${cardClass} mb-6 sm:mb-8`}>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-[#800000] mb-1">Donations</h1>
+                    <p className="text-sm text-gray-500">Manage and track wallet, cash/cheque, and in-kind donations</p>
                 </div>
-                
+
                 {/* Tabs */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 mb-6 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden mb-6">
                     <div className="flex flex-wrap">
-                        <button
-                            onClick={() => setActiveTab('wallet')}
-                            className={`flex-1 sm:flex-none px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
-                                activeTab === 'wallet'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
-                            }`}
-                        >
-                            <div className="flex items-center justify-center gap-3">
-                                <FaWallet className={`text-xl transition-transform duration-200 ${activeTab === 'wallet' ? 'scale-110' : ''}`} />
-                                <span>Wallet</span>
-                            </div>
-                            {activeTab === 'wallet' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => { setActiveTab('cashcheque'); setStatusFilter('all'); setCashPage(1); }}
-                            className={`flex-1 sm:flex-none px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
-                                activeTab === 'cashcheque'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
-                            }`}
-                        >
-                            <div className="flex items-center justify-center gap-3">
-                                <FaMoneyBillWave className={`text-xl transition-transform duration-200 ${activeTab === 'cashcheque' ? 'scale-110' : ''}`} />
-                                <span>Cash/Cheque</span>
-                            </div>
-                            {activeTab === 'cashcheque' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('inkind')}
-                            className={`flex-1 sm:flex-none px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
-                                activeTab === 'inkind'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
-                            }`}
-                        >
-                            <div className="flex items-center justify-center gap-3">
-                                <FaBoxOpen className={`text-xl transition-transform duration-200 ${activeTab === 'inkind' ? 'scale-110' : ''}`} />
-                                <span>In-Kind</span>
-                            </div>
-                            {activeTab === 'inkind' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('event-report')}
-                            className={`flex-1 sm:flex-none px-6 sm:px-8 py-4 sm:py-5 text-base sm:text-lg font-semibold transition-all duration-300 relative ${
-                                activeTab === 'event-report'
-                                    ? 'text-[#800000] bg-gradient-to-br from-red-50 to-red-100/50'
-                                    : 'text-gray-600 hover:text-[#800000] hover:bg-gray-50/50'
-                            }`}
-                        >
-                            <div className="flex items-center justify-center gap-3">
-                                <FaChartBar className={`text-xl transition-transform duration-200 ${activeTab === 'event-report' ? 'scale-110' : ''}`} />
-                                <span>Event Report</span>
-                            </div>
-                            {activeTab === 'event-report' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#800000] to-[#9c0000]"></div>
-                            )}
-                        </button>
+                        {[
+                            { id: 'wallet', label: 'Wallet', icon: FaWallet },
+                            { id: 'cashcheque', label: 'Cash/Cheque', icon: FaMoneyBillWave },
+                            { id: 'inkind', label: 'In-Kind', icon: FaBoxOpen },
+                            { id: 'event-report', label: 'Event Report', icon: FaChartBar }
+                        ].map(({ id, label, icon: Icon }) => (
+                            <button
+                                key={id}
+                                type="button"
+                                onClick={() => {
+                                    setActiveTab(id)
+                                    if (id === 'cashcheque') { setStatusFilter('all'); setCashPage(1); }
+                                }}
+                                className={`flex-1 sm:flex-none min-w-0 px-4 sm:px-6 py-3.5 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                                    activeTab === id
+                                        ? 'bg-[#800000] text-white'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
+                            >
+                                <Icon className="w-4 h-4 flex-shrink-0" />
+                                <span className="truncate">{label}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
-                
+
                 {/* Filters */}
                 {(activeTab === 'wallet' || activeTab === 'inkind' || activeTab === 'cashcheque') && (
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-5 sm:p-6 mb-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search donations by name, email, or message..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base"
-                                    />
-                                </div>
+                    <div className={`${cardClass} mb-6`}>
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                            <div className="flex-1 relative">
+                                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by name, email, or message..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200/80 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
+                                />
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-wrap gap-2">
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
+                                    className="px-3 py-2.5 rounded-xl border border-gray-200/80 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                 >
                                     <option value="all">All Status</option>
                                     {activeTab === 'wallet' && (
@@ -666,7 +623,7 @@ const CRDDonations = () => {
                                     <select
                                         value={recipientTypeFilter}
                                         onChange={(e) => setRecipientTypeFilter(e.target.value)}
-                                        className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
+                                        className="px-3 py-2.5 rounded-xl border border-gray-200/80 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                     >
                                         <option value="all">All Recipients</option>
                                         <option value="crd">CRD</option>
@@ -678,7 +635,7 @@ const CRDDonations = () => {
                                     <select
                                         value={paymentMethodFilter}
                                         onChange={(e) => setPaymentMethodFilter(e.target.value)}
-                                        className="px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#800000] focus:ring-2 focus:ring-[#800000]/20 transition-all duration-200 text-base font-medium cursor-pointer bg-white"
+                                        className="px-3 py-2.5 rounded-xl border border-gray-200/80 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                     >
                                         <option value="all">All Methods</option>
                                         <option value="gcash">GCash</option>
@@ -694,7 +651,7 @@ const CRDDonations = () => {
                 )}
                 
                 {/* Content */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-5 sm:p-6 lg:p-8">
+                <div className={`${cardClass} sm:p-6 lg:p-8`}>
                     {activeTab === 'wallet' && (
                         <>
                             {walletLoading ? (
@@ -711,22 +668,22 @@ const CRDDonations = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                                    <div className="overflow-x-auto rounded-xl border border-gray-200/80">
                                         <table className="w-full min-w-[720px] text-sm">
                                             <thead>
-                                                <tr className="bg-gray-50 border-b border-gray-200">
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Donor</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Amount</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Method</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Recipient</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
+                                                <tr className="bg-gray-50/80 border-b border-gray-200/80">
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Date</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Donor</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Amount</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Method</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Recipient</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody className="divide-y divide-gray-200/80">
                                                 {walletPaginated.map((donation) => (
-                                                    <tr key={donation._id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                                    <tr key={donation._id} className="hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{formatDate(donation.createdAt)}</td>
                                                         <td className="py-3 px-4">
                                                             <div className="font-medium text-gray-900">{donation.donorName}</div>
@@ -792,7 +749,7 @@ const CRDDonations = () => {
                                         </table>
                                     </div>
                                     {walletTotalPages > 1 && (
-                                        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-200/80">
                                             <p className="text-xs text-gray-500">
                                                 Showing {((walletPage - 1) * walletPerPage) + 1}–{Math.min(walletPage * walletPerPage, filteredWalletDonations.length)} of {filteredWalletDonations.length}
                                             </p>
@@ -801,18 +758,16 @@ const CRDDonations = () => {
                                                     type="button"
                                                     onClick={() => setWalletPage(p => Math.max(1, p - 1))}
                                                     disabled={walletPage <= 1}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Previous
                                                 </button>
-                                                <span className="text-sm text-gray-600">
-                                                    Page {walletPage} of {walletTotalPages}
-                                                </span>
+                                                <span className="text-sm text-gray-600 tabular-nums">Page {walletPage} of {walletTotalPages}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setWalletPage(p => Math.min(walletTotalPages, p + 1))}
                                                     disabled={walletPage >= walletTotalPages}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     Next
                                                 </button>
@@ -840,21 +795,21 @@ const CRDDonations = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                                    <div className="overflow-x-auto rounded-xl border border-gray-200/80">
                                         <table className="w-full min-w-[720px] text-sm">
                                             <thead>
-                                                <tr className="bg-gray-50 border-b border-gray-200">
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Donor</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Amount</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Recipient</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
+                                                <tr className="bg-gray-50/80 border-b border-gray-200/80">
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Date</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Donor</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Amount</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Recipient</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody className="divide-y divide-gray-200/80">
                                                 {cashPaginated.map((donation) => (
-                                                    <tr key={donation._id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                                    <tr key={donation._id} className="hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{formatDate(donation.createdAt)}</td>
                                                         <td className="py-3 px-4">
                                                             <div className="font-medium text-gray-900">{donation.donorName}</div>
@@ -919,28 +874,14 @@ const CRDDonations = () => {
                                         </table>
                                     </div>
                                     {cashTotalPages > 1 && (
-                                        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-200/80">
                                             <p className="text-xs text-gray-500">
                                                 Showing {((cashPage - 1) * cashPerPage) + 1}–{Math.min(cashPage * cashPerPage, filteredCashDonations.length)} of {filteredCashDonations.length}
                                             </p>
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCashPage(p => Math.max(1, p - 1))}
-                                                    disabled={cashPage <= 1}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Previous
-                                                </button>
-                                                <span className="text-sm text-gray-600">Page {cashPage} of {cashTotalPages}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCashPage(p => Math.min(cashTotalPages, p + 1))}
-                                                    disabled={cashPage >= cashTotalPages}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Next
-                                                </button>
+                                                <button type="button" onClick={() => setCashPage(p => Math.max(1, p - 1))} disabled={cashPage <= 1} className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                                                <span className="text-sm text-gray-600 tabular-nums">Page {cashPage} of {cashTotalPages}</span>
+                                                <button type="button" onClick={() => setCashPage(p => Math.min(cashTotalPages, p + 1))} disabled={cashPage >= cashTotalPages} className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                                             </div>
                                         </div>
                                     )}
@@ -965,21 +906,21 @@ const CRDDonations = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                                    <div className="overflow-x-auto rounded-xl border border-gray-200/80">
                                         <table className="w-full min-w-[640px] text-sm">
                                             <thead>
-                                                <tr className="bg-gray-50 border-b border-gray-200">
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Date</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Donor</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Item</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Est. value</th>
-                                                    <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                                                    <th className="text-right py-3 px-4 font-medium text-gray-700">Actions</th>
+                                                <tr className="bg-gray-50/80 border-b border-gray-200/80">
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Date</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Donor</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Item</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Est. value</th>
+                                                    <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+                                                    <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wide">Actions</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody className="divide-y divide-gray-200/80">
                                                 {inKindPaginated.map((donation) => (
-                                                    <tr key={donation._id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                                    <tr key={donation._id} className="hover:bg-gray-50/50 transition-colors">
                                                         <td className="py-3 px-4 text-gray-600 whitespace-nowrap">{formatDate(donation.createdAt)}</td>
                                                         <td className="py-3 px-4">
                                                             <div className="font-medium text-gray-900">{donation.donorName}</div>
@@ -1010,28 +951,14 @@ const CRDDonations = () => {
                                         </table>
                                     </div>
                                     {inKindTotalPages > 1 && (
-                                        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
+                                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-200/80">
                                             <p className="text-xs text-gray-500">
                                                 Showing {((inKindPage - 1) * inKindPerPage) + 1}–{Math.min(inKindPage * inKindPerPage, filteredInKindDonations.length)} of {filteredInKindDonations.length}
                                             </p>
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setInKindPage(p => Math.max(1, p - 1))}
-                                                    disabled={inKindPage <= 1}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Previous
-                                                </button>
-                                                <span className="text-sm text-gray-600">Page {inKindPage} of {inKindTotalPages}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setInKindPage(p => Math.min(inKindTotalPages, p + 1))}
-                                                    disabled={inKindPage >= inKindTotalPages}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    Next
-                                                </button>
+                                                <button type="button" onClick={() => setInKindPage(p => Math.max(1, p - 1))} disabled={inKindPage <= 1} className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                                                <span className="text-sm text-gray-600 tabular-nums">Page {inKindPage} of {inKindTotalPages}</span>
+                                                <button type="button" onClick={() => setInKindPage(p => Math.min(inKindTotalPages, p + 1))} disabled={inKindPage >= inKindTotalPages} className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                                             </div>
                                         </div>
                                     )}
@@ -1042,26 +969,17 @@ const CRDDonations = () => {
                     
                     {activeTab === 'event-report' && (
                         <>
-                            {/* Event Report Header */}
                             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Donations Report</h2>
-                                    <p className="text-gray-600">Total donations received per event</p>
+                                    <h2 className="text-lg font-bold text-[#800000] mb-0.5">Event Donations Report</h2>
+                                    <p className="text-sm text-gray-500">Total donations received per event</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button
-                                        onClick={handlePrintEventReport}
-                                        className="flex items-center gap-2 px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors duration-200 shadow-md hover:shadow-lg"
-                                    >
-                                        <FaPrint className="w-4 h-4" />
-                                        <span>Print</span>
+                                    <button type="button" onClick={handlePrintEventReport} className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#800000] text-white rounded-xl text-sm font-medium hover:bg-[#900000] transition-colors">
+                                        <FaPrint className="w-4 h-4" /> Print
                                     </button>
-                                    <button
-                                        onClick={handleExportEventReport}
-                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md hover:shadow-lg"
-                                    >
-                                        <FaFileExcel className="w-4 h-4" />
-                                        <span>Export CSV</span>
+                                    <button type="button" onClick={handleExportEventReport} className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-200/80 text-gray-700 rounded-xl text-sm font-medium bg-white hover:bg-gray-100 hover:border-gray-300 active:bg-gray-200 active:border-gray-300 active:scale-[0.98] transition-colors transition-transform">
+                                        <FaFileExcel className="w-4 h-4" /> Export CSV
                                     </button>
                                 </div>
                             </div>
@@ -1078,77 +996,35 @@ const CRDDonations = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* Summary Cards */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                                        {[
+                                            { label: 'Total Donations', value: formatCurrency(overallTotal), icon: FaMoneyBillWave },
+                                            { label: 'Total Events', value: totalEvents, icon: FaCalendarAlt },
+                                            { label: 'Average per Event', value: formatCurrency(totalEvents > 0 ? overallTotal / totalEvents : 0), icon: FaMoneyBillWave }
+                                        ].map((item, i) => (
+                                            <motion.div key={item.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-5 shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                                        <item.icon className="w-5 h-5 text-[#800000]" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{item.label}</p>
+                                                        <p className="text-lg sm:text-xl font-bold text-[#800000] tabular-nums truncate">{item.value}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Donations</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
-                                                        {formatCurrency(overallTotal)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                        
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.1 }}
-                                            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaCalendarAlt className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Total Events</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
-                                                        {totalEvents}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                        
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.2 }}
-                                            className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex items-center justify-center flex-shrink-0">
-                                                    <FaMoneyBillWave className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">Average per Event</p>
-                                                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold truncate text-[#800000]">
-                                                        {formatCurrency(totalEvents > 0 ? overallTotal / totalEvents : 0)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
+                                            </motion.div>
+                                        ))}
                                     </div>
                                     
                                     {/* Pagination Controls - Top */}
                                     {eventsData.length > 0 && (
-                                        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <label className="text-sm font-medium text-gray-700">Items per page:</label>
+                                        <div className="rounded-2xl border border-gray-200/80 bg-white p-4 mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <label className="text-sm font-medium text-gray-600">Items per page</label>
                                                 <select
                                                     value={itemsPerPage}
-                                                    onChange={(e) => {
-                                                        setItemsPerPage(Number(e.target.value))
-                                                        setCurrentPage(1)
-                                                    }}
-                                                    className="px-3 py-1.5 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-sm"
+                                                    onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                                    className="px-3 py-2 rounded-xl border border-gray-200/80 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                                 >
                                                     <option value={5}>5</option>
                                                     <option value={10}>10</option>
@@ -1169,22 +1045,21 @@ const CRDDonations = () => {
                                         </div>
                                     )}
 
-                                    {/* Events Table */}
-                                    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
                                         <div className="overflow-x-auto">
-                                            <table className="w-full">
-                                                <thead className="bg-gradient-to-r from-[#800000] to-[#900000] text-white">
+                                            <table className="w-full text-sm">
+                                                <thead className="bg-gray-50/80 border-b border-gray-200/80">
                                                     <tr>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Event Title</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">Start Date</th>
-                                                        <th className="px-4 py-3 text-left text-sm font-semibold">End Date</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold">Total Donations</th>
-                                                        <th className="px-4 py-3 text-center text-sm font-semibold">Count</th>
-                                                        <th className="px-4 py-3 text-right text-sm font-semibold">Target</th>
-                                                        <th className="px-4 py-3 text-center text-sm font-semibold">Progress</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Event Title</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Start Date</th>
+                                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">End Date</th>
+                                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Total Donations</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">Count</th>
+                                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Target</th>
+                                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">Progress</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody className="divide-y divide-gray-200">
+                                                <tbody className="divide-y divide-gray-200/80">
                                                     {eventsData.length === 0 ? (
                                                         <tr>
                                                             <td colSpan="7" className="px-4 py-12">
@@ -1241,7 +1116,7 @@ const CRDDonations = () => {
                                                     )}
                                                 </tbody>
                                                 {eventsData.length > 0 && (
-                                                    <tfoot className="bg-gray-50">
+                                                    <tfoot className="bg-gray-50/80 border-t border-gray-200/80">
                                                         <tr>
                                                             <td colSpan="3" className="px-4 py-3 text-sm font-semibold text-gray-900">
                                                                 Total
@@ -1260,17 +1135,11 @@ const CRDDonations = () => {
                                         </div>
                                     </div>
 
-                                    {/* Pagination Controls - Bottom */}
                                     {eventsData.length > 0 && (
-                                        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-4 mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                            <div className="text-sm text-gray-600">
-                                                Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{Math.ceil(eventsData.length / itemsPerPage)}</span>
-                                            </div>
+                                        <div className="rounded-2xl border border-gray-200/80 bg-white p-4 mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <p className="text-sm text-gray-500">Page <span className="font-medium text-gray-900 tabular-nums">{currentPage}</span> of <span className="font-medium text-gray-900 tabular-nums">{Math.ceil(eventsData.length / itemsPerPage)}</span></p>
                                             <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={() => setCurrentPage(1)}
-                                                    disabled={currentPage === 1}
-                                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                <button type="button" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="p-2 text-gray-600 bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     title="First page"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1352,72 +1221,58 @@ const CRDDonations = () => {
             
             {/* Cash Verification Modal */}
             {verificationModal.open && verificationModal.donation && (
-                <div 
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 md:pt-28 pb-8 backdrop-blur-md bg-white/30 animate-modal-in"
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 pt-20 sm:pt-24 md:pt-28 pb-8 bg-black/40 backdrop-blur-sm"
                     onClick={() => setVerificationModal({ open: false, donation: null })}
                     style={{ zIndex: 200 }}
                 >
-                    <div 
-                        className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-lg w-full border border-gray-200/50 animate-slide-down flex flex-col"
+                    <div
+                        className="bg-white rounded-2xl border border-gray-200/80 shadow-xl max-w-lg w-full flex flex-col max-h-[calc(100vh-6rem)]"
                         onClick={(e) => e.stopPropagation()}
-                        style={{ zIndex: 201, maxHeight: 'calc(100vh - 6rem)' }}
+                        style={{ zIndex: 201 }}
                     >
-                        <div className="flex-shrink-0 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-5 sm:p-6 rounded-t-2xl">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-xl sm:text-2xl font-bold">Verify Cash Donation</h2>
-                                <button
-                                    onClick={() => setVerificationModal({ open: false, donation: null })}
-                                    className="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-2 transition-all duration-200 flex-shrink-0"
-                                >
-                                    <FaTimesCircle className="text-xl" />
-                                </button>
-                            </div>
+                        <div className="flex-shrink-0 px-5 sm:px-6 py-4 border-b border-gray-200/80 flex items-center justify-between bg-[#800000] text-white rounded-t-2xl">
+                            <h2 className="text-lg font-bold">Verify Cash Donation</h2>
+                            <button type="button" onClick={() => setVerificationModal({ open: false, donation: null })} className="p-2 rounded-xl text-white/90 hover:bg-white/20" aria-label="Close">
+                                <FaTimesCircle className="w-5 h-5" />
+                            </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
-                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                                <p className="text-sm text-yellow-800 font-medium mb-1">Donation Details</p>
-                                <p className="text-lg font-bold text-yellow-900">{formatCurrency(verificationModal.donation.amount)}</p>
-                                <p className="text-xs text-yellow-700 mt-1">From: {verificationModal.donation.donorName}</p>
+                        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+                            <div className="rounded-xl border border-gray-200/80 bg-gray-50/50 p-4">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Donation</p>
+                                <p className="text-xl font-bold text-[#800000] tabular-nums">{formatCurrency(verificationModal.donation.amount)}</p>
+                                <p className="text-sm text-gray-600 mt-1">From: {verificationModal.donation.donorName}</p>
                             </div>
-                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Receipt Number <span className="text-red-500">*</span>
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Receipt Number <span className="text-red-500">*</span></label>
                                 <input
                                     type="text"
                                     value={verificationForm.receiptNumber}
                                     onChange={(e) => setVerificationForm({ ...verificationForm, receiptNumber: e.target.value })}
                                     placeholder="Enter official receipt number"
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                     required
                                 />
                             </div>
-                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Verification Notes (Optional)
-                                </label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Verification Notes (Optional)</label>
                                 <textarea
                                     value={verificationForm.verificationNotes}
                                     onChange={(e) => setVerificationForm({ ...verificationForm, verificationNotes: e.target.value })}
-                                    placeholder="Add any notes about the verification..."
-                                    rows="4"
-                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition-all duration-200"
+                                    placeholder="Add any notes..."
+                                    rows="3"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000]"
                                 />
                             </div>
-                            
-                            <div className="flex gap-3 pt-2">
-                                <button
-                                    onClick={() => setVerificationModal({ open: false, donation: null })}
-                                    className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-semibold"
-                                >
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => setVerificationModal({ open: false, donation: null })} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                     Cancel
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={handleVerifyCash}
                                     disabled={verifyingCash === verificationModal.donation._id || !verificationForm.receiptNumber.trim()}
-                                    className="flex-1 px-4 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-[#800000] hover:bg-[#900000] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {verifyingCash === verificationModal.donation._id ? (
                                         <>
@@ -1434,20 +1289,11 @@ const CRDDonations = () => {
                 </div>
             )}
             
-            {/* Donation Details Modal — compact, wallet / cash-cheque / in-kind */}
             {showModal && selectedDonation && (
-                <div
-                    className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
-                    onClick={() => setShowModal(false)}
-                    style={{ zIndex: 200 }}
-                >
-                    <div
-                        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md max-h-[85vh] flex flex-col"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{ zIndex: 201 }}
-                    >
-                        <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 border-b border-gray-200">
-                            <h2 className="text-base font-semibold text-gray-900">Donation details</h2>
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} style={{ zIndex: 200 }}>
+                    <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xl w-full max-w-md max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()} style={{ zIndex: 201 }}>
+                        <div className="flex items-center justify-between flex-shrink-0 px-5 py-4 border-b border-gray-200/80">
+                            <h2 className="text-lg font-bold text-[#800000]">Donation details</h2>
                             <button
                                 type="button"
                                 onClick={() => setShowModal(false)}
@@ -1497,7 +1343,7 @@ const CRDDonations = () => {
                                         </div>
                                     )}
                                     {selectedDonation.paymentMethod === 'cash' && selectedDonation.cashVerification && (
-                                        <div className="py-2 pt-2 border-t border-gray-100 bg-blue-50/50 rounded-lg px-3 py-2 space-y-1.5">
+                                        <div className="pt-2 px-3 pb-2 border-t border-gray-100 bg-blue-50/50 rounded-lg space-y-1.5">
                                             <p className="text-xs font-medium text-blue-900">Cash verification</p>
                                             {selectedDonation.cashVerification.receiptNumber && (
                                                 <p className="text-xs text-blue-800">Receipt: {selectedDonation.cashVerification.receiptNumber}</p>

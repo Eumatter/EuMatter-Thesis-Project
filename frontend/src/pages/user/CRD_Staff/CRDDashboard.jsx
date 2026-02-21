@@ -451,19 +451,28 @@ const CRDDashboard = () => {
     }
     
     // Format currency for display (compact format for dashboard cards)
+    // Millions: "#.# M", hundred thousands: "#.# K" or "XXX K", thousands: "#.# K", below: full amount
     const formatCurrencyCompact = (amount) => {
-        if (!amount || amount === 0) return '₱0.00'
-        // For amounts less than 10,000, show full amount
-        if (amount < 10000) {
-            return formatCurrency(amount)
+        if (amount == null || amount === 0) return '₱0.00'
+        const num = parseFloat(amount)
+        if (num < 1000) return formatCurrency(num)
+        if (num >= 1000000) {
+            const millions = num / 1000000
+            const rounded = Math.round(millions * 10) / 10
+            const str = rounded % 1 === 0 ? String(Math.round(rounded)) : rounded.toFixed(1)
+            return `₱${str} M`
         }
-        // For amounts 10,000 and above, use compact format
-        if (amount >= 1000000) {
-            return `₱${(amount / 1000000).toFixed(amount % 1000000 === 0 ? 0 : 2)}M`
-        } else if (amount >= 1000) {
-            return `₱${(amount / 1000).toFixed(amount % 1000 === 0 ? 0 : 2)}K`
+        if (num >= 100000) {
+            const thousands = num / 1000
+            const rounded = Math.round(thousands * 10) / 10
+            const str = rounded % 1 === 0 ? String(Math.round(rounded)) : rounded.toFixed(1)
+            return `₱${str} K`
         }
-        return formatCurrency(amount)
+        // 1,000 to 99,999
+        const thousands = num / 1000
+        const rounded = Math.round(thousands * 10) / 10
+        const str = rounded % 1 === 0 ? String(Math.round(rounded)) : rounded.toFixed(1)
+        return `₱${str} K`
     }
 
     // Color Theme: 60% White, 30% Maroon, 10% Gold

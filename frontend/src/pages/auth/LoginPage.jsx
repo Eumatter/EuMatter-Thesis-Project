@@ -420,34 +420,34 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-white">
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-200/30 to-yellow-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-indigo-100/20 to-cyan-100/20 rounded-full blur-3xl"></div>
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-gray-50">
+            {/* Minimalist background: soft gradient orbs, no pulse */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-0 w-[280px] sm:w-[360px] md:w-[420px] h-[280px] sm:h-[360px] md:h-[420px] bg-[#800000]/[0.06] rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 right-0 w-[280px] sm:w-[360px] md:w-[420px] h-[280px] sm:h-[360px] md:h-[420px] bg-[#EE1212]/[0.06] rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(90vw,480px)] h-[min(90vw,480px)] bg-[#800000]/[0.04] rounded-full blur-3xl" />
             </div>
-            
+
             <div className="relative z-10 min-h-screen flex flex-col w-full overflow-x-hidden">
                 <Header />
-                
-                {/* Maintenance Mode Banner - Show when maintenance is enabled, positioned under header */}
+
                 {maintenanceMode && (
-                    <div className="w-full bg-gradient-to-r from-[#800000] to-[#EE1212] text-white py-3 px-4 text-center text-sm font-semibold z-40 mt-2">
-                        <div className="flex items-center justify-center space-x-2">
-                            <FaShieldAlt className="w-4 h-4" />
+                    <div className="w-full bg-gradient-to-r from-[#800000] to-[#EE1212] text-white py-3 px-4 text-center text-sm font-semibold z-40">
+                        <div className="flex items-center justify-center gap-2">
+                            <FaShieldAlt className="w-4 h-4 flex-shrink-0" />
                             <span>System Under Maintenance</span>
                         </div>
                     </div>
                 )}
 
-                <main className="flex-1 flex items-center justify-center py-4 px-4 md:py-6 md:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
-                    <div className="bg-white backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.1)] rounded-2xl flex flex-col lg:flex-row w-full max-w-5xl lg:h-[calc(85vh-20px)] max-h-[680px] overflow-hidden border border-gray-100 mx-auto">
-                        {/* Column 1: Visual Design */}
-                        <div className="hidden lg:flex relative w-full lg:w-1/2 flex-col items-center justify-between p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-l-2xl">
+                <main className="flex-1 flex items-center justify-center py-6 px-4 sm:py-8 sm:px-6 md:py-10 md:px-8 lg:px-8 w-full max-w-full overflow-x-hidden">
+                    <div className="bg-white/95 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.06)] rounded-2xl flex flex-col lg:flex-row w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-5xl lg:h-[calc(85vh-2rem)] lg:max-h-[680px] overflow-hidden border border-gray-100/80 mx-auto">
+                        {/* Column 1: Visual (desktop only) */}
+                        <div className="hidden lg:flex relative w-full lg:w-1/2 flex-col items-center justify-between p-6 lg:p-8 bg-gradient-to-br from-gray-50 to-gray-100/80 rounded-l-2xl border-r border-gray-100">
                             <motion.div
-                                initial={{ scale: 0.8, opacity: 0 }}
+                                initial={{ scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                transition={{ duration: 0.5 }}
+                                transition={{ duration: 0.4 }}
                                 className="flex flex-col items-center justify-center flex-grow"
                             >
                                 <img
@@ -456,30 +456,30 @@ const Login = () => {
                                     className="w-48 xl:w-56 object-contain"
                                 />
                             </motion.div>
-
-                            <div className="flex items-center space-x-3">
-                                <img
-                                    src={EnvergaLogo}
-                                    alt="Enverga University Logo"
-                                    className="w-8 h-8 object-contain"
-                                />
-                                <span className="text-lg font-bold tracking-wide text-red-900">
-                                    ENVERGA UNIVERSITY
-                                </span>
+                            <div className="flex items-center gap-3">
+                                <img src={EnvergaLogo} alt="Enverga University" className="w-8 h-8 object-contain" />
+                                <span className="text-base font-bold tracking-wide text-[#800000]/90">ENVERGA UNIVERSITY</span>
                             </div>
                         </div>
 
                         {/* Column 2: Login Form */}
-                        <div className="w-full lg:w-1/2 p-6 md:p-8 lg:p-10 flex flex-col justify-center bg-gradient-to-bl from-[#800000] to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none overflow-y-auto">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5 }}
-                                className="text-center md:text-left space-y-1 mb-6"
-                            >
-                                <h1 className="text-2xl md:text-4xl font-extrabold text-white">Welcome Back!</h1>
-                                <p className="text-sm md:text-base text-gray-200">Login to continue to EuMatter</p>
-                            </motion.div>
+                        <div className="w-full lg:w-1/2 flex flex-col justify-center bg-gradient-to-b from-[#800000] to-[#9a0a0a] lg:from-[#800000] lg:to-[#EE1212] rounded-2xl lg:rounded-r-2xl lg:rounded-l-none overflow-y-auto">
+                            {/* Mobile/Tablet: logo on contrasting background so it’s visible on all devices */}
+                            <div className="lg:hidden flex flex-col items-center pt-6 pb-2 px-5 sm:px-6">
+                                <div className="rounded-2xl bg-white/95 p-4 shadow-lg ring-1 ring-white/20">
+                                    <img src={EuMatterLogo} alt="EuMatter" className="w-24 h-24 sm:w-28 sm:h-28 object-contain" />
+                                </div>
+                            </div>
+                            <div className="w-full p-5 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-center lg:text-left space-y-1 mb-5 sm:mb-6"
+                                >
+                                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight">Welcome Back</h1>
+                                    <p className="text-sm sm:text-base text-white/80">Sign in to continue to EuMatter</p>
+                                </motion.div>
 
                             {/* General Error Message (Mobile/Tablet only) */}
                             <AnimatePresence>
@@ -489,24 +489,24 @@ const Login = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
                                         transition={{ duration: 0.2 }}
-                                        className="mb-4 p-3 bg-[#800000]/30 border border-[#FFD700]/50 rounded-lg flex items-start space-x-2"
+                                        className="mb-4 p-3 bg-white/10 border border-amber-400/50 rounded-xl flex items-start gap-2"
                                     >
-                                        <FaExclamationCircle className="w-5 h-5 text-[#FFD700] flex-shrink-0 mt-0.5" />
+                                        <FaExclamationCircle className="w-5 h-5 text-amber-300 flex-shrink-0 mt-0.5" />
                                         <p className="text-sm text-white flex-1">{errors.general}</p>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
 
-                            <form onSubmit={onSubmitHandler} className="space-y-4">
+                            <form onSubmit={onSubmitHandler} className="space-y-4 sm:space-y-5">
                                 {/* Email Field */}
                                 <div className="space-y-1.5">
                                     <label htmlFor="email" className="block text-sm font-medium text-white">
                                         Email Address
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                             <FaEnvelope className={`w-5 h-5 transition-colors duration-200 ${
-                                                emailHasError ? 'text-[#FFD700]' : 'text-gray-400'
+                                                emailHasError ? 'text-amber-400' : 'text-gray-400'
                                             }`} />
                                         </div>
                                         <input
@@ -516,10 +516,10 @@ const Login = () => {
                                             value={email}
                                             onChange={handleEmailChange}
                                             onBlur={() => handleBlur('email')}
-                                            className={`w-full rounded-lg border bg-white text-gray-900 pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                            className={`w-full rounded-xl border bg-white text-gray-900 pl-10 pr-10 py-3 text-sm sm:text-base focus:outline-none focus:ring-2 transition-all duration-200 ${
                                                 emailHasError
-                                                    ? 'border-[#FFD700] focus:ring-[#FFD700] focus:border-[#FFD700]'
-                                                    : 'border-gray-400 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                                                    ? 'border-amber-400 focus:ring-amber-400/50 focus:border-amber-400'
+                                                    : 'border-gray-300 focus:ring-[#FFD700]/50 focus:border-[#FFD700]'
                                             }`}
                                         />
                                     </div>
@@ -530,7 +530,7 @@ const Login = () => {
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 exit={{ opacity: 0, height: 0 }}
                                                 transition={{ duration: 0.2 }}
-                                                className="flex items-center space-x-1.5 text-[#FFD700] text-xs"
+                                                className="flex items-center gap-1.5 text-amber-200 text-xs sm:text-sm"
                                             >
                                                 <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
                                                 <span>{emailErrorText}</span>
@@ -545,9 +545,9 @@ const Login = () => {
                                         Password
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                        <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                             <FaLock className={`w-5 h-5 transition-colors duration-200 ${
-                                                passwordHasError ? 'text-[#FFD700]' : 'text-gray-400'
+                                                passwordHasError ? 'text-amber-400' : 'text-gray-400'
                                             }`} />
                                         </div>
                                         <input
@@ -557,16 +557,16 @@ const Login = () => {
                                             value={password}
                                             onChange={handlePasswordChange}
                                             onBlur={() => handleBlur('password')}
-                                            className={`w-full rounded-lg border bg-white text-gray-900 pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 transition-all duration-200 ${
+                                            className={`w-full rounded-xl border bg-white text-gray-900 pl-10 pr-12 py-3 text-sm sm:text-base focus:outline-none focus:ring-2 transition-all duration-200 ${
                                                 passwordHasError
-                                                    ? 'border-[#FFD700] focus:ring-[#FFD700] focus:border-[#FFD700]'
-                                                    : 'border-gray-400 focus:ring-[#FFD700] focus:border-[#FFD700]'
+                                                    ? 'border-amber-400 focus:ring-amber-400/50 focus:border-amber-400'
+                                                    : 'border-gray-300 focus:ring-[#FFD700]/50 focus:border-[#FFD700]'
                                             }`}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center -my-1"
                                             aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         >
                                             {showPassword ? <FaEyeSlash className="w-5 h-5" /> : <FaEye className="w-5 h-5" />}
@@ -579,7 +579,7 @@ const Login = () => {
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 exit={{ opacity: 0, height: 0 }}
                                                 transition={{ duration: 0.2 }}
-                                                className="flex items-center space-x-1.5 text-[#FFD700] text-xs"
+                                                className="flex items-center gap-1.5 text-amber-200 text-xs sm:text-sm"
                                             >
                                                 <FaExclamationCircle className="w-3 h-3 flex-shrink-0" />
                                                 <span>{passwordErrorText}</span>
@@ -589,19 +589,17 @@ const Login = () => {
                                 </div>
 
                                 {/* Remember Me & Forgot Password */}
-                                <div className="flex items-center justify-between text-xs md:text-sm">
-                                    <div className="flex items-center">
+                                <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                                    <label className="flex items-center gap-2 cursor-pointer text-white/90">
                                         <input
                                             id="remember-me"
                                             name="remember-me"
                                             type="checkbox"
-                                            className="h-3.5 w-3.5 text-[#FFD700] focus:ring-[#FFD700] border-gray-300 rounded"
+                                            className="h-4 w-4 rounded border-gray-400 text-[#FFD700] focus:ring-[#FFD700]/50"
                                         />
-                                        <label htmlFor="remember-me" className="ml-2 block text-gray-200">
-                                            Keep me logged in
-                                        </label>
-                                    </div>
-                                    <a href="/reset-password" className="text-[#FFD700] hover:underline font-medium text-xs md:text-sm transition-colors">
+                                        <span>Keep me logged in</span>
+                                    </label>
+                                    <a href="/reset-password" className="text-[#FFD700] hover:underline font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50 focus:ring-offset-2 focus:ring-offset-transparent rounded">
                                         Forgot Password?
                                     </a>
                                 </div>
@@ -629,9 +627,11 @@ const Login = () => {
                                 </motion.div>
                             </form>
 
-                            {/* Sign Up Link */}
-                            <div className="text-center text-xs md:text-sm mt-5 text-gray-200">
-                                Don't have an account yet? <a href="/register" className="text-[#FFD700] hover:underline font-bold transition-colors">Sign Up</a>
+                                {/* Sign Up Link */}
+                                <div className="text-center text-sm sm:text-base mt-6 text-white/85">
+                                    Don't have an account?{' '}
+                                    <a href="/register" className="text-[#FFD700] font-semibold hover:underline focus:outline-none focus:ring-2 focus:ring-[#FFD700]/50 rounded transition-colors">Sign Up</a>
+                                </div>
                             </div>
                         </div>
                     </div>
