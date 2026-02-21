@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import Button from '../components/Button';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { AppContent } from '../context/AppContext.jsx';
+import { stripHtml } from '../utils/stripHtml';
 import axios from 'axios';
 import { 
     FaBookOpen, 
@@ -442,7 +443,7 @@ const Program = () => {
                                         
                                         <div className="p-5 sm:p-6 space-y-4">
                                             <p className="text-sm sm:text-base text-gray-600 line-clamp-3 min-h-[4rem]">
-                                                {program.description || 'Join us in making a difference in our community.'}
+                                                {program.description ? stripHtml(program.description) : 'Join us in making a difference in our community.'}
                                             </p>
                                             
                                             <div className="flex items-center justify-between pt-2">

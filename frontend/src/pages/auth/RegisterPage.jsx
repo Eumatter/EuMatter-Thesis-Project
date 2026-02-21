@@ -581,7 +581,7 @@ const RegisterPage = () => {
     };
     
     return (
-        <div className="min-h-screen flex flex-col font-poppins relative overflow-x-hidden bg-white">
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-white">
             {/* Modern blur effect background layers */}
             <div className="absolute inset-0 overflow-hidden">
                 {/* Animated gradient blur circles */}

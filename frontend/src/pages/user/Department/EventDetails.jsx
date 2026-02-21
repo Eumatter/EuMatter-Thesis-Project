@@ -263,7 +263,7 @@ const EventDetails = () => {
         return (
             <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
                 <Header />
-                <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
+                <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
                     <div className="text-center py-20">
                         <p className="text-gray-600">Failed to load analytics</p>
                         <button

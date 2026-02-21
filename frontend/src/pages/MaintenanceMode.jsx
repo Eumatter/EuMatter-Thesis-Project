@@ -59,7 +59,7 @@ const MaintenanceMode = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col font-poppins relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-gray-100">
             {/* Animated Background */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-0 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-[#800000]/10 to-[#EE1212]/10 rounded-full blur-3xl animate-pulse"></div>

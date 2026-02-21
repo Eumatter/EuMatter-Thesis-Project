@@ -2,13 +2,12 @@ import React, { useContext, useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
-import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import gcashLogo from '../../../assets/gcashLogo.png'
 import { AppContent } from '../../../context/AppContext.jsx'
 import axios from 'axios'
-import DOMPurify from 'dompurify'
-import { notifyError, notifySuccess, notifyInfo } from '../../../utils/notify'
+import { stripHtml } from '../../../utils/stripHtml'
+import { notifyError, notifySuccess } from '../../../utils/notify'
 
 const EventDetails = () => {
     const { id } = useParams()
@@ -205,7 +204,7 @@ const EventDetails = () => {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
-                <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 flex items-center justify-center min-h-[60vh]">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center min-h-[60vh]">
                     <LoadingSpinner size="large" text="Loading event details..." />
                 </main>
                 <Footer />
@@ -217,10 +216,10 @@ const EventDetails = () => {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
-                <main className="max-w-4xl mx-auto px-4 md:px-6 py-8">
-                    <div className="text-center py-12">
-                        <h2 className="text-2xl font-bold text-gray-600 mb-4">Event not found</h2>
-                        <Button onClick={() => navigate('/user/events')}>Back to Events</Button>
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="text-center py-10">
+                        <p className="text-sm font-medium text-gray-700 mb-4">Event not found.</p>
+                        <button onClick={() => navigate('/user/events')} className="text-sm font-medium text-[#800000] hover:underline">Back to events</button>
                     </div>
                 </main>
                 <Footer />
@@ -237,341 +236,186 @@ const EventDetails = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-4xl mx-auto px-4 md:px-6 py-8">
-                {/* Back Button */}
-                <button 
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                <button
                     onClick={() => navigate('/user/events')}
-                    className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+                    className="flex items-center gap-2 text-sm text-gray-500 hover:text-[#800000] mb-4"
+                    aria-label="Back to events"
                 >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                     Back to Events
                 </button>
 
-                {/* Event Header */}
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+                {/* Event card */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
                     {event.image && (
-                        <div className="h-64 md:h-80 bg-gray-300 bg-cover bg-center relative" 
-                             style={{backgroundImage: `url(data:image/jpeg;base64,${event.image})`}}>
-                            <div className="absolute top-4 right-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${status.color}`}>
-                                    {status.text}
-                                </span>
-                            </div>
+                        <div className="h-48 sm:h-56 bg-gray-200 bg-cover bg-center relative" style={{ backgroundImage: `url(data:image/jpeg;base64,${event.image})` }}>
+                            <span className={`absolute top-3 right-3 px-2 py-0.5 rounded text-xs font-medium border ${status.color}`}>{status.text}</span>
                         </div>
                     )}
-                    
-                    <div className="p-6 md:p-8">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6">
-                            <div className="flex-1">
-                                <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">{event.title}</h1>
-                                <p className="text-gray-600 text-lg">Organized by {event.createdBy?.name || 'Unknown'}</p>
+                    <div className="p-4 sm:p-6">
+                        <div className="flex flex-wrap items-start justify-between gap-2 mb-4">
+                            <div>
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{event.title}</h1>
+                                <p className="text-sm text-gray-500 mt-0.5">Organized by {event.createdBy?.name || 'Unknown'}</p>
                             </div>
                             {!event.image && (
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${status.color} mt-4 md:mt-0`}>
-                                    {status.text}
-                                </span>
+                                <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-medium border ${status.color}`}>{status.text}</span>
                             )}
                         </div>
 
-                        {/* Event Info Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div className="space-y-4">
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Event Duration</p>
-                                        <p className="text-gray-600">{formatDate(event.startDate)}</p>
-                                        <p className="text-gray-600">to {formatDate(event.endDate)}</p>
-                                    </div>
+                        {/* Info grid — compact */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div className="space-y-3">
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Date & time</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{formatDate(event.startDate)}</p>
+                                    <p className="text-sm text-gray-600">to {formatDate(event.endDate)}</p>
                                 </div>
-
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Location</p>
-                                        <p className="text-gray-600">{event.location}</p>
-                                    </div>
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Location</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{event.location}</p>
                                 </div>
                             </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Volunteers</p>
-                                        <p className="text-gray-600">{event.volunteers?.length || 0} joined</p>
-                                    </div>
+                            <div className="space-y-3">
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Volunteers</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{event.volunteers?.length || 0} joined</p>
                                 </div>
-
                                 {openForDonation && (
-                                    <div className="flex items-start space-x-3">
-                                        <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                        </svg>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">Donations</p>
-                                            <p className="text-gray-600">
-                                                ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} raised
-                                                {event.donations && event.donations.length > 0 && (
-                                                    <span className="text-gray-500"> from {event.donations.length} donor{event.donations.length !== 1 ? 's' : ''}</span>
-                                                )}
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Donations</p>
+                                        <p className="text-sm text-gray-900 mt-0.5">
+                                            ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} raised
+                                            {event.donations?.length > 0 && <span className="text-gray-500"> · {event.donations.length} donor{event.donations.length !== 1 ? 's' : ''}</span>}
+                                        </p>
                                     </div>
                                 )}
-
-                                <div className="flex items-start space-x-3">
-                                    <svg className="w-6 h-6 text-red-900 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">Status</p>
-                                        <p className="text-gray-600">{event.status || 'Pending Review'}</p>
-                                    </div>
+                                <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Status</p>
+                                    <p className="text-sm text-gray-900 mt-0.5">{event.status || 'Pending'}</p>
                                 </div>
                             </div>
                         </div>
                         
-                        {/* Donation Progress Section */}
+                        {/* Donation progress */}
                         {openForDonation && event.donationTarget && (
-                            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 sm:p-6 mb-8">
-                                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                                    <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                    </svg>
-                                    Donation Progress
-                                </h3>
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span className="font-medium text-gray-700">Raised</span>
-                                        <span className="font-bold text-gray-900">
-                                            ₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
-                                            <span className="text-gray-600 font-normal ml-2">
-                                                / ₱{parseFloat(event.donationTarget).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                                        <div 
-                                            className={`h-4 rounded-full transition-all duration-500 ${
-                                                ((event.totalDonations || 0) / event.donationTarget) >= 1 ? 'bg-green-600' :
-                                                ((event.totalDonations || 0) / event.donationTarget) >= 0.5 ? 'bg-yellow-500' :
-                                                'bg-red-500'
-                                            }`}
-                                            style={{ 
-                                                width: `${Math.min(((event.totalDonations || 0) / event.donationTarget) * 100, 100)}%` 
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center text-xs text-gray-600">
-                                        <span>
-                                            {event.donations && event.donations.length > 0 
-                                                ? `${event.donations.length} donor${event.donations.length !== 1 ? 's' : ''} contributed`
-                                                : 'Be the first to donate!'}
-                                        </span>
-                                        <span className="font-semibold">
-                                            {((event.totalDonations || 0) / event.donationTarget * 100).toFixed(1)}% of goal
-                                        </span>
-                                    </div>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Donation goal</p>
+                                <div className="flex justify-between text-sm mb-2">
+                                    <span className="text-gray-700">₱{parseFloat(event.totalDonations || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className="text-gray-500">/ ₱{parseFloat(event.donationTarget).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                 </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        className="h-2 rounded-full bg-[#800000] transition-all"
+                                        style={{ width: `${Math.min(((event.totalDonations || 0) / event.donationTarget) * 100, 100)}%` }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1.5">
+                                    {((event.totalDonations || 0) / event.donationTarget * 100).toFixed(0)}% · {event.donations?.length ? `${event.donations.length} donor${event.donations.length !== 1 ? 's' : ''}` : 'Be the first to donate'}
+                                </p>
                             </div>
                         )}
 
-                        {/* Action Buttons - Show based on event status and settings */}
+                        {/* Actions */}
                         {(() => {
                             const isUpcoming = status.text === 'Upcoming' && (event.status === 'Upcoming' || event.status === 'Approved')
                             const isOngoing = status.text === 'Ongoing' || event.status === 'Ongoing'
                             const isCompleted = status.text === 'Completed' || event.status === 'Completed'
-                            
-                            // Show registration button only for Upcoming events with volunteer allowed
                             const canRegister = isUpcoming && openForVolunteer && !userJoined
-                            // Show donation button only for Upcoming events with donation allowed
                             const canDonate = isUpcoming && openForDonation
-                            
+
                             if (isCompleted) {
-                                return (
-                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-8">
-                                        <div className="flex items-center">
-                                            <svg className="w-5 h-5 text-gray-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <p className="text-gray-800 font-medium">This event has been completed.</p>
-                                        </div>
-                                    </div>
-                                )
+                                return <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">This event has been completed.</div>
                             }
-                            
                             if (isOngoing) {
                                 const timeFrame = calculateTimeFrame(event)
                                 return (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-                                        <div className="flex items-start">
-                                            <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <div>
-                                                <p className="text-blue-800 font-medium mb-1">Event is currently ongoing</p>
-                                                <p className="text-blue-700 text-sm">
-                                                    Registration is closed. {timeFrame && `Volunteer duration: ${timeFrame}`}
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                                        Event is ongoing. Registration closed.{timeFrame && ` Duration: ${timeFrame}.`}
                                     </div>
                                 )
                             }
-                            
                             if (canRegister || canDonate) {
                                 return (
-                                    <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                                    <div className="flex flex-col sm:flex-row gap-3">
                                         {openForVolunteer && (
-                                            <Button 
+                                            <button
+                                                type="button"
                                                 onClick={handleJoinEvent}
                                                 disabled={isJoining || userJoined || !canRegister}
-                                                className="flex-1 flex items-center justify-center"
+                                                className="flex-1 py-2.5 px-4 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                             >
-                                                {isJoining ? (
-                                                    <>
-                                                        <LoadingSpinner size="tiny" inline />
-                                                        Joining...
-                                                    </>
-                                                ) : userJoined ? (
-                                                    <>
-                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        Already Joined
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                        </svg>
-                                                        Join Event
-                                                    </>
-                                                )}
-                                            </Button>
+                                                {isJoining ? <><LoadingSpinner size="tiny" inline /> Joining...</> : userJoined ? 'Already joined' : 'Join as volunteer'}
+                                            </button>
                                         )}
-                                        
                                         {openForDonation && (
-                                            <Button 
-                                                variant="primary"
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowDonationModal(true)}
                                                 disabled={!canDonate}
-                                                className="flex-1 flex items-center justify-center"
+                                                className="flex-1 py-2.5 px-4 rounded-lg text-sm font-semibold bg-[#800000] text-white hover:bg-[#9c0000] disabled:opacity-50 flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#800000] focus:ring-offset-2"
                                             >
-                                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                                </svg>
-                                                Make a Donation
-                                            </Button>
+                                                Donate
+                                            </button>
                                         )}
                                     </div>
                                 )
                             }
-                            
                             return null
                         })()}
 
-                        {/* Event Status Message for Non-Approved/Non-Upcoming Events */}
                         {!['Approved', 'Upcoming', 'Ongoing', 'Completed'].includes(event.status) && (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-                                <div className="flex items-center">
-                                    <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
-                                    </svg>
-                                    <p className="text-yellow-800 font-medium">
-                                        {event.status === 'Proposed' && 'This event is pending approval and not yet open for participation.'}
-                                        {event.status === 'Declined' && 'This event has been declined and is not available for participation.'}
-                                        {event.status === 'Pending' && 'This event is pending review and not yet open for participation.'}
-                                    </p>
-                                </div>
+                            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                                {event.status === 'Proposed' && 'Pending approval. Not open for participation yet.'}
+                                {event.status === 'Declined' && 'This event has been declined.'}
+                                {event.status === 'Pending' && 'Pending review. Not open for participation yet.'}
                             </div>
                         )}
 
-                        {/* No Actions Available Message for Upcoming/Approved events without volunteer/donation options */}
                         {['Approved', 'Upcoming'].includes(event.status) && !event.isOpenForVolunteer && !event.isOpenForDonation && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-                                <div className="flex items-center">
-                                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p className="text-blue-800 font-medium">
-                                        This event is not currently open for volunteers or donations.
-                                    </p>
-                                </div>
-                            </div>
+                            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">Not open for volunteers or donations.</div>
                         )}
 
-                        {/* QR Scanner Button for Joined Events */}
                         {userJoined && (event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-6 sm:mb-8">
-                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-                                    <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1">
-                                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                                        </svg>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-green-800 font-medium text-sm sm:text-base">Scan QR Code for Attendance</p>
-                                            <p className="text-green-700 text-xs sm:text-sm mt-0.5">Record your time in and time out for this event</p>
-                                        </div>
-                                    </div>
-                                    <Button
-                                        onClick={() => navigate(`/volunteer/attendance/${event._id}`)}
-                                        className="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 text-sm sm:text-base flex items-center justify-center gap-2"
-                                    >
-                                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        View Attendance
-                                    </Button>
-                                </div>
+                            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <p className="text-sm text-gray-700">Record your attendance for this event.</p>
+                                <button
+                                    type="button"
+                                    onClick={() => navigate(`/volunteer/attendance/${event._id}`)}
+                                    className="shrink-0 py-2 px-4 rounded-lg text-sm font-medium bg-[#800000] text-white hover:bg-[#9c0000] focus:ring-2 focus:ring-[#800000] focus:ring-offset-2"
+                                >
+                                    View attendance
+                                </button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Event Description */}
-                <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-black mb-4">About This Event</h2>
-                    <div className="prose max-w-none">
-                        {event.description ? (
-                            <div 
-                                className="text-gray-700 leading-relaxed"
-                                dangerouslySetInnerHTML={{ 
-                                    __html: event.description
-                                        .replace(/&lt;/g, '<')
-                                        .replace(/&gt;/g, '>')
-                                        .replace(/&amp;/g, '&')
-                                }}
-                            />
-                        ) : (
-                            <p className="text-gray-500 italic">No description provided.</p>
-                        )}
-                    </div>
+                {/* About */}
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-3">About this event</h2>
+                    {event.description ? (
+                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{stripHtml(event.description)}</p>
+                    ) : (
+                        <p className="text-sm text-gray-500 italic">No description provided.</p>
+                    )}
                 </div>
 
-                {/* Volunteers Section */}
+                {/* Volunteers */}
                 {event.volunteers && event.volunteers.length > 0 && (
-                    <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
-                        <h2 className="text-2xl font-bold text-black mb-4">Volunteers ({event.volunteers.length})</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
+                        <h2 className="text-lg font-semibold text-gray-900 mb-3">Volunteers ({event.volunteers.length})</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {event.volunteers.map((volunteer) => (
-                                <div key={volunteer._id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                                    <div className="w-10 h-10 bg-red-900 rounded-full flex items-center justify-center text-white font-semibold">
+                                <div key={volunteer._id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                                    <div className="w-9 h-9 rounded-full bg-[#800000] flex items-center justify-center text-white text-sm font-medium shrink-0">
                                         {volunteer.name?.charAt(0)?.toUpperCase() || 'U'}
                                     </div>
-                                    <div>
-                                        <p className="font-medium text-gray-900">{volunteer.name}</p>
-                                        <p className="text-sm text-gray-500">{volunteer.email}</p>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{volunteer.name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{volunteer.email}</p>
                                     </div>
                                 </div>
                             ))}
@@ -582,247 +426,131 @@ const EventDetails = () => {
 
             {/* Donation Modal */}
             {showDonationModal && (
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-black">Make a Donation</h3>
-                            <button 
-                                onClick={() => setShowDonationModal(false)}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="donation-modal-title">
+                    <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-4 sm:p-6 shadow-xl">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 id="donation-modal-title" className="text-lg font-semibold text-gray-900">Donate</h3>
+                            <button type="button" onClick={() => { setShowDonationModal(false); setDonationAmount(''); setPaymentMethod('gcash'); }} className="p-1 text-gray-400 hover:text-gray-600 rounded" aria-label="Close">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        
-                        <p className="text-gray-600 mb-4">Support "{event.title}" with your donation.</p>
-                        
+                        <p className="text-sm text-gray-600 mb-4">Support this event with your donation.</p>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Donation Amount (₱)
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Amount (₱)</label>
                             <input
                                 type="number"
                                 value={donationAmount}
                                 onChange={(e) => setDonationAmount(e.target.value)}
-                                placeholder="Enter amount"
+                                placeholder="e.g. 100"
                                 min="1"
                                 step="0.01"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900"
+                                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
                             />
                         </div>
-                        
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Donation Method
-                            </label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* GCash */}
-                                <button
-                                    type="button"
-                                    onClick={() => setPaymentMethod('gcash')}
-                                    className={`border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'gcash' ? 'ring-2 ring-red-900 border-red-900 bg-red-50' : 'hover:border-gray-400 border-gray-300'}`}
-                                >
-                                    <img src={gcashLogo} alt="GCash" className="h-6 w-auto" />
-                                    <span className="text-sm font-medium text-gray-900">GCash</span>
-                                </button>
-
-                                {/* PayMaya */}
-                                <button
-                                    type="button"
-                                    onClick={() => setPaymentMethod('paymaya')}
-                                    className={`border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'paymaya' ? 'ring-2 ring-red-900 border-red-900 bg-red-50' : 'hover:border-gray-400 border-gray-300'}`}
-                                >
-                                    {/* Simple PayMaya leaf icon */}
-                                    <svg className="h-6 w-6 text-emerald-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                        <path d="M12 2c5 0 9 4 9 9 0 5.523-4.477 10-10 10-4.97 0-9-4.03-9-9C2 6.477 6.477 2 12 2z" opacity=".15" />
-                                        <path d="M11 6c4 0 7 3.134 7 7 0 .69-.56 1.25-1.25 1.25H12A5 5 0 0 1 7 9.25V7.25C7 6.56 7.56 6 8.25 6H11z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-900">PayMaya</span>
-                                </button>
-
-                                {/* Card */}
-                                <button
-                                    type="button"
-                                    onClick={() => setPaymentMethod('card')}
-                                    className={`border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'card' ? 'ring-2 ring-red-900 border-red-900 bg-red-50' : 'hover:border-gray-400 border-gray-300'}`}
-                                >
-                                    <svg className="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m3 0h6M3 8a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-900">Card</span>
-                                </button>
-
-                                {/* Bank */}
-                                <button
-                                    type="button"
-                                    onClick={() => setPaymentMethod('bank')}
-                                    className={`border rounded-lg p-3 flex items-center justify-center gap-2 transition-colors ${paymentMethod === 'bank' ? 'ring-2 ring-red-900 border-red-900 bg-red-50' : 'hover:border-gray-400 border-gray-300'}`}
-                                >
-                                    <svg className="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l9-7 9 7M4 10h16v10H4V10zm4 10v-6h8v6" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-gray-900">Bank</span>
-                                </button>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment method</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { value: 'gcash', label: 'GCash', el: <img src={gcashLogo} alt="" className="h-5 w-auto" /> },
+                                    { value: 'paymaya', label: 'PayMaya', el: <svg className="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="currentColor"><path d="M11 6c4 0 7 3 7 7 0 .7-.6 1.25-1.25 1.25H12A5 5 0 017 9.25V7.25C7 6.56 7.56 6 8.25 6H11z" /></svg> },
+                                    { value: 'card', label: 'Card', el: <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m3 0h6M3 8a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" /></svg> },
+                                    { value: 'bank', label: 'Bank', el: <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10l9-7 9 7M4 10h16v10H4V10z" /></svg> }
+                                ].map(({ value, label, el }) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => setPaymentMethod(value)}
+                                        className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${paymentMethod === value ? 'border-[#800000] bg-red-50 text-[#800000]' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                                    >
+                                        {el}
+                                        {label}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        
-                        <div className="flex space-x-3">
-                            <Button
-                                variant="ghostDark"
-                                onClick={() => {
-                                    setShowDonationModal(false)
-                                    setDonationAmount('')
-                                    setPaymentMethod('gcash')
-                                }}
-                                className="flex-1"
-                            >
+                        <div className="flex gap-3">
+                            <button type="button" onClick={() => { setShowDonationModal(false); setDonationAmount(''); setPaymentMethod('gcash'); }} className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50">
                                 Cancel
-                            </Button>
-                            <Button
-                                onClick={handleDonate}
-                                disabled={isDonating || !donationAmount}
-                                className="flex-1"
-                            >
+                            </button>
+                            <button type="button" onClick={handleDonate} disabled={isDonating || !donationAmount} className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-[#800000] text-white hover:bg-[#9c0000] disabled:opacity-50">
                                 {isDonating ? 'Processing...' : 'Donate'}
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Join as Volunteer Modal - Registration Form */}
+            {/* Join as Volunteer Modal */}
             {showJoinModal && (
-                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-bold text-black">Register for Event</h3>
-                            <button onClick={() => setShowJoinModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="join-modal-title">
+                    <div className="bg-white rounded-xl border border-gray-200 max-w-md w-full p-4 sm:p-6 max-h-[90vh] overflow-y-auto shadow-xl">
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 id="join-modal-title" className="text-lg font-semibold text-gray-900">Join as volunteer</h3>
+                            <button type="button" onClick={() => { setShowJoinModal(false); setJoinForm({ skills: '', additionalNotes: '' }); }} className="p-1 text-gray-400 hover:text-gray-600 rounded" aria-label="Close">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        
-                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-sm text-blue-800 font-medium">{event?.title}</p>
-                            <p className="text-xs text-blue-600 mt-1">Please fill out the registration form below to join this event as a volunteer.</p>
-                        </div>
-                        
+                        <p className="text-sm text-gray-600 mb-4">Fill out the form to register for this event.</p>
+
                         {event?.volunteerSettings?.mode === 'with_requirements' && (
-                            <div className="mb-4 text-sm text-gray-600 bg-gray-50 border border-gray-200 p-3 rounded-lg">
-                                <p className="font-semibold text-gray-800 mb-2">Event Requirements</p>
-                                <ul className="list-disc ml-5 space-y-1">
-                                    {event.volunteerSettings.minAge && (<li>Minimum age: {event.volunteerSettings.minAge} years old</li>)}
-                                    {event.volunteerSettings.maxVolunteers && (
-                                        <li>Maximum volunteers: {event.volunteerSettings.maxVolunteers} ({event.volunteers?.length || 0} already registered)</li>
-                                    )}
+                            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-700">
+                                <p className="font-medium text-gray-900 mb-1.5">Requirements</p>
+                                <ul className="list-disc ml-4 space-y-0.5 text-xs">
+                                    {event.volunteerSettings.minAge && <li>Minimum age: {event.volunteerSettings.minAge}</li>}
+                                    {event.volunteerSettings.maxVolunteers && <li>Max volunteers: {event.volunteerSettings.maxVolunteers} ({event.volunteers?.length || 0} registered)</li>}
                                     {Array.isArray(event.volunteerSettings.requiredSkills) && event.volunteerSettings.requiredSkills.length > 0 && (
-                                        <li className="text-red-600 font-medium">Required skills: {event.volunteerSettings.requiredSkills.join(', ')}</li>
+                                        <li className="text-[#800000] font-medium">Required skills: {event.volunteerSettings.requiredSkills.join(', ')}</li>
                                     )}
-                                    {event.volunteerSettings.departmentRestrictionType === 'specific' && Array.isArray(event.volunteerSettings.allowedDepartments) && event.volunteerSettings.allowedDepartments.length > 0 && (
-                                        <li>Allowed departments: {event.volunteerSettings.allowedDepartments.join(', ')}</li>
+                                    {event.volunteerSettings.departmentRestrictionType === 'specific' && event.volunteerSettings.allowedDepartments?.length > 0 && (
+                                        <li>Departments: {event.volunteerSettings.allowedDepartments.join(', ')}</li>
                                     )}
-                                    {event.volunteerSettings.notes && (<li>{event.volunteerSettings.notes}</li>)}
+                                    {event.volunteerSettings.notes && <li>{event.volunteerSettings.notes}</li>}
                                 </ul>
                             </div>
                         )}
-                        
-                        {/* Time Schedule Requirements */}
-                        {event?.volunteerSettings?.dailySchedule && event.volunteerSettings.dailySchedule.length > 0 && (
-                            <div className="mb-4 text-sm text-gray-600 bg-blue-50 border border-blue-200 p-3 rounded-lg">
-                                <p className="font-semibold text-blue-800 mb-2 flex items-center">
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Volunteer Time Schedule
-                                </p>
-                                <div className="space-y-2">
-                                    {event.volunteerSettings.dailySchedule.map((schedule, index) => {
-                                        const scheduleDate = new Date(schedule.date)
-                                        const isMultiDay = event.volunteerSettings.dailySchedule.length > 1
-                                        const dayLabel = isMultiDay 
-                                            ? scheduleDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-                                            : 'Event Day'
-                                        
-                                        return (
-                                            <div key={index} className="bg-white rounded p-2 border border-blue-100">
-                                                <p className="font-medium text-blue-900 text-xs mb-1">{dayLabel}</p>
-                                                <p className="text-xs text-gray-700">
-                                                    <span className="font-medium">Time In:</span> {schedule.timeIn || '08:00'} | 
-                                                    <span className="font-medium ml-1">Time Out:</span> {schedule.timeOut || '17:00'}
-                                                </p>
-                                                {schedule.notes && (
-                                                    <p className="text-xs text-gray-600 mt-1 italic">{schedule.notes}</p>
-                                                )}
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <p className="text-xs text-blue-700 mt-2 italic">
-                                    {event.volunteerSettings.dailySchedule.length > 1 
-                                        ? 'Volunteers must check in/out for each day. Evaluation form will be available after each day\'s time out.'
-                                        : 'After time out, you will be asked to complete an evaluation form to finalize your volunteer hours.'}
-                                </p>
+
+                        {event?.volunteerSettings?.dailySchedule?.length > 0 && (
+                            <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700">
+                                <p className="font-medium text-gray-900 mb-1.5">Schedule</p>
+                                {event.volunteerSettings.dailySchedule.map((schedule, i) => {
+                                    const d = new Date(schedule.date)
+                                    const label = event.volunteerSettings.dailySchedule.length > 1 ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Event day'
+                                    return (
+                                        <div key={i} className="mb-1 last:mb-0"> {label}: {schedule.timeIn || '08:00'} – {schedule.timeOut || '17:00'}</div>
+                                    )
+                                })}
                             </div>
                         )}
-                        
+
                         <form onSubmit={(e) => { e.preventDefault(); submitJoin(); }} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Skills <span className="text-red-500">*</span>
-                                    <span className="text-xs text-gray-500 font-normal ml-1">(comma separated)</span>
-                                </label>
-                                <input 
-                                    type="text" 
-                                    value={joinForm.skills} 
-                                    onChange={e => setJoinForm({ ...joinForm, skills: e.target.value })} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" 
-                                    placeholder="e.g., First Aid, Logistics, Communication"
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Skills <span className="text-red-500">*</span></label>
+                                <input
+                                    type="text"
+                                    value={joinForm.skills}
+                                    onChange={e => setJoinForm({ ...joinForm, skills: e.target.value })}
+                                    className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent"
+                                    placeholder="e.g. First Aid, Logistics (comma separated)"
                                     required
                                 />
-                                <p className="text-xs text-gray-500 mt-1">List your relevant skills or experience</p>
                             </div>
-                            
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Additional Notes
-                                    <span className="text-xs text-gray-500 font-normal ml-1">(optional)</span>
-                                </label>
-                                <textarea 
-                                    rows={4} 
-                                    value={joinForm.additionalNotes} 
-                                    onChange={e => setJoinForm({ ...joinForm, additionalNotes: e.target.value })} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-900" 
-                                    placeholder="Tell us why you want to volunteer or any additional information..."
+                                <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional notes (optional)</label>
+                                <textarea
+                                    rows={3}
+                                    value={joinForm.additionalNotes}
+                                    onChange={e => setJoinForm({ ...joinForm, additionalNotes: e.target.value })}
+                                    className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-transparent resize-y"
+                                    placeholder="Why you want to volunteer..."
                                 />
                             </div>
-                            
-                            <div className="pt-2 flex space-x-3">
-                                <Button 
-                                    variant="ghostDark" 
-                                    className="flex-1" 
-                                    type="button"
-                                    onClick={() => {
-                                        setShowJoinModal(false)
-                                        setJoinForm({ skills: '', additionalNotes: '' })
-                                    }}
-                                >
+                            <div className="flex gap-3 pt-1">
+                                <button type="button" onClick={() => { setShowJoinModal(false); setJoinForm({ skills: '', additionalNotes: '' }); }} className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-50">
                                     Cancel
-                                </Button>
-                                <Button 
-                                    className="flex-1" 
-                                    type="submit"
-                                    disabled={isJoining || !joinForm.skills.trim()}
-                                >
-                                    {isJoining ? (
-                                        <>
-                                            <LoadingSpinner size="tiny" inline />
-                                            Registering...
-                                        </>
-                                    ) : (
-                                        'Register Now'
-                                    )}
-                                </Button>
+                                </button>
+                                <button type="submit" disabled={isJoining || !joinForm.skills.trim()} className="flex-1 py-2.5 rounded-lg text-sm font-semibold bg-[#800000] text-white hover:bg-[#9c0000] disabled:opacity-50 flex items-center justify-center gap-2">
+                                    {isJoining ? <><LoadingSpinner size="tiny" inline /> Registering...</> : 'Register'}
+                                </button>
                             </div>
                         </form>
                     </div>

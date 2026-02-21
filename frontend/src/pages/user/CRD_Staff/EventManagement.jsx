@@ -9,6 +9,7 @@ import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
 import { AppContent } from '../../../context/AppContext.jsx'
+import { stripHtml } from '../../../utils/stripHtml'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -487,13 +488,13 @@ const EventManagement = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Event Management</h1>
-                            <p className="text-gray-600 text-lg">Review and manage event proposals from departments</p>
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Event Management</h1>
+                            <p className="text-gray-600 text-base sm:text-lg">Review and manage event proposals from departments</p>
                         </div>
                         <div className="flex items-center space-x-4">
                         <Button
@@ -944,16 +945,9 @@ const EventManagement = () => {
 
                                             {/* Event Description */}
                                                     {event.description && (
-                                                        <div 
-                                                    className="text-sm text-gray-600 mb-4 line-clamp-3 flex-1"
-                                                            dangerouslySetInnerHTML={{ 
-                                                                __html: event.description
-                                                                    .replace(/&lt;/g, '<')
-                                                                    .replace(/&gt;/g, '>')
-                                                                    .replace(/&amp;/g, '&')
-                                                            .substring(0, 150) + (event.description.length > 150 ? '...' : '')
-                                                            }}
-                                                        />
+                                                        <p className="text-sm text-gray-600 mb-4 line-clamp-3 flex-1">
+                                                            {stripHtml(event.description).substring(0, 150)}{stripHtml(event.description).length > 150 ? '...' : ''}
+                                                        </p>
                                                     )}
                                                     
                                             {/* Event Details */}
@@ -1234,16 +1228,9 @@ const EventManagement = () => {
                                                 <td className="px-6 py-4">
                                                     <div className="text-sm font-semibold text-gray-900">{event.title}</div>
                                                     {event.description && (
-                                                        <div 
-                                                            className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-md"
-                                                            dangerouslySetInnerHTML={{ 
-                                                                __html: event.description
-                                                                    .replace(/&lt;/g, '<')
-                                                                    .replace(/&gt;/g, '>')
-                                                                    .replace(/&amp;/g, '&')
-                                                                    .substring(0, 100) + '...'
-                                                            }}
-                                                        />
+                                                        <p className="text-xs text-gray-500 mt-1 line-clamp-2 max-w-md">
+                                                            {stripHtml(event.description).substring(0, 100)}...
+                                                        </p>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -1622,15 +1609,9 @@ const EventManagement = () => {
                             <div className="bg-red-50 rounded-xl p-6 mb-6 border border-red-200">
                                 <h4 className="text-xl font-semibold text-red-900 mb-3">{selectedEvent.title}</h4>
                                 {selectedEvent.description && (
-                                    <div 
-                                        className="text-red-700 mb-4 prose prose-sm max-w-none"
-                                        dangerouslySetInnerHTML={{ 
-                                            __html: selectedEvent.description
-                                                .replace(/&lt;/g, '<')
-                                                .replace(/&gt;/g, '>')
-                                                .replace(/&amp;/g, '&')
-                                        }}
-                                    />
+                                    <p className="text-red-700 mb-4 prose prose-sm max-w-none whitespace-pre-wrap">
+                                        {stripHtml(selectedEvent.description)}
+                                    </p>
                                 )}
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -1796,17 +1777,9 @@ const EventManagement = () => {
 
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Description</h3>
-                                    <div 
-                                        className="prose max-w-none text-gray-700"
-                                        dangerouslySetInnerHTML={{ 
-                                            __html: selectedEvent.description 
-                                                ? selectedEvent.description
-                                                    .replace(/&lt;/g, '<')
-                                                    .replace(/&gt;/g, '>')
-                                                    .replace(/&amp;/g, '&')
-                                                : 'No description provided.'
-                                        }}
-                                    />
+                                    <p className="prose max-w-none text-gray-700 whitespace-pre-wrap">
+                                        {selectedEvent.description ? stripHtml(selectedEvent.description) : 'No description provided.'}
+                                    </p>
                                 </div>
                             </div>
 
@@ -2466,15 +2439,9 @@ const EventManagement = () => {
                                             <div>
                                                 <label className="text-sm font-medium text-gray-600">Description</label>
                                                 {selectedEvent.description && (
-                                                    <div 
-                                                        className="text-gray-900 prose prose-sm max-w-none"
-                                                        dangerouslySetInnerHTML={{ 
-                                                            __html: selectedEvent.description
-                                                                .replace(/&lt;/g, '<')
-                                                                .replace(/&gt;/g, '>')
-                                                                .replace(/&amp;/g, '&')
-                                                        }}
-                                                    />
+                                                    <p className="text-gray-900 prose prose-sm max-w-none whitespace-pre-wrap">
+                                                        {stripHtml(selectedEvent.description)}
+                                                    </p>
                                                 )}
                                             </div>
                                             <div>

@@ -111,70 +111,61 @@ const Reports = () => {
     const fetchAllData = async () => {
         try {
             setIsLoading(true)
-            
-            // Declare variables at function scope for use in fallback code
             let eventsData = []
             let donationsData = []
-            
-            // Fetch events with caching
-            try {
-                eventsData = await cachedGet('events', 'api/events', { forceRefresh: false })
-                setEvents(eventsData || [])
-            } catch (error) {
-                console.error('Error fetching events:', error)
+
+            // Fetch events, donations, in-kind, expenditures in parallel to reduce load time
+            const [eventsResult, donationsResult, inKindResult, expendituresResult] = await Promise.allSettled([
+                cachedGet('events', 'api/events', { forceRefresh: false }),
+                cachedGet('donations', 'api/donations/all', { forceRefresh: false }),
+                cachedGet('inKindDonations', 'api/in-kind-donations', { forceRefresh: false }),
+                cachedGet('expenditures', 'api/expenditures', { forceRefresh: false })
+            ])
+
+            if (eventsResult.status === 'fulfilled') {
+                eventsData = eventsResult.value || []
+                setEvents(eventsData)
+            } else {
+                console.error('Error fetching events:', eventsResult.reason)
                 setEvents([])
             }
-            
-            // Fetch donations with caching
-            try {
-                const donationsResponse = await cachedGet('donations', 'api/donations/all', { forceRefresh: false })
-                donationsData = donationsResponse?.donations || []
+            if (donationsResult.status === 'fulfilled') {
+                const res = donationsResult.value
+                donationsData = res?.donations || []
                 setDonations(donationsData)
-            } catch (error) {
-                console.error('Error fetching donations:', error)
+            } else {
+                console.error('Error fetching donations:', donationsResult.reason)
                 setDonations([])
             }
-            
-            // Fetch in-kind donations with caching
-            try {
-                const inKindResponse = await cachedGet('inKindDonations', 'api/in-kind-donations', { forceRefresh: false })
-                setInKindDonations(inKindResponse?.donations || [])
-            } catch (error) {
-                console.error('Error fetching in-kind donations:', error)
+            if (inKindResult.status === 'fulfilled') {
+                const res = inKindResult.value
+                setInKindDonations(res?.donations || [])
+            } else {
+                console.error('Error fetching in-kind donations:', inKindResult.reason)
                 setInKindDonations([])
             }
-            
-            // Fetch expenditures with caching
-            try {
-                const expendituresResponse = await cachedGet('expenditures', 'api/expenditures', { forceRefresh: false })
-                // Handle different response formats
-                if (expendituresResponse) {
-                    if (Array.isArray(expendituresResponse)) {
-                        setExpenditures(expendituresResponse)
-                    } else if (expendituresResponse.expenditures && Array.isArray(expendituresResponse.expenditures)) {
-                        setExpenditures(expendituresResponse.expenditures)
-                    } else if (expendituresResponse.success && Array.isArray(expendituresResponse.data)) {
-                        setExpenditures(expendituresResponse.data)
-                    } else {
-                        setExpenditures([])
-                    }
+            if (expendituresResult.status === 'fulfilled') {
+                const expendituresResponse = expendituresResult.value
+                if (Array.isArray(expendituresResponse)) {
+                    setExpenditures(expendituresResponse)
+                } else if (expendituresResponse?.expenditures && Array.isArray(expendituresResponse.expenditures)) {
+                    setExpenditures(expendituresResponse.expenditures)
+                } else if (expendituresResponse?.success && Array.isArray(expendituresResponse.data)) {
+                    setExpenditures(expendituresResponse.data)
                 } else {
                     setExpenditures([])
                 }
-            } catch (error) {
-                console.error('Error fetching expenditures:', error)
-                // Don't show error toast here as it's part of bulk data fetch
-                // User will see empty expenditures section if it fails
-                if (error.code === 'ERR_BLOCKED_BY_CLIENT') {
-                    console.warn('Expenditures request blocked by browser extension')
+            } else {
+                if (expendituresResult.reason?.code !== 'ERR_BLOCKED_BY_CLIENT') {
+                    console.error('Error fetching expenditures:', expendituresResult.reason)
                 }
                 setExpenditures([])
             }
-            
-            // Fetch event donations report
+
+            // Event donations report loads in background (non-blocking)
             fetchEventDonationsReport()
-            
-            // Fetch users (for demographics) - try multiple endpoints with caching
+
+            // Fetch users (for demographics) - uses eventsData/donationsData for fallback
             let usersData = []
             // Check if user has System Administrator role to access admin endpoints
             const userRole = userData?.role
@@ -1825,7 +1816,7 @@ const Reports = () => {
             
             <Header />
             
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200 no-print">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -2798,26 +2789,37 @@ const Reports = () => {
             </main>
 
             <>
-                {/* Expenditure Add/Edit Modal */}
+                {/* Expenditure Add/Edit Modal — blur backdrop, minimalist UI */}
                 {showExpenditureModal && (
-                <div className="fixed inset-0 bg-white bg-opacity-30 backdrop-blur-lg flex items-center justify-center z-[9999] p-4" onClick={() => {
-                    setShowExpenditureModal(false)
-                    resetExpenditureForm()
-                }}>
-                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto z-[10000]" onClick={(e) => e.stopPropagation()}>
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900">
+                <div
+                    className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
+                    onClick={() => {
+                        setShowExpenditureModal(false)
+                        resetExpenditureForm()
+                    }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="expenditure-modal-title"
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6 sm:p-8">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-5">
+                                <h2 id="expenditure-modal-title" className="text-xl font-semibold text-gray-900">
                                     {editingExpenditure ? 'Edit Expenditure' : 'Add New Expenditure'}
                                 </h2>
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         setShowExpenditureModal(false)
                                         resetExpenditureForm()
                                     }}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                    aria-label="Close"
                                 >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -2825,32 +2827,37 @@ const Reports = () => {
 
                             <form onSubmit={handleExpenditureSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Title *</label>
+                                    <label htmlFor="exp-title" className="block text-sm font-medium text-gray-700 mb-1.5">Title <span className="text-red-500">*</span></label>
                                     <input
+                                        id="exp-title"
                                         type="text"
                                         name="title"
                                         value={expenditureFormData.title}
                                         onChange={handleExpenditureInputChange}
                                         required
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                        placeholder="e.g. Event supplies, Transportation"
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                                    <label htmlFor="exp-description" className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                                     <textarea
+                                        id="exp-description"
                                         name="description"
                                         value={expenditureFormData.description}
                                         onChange={handleExpenditureInputChange}
                                         rows="3"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                        placeholder="Brief description of the expense..."
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400 resize-y"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Amount (₱) *</label>
+                                        <label htmlFor="exp-amount" className="block text-sm font-medium text-gray-700 mb-1.5">Amount (₱) <span className="text-red-500">*</span></label>
                                         <input
+                                            id="exp-amount"
                                             type="number"
                                             name="amount"
                                             value={expenditureFormData.amount}
@@ -2858,18 +2865,19 @@ const Reports = () => {
                                             required
                                             min="0"
                                             step="0.01"
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            placeholder="0.00"
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400"
                                         />
                                     </div>
-
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Category *</label>
+                                        <label htmlFor="exp-category" className="block text-sm font-medium text-gray-700 mb-1.5">Category <span className="text-red-500">*</span></label>
                                         <select
+                                            id="exp-category"
                                             name="category"
                                             value={expenditureFormData.category}
                                             onChange={handleExpenditureInputChange}
                                             required
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-gray-700"
                                         >
                                             {expenditureCategories.map(cat => (
                                                 <option key={cat} value={cat}>{cat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
@@ -2880,81 +2888,87 @@ const Reports = () => {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Method</label>
+                                        <label htmlFor="exp-payment" className="block text-sm font-medium text-gray-700 mb-1.5">Payment Method</label>
                                         <select
+                                            id="exp-payment"
                                             name="paymentMethod"
                                             value={expenditureFormData.paymentMethod}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-gray-700"
                                         >
                                             {paymentMethods.map(method => (
                                                 <option key={method} value={method}>{method.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>
                                             ))}
                                         </select>
                                     </div>
-
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Expense Date *</label>
+                                        <label htmlFor="exp-date" className="block text-sm font-medium text-gray-700 mb-1.5">Expense Date <span className="text-red-500">*</span></label>
                                         <input
+                                            id="exp-date"
                                             type="date"
                                             name="expenseDate"
                                             value={expenditureFormData.expenseDate}
                                             onChange={handleExpenditureInputChange}
                                             required
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] text-gray-700"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Receipt Number</label>
+                                        <label htmlFor="exp-receipt-no" className="block text-sm font-medium text-gray-700 mb-1.5">Receipt Number</label>
                                         <input
+                                            id="exp-receipt-no"
                                             type="text"
                                             name="receiptNumber"
                                             value={expenditureFormData.receiptNumber}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            placeholder="Optional"
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400"
                                         />
                                     </div>
-
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Receipt URL</label>
+                                        <label htmlFor="exp-receipt-url" className="block text-sm font-medium text-gray-700 mb-1.5">Receipt URL</label>
                                         <input
+                                            id="exp-receipt-url"
                                             type="url"
                                             name="receiptUrl"
                                             value={expenditureFormData.receiptUrl}
                                             onChange={handleExpenditureInputChange}
-                                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                            placeholder="https://..."
+                                            className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+                                    <label htmlFor="exp-notes" className="block text-sm font-medium text-gray-700 mb-1.5">Notes</label>
                                     <textarea
+                                        id="exp-notes"
                                         name="notes"
                                         value={expenditureFormData.notes}
                                         onChange={handleExpenditureInputChange}
                                         rows="2"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-1 focus:ring-[#800000] focus:outline-none focus:border-[#800000]"
+                                        placeholder="Any additional notes..."
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#800000] focus:border-[#800000] placeholder:text-gray-400 resize-y"
                                     />
                                 </div>
 
-                                <div className="flex justify-end gap-3 pt-4">
+                                <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setShowExpenditureModal(false)
                                             resetExpenditureForm()
                                         }}
-                                        className="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                        className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-[#800000] focus:ring-offset-1"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg hover:from-[#900000] hover:to-[#990000] transition-all duration-200 font-medium shadow-md"
+                                        className="px-4 py-2.5 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#9c0000] focus:ring-2 focus:ring-[#800000] focus:ring-offset-2"
                                     >
                                         {editingExpenditure ? 'Update' : 'Create'} Expenditure
                                     </button>

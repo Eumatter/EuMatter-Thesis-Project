@@ -66,8 +66,8 @@ const WalletStatus = () => {
 
     if (!walletStatus) {
         return (
-            <div className="bg-gray-50 min-h-screen py-12 px-4">
-                <div className="max-w-2xl mx-auto">
+            <div className="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto">
                     <div className="bg-white rounded-xl shadow-md p-8 text-center">
                         <FaExclamationTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Wallet Not Configured</h2>
@@ -87,8 +87,8 @@ const WalletStatus = () => {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen py-12 px-4">
-            <div className="max-w-4xl mx-auto">
+        <div className="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Wallet Status</h1>
                     <p className="text-gray-600">View your PayMongo wallet configuration status</p>

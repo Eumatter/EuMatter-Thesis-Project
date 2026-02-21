@@ -150,9 +150,9 @@ const Reactions = ({ eventId, initialReactions = {}, onReact, currentUserId }) =
     // Reset animation after a short delay
     setTimeout(() => setAnimatingReaction(null), 600);
 
-    // Call the parent handler
+    // Call the parent handler (pass null to remove, reaction type to add/switch)
     if (onReact) {
-      const result = await onReact(eventId, newReaction || reactionType);
+      const result = await onReact(eventId, newReaction);
       
       // If the API call failed, revert the optimistic update
       if (result === false) {

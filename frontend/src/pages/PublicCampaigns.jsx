@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppContent } from '../context/AppContext.jsx';
+import { stripHtml } from '../utils/stripHtml';
 import axios from 'axios';
 import { FaArrowLeft } from 'react-icons/fa';
 
@@ -117,7 +118,7 @@ const PublicCampaigns = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 font-poppins flex flex-col">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
             <section className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-10 sm:py-12 w-full">
@@ -389,14 +390,15 @@ const PublicCampaigns = () => {
                                     <div className="prose prose-sm sm:prose-base max-w-none">
                                         <div className="border-l-4 border-[#800000] pl-4 sm:pl-6">
                                             {activeCampaign.description ? (
-                                                <div 
+                                                <p 
                                                     className="text-gray-700 leading-relaxed"
-                                                    dangerouslySetInnerHTML={{ __html: activeCampaign.description }}
                                                     style={{
                                                         wordWrap: 'break-word',
                                                         overflowWrap: 'break-word'
                                                     }}
-                                                />
+                                                >
+                                                    {stripHtml(activeCampaign.description)}
+                                                </p>
                                             ) : (
                                                 <p className="text-gray-700 leading-relaxed">{activeCampaign.summary}</p>
                                             )}

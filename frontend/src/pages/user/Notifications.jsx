@@ -7,24 +7,17 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { AppContent } from '../../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { formatNotificationPayload, getNotificationIcon as getNotificationIconFromUtil, getNotificationColorClass } from '../../utils/notificationFormatter.js';
-import { 
-    FaBell, 
-    FaCheck, 
-    FaCheckCircle, 
-    FaTrash, 
+import NotificationIcon from '../../components/NotificationIcon.jsx';
+import {
+    FaBell,
+    FaCheck,
+    FaCheckCircle,
+    FaTrash,
     FaFilter,
     FaTimes,
-    FaEye,
     FaCalendarAlt,
-    FaHandHoldingHeart,
-    FaUsers,
-    FaFileAlt,
-    FaExclamationCircle,
-    FaInfoCircle,
-    FaCheckDouble,
     FaChevronRight,
-    FaArrowLeft
+    FaArrowLeft,
 } from 'react-icons/fa';
 
 const Notifications = () => {
@@ -106,8 +99,8 @@ const Notifications = () => {
         setFilteredNotifications(filtered);
     };
 
-    const handleMarkAsRead = async (notificationId, e) => {
-        e.stopPropagation();
+    const handleMarkAsRead = async (notificationId, e, silent = false) => {
+        if (e && e.stopPropagation) e.stopPropagation();
         try {
             axios.defaults.withCredentials = true;
             await axios.post(backendUrl + `api/notifications/${notificationId}/read`);
@@ -121,7 +114,7 @@ const Notifications = () => {
                 unread: Math.max(0, prev.unread - 1)
             }));
             
-            toast.success('Notification marked as read');
+            if (!silent) toast.success('Notification marked as read');
         } catch (error) {
             console.error('Error marking as read:', error);
             toast.error('Failed to mark as read');
@@ -169,23 +162,13 @@ const Notifications = () => {
     const handleNotificationClick = async (notification) => {
         setSelectedNotification(notification);
         setShowDetailModal(true);
-        
-        // Mark as read if unread
+        // Auto mark as read when opening (no toast)
         if (notification.unread) {
-            await handleMarkAsRead(notification.id, { stopPropagation: () => {} });
+            await handleMarkAsRead(notification.id, { stopPropagation: () => {} }, true);
         }
     };
 
-    const getNotificationIcon = (notification) => {
-        const notificationType = notification.payload?.type || 'system';
-        const icon = getNotificationIconFromUtil(notificationType);
-        return <span className="text-2xl">{icon}</span>;
-    };
-
-    const getNotificationColor = (notification) => {
-        const notificationType = notification.payload?.type || 'system';
-        return getNotificationColorClass(notificationType);
-    };
+    const getNotificationType = (notification) => notification.payload?.type || 'system';
 
     const formatTimeAgo = (dateString) => {
         if (!dateString) return '';
@@ -213,105 +196,44 @@ const Notifications = () => {
     };
 
     return (
-        <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-gray-50 to-white">
+        <div className="min-h-screen w-full overflow-x-hidden bg-gray-50">
             <Header />
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10 xl:px-12 py-8 sm:py-12">
-                {/* Header Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="mb-8"
-                >
-                    <div className="flex items-center justify-between mb-6">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                {/* Header Section - same style as Reports, Dashboard, Events, etc. */}
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-4">
                             <button
+                                type="button"
                                 onClick={() => navigate(-1)}
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+                                aria-label="Go back"
                             >
-                                <FaArrowLeft className="w-5 h-5 text-gray-700" />
+                                <FaArrowLeft className="w-5 h-5" />
                             </button>
                             <div>
-                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#800000] mb-2">
-                                    Notifications
-                                </h1>
-                                <p className="text-gray-600">
-                                    Stay updated with all your activities and interactions
-                                </p>
+                                <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Notifications</h1>
+                                <p className="text-gray-600 text-base sm:text-lg">Your activity updates</p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10 hover:border-[#800000]/20 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Total</p>
-                                    <p className="text-3xl font-bold text-[#800000]">{stats.total}</p>
-                                </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-[#800000] to-[#900000] rounded-xl flex items-center justify-center shadow-md">
-                                    <FaBell className="w-7 h-7 text-white" />
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-[#D4AF37]/20 hover:border-[#D4AF37]/30 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Unread</p>
-                                    <p className="text-3xl font-bold text-[#D4AF37]">{stats.unread}</p>
-                                </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-[#D4AF37] to-[#C9A227] rounded-xl flex items-center justify-center shadow-md">
-                                    <FaExclamationCircle className="w-7 h-7 text-white" />
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
-                            className="bg-white rounded-xl p-5 shadow-lg border-2 border-gray-200 hover:border-gray-300 transition-all duration-300"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">Read</p>
-                                    <p className="text-3xl font-bold text-gray-700">{stats.total - stats.unread}</p>
-                                </div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-md">
-                                    <FaCheckDouble className="w-7 h-7 text-white" />
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-
-                    {/* Filter and Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white rounded-xl p-5 shadow-lg border-2 border-[#800000]/10">
-                        <div className="flex items-center gap-3 flex-wrap">
-                            <div className="w-8 h-8 bg-gradient-to-br from-[#800000] to-[#900000] rounded-lg flex items-center justify-center">
-                                <FaFilter className="text-white w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-bold text-gray-700">Filter:</span>
+                <div className="mb-6">
+                    {/* Filter + Mark all read */}
+                    <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between bg-white rounded-xl p-4 border border-gray-200">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <FaFilter className="w-4 h-4 text-gray-500" />
                             {['all', 'unread', 'read'].map((f) => (
                                 <button
                                     key={f}
+                                    type="button"
                                     onClick={() => setFilter(f)}
-                                    className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 ${
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                         filter === f
-                                            ? 'bg-gradient-to-r from-[#800000] to-[#900000] text-white shadow-lg transform scale-105'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
+                                            ? 'bg-[#800000] text-white'
+                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                                 >
                                     {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -319,15 +241,16 @@ const Notifications = () => {
                             ))}
                         </div>
                         <button
+                            type="button"
                             onClick={handleMarkAllRead}
                             disabled={stats.unread === 0}
-                            className="px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 disabled:hover:shadow-md"
+                            className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                         >
-                            <FaCheckDouble />
-                            Mark All Read
+                            <FaCheck className="w-4 h-4" />
+                            Mark all read
                         </button>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* Notifications List */}
                 {isLoading ? (
@@ -335,152 +258,127 @@ const Notifications = () => {
                         <LoadingSpinner size="large" text="Loading notifications..." />
                     </div>
                 ) : filteredNotifications.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-20 bg-white rounded-xl shadow-lg border border-gray-100"
-                    >
-                        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <FaBell className="w-12 h-12 text-gray-400" />
+                    <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+                        <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                            <FaBell className="w-7 h-7 text-gray-400" />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">No notifications</h3>
-                        <p className="text-gray-600">
-                            {filter === 'all' 
-                                ? "You're all caught up! No notifications yet."
-                                : filter === 'unread'
-                                ? "No unread notifications."
-                                : "No read notifications."}
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">No notifications</h3>
+                        <p className="text-sm text-gray-500">
+                            {filter === 'all' ? "You're all caught up." : filter === 'unread' ? "No unread." : "No read."}
                         </p>
-                    </motion.div>
+                    </div>
                 ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         <AnimatePresence>
-                            {filteredNotifications.map((notification, index) => (
-                                <motion.div
-                                    key={notification.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, x: -20 }}
-                                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                                    onClick={() => handleNotificationClick(notification)}
-                                    className={`group relative bg-white rounded-xl p-5 shadow-lg border-2 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
-                                        notification.unread 
-                                            ? 'border-[#800000]/40 bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent' 
-                                            : 'border-gray-200'
-                                    }`}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        {/* Icon */}
-                                        <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${getNotificationColor(notification)} flex items-center justify-center text-white shadow-lg`}>
-                                            {getNotificationIcon(notification)}
-                                        </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-2 mb-1">
-                                                <h3 className={`font-bold text-base ${
-                                                    notification.unread ? 'text-gray-900' : 'text-gray-700'
-                                                }`}>
-                                                    {notification.title || 'Notification'}
-                                                </h3>
-                                                {notification.unread && (
-                                                    <span className="flex-shrink-0 w-2 h-2 bg-[#800000] rounded-full mt-2"></span>
-                                                )}
+                            {filteredNotifications.map((notification, index) => {
+                                const notifType = getNotificationType(notification);
+                                const isUnread = notification.unread;
+                                return (
+                                    <motion.div
+                                        key={notification.id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, x: -10 }}
+                                        transition={{ duration: 0.2, delay: index * 0.03 }}
+                                        onClick={() => handleNotificationClick(notification)}
+                                        className={`group flex items-start gap-3 rounded-xl p-4 border cursor-pointer transition-colors hover:bg-gray-50 ${
+                                            isUnread ? 'bg-[#800000]/5 border-[#800000]/20' : 'bg-white border-gray-200'
+                                        }`}
+                                    >
+                                        <NotificationIcon type={notifType} size="lg" />
+                                        <div className="flex-1 min-w-0 flex flex-col">
+                                            <div className="min-h-[4.25rem]">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <h3 className={`text-sm min-w-0 flex-1 ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>
+                                                        {notification.title || 'Notification'}
+                                                    </h3>
+                                                </div>
+                                                <p className={`text-sm line-clamp-2 mt-0.5 ${isUnread ? 'font-medium text-gray-700' : 'font-normal text-gray-500'}`}>
+                                                    {notification.message || 'No message'}
+                                                </p>
                                             </div>
-                                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                                                {notification.message || 'No message'}
-                                            </p>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs text-gray-500">
-                                                    {formatTimeAgo(notification.createdAt)}
+                                            <div className="flex items-center justify-between mt-2 gap-3 min-h-[1.25rem] flex-shrink-0">
+                                                <span className="text-xs text-gray-500 flex-shrink-0">{formatTimeAgo(notification.createdAt)}</span>
+                                                <span className={`text-xs font-semibold flex items-center gap-0.5 shrink-0 min-w-[5rem] w-20 justify-end text-right text-[#800000] ${!notification.payload?.eventId ? 'invisible' : ''}`} aria-hidden={!notification.payload?.eventId}>
+                                                    View event <FaChevronRight className="w-2.5 h-2.5 flex-shrink-0" />
                                                 </span>
-                                                {notification.payload?.eventId && (
-                                                    <span className="text-xs text-[#800000] font-medium flex items-center gap-1">
-                                                        View Event
-                                                        <FaChevronRight className="w-3 h-3" />
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
-
-                                        {/* Actions */}
-                                        <div className="flex-shrink-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {notification.unread && (
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity w-20 flex-shrink-0 justify-end">
+                                            {isUnread && (
                                                 <button
+                                                    type="button"
                                                     onClick={(e) => handleMarkAsRead(notification.id, e)}
-                                                    className="p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-700 transition-colors"
+                                                    className="p-2 rounded-lg hover:bg-gray-200 text-gray-600"
                                                     title="Mark as read"
                                                 >
                                                     <FaCheck className="w-4 h-4" />
                                                 </button>
                                             )}
                                             <button
+                                                type="button"
                                                 onClick={(e) => handleDelete(notification.id, e)}
-                                                className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors"
+                                                className="p-2 rounded-lg hover:bg-red-50 text-red-600"
                                                 title="Delete"
                                             >
                                                 <FaTrash className="w-4 h-4" />
                                             </button>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                    </motion.div>
+                                );
+                            })}
                         </AnimatePresence>
                     </div>
                 )}
             </main>
 
-            {/* Notification Detail Modal */}
+            {/* Detail modal — blur backdrop, minimalist; open = auto read; Delete bottom-right only */}
             <AnimatePresence>
                 {showDetailModal && selectedNotification && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+                        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm"
                         onClick={() => setShowDetailModal(false)}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="notification-modal-title"
                     >
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
+                            initial={{ scale: 0.98, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            exit={{ scale: 0.98, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+                            className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col"
                         >
-                            <div className={`p-6 bg-gradient-to-br ${getNotificationColor(selectedNotification)} text-white shadow-lg`}>
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center">
-                                            {getNotificationIcon(selectedNotification)}
-                                        </div>
-                                        <div>
-                                            <h2 className="text-2xl font-bold mb-1">
-                                                {selectedNotification.title || 'Notification'}
-                                            </h2>
-                                            <p className="text-white/90 text-sm">
-                                                {formatTimeAgo(selectedNotification.createdAt)}
-                                            </p>
-                                        </div>
+                            <div className="flex items-start justify-between gap-3 p-4 sm:p-5 border-b border-gray-100">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                                        <NotificationIcon type={getNotificationType(selectedNotification)} size="md" className="text-gray-600" />
                                     </div>
-                                    <button
-                                        onClick={() => setShowDetailModal(false)}
-                                        className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-                                    >
-                                        <FaTimes className="w-5 h-5" />
-                                    </button>
+                                    <div className="min-w-0">
+                                        <h2 id="notification-modal-title" className="text-base font-semibold text-gray-900 truncate">
+                                            {selectedNotification.title || 'Notification'}
+                                        </h2>
+                                        <p className="text-xs text-gray-500 mt-0.5">{formatTimeAgo(selectedNotification.createdAt)}</p>
+                                    </div>
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDetailModal(false)}
+                                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors flex-shrink-0"
+                                    aria-label="Close"
+                                >
+                                    <FaTimes className="w-5 h-5" />
+                                </button>
                             </div>
-
-                            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-                                <div className="mb-6">
-                                    <p className="text-gray-900 leading-relaxed text-base">
-                                        {selectedNotification.message || 'No message content'}
-                                    </p>
-                                </div>
-
-                                <div className="flex gap-3 pt-4 border-t">
+                            <div className="p-4 sm:p-5 overflow-y-auto flex-1 min-h-0">
+                                <p className="text-sm text-gray-700 leading-relaxed">{selectedNotification.message || 'No message content'}</p>
+                                <div className="flex flex-wrap gap-2 mt-4">
                                     {selectedNotification.payload?.type === 'volunteer_invitation' && selectedNotification.payload?.eventId && (
                                         <button
+                                            type="button"
                                             onClick={async () => {
                                                 try {
                                                     axios.defaults.withCredentials = true;
@@ -489,55 +387,39 @@ const Notifications = () => {
                                                         {},
                                                         { withCredentials: true }
                                                     );
-                                                    toast.success(response.data.message || 'Invitation accepted successfully');
-                                                    handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
+                                                    toast.success(response.data.message || 'Invitation accepted');
                                                     setShowDetailModal(false);
-                                                    fetchNotifications(); // Refresh notifications
-                                                    // Navigate to event details
+                                                    fetchNotifications();
                                                     navigate(`/user/events/${selectedNotification.payload.eventId}`);
                                                 } catch (error) {
                                                     console.error('Error accepting invitation:', error);
-                                                    toast.error(error.response?.data?.message || 'Failed to accept invitation');
+                                                    toast.error(error.response?.data?.message || 'Failed to accept');
                                                 }
                                             }}
-                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                                            className="px-3 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#9c0000] transition-colors flex items-center gap-2"
                                         >
-                                            <FaCheckCircle />
-                                            Accept Invitation
+                                            <FaCheckCircle className="w-4 h-4" /> Accept
                                         </button>
                                     )}
                                     {selectedNotification.payload?.eventId && selectedNotification.payload?.type !== 'volunteer_invitation' && (
                                         <button
+                                            type="button"
                                             onClick={() => handleNavigateFromPayload(selectedNotification.payload)}
-                                            className="flex-1 px-5 py-3 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                                            className="px-3 py-2 text-sm font-medium text-white bg-[#800000] rounded-lg hover:bg-[#9c0000] transition-colors flex items-center gap-2"
                                         >
-                                            <FaCalendarAlt />
-                                            View Event
+                                            <FaCalendarAlt className="w-4 h-4" /> View event
                                         </button>
                                     )}
-                                    {selectedNotification.unread && (
-                                        <button
-                                            onClick={() => {
-                                                handleMarkAsRead(selectedNotification.id, { stopPropagation: () => {} });
-                                                setShowDetailModal(false);
-                                            }}
-                                            className="px-5 py-3 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
-                                        >
-                                            <FaCheck />
-                                            Mark as Read
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => {
-                                            handleDelete(selectedNotification.id, { stopPropagation: () => {} });
-                                            setShowDetailModal(false);
-                                        }}
-                                        className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center gap-2"
-                                    >
-                                        <FaTrash />
-                                        Delete
-                                    </button>
                                 </div>
+                            </div>
+                            <div className="flex justify-end p-4 sm:p-5 pt-0 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => { handleDelete(selectedNotification.id, { stopPropagation: () => {} }); setShowDetailModal(false); }}
+                                    className="px-3 py-2 text-sm font-medium text-red-600 bg-white border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors flex items-center gap-2"
+                                >
+                                    <FaTrash className="w-4 h-4" /> Delete
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

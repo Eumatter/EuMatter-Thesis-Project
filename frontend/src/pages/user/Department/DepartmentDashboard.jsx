@@ -8,6 +8,7 @@ import Button from '../../../components/Button'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import api from '../../../utils/api'
+import { stripHtml } from '../../../utils/stripHtml'
 import Reactions from '../../../components/social/Reactions'
 import CommentModal from '../../../components/social/CommentModal'
 
@@ -407,11 +408,6 @@ const DepartmentDashboard = () => {
         return events.find(e => e._id === selectedEventId) || null;
     }, [events, selectedEventId]);
 
-    const stripHtml = (html) => {
-        if (!html) return ''
-        return String(html).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
-    }
-
     // Calendar state and helpers (matching UserDashboard style)
     const [today, setToday] = useState(new Date())
     const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(today)
@@ -425,7 +421,7 @@ const DepartmentDashboard = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 min-h-screen">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
                     {/* Left Column: Profile + Stats - Responsive like UserDashboard */}
                     <aside className="lg:col-span-3 space-y-6 text-[0.95rem] overflow-hidden">

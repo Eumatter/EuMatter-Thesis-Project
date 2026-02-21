@@ -238,7 +238,7 @@ const ResetPasswordPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col font-poppins relative overflow-x-hidden bg-white">
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-white">
             {/* Modern blur effect background layers */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-red-200/30 to-pink-200/30 rounded-full blur-3xl animate-pulse"></div>

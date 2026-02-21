@@ -1,16 +1,16 @@
 import React, { useContext, useState, useEffect } from 'react'
 import { AppContent } from '../../../context/AppContext'
+import { useCache } from '../../../context/CacheContext.jsx'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import Button from '../../../components/Button'
 import LoadingSpinner from '../../../components/LoadingSpinner'
-import axios from 'axios'
-import { toast } from 'react-toastify'
 
 const DepartmentLeaderboard = () => {
     const navigate = useNavigate()
     const { backendUrl } = useContext(AppContent)
+    const { cachedGet } = useCache()
     const [departments, setDepartments] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [filterPeriod, setFilterPeriod] = useState('all') // 'all', 'month', 'quarter', 'year'
@@ -37,160 +37,118 @@ const DepartmentLeaderboard = () => {
     const fetchLeaderboardData = async () => {
         try {
             setIsLoading(true)
-            axios.defaults.withCredentials = true
-            
+
+            // Fetch events and donations in parallel using cache (repeat visits are fast)
+            const [events, donationsPayload] = await Promise.all([
+                cachedGet('events', 'api/events', { forceRefresh: false }),
+                cachedGet('donations', 'api/donations/all', { forceRefresh: false }).catch(() => ({ donations: [] }))
+            ])
+
+            const eventsList = Array.isArray(events) ? events : []
+            const allDonations = donationsPayload?.donations || []
+
+            // Build eventId -> total donation amount map once (O(donations) instead of O(events * donations))
+            const eventDonationsMap = new Map()
+            for (const donation of allDonations) {
+                if (donation.status !== 'succeeded' && donation.status !== 'cash_completed') continue
+                const eventId = donation.event?._id?.toString() || donation.event?.toString()
+                if (!eventId) continue
+                const amount = parseFloat(donation.amount) || 0
+                eventDonationsMap.set(eventId, (eventDonationsMap.get(eventId) || 0) + amount)
+            }
+
             // Start with sample departments as baseline
             const departmentMap = new Map()
             sampleDepartments.forEach(dept => {
                 departmentMap.set(dept.id, { ...dept })
             })
-            
-            // Fetch all events
-            const eventsResponse = await axios.get(backendUrl + 'api/events')
-            const events = eventsResponse.data || []
-            
-            // Fetch all donations separately to get accurate donation amounts
-            let allDonations = []
-            try {
-                const donationsResponse = await axios.get(backendUrl + 'api/donations/all')
-                allDonations = donationsResponse.data?.donations || []
-            } catch (error) {
-                console.log('Could not fetch donations separately, using event donations')
-            }
-            
+
             // Filter events: Only events created by Department/Organization role users
-            // Also include community relations/extension services events if category is set
-            const filteredEvents = events.filter(event => {
+            const filteredEvents = eventsList.filter(event => {
                 if (!event.createdBy) return false
-                
-                // Check if created by Department/Organization role
                 const isDepartmentRole = event.createdBy.role === 'Department/Organization'
-                
-                // If eventCategory is set, only include community relations/extension services
-                // Otherwise, include all department events
                 if (event.eventCategory) {
-                    const isCommunityEvent = event.eventCategory === 'community_relations' || 
-                                            event.eventCategory === 'community_extension'
+                    const isCommunityEvent = event.eventCategory === 'community_relations' ||
+                        event.eventCategory === 'community_extension'
                     return isDepartmentRole && isCommunityEvent
                 }
-                
-                // If no category set, include all department events
                 return isDepartmentRole
             })
-            
+
             // Process real data and merge with sample data
-            filteredEvents.forEach(event => {
-                if (event.createdBy && event.createdBy._id) {
-                    const deptId = event.createdBy._id.toString()
-                    const deptName = event.createdBy.name || 'Unknown Department'
-                    const deptEmail = event.createdBy.email || ''
-                    
-                    // Only process if it's a Department/Organization role
-                    if (event.createdBy.role !== 'Department/Organization') {
-                        return // Skip non-department users
-                    }
-                    
-                    // Try to match with sample departments by name (check for acronym match)
-                    let matchedSampleId = null
-                    const deptNameUpper = deptName.toUpperCase()
-                    
-                    // Extract acronyms from sample departments and try to match
-                    for (const sample of sampleDepartments) {
-                        const sampleAcronym = sample.name.split(' - ')[0].toUpperCase() // e.g., "CED", "CAFA"
-                        // Check if department name contains the acronym or vice versa
-                        if (deptNameUpper.includes(sampleAcronym) || 
-                            sample.name.toUpperCase().includes(deptNameUpper.split(' - ')[0] || '')) {
-                            matchedSampleId = sample.id
-                            break
-                        }
-                    }
-                    
-                    // Use matched sample ID to update sample data, or create new entry with real ID
-                    const mapKey = matchedSampleId || deptId
-                    
-                    if (!departmentMap.has(mapKey)) {
-                        departmentMap.set(mapKey, {
-                            id: mapKey,
-                            name: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).name : deptName,
-                            email: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).email : deptEmail,
-                            events: 0,
-                            volunteers: 0,
-                            donations: 0,
-                            total: 0
-                        })
-                    }
-                    
-                    const dept = departmentMap.get(mapKey)
-                    
-                    // If matching a sample department, reset to use real data
-                    if (matchedSampleId) {
-                        // Check if this is the first real data for this sample department
-                        const sampleDept = sampleDepartments.find(s => s.id === matchedSampleId)
-                        // Reset only if still using sample values (first time updating)
-                        if (dept.events === sampleDept.events && dept.volunteers === sampleDept.volunteers && dept.donations === sampleDept.donations) {
-                            dept.events = 0
-                            dept.volunteers = 0
-                            dept.donations = 0
-                        }
-                    }
-                    
-                    // Count events
-                    dept.events += 1
-                    
-                    // Count volunteers from volunteerRegistrations (more accurate)
-                    if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
-                        // Count all registered volunteers (not just approved)
-                        const uniqueVolunteers = new Set()
-                        event.volunteerRegistrations.forEach(reg => {
-                            const userId = reg.user?._id?.toString() || reg.user?.toString()
-                            if (userId) {
-                                uniqueVolunteers.add(userId)
-                            }
-                        })
-                        dept.volunteers += uniqueVolunteers.size
-                    } else if (event.volunteers && Array.isArray(event.volunteers)) {
-                        // Fallback to old volunteers array
-                        dept.volunteers += event.volunteers.length
-                    }
-                    
-                    // Calculate donations from separate donations API (more accurate)
-                    const eventDonations = allDonations.filter(donation => {
-                        const donationEventId = donation.event?._id?.toString() || donation.event?.toString()
-                        const eventId = event._id?.toString() || event._id?.toString()
-                        return donationEventId === eventId && 
-                               (donation.status === 'succeeded' || donation.status === 'cash_completed')
-                    }).reduce((sum, donation) => {
-                        return sum + (parseFloat(donation.amount) || 0)
-                    }, 0)
-                    
-                    // Fallback to event.donations if separate API didn't work
-                    if (eventDonations === 0 && event.donations && Array.isArray(event.donations)) {
-                        const eventDonationsFallback = event.donations
-                            .filter(donation => donation.status === 'succeeded')
-                            .reduce((sum, donation) => {
-                                return sum + (parseFloat(donation.amount) || 0)
-                            }, 0)
-                        dept.donations += eventDonationsFallback
-                    } else {
-                        dept.donations += eventDonations
+            for (const event of filteredEvents) {
+                if (!event.createdBy || !event.createdBy._id) continue
+                if (event.createdBy.role !== 'Department/Organization') continue
+
+                const deptId = event.createdBy._id.toString()
+                const deptName = event.createdBy.name || 'Unknown Department'
+                const deptEmail = event.createdBy.email || ''
+                const eventId = event._id?.toString() || event._id?.toString()
+
+                let matchedSampleId = null
+                const deptNameUpper = deptName.toUpperCase()
+                for (const sample of sampleDepartments) {
+                    const sampleAcronym = sample.name.split(' - ')[0].toUpperCase()
+                    if (deptNameUpper.includes(sampleAcronym) ||
+                        sample.name.toUpperCase().includes(deptNameUpper.split(' - ')[0] || '')) {
+                        matchedSampleId = sample.id
+                        break
                     }
                 }
-            })
-            
-            // Calculate total score (weighted: events*1 + volunteers*0.5 + donations*0.01)
+
+                const mapKey = matchedSampleId || deptId
+                if (!departmentMap.has(mapKey)) {
+                    departmentMap.set(mapKey, {
+                        id: mapKey,
+                        name: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).name : deptName,
+                        email: matchedSampleId ? sampleDepartments.find(s => s.id === matchedSampleId).email : deptEmail,
+                        events: 0,
+                        volunteers: 0,
+                        donations: 0,
+                        total: 0
+                    })
+                }
+
+                const dept = departmentMap.get(mapKey)
+                if (matchedSampleId) {
+                    const sampleDept = sampleDepartments.find(s => s.id === matchedSampleId)
+                    if (dept.events === sampleDept.events && dept.volunteers === sampleDept.volunteers && dept.donations === sampleDept.donations) {
+                        dept.events = 0
+                        dept.volunteers = 0
+                        dept.donations = 0
+                    }
+                }
+
+                dept.events += 1
+
+                if (event.volunteerRegistrations && Array.isArray(event.volunteerRegistrations)) {
+                    const uniqueVolunteers = new Set()
+                    event.volunteerRegistrations.forEach(reg => {
+                        const userId = reg.user?._id?.toString() || reg.user?.toString()
+                        if (userId) uniqueVolunteers.add(userId)
+                    })
+                    dept.volunteers += uniqueVolunteers.size
+                } else if (event.volunteers && Array.isArray(event.volunteers)) {
+                    dept.volunteers += event.volunteers.length
+                }
+
+                let eventDonations = eventDonationsMap.get(eventId) || 0
+                if (eventDonations === 0 && event.donations && Array.isArray(event.donations)) {
+                    eventDonations = event.donations
+                        .filter(d => d.status === 'succeeded')
+                        .reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+                }
+                dept.donations += eventDonations
+            }
+
             const departmentsArray = Array.from(departmentMap.values()).map(dept => ({
                 ...dept,
                 total: (dept.events * 1) + (dept.volunteers * 0.5) + (dept.donations * 0.01)
             }))
-            
-            // Sort by total score
             departmentsArray.sort((a, b) => b.total - a.total)
-            
             setDepartments(departmentsArray)
         } catch (error) {
             console.error('Error fetching leaderboard data:', error)
-            // Don't show error toast - just use sample data
-            // Always show sample departments even on error
             setDepartments(sampleDepartments)
         } finally {
             setIsLoading(false)
@@ -239,7 +197,7 @@ const DepartmentLeaderboard = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Back Button - Top Left (Mobile/Tablet Only) */}
                 <div className="mb-4 lg:hidden">
                     <button
@@ -254,11 +212,11 @@ const DepartmentLeaderboard = () => {
                 </div>
 
                 {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">Leaderboards</h1>
-                            <p className="text-gray-600 text-lg">Recognizing top-performing departments and their contributions</p>
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Leaderboards</h1>
+                            <p className="text-gray-600 text-base sm:text-lg">Recognizing top-performing departments and their contributions</p>
                         </div>
                         <div className="flex flex-col sm:flex-row gap-3">
                             <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">

@@ -420,7 +420,7 @@ const Login = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col font-poppins relative overflow-x-hidden bg-white">
+        <div className="min-h-screen flex flex-col relative overflow-x-hidden bg-white">
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl animate-pulse"></div>
                 <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-pink-200/30 to-yellow-200/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>

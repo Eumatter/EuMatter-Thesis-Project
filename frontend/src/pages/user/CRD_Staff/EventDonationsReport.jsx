@@ -89,7 +89,7 @@ const EventDonationsReport = () => {
         return (
             <div className="min-h-screen bg-gray-50">
                 <Header />
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <LoadingSpinner size="large" text="Loading event donations report..." />
                 </main>
                 <Footer />
@@ -101,7 +101,7 @@ const EventDonationsReport = () => {
         <div className="min-h-screen bg-gray-50">
             <Header />
             
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Header Section */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200 no-print">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

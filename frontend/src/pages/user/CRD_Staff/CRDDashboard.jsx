@@ -71,25 +71,24 @@ const CRDDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setIsLoading(true)
-            
-            // Fetch events with caching
             let events = []
-            try {
-                const eventsData = await cachedGet('events', 'api/events', { forceRefresh: false })
-                events = eventsData || []
-            } catch (error) {
-                console.error('Error fetching events:', error)
-                // Continue with empty events array
-            }
-            
-            // Fetch donations with caching
             let donationsData = []
-            try {
-                const donationsResponse = await cachedGet('donations', 'api/donations/all', { forceRefresh: false })
-                donationsData = donationsResponse?.donations || []
-            } catch (error) {
-                console.error('Error fetching donations:', error)
-                // Continue with empty donations array
+
+            // Fetch events and donations in parallel to reduce load time
+            const [eventsResult, donationsResult] = await Promise.allSettled([
+                cachedGet('events', 'api/events', { forceRefresh: false }),
+                cachedGet('donations', 'api/donations/all', { forceRefresh: false })
+            ])
+            if (eventsResult.status === 'fulfilled') {
+                events = eventsResult.value || []
+            } else {
+                console.error('Error fetching events:', eventsResult.reason)
+            }
+            if (donationsResult.status === 'fulfilled') {
+                const res = donationsResult.value
+                donationsData = res?.donations || []
+            } else {
+                console.error('Error fetching donations:', donationsResult.reason)
             }
             setDonations(donationsData)
             
@@ -637,12 +636,12 @@ const CRDDashboard = () => {
         <div className="min-h-screen" style={{ backgroundColor: THEME_COLORS.whiteBg }}>
             <Header />
             
-            <main className="max-w-7xl mx-auto px-6 py-8">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header Section */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-200">
+                <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 sm:mb-8 border border-gray-200">
                     <div>
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Dashboard</h1>
-                        <p className="text-gray-600 text-lg">Overview of operations, events, donations, and volunteer activities</p>
+                        <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ backgroundImage: 'linear-gradient(to right, #800000, #900000)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Dashboard</h1>
+                        <p className="text-gray-600 text-base sm:text-lg">Overview of operations, events, donations, and volunteer activities</p>
                     </div>
                 </div>
 

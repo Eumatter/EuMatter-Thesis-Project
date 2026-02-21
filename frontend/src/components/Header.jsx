@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { AppContent } from '../context/AppContext.jsx';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { formatNotificationPayload, getNotificationIcon, getNotificationColorClass } from '../utils/notificationFormatter.js';
+import NotificationIcon from './NotificationIcon.jsx';
 import eumatterLogo from '../assets/eumatter_logo.png';
 import { 
     FaHome, 
@@ -408,7 +408,7 @@ const Header = () => {
                 </div>
             </div>
         )}
-        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md font-poppins backdrop-blur-sm overflow-visible`}>
+        <header className={`fixed ${showMaintenanceBanner ? 'top-12 sm:top-14' : 'top-0'} left-0 right-0 z-[100] bg-white/95 shadow-md backdrop-blur-sm overflow-visible`}>
             <div className="w-full px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-2.5 sm:py-3 md:py-4">
                 <div className="max-w-7xl mx-auto flex justify-between items-center gap-1.5 sm:gap-2">
                     {/* Left side - Logo and App Name */}
@@ -479,62 +479,52 @@ const Header = () => {
 								)}
 							</button>
 							{isBellOpen && (
-                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-2xl shadow-2xl border-2 border-[#800000]/10 z-[110] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden backdrop-blur-sm">
-									{/* Header with View All button in top right */}
-									<div className="px-4 py-3 bg-gradient-to-r from-[#800000] via-[#900000] to-[#800000] text-white flex items-center justify-between relative">
+                                <div className="fixed sm:absolute right-2 sm:right-0 mt-2 w-[calc(100vw-1rem)] sm:w-80 md:w-96 max-w-[calc(100vw-1rem)] sm:max-w-none bg-white rounded-xl shadow-xl border border-gray-200 z-[110] overflow-hidden">
+									{/* Header - minimal */}
+									<div className="px-4 py-3 bg-[#800000] text-white flex items-center justify-between">
 										<div className="flex items-center gap-2">
-											<div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-												<FaBell className="w-4 h-4" />
-											</div>
+											<NotificationIcon type="system" size="sm" className="!w-8 !h-8" />
 											<div>
-												<span className="text-sm font-bold block">Notifications</span>
+												<span className="text-sm font-semibold block">Notifications</span>
 												{unreadCount > 0 && (
-													<span className="text-xs text-white/90">
-														{unreadCount} {unreadCount === 1 ? 'new' : 'new'}
-													</span>
+													<span className="text-xs text-white/90">{unreadCount} new</span>
 												)}
 											</div>
 										</div>
 										<div className="flex items-center gap-2">
 											{unreadCount > 0 && (
-												<button 
-													className="text-xs px-2 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-all duration-200 backdrop-blur-sm" 
-													onClick={(e) => { 
-														e.stopPropagation(); 
-														markAllRead(); 
-													}}
+												<button
+													type="button"
+													className="text-xs px-2.5 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors"
+													onClick={(e) => { e.stopPropagation(); markAllRead(); }}
 												>
 													Mark all read
 												</button>
 											)}
 											<button
-												onClick={(e) => {
-													e.stopPropagation();
-													navigate('/notifications');
-													setIsBellOpen(false);
-												}}
-												className="text-xs px-3 py-1.5 bg-gradient-to-r from-[#D4AF37] to-[#C9A227] hover:from-[#C9A227] hover:to-[#B8941F] text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-1.5"
+												type="button"
+												onClick={(e) => { e.stopPropagation(); navigate('/notifications'); setIsBellOpen(false); }}
+												className="text-xs px-3 py-1.5 bg-white text-[#800000] rounded-lg font-semibold hover:bg-gray-100 transition-colors flex items-center gap-1.5"
 											>
 												<FaEye className="w-3 h-3" />
-												View All
+												View all
 											</button>
 										</div>
 									</div>
-									
-									{/* Notifications List */}
-									<div className="max-h-96 overflow-y-auto bg-gradient-to-b from-white to-gray-50/50">
+									{/* List */}
+									<div className="max-h-96 overflow-y-auto bg-gray-50/50">
 										{isLoadingNotifications && (
-											<div className="p-8 text-center">
-												<div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#800000] border-t-transparent"></div>
-												<p className="text-sm text-gray-600 mt-3 font-medium">Loading notifications...</p>
+											<div className="p-6 text-center">
+												<div className="inline-block w-8 h-8 border-2 border-[#800000] border-t-transparent rounded-full animate-spin" />
+												<p className="text-sm text-gray-500 mt-2">Loading...</p>
 											</div>
 										)}
 										{!isLoadingNotifications && notifications.length === 0 && (
-											<div className="p-8 text-center">
-												<div className="w-16 h-16 bg-gradient-to-br from-[#800000]/10 to-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-3">
-													<FaBell className="w-8 h-8 text-gray-400" />
+											<div className="p-6 text-center">
+												<div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center mx-auto mb-2">
+													<FaBell className="w-6 h-6 text-gray-400" />
 												</div>
-												<p className="text-sm font-semibold text-gray-700 mb-1">All caught up!</p>
+												<p className="text-sm font-medium text-gray-700">All caught up</p>
 												<p className="text-xs text-gray-500">No new notifications</p>
 											</div>
 										)}
@@ -543,59 +533,41 @@ const Header = () => {
 												if (!dateString) return '';
 												const date = new Date(dateString);
 												const now = new Date();
-												const diffInSeconds = Math.floor((now - date) / 1000);
-												if (diffInSeconds < 60) return 'Just now';
-												if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-												if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+												const diff = Math.floor((now - date) / 1000);
+												if (diff < 60) return 'Just now';
+												if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+												if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
 												return date.toLocaleDateString();
 											};
-											
 											const notificationType = n.payload?.type || 'system';
-											const icon = getNotificationIcon(notificationType);
-											const colorClass = getNotificationColorClass(notificationType);
-											
+											const isUnread = n.unread || n.read === false;
 											return (
-												<div 
-													key={n.id || n._id || idx} 
+												<div
+													key={n.id || n._id || idx}
+													role="button"
+													tabIndex={0}
 													onClick={() => handleNotificationClick(n)}
-													className={`px-4 py-3.5 border-b cursor-pointer transition-all duration-300 hover:shadow-md hover:bg-gradient-to-r hover:from-white hover:to-[#800000]/5 ${
-														n.unread || n.read === false 
-															? 'bg-gradient-to-r from-[#800000]/8 via-[#D4AF37]/5 to-transparent border-[#800000]/20' 
-															: 'bg-white border-gray-100'
-													}`}
+													onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(n); } }}
+													className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors hover:bg-white flex items-start gap-3 ${isUnread ? 'bg-[#800000]/5' : 'bg-white'}`}
 												>
-													<div className="flex items-start gap-3">
-														{/* Icon */}
-														<div className={`flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white shadow-md text-lg`}>
-															{icon}
+													<NotificationIcon type={notificationType} size="sm" />
+													<div className="flex-1 min-w-0">
+														<div className="flex items-start justify-between gap-2">
+															<h4 className={`text-sm leading-tight min-w-0 flex-1 pr-2 ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>
+																{n.title || 'Notification'}
+															</h4>
+															<span className={`flex-shrink-0 w-1.5 h-1.5 mt-1.5 rounded-full ${isUnread ? 'bg-[#800000]' : 'bg-transparent'}`} aria-hidden />
 														</div>
-														
-														{/* Content */}
-														<div className="flex-1 min-w-0">
-															<div className="flex items-start justify-between gap-2 mb-1">
-																<h4 className={`font-bold text-sm leading-tight ${
-																	n.unread || n.read === false ? 'text-gray-900' : 'text-gray-700'
-																}`}>
-																	{n.title || 'Notification'}
-																</h4>
-																{(n.unread || n.read === false) && (
-																	<div className="flex-shrink-0 w-2 h-2 bg-[#800000] rounded-full mt-1.5 animate-pulse"></div>
+														<p className={`text-xs line-clamp-2 mt-0.5 ${isUnread ? 'font-medium text-gray-700' : 'font-normal text-gray-500'}`}>{n.message || n.body || 'No message'}</p>
+														<div className="flex items-center justify-between mt-1 gap-2 min-h-[1.25rem]">
+															<span className="text-xs text-gray-500 flex-shrink-0">{formatTime(n.createdAt)}</span>
+															<span className="text-xs font-semibold flex items-center gap-0.5 shrink-0 w-20 justify-end text-[#800000]">
+																{n.payload?.eventId ? (
+																	<>View event <FaChevronRight className="w-2.5 h-2.5" /></>
+																) : (
+																	<span className="invisible" aria-hidden>View event</span>
 																)}
-															</div>
-															<p className="text-xs text-gray-600 line-clamp-2 mb-2 leading-relaxed">
-																{n.message || n.body || 'No message'}
-															</p>
-															<div className="flex items-center justify-between">
-																<span className="text-xs text-gray-500 font-medium">
-																	{formatTime(n.createdAt)}
-																</span>
-																{n.payload?.eventId && (
-																	<span className="text-xs text-[#800000] font-semibold flex items-center gap-1">
-																		View
-																		<FaChevronRight className="w-2.5 h-2.5" />
-																	</span>
-																)}
-															</div>
+															</span>
 														</div>
 													</div>
 												</div>

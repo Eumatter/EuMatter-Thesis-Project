@@ -53,7 +53,7 @@ const VolunteerHistory = () => {
         <div className="min-h-screen bg-[#f7f5f2]">
             <Header />
 
-            <main className="relative mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+            <main className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
                 <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#771010] via-[#8f2a2a] to-[#b3622c] px-6 pt-10 pb-12 sm:px-10 sm:pt-12 sm:pb-14 shadow-xl">
                     <div className="absolute inset-0 opacity-30 mix-blend-overlay" aria-hidden="true">
                         <div className="h-full w-full bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.25),_transparent_45%)]"></div>

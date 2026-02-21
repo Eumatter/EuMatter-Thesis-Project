@@ -1,14 +1,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 @import "tailwindcss";
 
-
+/* Poppins only - single font for the whole app. */
 @theme {
   --font-sans: "Poppins", sans-serif;
+  /* Consistent, responsive font-size scale (user-friendly, accessible) */
+  --text-xs: 0.75rem;      /* 12px - captions, labels */
+  --text-sm: 0.875rem;     /* 14px - secondary text */
+  --text-base: 1rem;       /* 16px - body (prevents zoom on iOS) */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: clamp(1.25rem, 2vw + 1rem, 1.5rem);   /* 20–24px responsive */
+  --text-3xl: clamp(1.5rem, 3vw + 1rem, 1.875rem);  /* 24–30px responsive */
+  --text-4xl: clamp(1.875rem, 4vw + 1rem, 2.25rem);  /* 30–36px responsive */
+  --text-5xl: clamp(2rem, 5vw + 1rem, 3rem);        /* 32–48px responsive */
+  --text-6xl: clamp(2.25rem, 6vw + 1rem, 3.75rem); /* 36–60px responsive */
+  --text-7xl: clamp(2.5rem, 7vw + 1rem, 4.5rem);   /* 40–72px responsive */
 }
 
-/* Safari viewport height fix */
+/* Safari viewport height fix + app font variable */
 :root {
   --vh: 1vh;
+  --font-app: "Poppins", sans-serif;
+}
+
+/* Poppins only - entire system. Applied to all elements so no fallback overrides. */
+html {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px; /* Consistent 1rem base; user-friendly and accessible across screen sizes */
 }
 
 /* Prevent horizontal scrolling globally */
@@ -16,6 +35,7 @@ html, body {
   overflow-x: hidden;
   max-width: 100%;
   width: 100%;
+  font-family: "Poppins", sans-serif;
   /* Safari specific fixes */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,6 +44,21 @@ html, body {
   -moz-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* Ensure Poppins everywhere: app, form elements, and rich text editor */
+#root,
+#root *,
+input,
+textarea,
+select,
+button,
+.ql-editor,
+.ql-container,
+.ql-editor p,
+.ql-editor span,
+.ql-editor div {
+  font-family: "Poppins", sans-serif !important;
 }
 
 /* Safari iOS specific fixes */
@@ -301,16 +336,12 @@ a:focus-visible {
   }
 }
 
-/* Improved text readability */
+/* Touch targets and inputs: 16px on mobile to prevent iOS zoom */
 @media (max-width: 768px) {
-  body {
-    font-size: 16px; /* Prevents zoom on iOS */
-  }
-  
   input,
   textarea,
   select {
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
   }
 }
 

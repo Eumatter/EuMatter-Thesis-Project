@@ -8,6 +8,18 @@ const router = express.Router();
 // Allowed reaction types
 const ALLOWED_REACTIONS = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
 
+// Ensure event.reactions has all keys as arrays (handles old docs or missing defaults)
+function ensureReactionsArrays(event) {
+    if (!event.reactions || typeof event.reactions !== 'object') {
+        event.reactions = {};
+    }
+    ALLOWED_REACTIONS.forEach(type => {
+        if (!Array.isArray(event.reactions[type])) {
+            event.reactions[type] = [];
+        }
+    });
+}
+
 // Add or update a reaction to an event
 router.post('/:eventId/react', userAuth, async (req, res) => {
     try {
@@ -25,16 +37,19 @@ router.post('/:eventId/react', userAuth, async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
+        ensureReactionsArrays(event);
+
         // Remove user's previous reaction if any
+        const userId = req.user._id;
         ALLOWED_REACTIONS.forEach(type => {
             event.reactions[type] = event.reactions[type].filter(
-                userId => !userId.equals(req.user._id)
+                id => id && !id.equals(userId)
             );
         });
 
-        // Add new reaction
-        if (!event.reactions[reactionType].includes(req.user._id)) {
-            event.reactions[reactionType].push(req.user._id);
+        // Add new reaction (avoid duplicates)
+        if (!event.reactions[reactionType].some(id => id.equals(userId))) {
+            event.reactions[reactionType].push(userId);
         }
 
         await event.save();
@@ -65,12 +80,14 @@ router.delete('/:eventId/react', userAuth, async (req, res) => {
             return res.status(404).json({ message: 'Event not found' });
         }
 
-        // Remove user from all reaction types
+        ensureReactionsArrays(event);
+
+        const userId = req.user._id;
         let removed = false;
         ALLOWED_REACTIONS.forEach(type => {
             const initialLength = event.reactions[type].length;
             event.reactions[type] = event.reactions[type].filter(
-                userId => !userId.equals(req.user._id)
+                id => id && !id.equals(userId)
             );
             if (initialLength !== event.reactions[type].length) {
                 removed = true;
@@ -89,6 +106,7 @@ router.delete('/:eventId/react', userAuth, async (req, res) => {
             reactionCounts[type] = event.reactions[type].length;
         });
         reactionCounts.total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
+        reactionCounts.userReaction = null;
 
         res.json({
             message: 'Reaction removed successfully',
@@ -112,7 +130,8 @@ router.get('/:eventId/reactions', async (req, res) => {
 
         const reactionCounts = {};
         ALLOWED_REACTIONS.forEach(type => {
-            reactionCounts[type] = event.reactions[type].length;
+            const arr = event.reactions?.[type];
+            reactionCounts[type] = Array.isArray(arr) ? arr.length : 0;
         });
         reactionCounts.total = Object.values(reactionCounts).reduce((a, b) => a + b, 0);
 
@@ -123,7 +142,8 @@ router.get('/:eventId/reactions', async (req, res) => {
                 const userId = decoded.id || decoded.userId;
                 if (userId) {
                     ALLOWED_REACTIONS.forEach(type => {
-                        if (event.reactions[type].some(id => id.toString() === userId.toString())) {
+                        const arr = event.reactions?.[type];
+                        if (Array.isArray(arr) && arr.some(id => id && id.toString() === userId.toString())) {
                             reactionCounts.userReaction = type;
                         }
                     });

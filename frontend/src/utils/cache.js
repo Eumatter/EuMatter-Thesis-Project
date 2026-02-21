@@ -44,6 +44,13 @@ const CACHE_CONFIG = {
     // Notifications - cache for 1 minute
     notifications: { ttl: 1 * 60 * 1000, persistent: false },
     
+    // Expenditures (CRD reports) - cache for 3 minutes
+    expenditures: { ttl: 3 * 60 * 1000, persistent: false },
+    
+    // In-kind donation settings / departments - cache for 10 minutes
+    inKindDonationSettings: { ttl: 10 * 60 * 1000, persistent: true },
+    departments: { ttl: 10 * 60 * 1000, persistent: true },
+    
     // Default - 5 minutes
     default: { ttl: DEFAULT_TTL, persistent: true }
 };
