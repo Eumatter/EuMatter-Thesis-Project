@@ -623,6 +623,26 @@ const CRDDashboard = () => {
     }
 
     const donationsChartData = getDonationsChartData()
+
+    // Y-axis scale based on actual donation data (so small amounts like ₱120 show correctly)
+    const donationsMaxAmount = donationsChartData.length
+        ? Math.max(...donationsChartData.map(d => Number(d.amount) || 0), 0)
+        : 0
+    const getNiceDomainMax = (max) => {
+        if (max <= 0) return 100
+        const order = Math.pow(10, Math.floor(Math.log10(max)))
+        const normalized = max / order
+        if (normalized <= 1) return order
+        if (normalized <= 2) return 2 * order
+        if (normalized <= 5) return 5 * order
+        return 10 * order
+    }
+    const donationsYDomainMax = getNiceDomainMax(donationsMaxAmount)
+    const donationsYAxisFormatter = (value) => {
+        if (value >= 1000) return `₱${(value / 1000).toFixed(0)}k`
+        return value === Math.round(value) ? `₱${Math.round(value)}` : `₱${value.toFixed(0)}`
+    }
+
     const usersChartData = getUsersChartData()
 
     // Prepare pie chart data
@@ -865,7 +885,7 @@ const CRDDashboard = () => {
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart
                                             data={donationsChartData}
-                                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                            margin={{ top: 10, right: 30, left: 36, bottom: 0 }}
                                             onClick={(e) => e.preventDefault()}
                                             style={{ outline: 'none' }}
                                         >
@@ -886,10 +906,11 @@ const CRDDashboard = () => {
                                                 height={donationFilter === 'weekly' ? 60 : 30}
                                             />
                                             <YAxis 
+                                                domain={[0, donationsYDomainMax]}
                                                 stroke="#6b7280"
                                                 style={{ fontSize: '12px', fontWeight: 500 }}
                                                 tick={{ fill: '#6b7280' }}
-                                                tickFormatter={(value) => `₱${(value / 1000).toFixed(0)}k`}
+                                                tickFormatter={donationsYAxisFormatter}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
                                             <Area

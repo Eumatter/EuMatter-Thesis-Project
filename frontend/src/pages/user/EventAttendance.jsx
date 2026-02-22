@@ -894,7 +894,7 @@ const EventAttendance = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+            <div className="min-h-screen bg-[#F5F5F5]">
                 <Header />
                 <div className="flex items-center justify-center min-h-[70vh]">
                     <LoadingSpinner size="large" text="Loading attendance..." />
@@ -906,20 +906,21 @@ const EventAttendance = () => {
 
     if (!event) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+            <div className="min-h-screen bg-[#F5F5F5]">
                 <Header />
-                <main className="max-w-4xl mx-auto px-6 py-12">
-                    <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-                        <div className="w-20 h-20 bg-white border-2 border-[#800000] rounded-full flex items-center justify-center mx-auto mb-6">
-                            <svg className="w-10 h-10 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                        <div className="w-16 h-16 bg-[#F5E6E8] border border-[#800000]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <svg className="w-8 h-8 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">Event Not Found</h1>
-                        <p className="text-gray-600 mb-8">The event you're looking for doesn't exist or you don't have access to it.</p>
-                        <button 
+                        <h1 className="text-xl font-bold text-gray-900 mb-2">Event Not Found</h1>
+                        <p className="text-sm text-gray-600 mb-6">The event doesn't exist or you don't have access.</p>
+                        <button
+                            type="button"
                             onClick={() => navigate('/user/events')}
-                            className="bg-gradient-to-r from-[#800000] to-[#a00000] text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                            className="px-5 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                         >
                             Back to Events
                         </button>
@@ -931,43 +932,36 @@ const EventAttendance = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+        <div className="min-h-screen bg-[#F5F5F5]">
             <Header />
-            
-            <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+            <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Pending Volunteer Feedback Section - First Priority */}
                 {(feedbackLoading || pendingFeedback) && (
                     <section id="pending-feedback-section" className="mb-6 sm:mb-8">
-                        <div className="bg-gradient-to-br from-white via-yellow-50/30 to-amber-50/50 rounded-2xl shadow-xl border-2 border-yellow-200/60 p-6 sm:p-8 relative overflow-hidden">
-                            {/* Decorative background elements */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-                            
-                            <div className="relative z-10">
-                                <div className="flex items-start justify-between gap-4 mb-6">
-                                    <div className="flex items-start gap-4 flex-1">
-                        <div className="w-14 h-14 bg-white border-2 border-[#800000] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                            <svg className="w-7 h-7 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h2 className="text-2xl sm:text-3xl font-bold text-[#800000] mb-2">Pending Volunteer Feedback</h2>
-                                            <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                                                Submit your feedback within the deadline to keep your volunteer hours valid.
-                                            </p>
-                                        </div>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
+                            <div className="flex items-start justify-between gap-4 mb-4 sm:mb-6">
+                                <div className="flex items-start gap-3 flex-1 min-w-0">
+                                    <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-4.215A2 2 0 0016.695 11H16V7a4 4 0 10-8 0v4h-.695a2 2 0 00-1.9 1.318L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
                                     </div>
-                                    {pendingFeedback && (
-                                        <span className={`text-xs sm:text-sm font-bold px-4 py-2 rounded-full shadow-sm ${
-                                            pendingFeedback.overdue 
-                                                ? 'bg-red-100 text-red-700 border-2 border-red-300' 
-                                                : 'bg-emerald-100 text-emerald-700 border-2 border-emerald-300'
-                                        }`}>
-                                            {pendingFeedback.overdue ? 'Overdue' : 'Pending'}
-                                        </span>
-                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <h2 className="text-lg sm:text-xl font-bold text-[#800000] mb-1">Pending Volunteer Feedback</h2>
+                                        <p className="text-sm text-gray-600">
+                                            Submit your feedback within the deadline to keep your volunteer hours valid.
+                                        </p>
+                                    </div>
                                 </div>
+                                {pendingFeedback && (
+                                    <span className={`text-xs font-medium px-3 py-1.5 rounded-lg flex-shrink-0 ${
+                                        pendingFeedback.overdue ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
+                                    }`}>
+                                        {pendingFeedback.overdue ? 'Overdue' : 'Pending'}
+                                    </span>
+                                )}
+                            </div>
 
                                 {feedbackLoading && (
                                     <div className="flex items-center justify-center gap-3 py-12">
@@ -988,18 +982,16 @@ const EventAttendance = () => {
                                     // Show warning if attendance not completed
                                     if (!isAttendanceComplete && !isAlreadySubmitted) {
                                         return (
-                                            <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-amber-200/60 p-6 sm:p-8 shadow-lg">
-                                                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-300 rounded-xl">
-                                                    <p className="text-sm text-amber-800 font-semibold flex items-center gap-2">
-                                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-4 sm:p-6">
+                                                <div className="mb-4 p-3 bg-amber-50 border border-amber-200/80 rounded-xl">
+                                                    <p className="text-sm text-amber-800 font-medium flex items-start gap-2">
+                                                        <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                                         </svg>
                                                         You need to complete your attendance (both Time In and Time Out) before submitting feedback. Please scan both QR codes first.
                                                     </p>
                                                 </div>
-                                                <div className="text-center py-4">
-                                                    <p className="text-gray-600">Complete your attendance to unlock the feedback form.</p>
-                                                </div>
+                                                <p className="text-center text-sm text-gray-600">Complete your attendance to unlock the feedback form.</p>
                                             </div>
                                         )
                                     }
@@ -1007,108 +999,84 @@ const EventAttendance = () => {
                                     // Show success message if already submitted
                                     if (isAlreadySubmitted) {
                                         return (
-                                            <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-green-200/60 p-6 sm:p-8 shadow-lg">
-                                                <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-xl">
-                                                    <p className="text-sm text-green-800 font-semibold flex items-center gap-2">
-                                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        Feedback has already been submitted for this attendance.
-                                                    </p>
-                                                </div>
+                                            <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 sm:p-6">
+                                                <p className="text-sm text-emerald-800 font-medium flex items-center gap-2">
+                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Feedback has already been submitted for this attendance.
+                                                </p>
                                             </div>
                                         )
                                     }
                                     
                                     // Show feedback form only if attendance is complete AND not already submitted
                                     return (
-                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl border-2 border-yellow-200/60 p-6 sm:p-8 shadow-lg">
-                                        
-                                        {/* Event Info */}
-                                        <div className="mb-6 pb-6 border-b-2 border-gray-100">
-                                            <h3 className="text-xl sm:text-2xl font-bold text-[#800000] mb-2">{event?.title || 'Event'}</h3>
-                                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                        <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-4 sm:p-6">
+                                        <div className="mb-5 pb-5 border-b border-gray-200">
+                                            <h3 className="text-lg font-bold text-[#800000] mb-2">{event?.title || 'Event'}</h3>
+                                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                                                 <div className="flex items-center gap-2">
-                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span>
-                                                        Attended on {new Date(pendingFeedback.date).toLocaleDateString(undefined, {
-                                                            year: 'numeric',
-                                                            month: 'long',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </span>
+                                                    <span>Attended on {new Date(pendingFeedback.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                                                 </div>
                                                 {pendingFeedback.deadlineAt && (
                                                     <div className="flex items-center gap-2">
-                                                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
-                                                        <span className={pendingFeedback.overdue ? 'text-red-600 font-semibold' : ''}>
-                                                            Deadline: {new Date(pendingFeedback.deadlineAt).toLocaleString(undefined, {
-                                                                year: 'numeric',
-                                                                month: 'long',
-                                                                day: 'numeric',
-                                                                hour: 'numeric',
-                                                                minute: '2-digit'
-                                                            })}
+                                                        <span className={pendingFeedback.overdue ? 'text-red-600 font-medium' : ''}>
+                                                            Deadline: {new Date(pendingFeedback.deadlineAt).toLocaleString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                                         </span>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Rating Section */}
-                                        <div className="mb-6">
-                                            <label className="block text-base sm:text-lg font-bold text-gray-900 mb-4">
-                                                Rate your experience <span className="text-red-500">*</span>
-                                            </label>
-                                            <div className="flex gap-3 sm:gap-4 justify-center sm:justify-start">
+                                        <div className="mb-5">
+                                            <label className="block text-sm font-semibold text-gray-900 mb-3">Rate your experience <span className="text-red-500">*</span></label>
+                                            <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
                                                 {[1, 2, 3, 4, 5].map(value => (
                                                     <button
                                                         key={value}
                                                         type="button"
                                                         onClick={() => handleFeedbackChange('rating', value)}
-                                                        className="focus:outline-none transform transition-all duration-200 hover:scale-125 active:scale-95"
+                                                        className="focus:outline-none transition hover:scale-110 active:scale-95"
                                                     >
                                                         <FaStar
-                                                            className={`w-10 h-10 sm:w-12 sm:h-12 transition-all duration-200 ${
-                                                                feedbackForm.rating >= value 
-                                                                    ? 'text-[#FFD700] fill-[#FFD700] drop-shadow-lg' 
-                                                                    : 'text-gray-300 hover:text-yellow-200'
+                                                            className={`w-9 h-9 sm:w-10 sm:h-10 transition ${
+                                                                feedbackForm.rating >= value ? 'text-amber-400 fill-amber-400' : 'text-gray-300 hover:text-amber-200'
                                                             }`}
                                                         />
                                                     </button>
                                                 ))}
                                             </div>
                                             {feedbackForm.rating > 0 && (
-                                                <p className="text-center sm:text-left mt-3 text-sm text-gray-600">
-                                                    {feedbackForm.rating === 5 && 'Excellent! ⭐⭐⭐⭐⭐'}
-                                                    {feedbackForm.rating === 4 && 'Great! ⭐⭐⭐⭐'}
-                                                    {feedbackForm.rating === 3 && 'Good! ⭐⭐⭐'}
-                                                    {feedbackForm.rating === 2 && 'Fair ⭐⭐'}
-                                                    {feedbackForm.rating === 1 && 'Poor ⭐'}
+                                                <p className="mt-2 text-sm text-gray-600">
+                                                    {feedbackForm.rating === 5 && 'Excellent'}
+                                                    {feedbackForm.rating === 4 && 'Great'}
+                                                    {feedbackForm.rating === 3 && 'Good'}
+                                                    {feedbackForm.rating === 2 && 'Fair'}
+                                                    {feedbackForm.rating === 1 && 'Poor'}
                                                 </p>
                                             )}
                                         </div>
 
-                                        {/* Feedback Comment Section */}
-                                        <div className="mb-6">
-                                            <label className="block text-base sm:text-lg font-bold text-gray-900 mb-3">
-                                                Feedback <span className="text-red-500">*</span>
-                                            </label>
+                                        <div className="mb-5">
+                                            <label className="block text-sm font-semibold text-gray-900 mb-2">Feedback <span className="text-red-500">*</span></label>
                                             <div className="relative">
                                                 <textarea
                                                     rows={5}
                                                     value={feedbackForm.comment}
                                                     onChange={(e) => handleFeedbackChange('comment', e.target.value)}
-                                                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm sm:text-base focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] outline-none resize-none transition-all duration-200 bg-white/90"
+                                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] outline-none resize-none transition bg-white"
                                                     placeholder="Share highlights, challenges, or suggestions about your volunteer experience..."
                                                     maxLength={2000}
                                                     required
                                                 />
-                                                <div className="absolute bottom-3 right-3 text-xs text-gray-400 bg-white/80 px-2 py-1 rounded">
+                                                <div className="absolute bottom-3 right-3 text-xs text-gray-400 bg-white/90 px-2 py-1 rounded">
                                                     {feedbackForm.comment.length}/2000
                                                 </div>
                                             </div>
@@ -1117,11 +1085,11 @@ const EventAttendance = () => {
                                             )}
                                         </div>
 
-                                        {/* Submit Button */}
                                         <button
+                                            type="button"
                                             onClick={handleSubmitFeedback}
                                             disabled={submittingFeedback || !feedbackForm.rating || !feedbackForm.comment || feedbackForm.comment.trim().length === 0}
-                                            className="w-full bg-gradient-to-r from-[#800000] to-[#a00000] text-white px-8 py-4 rounded-xl font-bold text-base sm:text-lg hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-3"
+                                            className="w-full bg-[#800000] text-white px-4 py-3 rounded-xl font-medium text-sm hover:bg-[#6b0000] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                             title={
                                                 submittingFeedback ? 'Submitting...' :
                                                 !feedbackForm.rating ? 'Please select a rating' :
@@ -1131,26 +1099,26 @@ const EventAttendance = () => {
                                         >
                                             {submittingFeedback ? (
                                                 <>
-                                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                    <span>Submitting...</span>
+                                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                    Submitting...
                                                 </>
                                             ) : (
                                                 <>
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                     </svg>
-                                                    <span>Submit Feedback</span>
+                                                    Submit Feedback
                                                 </>
                                             )}
                                         </button>
 
                                         {pendingFeedback.overdue && (
-                                            <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-                                                <p className="text-sm text-amber-700 font-semibold flex items-center gap-2">
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="mt-4 p-3 bg-amber-50 border border-amber-200/80 rounded-xl">
+                                                <p className="text-sm text-amber-700 font-medium flex items-center gap-2">
+                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    Note: The original feedback deadline has passed, but you can still submit your feedback anytime.
+                                                    The original deadline has passed, but you can still submit your feedback anytime.
                                                 </p>
                                             </div>
                                         )}
@@ -1160,8 +1128,8 @@ const EventAttendance = () => {
 
                                 {!feedbackLoading && !pendingFeedback && (
                                     <div className="text-center py-8">
-                                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
+                                            <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                             </svg>
                                         </div>
@@ -1169,121 +1137,91 @@ const EventAttendance = () => {
                                     </div>
                                 )}
                             </div>
-                        </div>
                     </section>
                 )}
 
                 {/* Header Section */}
-                <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                    <div className="flex items-center justify-between flex-wrap gap-4">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={() => navigate(`/user/events/${eventId}`)}
-                                className="p-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all duration-200 hover:scale-105 active:scale-95"
-                            >
-                                <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                </svg>
-                            </button>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">Event Attendance</h1>
-                                <p className="text-lg font-semibold text-[#800000]">{event.title}</p>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    {new Date(event.startDate).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
-                                    })} - {new Date(event.endDate).toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric', 
-                                        year: 'numeric' 
-                                    })}
-                                </p>
-                            </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/user/events/${eventId}`)}
+                            className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[#800000] transition"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="min-w-0 flex-1">
+                            <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight">Event Attendance</h1>
+                            <p className="font-medium text-gray-900 truncate">{event.title}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                {new Date(event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {' – '}
+                                {new Date(event.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Attendance Status Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2 sm:gap-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                    <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <span className="text-lg sm:text-xl">Attendance Status</span>
+                        Attendance Status
                     </h2>
-                    
-                    <div className="space-y-4">
-                        {/* Time In Status */}
-                        <div className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 ${
-                            attendanceStatus === 'timeout' || attendanceStatus === 'completed' 
-                                ? 'bg-green-50 border-green-300' 
-                                : 'bg-gray-50 border-gray-200'
+                    <div className="space-y-3">
+                        <div className={`flex items-center justify-between p-4 rounded-xl border transition ${
+                            attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'bg-emerald-50/80 border-emerald-100' : 'bg-gray-50/80 border-gray-100'
                         }`}>
-                            <div className="flex items-center gap-3 sm:gap-4">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border-2 flex-shrink-0 ${
-                                    attendanceStatus === 'timeout' || attendanceStatus === 'completed'
-                                        ? 'bg-white border-[#800000]'
-                                        : 'bg-white border-gray-400'
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                    attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'bg-[#F5E6E8] border border-[#800000]/10' : 'bg-gray-100 border border-gray-200'
                                 }`}>
-                                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-5 h-5 ${attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p className="font-semibold text-gray-900">Time In</p>
+                                    <p className="font-medium text-gray-900">Time In</p>
                                     {attendanceData?.checkInTime && (
-                                        <p className="text-sm text-gray-600">
-                                            {new Date(attendanceData.checkInTime).toLocaleString()}
-                                        </p>
+                                        <p className="text-sm text-gray-600">{new Date(attendanceData.checkInTime).toLocaleString()}</p>
                                     )}
                                 </div>
                             </div>
-                            <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                                attendanceStatus === 'timeout' || attendanceStatus === 'completed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-gray-200 text-gray-600'
+                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                                attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
                             }`}>
                                 {attendanceStatus === 'timeout' || attendanceStatus === 'completed' ? '✓ Completed' : 'Pending'}
                             </span>
                         </div>
-                        
-                        {/* Time Out Status */}
-                        <div className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all duration-300 ${
-                            attendanceStatus === 'completed'
-                                ? 'bg-green-50 border-green-300'
-                                : 'bg-gray-50 border-gray-200'
+                        <div className={`flex items-center justify-between p-4 rounded-xl border transition ${
+                            attendanceStatus === 'completed' ? 'bg-emerald-50/80 border-emerald-100' : 'bg-gray-50/80 border-gray-100'
                         }`}>
-                            <div className="flex items-center gap-3 sm:gap-4">
-                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border-2 flex-shrink-0 ${
-                                    attendanceStatus === 'completed'
-                                        ? 'bg-white border-[#800000]'
-                                        : 'bg-white border-gray-400'
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                    attendanceStatus === 'completed' ? 'bg-[#F5E6E8] border border-[#800000]/10' : 'bg-gray-100 border border-gray-200'
                                 }`}>
-                                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-5 h-5 ${attendanceStatus === 'completed' ? 'text-[#800000]' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                     </svg>
                                 </div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-gray-900">Time Out</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-gray-900">Time Out</p>
                                     {attendanceData?.checkOutTime && (
-                                        <p className="text-sm text-gray-600">
-                                            {new Date(attendanceData.checkOutTime).toLocaleString()}
-                                        </p>
+                                        <p className="text-sm text-gray-600">{new Date(attendanceData.checkOutTime).toLocaleString()}</p>
                                     )}
                                     {!attendanceData?.checkOutTime && exceptionRequest && (
-                                        <div className="mt-2">
+                                        <div className="mt-1">
                                             {exceptionRequest.status === 'pending' && (
-                                                <p className="text-sm text-amber-600 font-medium">
-                                                    Exception request pending review
-                                                </p>
+                                                <p className="text-sm text-amber-600 font-medium">Exception request pending review</p>
                                             )}
                                             {exceptionRequest.status === 'approved' && (
-                                                <p className="text-sm text-green-600 font-medium">
-                                                    Exception request approved
-                                                </p>
+                                                <p className="text-sm text-emerald-600 font-medium">Exception request approved</p>
                                             )}
                                             {exceptionRequest.status === 'rejected' && (
                                                 <p className="text-sm text-red-600 font-medium">
@@ -1295,42 +1233,33 @@ const EventAttendance = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                 {!attendanceData?.checkOutTime && !exceptionRequest && attendanceStatus === 'timeout' && attendanceData?._id && (
                                     <button
+                                        type="button"
                                         onClick={() => setShowExceptionModal(true)}
-                                        className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white border-2 border-[#800000] text-[#800000] rounded-lg font-semibold text-xs sm:text-sm hover:bg-[#800000] hover:text-white transition-all duration-200"
+                                        className="px-3 py-2 text-sm font-medium text-[#800000] border border-[#800000]/30 rounded-xl hover:bg-[#F5E6E8] transition"
                                     >
                                         Request Exception
                                     </button>
                                 )}
-                                <span className={`px-4 py-2 rounded-lg font-semibold text-sm ${
-                                    attendanceStatus === 'completed'
-                                        ? 'bg-green-100 text-green-800'
-                                        : 'bg-gray-200 text-gray-600'
+                                <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                                    attendanceStatus === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
                                 }`}>
                                     {attendanceStatus === 'completed' ? '✓ Completed' : 'Pending'}
                                 </span>
                             </div>
                         </div>
-
-                        {/* Hours Worked */}
                         {attendanceData?.hoursWorked && (
-                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-5">
-                                <div className="flex items-center justify-between flex-wrap gap-3 sm:gap-4">
-                                    <div className="flex items-center gap-3 sm:gap-4">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-gray-900">Hours Worked</p>
-                                            <p className="text-2xl font-bold text-[#800000]">
-                                                {attendanceData.hoursWorked.toFixed(2)} hours
-                                            </p>
-                                        </div>
-                                    </div>
+                            <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600">Hours Worked</p>
+                                    <p className="text-xl font-bold text-[#800000]">{attendanceData.hoursWorked.toFixed(2)} hours</p>
                                 </div>
                             </div>
                         )}
@@ -1340,39 +1269,37 @@ const EventAttendance = () => {
                 {/* Time In Recording Section */}
                 {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
                  attendanceStatus !== 'timeout' && attendanceStatus !== 'completed' && (
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <span className="text-base sm:text-xl">Record Time In</span>
+                            Record Time In
                         </h2>
-                        
                         <div className="space-y-4">
-                            {/* QR Scanner Option */}
-                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-6">
+                            <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 sm:p-5">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-[#800000] text-sm sm:text-base">Scan QR Code</h3>
-                                            <p className="text-xs sm:text-sm text-gray-700">Use your camera to scan the QR code</p>
+                                            <h3 className="font-semibold text-[#800000] text-sm">Scan QR Code</h3>
+                                            <p className="text-xs text-gray-600">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => startScanning('timein')}
                                         disabled={processing || (scanning && activeScanner === 'timein')}
-                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-[#6b0000] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {scanning && activeScanner === 'timein' ? (
                                             <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                                 Scanning...
                                             </>
                                         ) : (
@@ -1385,38 +1312,6 @@ const EventAttendance = () => {
                                         )}
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* Image Upload Option */}
-                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl p-4 sm:p-6">
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-bold text-[#800000] text-sm sm:text-base">Upload QR Image</h3>
-                                        <p className="text-xs sm:text-sm text-gray-700">Upload an image containing the QR code</p>
-                                    </div>
-                                </div>
-                                <input
-                                    ref={timeInFileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => handleImageUpload(e, 'timein')}
-                                    className="hidden"
-                                    id="timein-image-upload"
-                                />
-                                <label
-                                    htmlFor="timein-image-upload"
-                                    className="w-full bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
-                                >
-                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    Upload Image
-                                </label>
                             </div>
                         </div>
                     </div>
@@ -1425,39 +1320,37 @@ const EventAttendance = () => {
                 {/* Time Out Recording Section */}
                 {(event.status === 'Ongoing' || event.status === 'Approved' || event.status === 'Upcoming') && 
                  attendanceStatus === 'timeout' && (
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-6">
-                        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
                             </div>
-                            <span className="text-base sm:text-xl">Record Time Out</span>
+                            Record Time Out
                         </h2>
-                        
                         <div className="space-y-4">
-                            {/* QR Scanner Option */}
-                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-[#800000] rounded-xl p-4 sm:p-6">
+                            <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 sm:p-5">
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                             </svg>
                                         </div>
                                         <div>
-                                            <h3 className="font-bold text-[#800000] text-sm sm:text-base">Scan QR Code</h3>
-                                            <p className="text-xs sm:text-sm text-gray-700">Use your camera to scan the QR code</p>
+                                            <h3 className="font-semibold text-[#800000] text-sm">Scan QR Code</h3>
+                                            <p className="text-xs text-gray-600">Use your camera to scan the QR code</p>
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => startScanning('timeout')}
                                         disabled={processing || (scanning && activeScanner === 'timeout')}
-                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-[#800000] text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-[#6b0000] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {scanning && activeScanner === 'timeout' ? (
                                             <>
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                                                 Scanning...
                                             </>
                                         ) : (
@@ -1471,18 +1364,16 @@ const EventAttendance = () => {
                                     </button>
                                 </div>
                             </div>
-
-                            {/* Image Upload Option */}
-                            <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-300 rounded-xl p-4 sm:p-6">
+                            <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4 sm:p-5">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white border-2 border-[#800000] rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-bold text-[#800000] text-sm sm:text-base">Upload QR Image</h3>
-                                        <p className="text-xs sm:text-sm text-gray-700">Upload an image containing the QR code</p>
+                                        <h3 className="font-semibold text-[#800000] text-sm">Upload QR Image</h3>
+                                        <p className="text-xs text-gray-600">Upload an image containing the QR code</p>
                                     </div>
                                 </div>
                                 <input
@@ -1495,9 +1386,9 @@ const EventAttendance = () => {
                                 />
                                 <label
                                     htmlFor="timeout-image-upload"
-                                    className="w-full bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 cursor-pointer"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[#800000]/30 text-[#800000] font-medium text-sm hover:bg-[#F5E6E8] transition cursor-pointer"
                                 >
-                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
                                     Upload Image
@@ -1510,26 +1401,27 @@ const EventAttendance = () => {
                 {/* Exception Request Modal */}
                 {showExceptionModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                            <div className="p-6 border-b border-gray-200">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-2xl font-bold text-gray-900">Request Exception for Missed Time-Out</h3>
+                                    <h3 className="text-xl font-bold text-gray-900">Request Exception for Missed Time-Out</h3>
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setShowExceptionModal(false)
                                             setExceptionReason('')
                                         }}
-                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                        className="p-2 hover:bg-gray-50 rounded-xl transition"
                                     >
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
                             </div>
                             <div className="p-6">
-                                <div className="mb-6 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-                                    <p className="text-sm text-amber-800 font-semibold flex items-start gap-2">
+                                <div className="mb-6 p-4 bg-amber-50 border border-amber-200/80 rounded-xl">
+                                    <p className="text-sm text-amber-800 font-medium flex items-start gap-2">
                                         <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -1540,14 +1432,14 @@ const EventAttendance = () => {
                                     </p>
                                 </div>
                                 <div className="mb-6">
-                                    <label className="block text-base font-bold text-gray-900 mb-3">
+                                    <label className="block text-sm font-semibold text-gray-900 mb-2">
                                         Reason for Exception <span className="text-red-500">*</span>
                                     </label>
                                     <textarea
                                         rows={6}
                                         value={exceptionReason}
                                         onChange={(e) => setExceptionReason(e.target.value)}
-                                        className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] outline-none resize-none transition-all duration-200"
+                                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#800000]/20 focus:border-[#800000] outline-none resize-none transition"
                                         placeholder="Please provide a detailed explanation for missing your time-out (e.g., medical emergency, family emergency, transportation issues, etc.)..."
                                         maxLength={1000}
                                         required
@@ -1558,18 +1450,19 @@ const EventAttendance = () => {
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3">
                                     <button
+                                        type="button"
                                         onClick={() => {
                                             setShowExceptionModal(false)
                                             setExceptionReason('')
                                         }}
-                                        className="w-full sm:flex-1 px-4 sm:px-6 py-2 sm:py-3 border-2 border-gray-300 text-gray-700 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-50 transition-all duration-200"
+                                        className="w-full sm:flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 transition"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSubmitExceptionRequest}
                                         disabled={submittingException || !exceptionReason.trim()}
-                                        className="w-full sm:flex-1 px-4 sm:px-6 py-2 sm:py-3 bg-[#800000] text-white rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base hover:bg-[#900000] active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full sm:flex-1 px-4 py-2.5 bg-[#800000] text-white rounded-xl font-medium text-sm hover:bg-[#6b0000] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {submittingException ? (
                                             <>
@@ -1593,29 +1486,30 @@ const EventAttendance = () => {
 
                 {/* Camera Scanner Modal */}
                 {showCameraModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
                             {/* Modal Header */}
-                            <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-[#800000] to-[#a00000]">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-[#800000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-100 bg-[#800000]">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-white/20 border border-white/20 flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
                                     </div>
                                     <div>
-                                        <h3 className="text-base sm:text-lg md:text-xl font-bold text-white">
+                                        <h3 className="text-base sm:text-lg font-bold text-white">
                                             {activeScanner === 'timein' ? 'Scan QR Code for Time In' : 'Scan QR Code for Time Out'}
                                         </h3>
                                         <p className="text-xs sm:text-sm text-white/90">Position QR code within the frame</p>
                                     </div>
                                 </div>
                                 <button
+                                    type="button"
                                     onClick={closeCameraModal}
-                                    className="w-10 h-10 sm:w-12 sm:h-12 bg-white hover:bg-gray-100 rounded-xl flex items-center justify-center transition-all duration-200 text-[#800000] flex-shrink-0"
+                                    className="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition flex-shrink-0"
                                     aria-label="Close camera"
                                 >
-                                    <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -1627,14 +1521,14 @@ const EventAttendance = () => {
                                 
                                 {/* Scanning Overlay */}
                                 <div className="absolute inset-0 pointer-events-none">
-                                    <div className="absolute inset-0 border-4 border-[#800000] rounded-2xl animate-pulse"></div>
+                                    <div className="absolute inset-0 border-2 border-[#800000]/50 rounded-2xl" />
                                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                        <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-[#800000] rounded-xl"></div>
+                                        <div className="w-48 h-48 sm:w-64 sm:h-64 border-2 border-white/80 rounded-xl" />
                                     </div>
                                     <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2">
-                                        <div className="bg-[#800000]/90 backdrop-blur-sm text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full">
-                                            <p className="text-xs sm:text-sm font-semibold flex items-center gap-2">
-                                                <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                                        <div className="bg-[#800000] text-white px-4 py-2 rounded-xl shadow-sm">
+                                            <p className="text-xs sm:text-sm font-medium flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                                                 Scanning...
                                             </p>
                                         </div>
@@ -1643,13 +1537,14 @@ const EventAttendance = () => {
 
                                 {/* Camera Error Display */}
                                 {cameraError && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-                                        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 max-w-md mx-4">
-                                            <p className="text-red-800 font-semibold mb-2 text-lg">Camera Error</p>
-                                            <p className="text-red-700 text-sm mb-4">{cameraError}</p>
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 max-w-md mx-4">
+                                            <p className="text-gray-900 font-semibold mb-2">Camera Error</p>
+                                            <p className="text-gray-600 text-sm mb-4">{cameraError}</p>
                                             <button
+                                                type="button"
                                                 onClick={closeCameraModal}
-                                                className="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-all duration-200 font-semibold"
+                                                className="w-full bg-[#800000] text-white px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-[#6b0000] transition"
                                             >
                                                 Close
                                             </button>
@@ -1659,16 +1554,17 @@ const EventAttendance = () => {
                             </div>
                             
                             {/* Modal Footer */}
-                            <div className="p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
+                            <div className="p-4 sm:p-5 border-t border-gray-100 bg-gray-50/80">
                                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <p className="text-sm text-gray-600 text-center sm:text-left">
                                         Point your camera at the QR code. Make sure it's well-lit and in focus.
                                     </p>
                                     <button
+                                        type="button"
                                         onClick={closeCameraModal}
-                                        className="w-full sm:w-auto bg-white border-2 border-[#800000] text-[#800000] px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl hover:bg-[#800000] hover:text-white transition-all duration-200 font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto border border-[#800000]/30 text-[#800000] px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-[#F5E6E8] transition flex items-center justify-center gap-2"
                                     >
-                                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                         Stop Camera
@@ -1681,11 +1577,11 @@ const EventAttendance = () => {
 
                 {/* Processing Overlay */}
                 {processing && (
-                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-sm mx-4">
-                            <div className="w-16 h-16 border-4 border-[#800000] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                            <p className="text-lg font-semibold text-gray-900">Processing...</p>
-                            <p className="text-sm text-gray-600 mt-2">Please wait while we record your attendance</p>
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center max-w-sm mx-4">
+                            <div className="w-12 h-12 border-2 border-[#800000]/30 border-t-[#800000] rounded-full animate-spin mx-auto mb-4" />
+                            <p className="text-base font-semibold text-gray-900">Processing...</p>
+                            <p className="text-sm text-gray-600 mt-1">Please wait while we record your attendance</p>
                         </div>
                     </div>
                 )}

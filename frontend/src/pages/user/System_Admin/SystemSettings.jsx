@@ -4,7 +4,7 @@ import { AppContent } from '../../../context/AppContext.jsx'
 import SystemAdminSidebar from '../System_Admin/SystemAdminSidebar.jsx'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { FaTools, FaEnvelope, FaShieldAlt, FaSave, FaUser, FaUsers, FaUserTie, FaUserShield, FaBoxOpen } from 'react-icons/fa'
+import { FaTools, FaEnvelope, FaShieldAlt, FaSave, FaUser, FaUsers, FaUserTie, FaUserShield, FaBoxOpen, FaCogs } from 'react-icons/fa'
 
 const SystemSettings = () => {
     const { backendUrl } = useContext(AppContent)
@@ -248,7 +248,12 @@ const SystemSettings = () => {
                         </div>
 
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">General Settings</h3>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaCogs className="w-5 h-5 text-[#800000]" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900">General Settings</h3>
+                            </div>
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-gray-100 hover:bg-gray-50/80 transition">
                                 <div className="flex-1 min-w-0">
                                     <h4 className="font-medium text-gray-900 text-sm">System Name</h4>

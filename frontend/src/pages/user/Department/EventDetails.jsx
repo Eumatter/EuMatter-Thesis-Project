@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import LoadingSpinner from '../../../components/LoadingSpinner';
@@ -249,7 +248,7 @@ const EventDetails = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
                 <Header />
                 <div className="flex-1 flex justify-center items-center py-20">
                     <LoadingSpinner size="large" text="Loading event analytics..." />
@@ -261,109 +260,95 @@ const EventDetails = () => {
 
     if (!analytics) {
         return (
-            <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+            <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
                 <Header />
-                <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-                    <div className="text-center py-20">
-                        <p className="text-gray-600">Failed to load analytics</p>
+                <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+                        <div className="w-14 h-14 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center mx-auto mb-4">
+                            <FaChartLine className="w-7 h-7 text-[#800000]" />
+                        </div>
+                        <h1 className="text-lg font-bold text-gray-900 mb-2">Failed to load analytics</h1>
+                        <p className="text-sm text-gray-600 mb-6">We couldn’t load this event’s data. Please try again.</p>
                         <button
+                            type="button"
                             onClick={() => navigate('/department/events')}
-                            className="mt-4 px-4 py-2 bg-[#800000] text-white rounded-lg hover:opacity-90"
+                            className="px-5 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                         >
                             Back to Events
                         </button>
                     </div>
-                </div>
+                </main>
                 <Footer />
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-white">
+        <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
             <Header />
 
-            <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 relative z-50"
+            <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+                <button
+                    type="button"
+                    onClick={() => navigate('/department/events')}
+                    className="flex items-center gap-2 p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-[#800000] mb-4 transition"
                 >
-                    <button
-                        onClick={() => navigate('/department/events')}
-                        className="flex items-center gap-2 text-gray-600 hover:text-[#800000] mb-4 transition-colors"
-                    >
-                        <FaArrowLeft className="w-4 h-4" />
-                        <span>Back to Events</span>
-                    </button>
+                    <FaArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back to Events</span>
+                </button>
 
-                    <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6 mb-6 relative z-50">
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                            <div className="flex-1 w-full">
-                                <h1 className="text-2xl sm:text-3xl font-bold text-[#800000] mb-4 text-center sm:text-left">{analytics.event.title}</h1>
-                                <div className="flex flex-wrap items-center justify-start gap-4 text-sm text-gray-600">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm flex-shrink-0">
-                                            <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                        <span className="whitespace-nowrap">{formatDate(analytics.event.startDate)} - {formatDate(analytics.event.endDate)}</span>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="flex-1 w-full">
+                            <h1 className="text-xl sm:text-2xl font-bold text-[#800000] tracking-tight mb-3">{analytics.event.title}</h1>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                        <FaCalendarAlt className="w-4 h-4 text-[#800000]" />
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center border border-gray-300 shadow-sm flex-shrink-0">
-                                            <svg className="w-4 h-4 text-[#800020]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </div>
-                                        <span className="whitespace-nowrap">{analytics.event.location || 'N/A'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                                            analytics.event.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                                            analytics.event.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                            analytics.event.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                                            'bg-gray-100 text-gray-800'
-                                        }`}>
-                                            {analytics.event.status}
-                                        </span>
-                                    </div>
+                                    <span className="whitespace-nowrap">{formatDate(analytics.event.startDate)} – {formatDate(analytics.event.endDate)}</span>
                                 </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                        <FaMapMarkerAlt className="w-4 h-4 text-[#800000]" />
+                                    </div>
+                                    <span className="whitespace-nowrap">{analytics.event.location || 'N/A'}</span>
+                                </div>
+                                <span className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap ${
+                                    analytics.event.status === 'Approved' ? 'bg-emerald-50 text-emerald-700' :
+                                    analytics.event.status === 'Pending' ? 'bg-amber-50 text-amber-700' :
+                                    analytics.event.status === 'Rejected' ? 'bg-red-50 text-red-700' :
+                                    'bg-gray-100 text-gray-600'
+                                }`}>
+                                    {analytics.event.status}
+                                </span>
                             </div>
-                            {/* Volunteer Management Button */}
-                            {analytics.event.isOpenForVolunteer && (
-                                <button
-                                    onClick={() => navigate(`/department/volunteer-management/${eventId}`)}
-                                    className="px-4 py-2 bg-gradient-to-r from-[#800000] to-[#900000] text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center"
-                                >
-                                    <FaUsers className="w-4 h-4" />
-                                    Volunteer Management
-                                </button>
-                            )}
                         </div>
+                        {analytics.event.isOpenForVolunteer && (
+                            <button
+                                type="button"
+                                onClick={() => navigate(`/department/volunteer-management/${eventId}`)}
+                                className="px-4 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center"
+                            >
+                                <FaUsers className="w-4 h-4" />
+                                Volunteer Management
+                            </button>
+                        )}
                     </div>
-                </motion.div>
+                </div>
 
-                {/* View Tabs */}
-                <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
+                <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
                     {(() => {
                         const tabs = ['overview', 'hours', 'feedback'];
-                        if (analytics?.event?.isOpenForVolunteer) {
-                            tabs.push('registered', 'attendance', 'qr');
-                        }
-                        if (analytics?.event?.isOpenForDonation) {
-                            tabs.push('donations');
-                        }
+                        if (analytics?.event?.isOpenForVolunteer) tabs.push('registered', 'attendance', 'qr');
+                        if (analytics?.event?.isOpenForDonation) tabs.push('donations');
                         return tabs.map((view) => (
                             <button
                                 key={view}
+                                type="button"
                                 onClick={() => setActiveView(view)}
-                                className={`px-4 sm:px-6 py-3 font-semibold transition-all border-b-2 whitespace-nowrap ${
-                                    activeView === view
-                                        ? 'border-[#800000] text-[#800000]'
-                                        : 'border-transparent text-gray-600 hover:text-[#800000]'
+                                className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition ${
+                                    activeView === view ? 'border-[#800000] text-[#800000]' : 'border-transparent text-gray-600 hover:text-gray-900'
                                 }`}
                             >
                                 {view === 'qr' ? 'QR Code' : view.charAt(0).toUpperCase() + view.slice(1)}
@@ -375,132 +360,90 @@ const EventDetails = () => {
                 {/* Overview Tab */}
                 {activeView === 'overview' && (
                     <div className="space-y-6">
-                        {/* Key Metrics */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {/* Conditional: Total Donations if open for donation, Total Volunteers if not */}
                             {analytics.event.isOpenForDonation ? (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6"
-                                >
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3 className="text-sm font-medium text-gray-600 mb-1">Total Donations</h3>
-                                            <p className="text-3xl font-bold text-[#800000]">
-                                                ₱{donations.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0).toLocaleString()}
-                                            </p>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                {donations.length} donation{donations.length !== 1 ? 's' : ''}
-                                            </p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-600 mb-1">Total Donations</p>
+                                            <p className="text-xl sm:text-2xl font-bold text-[#800000]">₱{donations.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0).toLocaleString()}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{donations.length} donation{donations.length !== 1 ? 's' : ''}</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <FaMoneyBillWave className="w-8 h-8 text-[#800000]" fill="currentColor" />
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                            <FaMoneyBillWave className="w-5 h-5 text-[#800000]" />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6"
-                                >
+                                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                            <h3 className="text-sm font-medium text-gray-600 mb-1">Total Volunteers</h3>
-                                            <p className="text-3xl font-bold text-[#800000]">{analytics.volunteerHours.totalVolunteers}</p>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Avg: {analytics.volunteerHours.averageHoursPerVolunteer.toFixed(1)} hrs/volunteer
-                                            </p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-600 mb-1">Total Volunteers</p>
+                                            <p className="text-xl sm:text-2xl font-bold text-[#800000]">{analytics.volunteerHours.totalVolunteers}</p>
+                                            <p className="text-xs text-gray-500 mt-1">Avg: {analytics.volunteerHours.averageHoursPerVolunteer.toFixed(1)} hrs/volunteer</p>
                                         </div>
-                                        <div className="flex items-center">
-                                            <FaUsers className="w-8 h-8 text-[#800000]" fill="currentColor" />
+                                        <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                            <FaUsers className="w-5 h-5 text-[#800000]" />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             )}
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 }}
-                                className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6"
-                            >
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <h3 className="text-sm font-medium text-gray-600 mb-1">Average Rating</h3>
-                                        <p className="text-3xl font-bold text-[#800000]">
-                                            {analytics.feedback.averageRating.toFixed(1)}/5.0
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {analytics.feedback.totalResponses} responses
-                                        </p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-600 mb-1">Average Rating</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-[#800000]">{analytics.feedback.averageRating.toFixed(1)}/5.0</p>
+                                        <p className="text-xs text-gray-500 mt-1">{analytics.feedback.totalResponses} responses</p>
                                     </div>
-                                    <div className="flex items-center">
-                                        <FaStar className="w-8 h-8 text-[#800000]" fill="currentColor" />
+                                    <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                        <FaStar className="w-5 h-5 text-[#800000]" />
                                     </div>
                                 </div>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
-                                className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6"
-                            >
+                            </div>
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex-1">
-                                        <h3 className="text-sm font-medium text-gray-600 mb-1">Satisfaction Score</h3>
-                                        <p className="text-3xl font-bold text-[#800000]">
-                                            {analytics.feedback.satisfactionScore.toFixed(1)}%
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {analytics.feedback.feedbackResponseRate.toFixed(1)}% response rate
-                                        </p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-600 mb-1">Satisfaction Score</p>
+                                        <p className="text-xl sm:text-2xl font-bold text-[#800000]">{analytics.feedback.satisfactionScore.toFixed(1)}%</p>
+                                        <p className="text-xs text-gray-500 mt-1">{analytics.feedback.feedbackResponseRate.toFixed(1)}% response rate</p>
                                     </div>
-                                    <div className="flex items-center">
-                                        <FaChartLine className="w-8 h-8 text-[#800000]" fill="currentColor" />
+                                    <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center flex-shrink-0">
+                                        <FaChartLine className="w-5 h-5 text-[#800000]" />
                                     </div>
                                 </div>
-                            </motion.div>
+                            </div>
                         </div>
 
-                        {/* Quick Stats */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Top Volunteers */}
-                            <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <FaUsers className="text-[#800000]" />
+                                    <div className="w-8 h-8 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center"><FaUsers className="w-4 h-4 text-[#800000]" /></div>
                                     Top Volunteers by Hours
                                 </h3>
                                 <div className="space-y-3">
                                     {analytics.volunteerHours.byUser.slice(0, 5).map((user, idx) => (
-                                        <div key={user.volunteerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
-                                                    {idx + 1}
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-gray-900">{user.volunteerName}</p>
-                                                    <p className="text-xs text-gray-500">{user.volunteerEmail}</p>
+                                        <div key={user.volunteerId} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50/80 transition">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center text-[#800000] font-semibold text-sm flex-shrink-0">{idx + 1}</div>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-gray-900 truncate">{user.volunteerName}</p>
+                                                    <p className="text-xs text-gray-500 truncate">{user.volunteerEmail}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="text-right flex-shrink-0">
                                                 <p className="font-bold text-[#800000]">{user.totalHours.toFixed(1)} hrs</p>
                                                 <p className="text-xs text-gray-500">{user.records.length} records</p>
                                             </div>
                                         </div>
                                     ))}
                                     {analytics.volunteerHours.byUser.length === 0 && (
-                                        <p className="text-gray-500 text-center py-4">No volunteer hours recorded</p>
+                                        <p className="text-gray-500 text-center py-4 text-sm">No volunteer hours recorded</p>
                                     )}
                                 </div>
                             </div>
-
-                            {/* Rating Distribution */}
-                            <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <FaStar className="text-[#D4AF37]" />
+                                    <div className="w-8 h-8 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center"><FaStar className="w-4 h-4 text-[#800000]" /></div>
                                     Rating Distribution
                                 </h3>
                                 <div className="space-y-3">
@@ -510,23 +453,16 @@ const EventDetails = () => {
                                         const percentage = total > 0 ? (count / total) * 100 : 0;
                                         return (
                                             <div key={rating} className="flex items-center gap-3">
-                                                <div className="w-12 text-right">
-                                                    <span className="font-semibold text-gray-700">{rating}★</span>
+                                                <span className="w-10 text-sm font-medium text-gray-700">{rating}★</span>
+                                                <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                                                    <div className="h-full rounded-full bg-[#800000]/20 transition-all" style={{ width: `${percentage}%` }} />
                                                 </div>
-                                                <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                                                    <div
-                                                        className="h-full rounded-full transition-all bg-gradient-to-r from-[#ffd700] to-[#ffed4e]"
-                                                        style={{ width: `${percentage}%` }}
-                                                    />
-                                                </div>
-                                                <div className="w-16 text-right">
-                                                    <span className="text-sm font-semibold text-gray-700">{count}</span>
-                                                </div>
+                                                <span className="text-sm font-medium text-gray-600 w-8 text-right">{count}</span>
                                             </div>
                                         );
                                     })}
                                     {analytics.feedback.totalResponses === 0 && (
-                                        <p className="text-gray-500 text-center py-4">No feedback received yet</p>
+                                        <p className="text-gray-500 text-center py-4 text-sm">No feedback received yet</p>
                                     )}
                                 </div>
                             </div>
@@ -537,33 +473,36 @@ const EventDetails = () => {
                 {/* Hours Tab */}
                 {activeView === 'hours' && (
                     <div className="space-y-6">
-                        {/* Hours by User with Date and Voided Hours */}
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaUser className="text-[#800000]" />
-                                Volunteer Hours by User
-                            </h3>
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div className="p-4 sm:p-6 border-b border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                        <FaUser className="w-4 h-4 text-[#800000]" />
+                                    </div>
+                                    Volunteer Hours by User
+                                </h3>
+                            </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Volunteer</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                                            <th className="text-right py-3 px-4 font-semibold text-gray-700">Hours</th>
-                                            <th className="text-right py-3 px-4 font-semibold text-gray-700">Voided Hours</th>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Volunteer</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                                            <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Voided Hours</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-gray-100">
                                         {analytics.volunteerHours.byUser.flatMap((user) => 
                                             user.records && user.records.length > 0 ? user.records.map((record, idx) => (
-                                                <tr key={`${user.volunteerId}-${idx}`} className="border-b border-gray-100 hover:bg-gray-50">
+                                                <tr key={`${user.volunteerId}-${idx}`} className="hover:bg-gray-50/50 transition">
                                                     <td className="py-3 px-4">
                                                         {idx === 0 && (
                                                             <div className="flex items-center gap-3">
                                                                 {user.volunteerImage ? (
                                                                     <img src={user.volunteerImage} alt={user.volunteerName} className="w-10 h-10 rounded-full object-cover" />
                                                                 ) : (
-                                                                    <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                                    <div className="w-10 h-10 rounded-full bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center text-[#800000] font-semibold text-sm">
                                                                         {user.volunteerName?.charAt(0).toUpperCase() || 'U'}
                                                                     </div>
                                                                 )}
@@ -579,18 +518,18 @@ const EventDetails = () => {
                                                     <td className="text-right py-3 px-4 text-red-600">{record.voided ? (record.hours?.toFixed(1) || '0.0') : '0.0'}</td>
                                                 </tr>
                                             )) : (
-                                                <tr key={user.volunteerId} className="border-b border-gray-100 hover:bg-gray-50">
+                                                <tr key={user.volunteerId} className="hover:bg-gray-50/50 transition">
                                                     <td className="py-3 px-4">
                                                         <div className="flex items-center gap-3">
                                                             {user.volunteerImage ? (
                                                                 <img src={user.volunteerImage} alt={user.volunteerName} className="w-10 h-10 rounded-full object-cover" />
                                                             ) : (
-                                                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                                <div className="w-10 h-10 rounded-full bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center text-[#800000] font-semibold text-sm">
                                                                     {user.volunteerName?.charAt(0).toUpperCase() || 'U'}
                                                                 </div>
                                                             )}
                                                             <div>
-                                                                <p className="font-semibold text-gray-900">{user.volunteerName || 'Unknown'}</p>
+                                                                <p className="font-medium text-gray-900">{user.volunteerName || 'Unknown'}</p>
                                                                 <p className="text-xs text-gray-500">{user.volunteerEmail || ''}</p>
                                                             </div>
                                                         </div>
@@ -618,23 +557,23 @@ const EventDetails = () => {
                     <div className="space-y-6">
                         {/* Feedback Statistics */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                 <h3 className="text-sm font-medium text-gray-600 mb-2">Total Responses</h3>
-                                <p className="text-3xl font-bold text-[#800000]">{analytics.feedback.totalResponses}</p>
+                                <p className="text-2xl font-bold text-[#800000]">{analytics.feedback.totalResponses}</p>
                                 <p className="text-xs text-gray-500 mt-1">
                                     {analytics.feedback.volunteersWithFeedback} of {analytics.feedback.totalVolunteers} volunteers
                                 </p>
                             </div>
-                            <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/20 p-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                 <h3 className="text-sm font-medium text-gray-600 mb-2">Average Rating</h3>
-                                <p className={`text-3xl font-bold ${getRatingColor(analytics.feedback.averageRating)}`}>
+                                <p className={`text-2xl font-bold ${getRatingColor(analytics.feedback.averageRating)}`}>
                                     {analytics.feedback.averageRating.toFixed(1)}/5.0
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">Based on {analytics.feedback.totalResponses} ratings</p>
                             </div>
-                            <div className="bg-white rounded-xl shadow-lg border-2 border-green-500/20 p-6">
+                            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5">
                                 <h3 className="text-sm font-medium text-gray-600 mb-2">Satisfaction Score</h3>
-                                <p className={`text-3xl font-bold ${getSatisfactionColor(analytics.feedback.satisfactionScore)}`}>
+                                <p className={`text-2xl font-bold ${getSatisfactionColor(analytics.feedback.satisfactionScore)}`}>
                                     {analytics.feedback.satisfactionScore.toFixed(1)}%
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">4-5 star ratings</p>
@@ -642,17 +581,19 @@ const EventDetails = () => {
                         </div>
 
                         {/* Feedback Comments */}
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaComments className="text-[#800000]" />
+                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaComments className="w-4 h-4 text-[#800000]" />
+                                </div>
                                 Feedback Comments
                             </h3>
                             <div className="space-y-4">
                                 {analytics.feedback.comments.map((comment, idx) => (
-                                    <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div key={idx} className="p-4 rounded-xl border border-gray-100 bg-gray-50/80">
                                         <div className="flex items-start justify-between mb-2">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                <div className="w-10 h-10 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 text-[#800000] flex items-center justify-center font-semibold text-sm">
                                                     {comment.volunteerName.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
@@ -674,7 +615,7 @@ const EventDetails = () => {
                                                     ))}
                                                 </div>
                                                 {comment.overridden && (
-                                                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Overridden</span>
+                                                    <span className="text-xs px-2 py-1 bg-amber-50 text-amber-700 rounded-lg font-medium">Overridden</span>
                                                 )}
                                             </div>
                                         </div>
@@ -695,30 +636,32 @@ const EventDetails = () => {
                 {/* Registered Users Tab - Only if event is open for volunteers */}
                 {activeView === 'registered' && analytics?.event?.isOpenForVolunteer && (
                     <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaUserCheck className="text-[#800000]" />
+                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaUserCheck className="w-4 h-4 text-[#800000]" />
+                                </div>
                                 Registered Volunteers
                             </h3>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Volunteer</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Registered Date</th>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Volunteer</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Registered Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {volunteers.map((volunteer) => (
-                                            <tr key={volunteer._id || volunteer.user?._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr key={volunteer._id || volunteer.user?._id} className="hover:bg-gray-50/50 transition">
                                                 <td className="py-3 px-4">
                                                     <div className="flex items-center gap-3">
                                                         {volunteer.user?.profileImage || volunteer.profileImage ? (
                                                             <img src={volunteer.user?.profileImage || volunteer.profileImage} alt={volunteer.user?.name || volunteer.name} className="w-10 h-10 rounded-full object-cover" />
                                                         ) : (
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                            <div className="w-10 h-10 bg-[#F5E6E8] border border-[#800000]/10 text-[#800000] rounded-full flex items-center justify-center font-semibold text-sm">
                                                                 {(volunteer.user?.name || volunteer.name || 'U').charAt(0).toUpperCase()}
                                                             </div>
                                                         )}
@@ -730,10 +673,10 @@ const EventDetails = () => {
                                                 </td>
                                                 <td className="py-3 px-4 text-gray-600">{volunteer.user?.email || volunteer.email || 'N/A'}</td>
                                                 <td className="py-3 px-4">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                        (volunteer.status || volunteer.user?.status) === 'approved' ? 'bg-green-100 text-green-800' :
-                                                        (volunteer.status || volunteer.user?.status) === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                        'bg-yellow-100 text-yellow-800'
+                                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                                                        (volunteer.status || volunteer.user?.status) === 'approved' ? 'bg-emerald-50 text-emerald-700' :
+                                                        (volunteer.status || volunteer.user?.status) === 'rejected' ? 'bg-red-50 text-red-700' :
+                                                        'bg-amber-50 text-amber-700'
                                                     }`}>
                                                         {(volunteer.status || volunteer.user?.status || 'registered').charAt(0).toUpperCase() + (volunteer.status || volunteer.user?.status || 'registered').slice(1)}
                                                     </span>
@@ -756,32 +699,34 @@ const EventDetails = () => {
                 {/* Attendance Tab - Only if event is open for volunteers */}
                 {activeView === 'attendance' && analytics?.event?.isOpenForVolunteer && (
                     <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaCheckCircle className="text-[#800000]" />
+                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaCheckCircle className="w-4 h-4 text-[#800000]" />
+                                </div>
                                 Volunteer Attendance Records
                             </h3>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Volunteer</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Time In</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Time Out</th>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Volunteer</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Time In</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Time Out</th>
                                             <th className="text-right py-3 px-4 font-semibold text-gray-700">Hours</th>
-                                            <th className="text-center py-3 px-4 font-semibold text-gray-700">Status</th>
+                                            <th className="text-center py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {attendance.map((record, idx) => (
-                                            <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr key={idx} className="hover:bg-gray-50/50 transition">
                                                 <td className="py-3 px-4">
                                                     <div className="flex items-center gap-3">
                                                         {record.volunteer?.profileImage || record.userId?.profileImage ? (
                                                             <img src={record.volunteer?.profileImage || record.userId?.profileImage} alt={record.volunteer?.name || record.userId?.name} className="w-10 h-10 rounded-full object-cover" />
                                                         ) : (
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                            <div className="w-10 h-10 bg-[#F5E6E8] border border-[#800000]/10 text-[#800000] rounded-full flex items-center justify-center font-semibold text-sm">
                                                                 {(record.volunteer?.name || record.userId?.name || 'U').charAt(0).toUpperCase()}
                                                             </div>
                                                         )}
@@ -796,8 +741,8 @@ const EventDetails = () => {
                                                 <td className="py-3 px-4 text-gray-600">{record.timeOut ? formatTime(record.timeOut) : 'N/A'}</td>
                                                 <td className="text-right py-3 px-4 font-bold text-[#800000]">{record.totalHours?.toFixed(1) || '0.0'}</td>
                                                 <td className="text-center py-3 px-4">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                        record.isValid === false ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                                                        record.isValid === false ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'
                                                     }`}>
                                                         {record.isValid === false ? 'Voided' : 'Valid'}
                                                     </span>
@@ -819,17 +764,19 @@ const EventDetails = () => {
                 {/* QR Code Tab - Only if event is open for volunteers */}
                 {activeView === 'qr' && analytics?.event?.isOpenForVolunteer && (
                     <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                <FaQrcode className="text-[#800000]" />
+                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaQrcode className="w-4 h-4 text-[#800000]" />
+                                </div>
                                 QR Code Attendance & Evaluation
                             </h3>
                             
                             {/* Check-In QR Code */}
                             <div className="mb-8">
-                                <h4 className="text-md font-semibold text-gray-800 mb-4">Check-In QR Code</h4>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-4">Check-In QR Code</h4>
                                 {qrStatus?.hasCheckInQR && qrStatus?.checkInActive ? (
-                                    <div className="text-center bg-gray-50 rounded-lg p-6">
+                                    <div className="text-center rounded-xl border border-gray-100 bg-gray-50/80 p-6">
                                         <img 
                                             src={qrStatus.checkInQR} 
                                             alt="Check-In QR Code" 
@@ -842,21 +789,23 @@ const EventDetails = () => {
                                             Expires: {qrStatus.expiresAt ? formatDate(qrStatus.expiresAt) : 'N/A'}
                                         </p>
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 const link = document.createElement('a');
                                                 link.href = qrStatus.checkInQR;
                                                 link.download = `checkin-qr-${eventId}.png`;
                                                 link.click();
                                             }}
-                                            className="px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors"
+                                            className="px-4 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                                         >
                                             Download QR Code
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="text-center bg-gray-50 rounded-lg p-6">
-                                        <p className="text-gray-500 mb-4">No active check-in QR code</p>
+                                    <div className="text-center rounded-xl border border-gray-100 bg-gray-50/80 p-6">
+                                        <p className="text-gray-500 mb-4 text-sm">No active check-in QR code</p>
                                         <button
+                                            type="button"
                                             onClick={async () => {
                                                 try {
                                                     const token = localStorage.getItem('token');
@@ -873,7 +822,7 @@ const EventDetails = () => {
                                                     toast.error(error.response?.data?.message || 'Failed to generate QR code');
                                                 }
                                             }}
-                                            className="px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors"
+                                            className="px-4 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                                         >
                                             Generate Check-In QR Code
                                         </button>
@@ -883,9 +832,9 @@ const EventDetails = () => {
 
                             {/* Check-Out/Evaluation QR Code */}
                             <div>
-                                <h4 className="text-md font-semibold text-gray-800 mb-4">Evaluation QR Code (Time Out)</h4>
+                                <h4 className="text-sm font-semibold text-gray-900 mb-4">Evaluation QR Code (Time Out)</h4>
                                 {qrStatus?.hasCheckOutQR && qrStatus?.checkOutActive ? (
-                                    <div className="text-center bg-gray-50 rounded-lg p-6">
+                                    <div className="text-center rounded-xl border border-gray-100 bg-gray-50/80 p-6">
                                         <img 
                                             src={qrStatus.checkOutQR} 
                                             alt="Evaluation QR Code" 
@@ -899,17 +848,19 @@ const EventDetails = () => {
                                         </p>
                                         <div className="flex flex-col sm:flex-row justify-center gap-3">
                                             <button
+                                                type="button"
                                                 onClick={() => {
                                                     const link = document.createElement('a');
                                                     link.href = qrStatus.checkOutQR;
                                                     link.download = `evaluation-qr-${eventId}.png`;
                                                     link.click();
                                                 }}
-                                                className="px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors"
+                                                className="px-4 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                                             >
                                                 Download QR Code
                                             </button>
                                             <button
+                                                type="button"
                                                 onClick={async () => {
                                                     if (!window.confirm('Are you sure you want to close the evaluation QR code? This will prevent volunteers from checking out.')) return;
                                                     try {
@@ -927,16 +878,17 @@ const EventDetails = () => {
                                                         toast.error(error.response?.data?.message || 'Failed to close QR code');
                                                     }
                                                 }}
-                                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                                className="px-4 py-2.5 border border-red-200 text-red-700 text-sm font-medium rounded-xl hover:bg-red-50 transition"
                                             >
                                                 Close Evaluation QR
                                             </button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-center bg-gray-50 rounded-lg p-6">
-                                        <p className="text-gray-500 mb-4">No active evaluation QR code</p>
+                                    <div className="text-center rounded-xl border border-gray-100 bg-gray-50/80 p-6">
+                                        <p className="text-gray-500 mb-4 text-sm">No active evaluation QR code</p>
                                         <button
+                                            type="button"
                                             onClick={async () => {
                                                 try {
                                                     const token = localStorage.getItem('token');
@@ -953,7 +905,7 @@ const EventDetails = () => {
                                                     toast.error(error.response?.data?.message || 'Failed to generate QR code');
                                                 }
                                             }}
-                                            className="px-4 py-2 bg-[#800000] text-white rounded-lg hover:bg-[#900000] transition-colors"
+                                            className="px-4 py-2.5 bg-[#800000] text-white text-sm font-medium rounded-xl hover:bg-[#6b0000] transition"
                                         >
                                             Generate Evaluation QR Code
                                         </button>
@@ -967,31 +919,33 @@ const EventDetails = () => {
                 {/* Donations Tab - Only if event is open for donation */}
                 {activeView === 'donations' && analytics?.event?.isOpenForDonation && (
                     <div className="space-y-6">
-                        <div className="bg-white rounded-xl shadow-lg border-2 border-[#800000]/10 p-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <FaMoneyBillWave className="text-[#800000]" />
+                                <div className="w-9 h-9 rounded-xl bg-[#F5E6E8] border border-[#800000]/10 flex items-center justify-center">
+                                    <FaMoneyBillWave className="w-4 h-4 text-[#800000]" />
+                                </div>
                                 Donation Management
                             </h3>
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Donor</th>
+                                        <tr className="border-b border-gray-100 bg-gray-50/50">
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Donor</th>
                                             <th className="text-right py-3 px-4 font-semibold text-gray-700">Amount</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Payment Method</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                                            <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {donations.map((donation) => (
-                                            <tr key={donation._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr key={donation._id} className="hover:bg-gray-50/50 transition">
                                                 <td className="py-3 px-4">
                                                     <div className="flex items-center gap-3">
                                                         {donation.user?.profileImage ? (
                                                             <img src={donation.user.profileImage} alt={donation.donorName} className="w-10 h-10 rounded-full object-cover" />
                                                         ) : (
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-[#800000] to-[#900000] rounded-full flex items-center justify-center text-white font-semibold">
+                                                            <div className="w-10 h-10 bg-[#F5E6E8] border border-[#800000]/10 text-[#800000] rounded-full flex items-center justify-center font-semibold text-sm">
                                                                 {(donation.donorName || donation.user?.name || 'A').charAt(0).toUpperCase()}
                                                             </div>
                                                         )}
@@ -1007,10 +961,10 @@ const EventDetails = () => {
                                                 <td className="py-3 px-4 text-gray-600 capitalize">{donation.paymentMethod || 'N/A'}</td>
                                                 <td className="py-3 px-4 text-gray-600">{formatDate(donation.createdAt || donation.donatedAt)}</td>
                                                 <td className="py-3 px-4">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                        donation.status === 'succeeded' ? 'bg-green-100 text-green-800' :
-                                                        donation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                                    <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                                                        donation.status === 'succeeded' ? 'bg-emerald-50 text-emerald-700' :
+                                                        donation.status === 'pending' ? 'bg-amber-50 text-amber-700' :
+                                                        'bg-red-50 text-red-700'
                                                     }`}>
                                                         {donation.status || 'pending'}
                                                     </span>

@@ -602,18 +602,18 @@ const DepartmentReports = () => {
                         </div>
                         <div>
                             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Date range</label>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                 <input
                                     type="date"
                                     value={dateRange.start}
                                     onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                                    className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
+                                    className="w-full sm:flex-1 min-w-0 sm:min-w-[140px] px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                                 />
                                 <input
                                     type="date"
                                     value={dateRange.end}
                                     onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                                    className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
+                                    className="w-full sm:flex-1 min-w-0 sm:min-w-[140px] px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#800000]/30 focus:border-[#800000] transition bg-white"
                                 />
                             </div>
                         </div>
